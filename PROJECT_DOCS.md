@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Replace `cloudflared.exe` with Fresh Official Release Binary |
+| Last Code Change | 28 Jul 2026 — Auto-Start Local Node Server in `START_REMOTE_ACCESS.bat` to Prevent 502 Errors |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,16 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Auto-Start Local Node Server in `START_REMOTE_ACCESS.bat` to Prevent 502 Errors
+
+Files: START_REMOTE_ACCESS.bat, PROJECT_DOCS.md
+Type: Remote Access Self-Healing Fix
+
+- ROOT CAUSE: PWABuilder returned 502 Bad Gateway because Cloudflare Tunnel was running but the local Node.js server on port 3000 was stopped.
+- FIX: Updated `START_REMOTE_ACCESS.bat` to automatically check port 3000, start `node server.js` in the background if inactive, and then launch Cloudflare Tunnel to guarantee zero 502 Bad Gateway errors.
 
 ---
 
