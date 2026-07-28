@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.backup
+sessions/
+logs/
+reports/
+tmp/
+scratch/
+database/pds-reports.db*
+*.db
+*.sqlite
+*.exe
+*.old
+*.dump
+tmp_backup/
+.DS_Store
+Thumbs.db

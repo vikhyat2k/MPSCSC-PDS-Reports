@@ -1,0 +1,164 @@
+# ═══════════════════════════════════════════════════════
+#  MPSCSC PDS Reports — .gitignore
+#  Node.js / Express · SQLite · Puppeteer · Nodemailer
+# ═══════════════════════════════════════════════════════
+
+
+# ── ENVIRONMENT & SECRETS ──────────────────────────────
+# NEVER commit credentials, tokens, or keys
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+*.env
+secrets.json
+config.local.js
+
+
+# ── NODE MODULES ───────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+package-lock.json
+.npm
+.yarn
+
+
+# ── DATABASE FILES ─────────────────────────────────────
+# SQLite / better-sqlite3
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+*.db-journal
+data/*.db
+data/*.sqlite
+db/
+
+
+# ── GENERATED REPORTS (Excel / PDF output) ────────────
+# Don't commit auto-generated report files
+reports/
+output/
+exports/
+generated/
+*.xlsx
+*.xls
+*.pdf
+downloads/
+temp/
+tmp/
+
+
+# ── PUPPETEER / CHROMIUM ───────────────────────────────
+.cache/
+.local-chromium/
+puppeteer-downloads/
+chromium/
+
+
+# ── LOGS ───────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+error.log
+access.log
+combined.log
+server.log
+npm-debug.log
+
+
+# ── OPERATING SYSTEM ───────────────────────────────────
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+
+# Linux
+*~
+.nfs*
+
+
+# ── EDITOR & IDE ───────────────────────────────────────
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains (IntelliJ, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Cursor AI IDE
+.cursor/
+.cursorignore
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Vim / Emacs
+*.swp
+*.swo
+*.swn
+*~
+\#*\#
+.#*
+
+
+# ── RUNTIME & PROCESS ──────────────────────────────────
+pids/
+*.pid
+*.seed
+*.pid.lock
+.node_repl_history
+
+
+# ── BUILD OUTPUT ───────────────────────────────────────
+dist/
+build/
+.cache/
+.parcel-cache/
+
+
+# ── TESTING ────────────────────────────────────────────
+coverage/
+.nyc_output/
+.jest-cache/
+test-results/
+
+
+# ── MISCELLANEOUS ──────────────────────────────────────
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+*.temp
+*.zip
+*.tar.gz
+*.rar
+recovery/

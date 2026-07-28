@@ -1,0 +1,37 @@
+Please act as a Senior Node.js Full-Stack Developer and Technical Auditor. 
+
+I am providing you with the source code of my **PDS Lifting Report** web application, which was recently recovered and rewritten after a partial deletion incident. This application is a critical Node.js automation and reporting tool that scrapes multiple government portal modules (NFSA, MDM, ICDS, Welfare) and generates aggregated PDFs and HTML reports.
+
+I have placed all the essential files into a single flat directory for your review. The files include:
+- `server.js`: The main Express server entry point.
+- `server/database/db.js`: The SQLite database manager.
+- `server/automation/scraper_v2.js`: The scraper for NFSA commodity data.
+- `server/automation/mdm_scraper.js`: The scraper for Mid-Day Meal (MDM) data.
+- `server/automation/icds_scraper.js`: The scraper for Anganwadi (ICDS) data.
+- `server/automation/welfare_scraper.js`: The scraper for Welfare Institute data.
+- `server/automation/nfsa_daterange_scraper.js`: The scraper for date-range specific NFSA data.
+- `server/services/balancesReportGenerator.js`: The core logic for generating PDF and HTML reports.
+- `config/shops-mapping.json`: Configuration for mapping individual shops to sectors.
+- `public/index.html` & `public/app.js`: The frontend interface.
+
+### Audit Objectives
+
+Please conduct a comprehensive review of the entire project with a strict focus on **Data Authenticity**, **Architectural Integrity**, and **Completeness**. Specifically, address the following areas:
+
+#### 1. Data Authenticity & Scraper Integrity
+Recently, the government portal experienced data corruption (e.g., missing depots, duplicated shops, and intermittent DOM timeouts leading to stale data extraction). The scrapers (`mdm_scraper.js`, `icds_scraper.js`, `welfare_scraper.js`) were patched to hardcode deterministic `ISSUE_POINTS` and bypass DOM clicks using direct JavaScript evaluation (`eval(onclickStr)`).
+- **Review Task:** Examine the extraction logic across all scrapers. Verify that the current retry mechanisms and DOM-clearing implementations (`container.innerHTML = ''`) are robust enough to guarantee 100% data authenticity. Are there any edge cases where stale or mismatched data could still bleed into the SQLite database?
+
+#### 2. Report Generation Accuracy
+The core reporting logic resides in `balancesReportGenerator.js`, which reads from the SQLite database and aggregates the scraped data into sectors (combining NFSA, MDM, ICDS, and Welfare totals) for the final PDFs.
+- **Review Task:** Trace the data flow from the SQLite queries to the final PDF generation. Does the aggregation logic handle missing fields gracefully? Are the calculations mathematically sound and accurately matched against the expected output formats?
+
+#### 3. Completeness & Missing Files
+Because this project was restored from a partial deletion, there might be dangling references, missing middleware, or forgotten configurations.
+- **Review Task:** Analyze the dependencies in `package.json` and the require/import statements across the provided files. Are there any custom modules, config files (like `constants.js`), or environment variables referenced in the code that are missing from this audit batch?
+
+#### 4. Security & Best Practices
+- **Review Task:** Identify any glaring security vulnerabilities (e.g., SQL injection risks in `db.js`, hardcoded credentials, or unsafe `eval()` usage). Suggest modernizations or performance optimizations for the Puppeteer/Cheerio scraping processes and Express routes.
+
+### Output Format
+Please provide your findings in a structured Markdown report, categorized by severity (Critical, Warning, Optimization). For any missing files or broken logic, provide the exact file names and line references, along with your recommended code patches.

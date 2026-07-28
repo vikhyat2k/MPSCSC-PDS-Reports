@@ -1,0 +1,234 @@
+[
+    {
+        "serialNo": 1,
+        "districtOffice": "बैतूल",
+        "block": "बैतूल",
+        "totalShops": 29,
+        "sectorName": "बैतूल सेक्टर क्र 1",
+        "supervisor": "श्री प्रदीप सिंह",
+        "mobile": "6268969949",
+        "transporter": "श्री प्रदीप सिंह"
+    },
+    {
+        "serialNo": 2,
+        "districtOffice": "बैतूल",
+        "block": "बैतूल",
+        "totalShops": 36,
+        "sectorName": "बैतूल सेक्टर क्र 2",
+        "supervisor": "श्री पीयूष आर्य",
+        "mobile": "9977060636",
+        "transporter": "श्री पीयूष आर्य"
+    },
+    {
+        "serialNo": 3,
+        "districtOffice": "बैतूल",
+        "block": "बैतूल",
+        "totalShops": 38,
+        "monthlyAllocation": "3681.42",
+        "sectorName": "बैतूल सेक्टर क्र 3",
+        "supervisor": "श्री राहुल परिहार",
+        "mobile": "7489479209",
+        "transporter": "श्री राहुल परिहार"
+    },
+    {
+        "serialNo": 4,
+        "districtOffice": "शाहपुर",
+        "block": "शाहपुर",
+        "totalShops": 24,
+        "sectorName": "शाहपुर सेक्टर क्र 4",
+        "supervisor": "श्री विनोद यादव",
+        "mobile": "9009236960",
+        "transporter": "श्री विनोद यादव"
+    },
+    {
+        "serialNo": 5,
+        "districtOffice": "शाहपुर",
+        "block": "शाहपुर",
+        "totalShops": 33,
+        "sectorName": "शाहपुर सेक्टर क्र 5",
+        "supervisor": "श्री प्रितम कावरे",
+        "mobile": "9644152518",
+        "transporter": "श्री प्रितम कावरे"
+    },
+    {
+        "serialNo": 6,
+        "districtOffice": "घोडाडोंगरी",
+        "block": "घोडाडोंगरी",
+        "totalShops": 17,
+        "sectorName": "घोडाडोंगरी सेक्टर क्र 6",
+        "supervisor": "श्री साजन राठौर",
+        "mobile": "9685311795",
+        "transporter": "श्री साजन राठौर"
+    },
+    {
+        "serialNo": 7,
+        "districtOffice": "घोडाडोंगरी",
+        "block": "घोडाडोंगरी",
+        "totalShops": 25,
+        "monthlyAllocation": "2654.31",
+        "sectorName": "घोडाडोंगरी सेक्टर क्र 7",
+        "supervisor": "श्री मुकेश राठौर",
+        "mobile": "8319253402",
+        "transporter": "श्री मुकेश राठौर"
+    },
+    {
+        "serialNo": 8,
+        "districtOffice": "घोडाडोंगरी",
+        "block": "घोडाडोंगरी",
+        "totalShops": 26,
+        "monthlyAllocation": "2999.19",
+        "sectorName": "घोडाडोंगरी सेक्टर क्र 8",
+        "supervisor": "श्री अंकित राठौर",
+        "mobile": "9425006557",
+        "transporter": "श्री अंकित राठौर"
+    },
+    {
+        "serialNo": 9,
+        "districtOffice": "भीमपुर",
+        "block": "चिचोली",
+        "totalShops": 29,
+        "monthlyAllocation": "2559.39",
+        "sectorName": "चिचोली सेक्टर क्र 9",
+        "supervisor": "श्री सौरभ भारद्वाज",
+        "mobile": "8109700701",
+        "transporter": "श्री सौरभ भारद्वाज"
+    },
+    {
+        "serialNo": 10,
+        "districtOffice": "भीमपुर",
+        "block": "भीमपुर",
+        "totalShops": 25,
+        "monthlyAllocation": "2957.36",
+        "sectorName": "भीमपुर सेक्टर क्र 10",
+        "supervisor": "श्री नीलू रैचे",
+        "mobile": "9806081360",
+        "transporter": "श्री नीलू रैचे"
+    },
+    {
+        "serialNo": 11,
+        "districtOffice": "भीमपुर",
+        "block": "भीमपुर",
+        "totalShops": 22,
+        "monthlyAllocation": "2769.72",
+        "sectorName": "भीमपुर सेक्टर क्र 11",
+        "supervisor": "श्री पीयूष आर्य",
+        "mobile": "9977060636",
+        "transporter": "श्री पीयूष आर्य"
+    },
+    {
+        "serialNo": 12,
+        "districtOffice": "भैसदेही",
+        "block": "भैसदेही",
+        "totalShops": 29,
+        "sectorName": "भैसदेही सेक्टर क्र 12",
+        "supervisor": "श्री अभिषेक मालवीय",
+        "mobile": "9669921969",
+        "transporter": "श्री अभिषेक मालवीय"
+    },
+    {
+        "serialNo": 13,
+        "districtOffice": "भैसदेही",
+        "block": "भैसदेही",
+        "totalShops": 26,
+        "monthlyAllocation": "2932.57",
+        "sectorName": "भैसदेही सेक्टर क्र 13",
+        "supervisor": "श्री दिनेश लिखितकर",
+        "mobile": "9770142072",
+        "transporter": "श्री दिनेश लिखितकर"
+    },
+    {
+        "serialNo": 14,
+        "districtOffice": "आठनेर",
+        "block": "आठनेर",
+        "totalShops": 30,
+        "monthlyAllocation": "2747.75",
+        "sectorName": "आठनेर सेक्टर क्र 14",
+        "supervisor": "श्री सुभाष राठौर",
+        "mobile": "9406566700",
+        "transporter": "श्री सुभाष राठौर"
+    },
+    {
+        "serialNo": 15,
+        "districtOffice": "आठनेर",
+        "block": "आठनेर",
+        "totalShops": 25,
+        "monthlyAllocation": "2652.70",
+        "sectorName": "आठनेर सेक्टर क्र 15",
+        "supervisor": "श्री निलेश सोनी",
+        "mobile": "9754226851",
+        "transporter": "श्री निलेश सोनी"
+    },
+    {
+        "serialNo": 16,
+        "districtOffice": "प्रभातपटटन",
+        "block": "प्रभातपटटन",
+        "totalShops": 39,
+        "sectorName": "प्रभातपटटन सेक्टर क्र 16",
+        "supervisor": "श्री दुर्गादास सोनारे",
+        "mobile": "9975003109",
+        "transporter": "श्री दुर्गादास सोनारे"
+    },
+    {
+        "serialNo": 17,
+        "districtOffice": "प्रभातपटटन",
+        "block": "प्रभातपटटन",
+        "totalShops": 31,
+        "monthlyAllocation": "2693.90",
+        "sectorName": "प्रभातपटटन सेक्टर क्र 17",
+        "supervisor": "श्री ओमप्रकाश भोपते",
+        "mobile": "8989100399",
+        "transporter": "श्री ओमप्रकाश भोपते"
+    },
+    {
+        "serialNo": 18,
+        "districtOffice": "मुलताई",
+        "block": "मुलताई",
+        "totalShops": 37,
+        "sectorName": "मुलताई क्र सेक्टर 18",
+        "supervisor": "श्री जितेन्द्र सिंह",
+        "mobile": "9399942746",
+        "transporter": "श्री जितेन्द्र सिंह"
+    },
+    {
+        "serialNo": 19,
+        "districtOffice": "मुलताई",
+        "block": "मुलताई",
+        "totalShops": 39,
+        "monthlyAllocation": "3314.66",
+        "sectorName": "मुलताई सेक्टर क्र 19",
+        "supervisor": "श्री विरेन्द्र परिहार",
+        "mobile": "7389431405",
+        "transporter": "श्री विरेन्द्र परिहार"
+    },
+    {
+        "serialNo": 20,
+        "districtOffice": "आमला",
+        "block": "आमला",
+        "totalShops": 37,
+        "sectorName": "आमला सेक्टर क्र 20",
+        "supervisor": "श्री रविन्द्र सिंह तोमर",
+        "mobile": "9893903157",
+        "transporter": "श्री रविन्द्र सिंह तोमर"
+    },
+    {
+        "serialNo": 21,
+        "districtOffice": "आमला",
+        "block": "आमला",
+        "totalShops": 38,
+        "sectorName": "आमला सेक्टर क्र 21",
+        "supervisor": "श्री नीतेश साहू",
+        "mobile": "9755829852",
+        "transporter": "श्री नीतेश साहू"
+    },
+    {
+        "serialNo": 22,
+        "districtOffice": "भीमपुर",
+        "block": "भीमपुर",
+        "totalShops": 27,
+        "monthlyAllocation": "2603.77",
+        "sectorName": "भीमपुर सेक्टर क्र 22",
+        "supervisor": "श्री योगेश यादव",
+        "mobile": "7089363619",
+        "transporter": "श्री योगेश यादव"
+    }
+]

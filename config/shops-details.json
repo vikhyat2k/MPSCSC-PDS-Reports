@@ -1,0 +1,3312 @@
+{
+    "3101001": {
+        "shopName": "BHIMPUR",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101002": {
+        "shopName": "ADARSH PIPARIYA",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101003": {
+        "shopName": "CHIKHALI",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101004": {
+        "shopName": "KUND BAKAJAN",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101005": {
+        "shopName": "ADARSH DANORA",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101006": {
+        "shopName": "NANDA",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101007": {
+        "shopName": "PAT",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101008": {
+        "shopName": "RATANPUR",
+        "samitiId": "SC101224",
+        "shopType": "Rural"
+    },
+    "3101009": {
+        "shopName": "KUTANGA",
+        "samitiId": "SC101224",
+        "shopType": "Rural"
+    },
+    "3101010": {
+        "shopName": "JHAPAL",
+        "samitiId": "SC101224",
+        "shopType": "Rural"
+    },
+    "3101011": {
+        "shopName": "KHAMAPUR",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101012": {
+        "shopName": "BHANDWA",
+        "samitiId": "SC101224",
+        "shopType": "Rural"
+    },
+    "3101013": {
+        "shopName": "CHAKDHANA",
+        "samitiId": "SC101224",
+        "shopType": "Rural"
+    },
+    "3101014": {
+        "shopName": "PATRI",
+        "samitiId": "SC101224",
+        "shopType": "Rural"
+    },
+    "3101015": {
+        "shopName": "CHILLOR",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101016": {
+        "shopName": "VASINDA",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101017": {
+        "shopName": "KAMODH",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101018": {
+        "shopName": "KHIRA",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101019": {
+        "shopName": "GURUVA",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101020": {
+        "shopName": "PIPARIYA",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101021": {
+        "shopName": "KASMAR KHANDI",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101022": {
+        "shopName": "DHAMJIPURA",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101023": {
+        "shopName": "MAHATPUR",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101024": {
+        "shopName": "MOHATA",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101025": {
+        "shopName": "TETWI",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101026": {
+        "shopName": "DESLI",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101027": {
+        "shopName": "JHAKAS",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101028": {
+        "shopName": "KEKADIYA KALA",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101029": {
+        "shopName": "BATLA KALA",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101030": {
+        "shopName": "BOREKUND",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101031": {
+        "shopName": "DULARIYA",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101032": {
+        "shopName": "CHANDU",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101034": {
+        "shopName": "CHOHATA POPTI",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101035": {
+        "shopName": "KHUN KHEDI",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101036": {
+        "shopName": "DODA JAM",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101037": {
+        "shopName": "RATHAMATI",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101038": {
+        "shopName": "CHUNALOMA",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101039": {
+        "shopName": "DHAMANYA",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101040": {
+        "shopName": "JAMANYA",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101041": {
+        "shopName": "Sonajhar",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101042": {
+        "shopName": "IMLIDOH NAVEEN FOREST APURTI STORE",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101043": {
+        "shopName": "AAMPATHAR N.F. APURTI SOTRE",
+        "samitiId": "SC103224",
+        "shopType": "Rural"
+    },
+    "3101044": {
+        "shopName": "GHUTIYA N.F. APURTI SOTRE",
+        "samitiId": "SC103151",
+        "shopType": "Rural"
+    },
+    "3101045": {
+        "shopName": "LAPA N.F. APURTI SOTRE",
+        "samitiId": "SC103183",
+        "shopType": "Rural"
+    },
+    "3101046": {
+        "shopName": "TAWADI N.F. APURTI SOTRE",
+        "samitiId": "SC103160",
+        "shopType": "Rural"
+    },
+    "3101048": {
+        "shopName": "CHIKHALDA N.F. APURTI SOTRE",
+        "samitiId": "SC103213",
+        "shopType": "Rural"
+    },
+    "3101049": {
+        "shopName": "BEHADA - N.F. APURTI SOTRE",
+        "samitiId": "SC103220",
+        "shopType": "Rural"
+    },
+    "3101051": {
+        "shopName": "Takjhiri",
+        "samitiId": "SC103236",
+        "shopType": "Rural"
+    },
+    "3101052": {
+        "shopName": "MOHADA - N.F. APURTI STORES",
+        "samitiId": "SC103230",
+        "shopType": "Rural"
+    },
+    "3101053": {
+        "shopName": "PALANGA - N.F. APURTI STORES",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101054": {
+        "shopName": "MENDHA - N.F. APURTI STORES",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101057": {
+        "shopName": "Lakkadjam",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101058": {
+        "shopName": "palaspani",
+        "samitiId": "SC101207",
+        "shopType": "Rural"
+    },
+    "3101059": {
+        "shopName": "BHADUGAON- N.F- APURTI STRORES",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3101060": {
+        "shopName": "NEWRALONDU-N.F. APURTI STORES",
+        "samitiId": "SC103110",
+        "shopType": "Rural"
+    },
+    "3101061": {
+        "shopName": "BATLAKHURD",
+        "samitiId": "SC101219",
+        "shopType": "Rural"
+    },
+    "3101062": {
+        "shopName": "KAABRA",
+        "samitiId": "SC101214",
+        "shopType": "Rural"
+    },
+    "3101063": {
+        "shopName": "UTI",
+        "samitiId": "SC101533",
+        "shopType": "Rural"
+    },
+    "3101064": {
+        "shopName": "singarchavrdi",
+        "samitiId": "SC101554",
+        "shopType": "Rural"
+    },
+    "3102001": {
+        "shopName": "purna marketing society bhesdehi",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102002": {
+        "shopName": "JAMJHIRI",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102003": {
+        "shopName": "NAI GUDIYA",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102004": {
+        "shopName": "MAJARWANI",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102005": {
+        "shopName": "SIVANI",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102006": {
+        "shopName": "RAKSHI",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102007": {
+        "shopName": "BHELDHANA",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102008": {
+        "shopName": "CHOPNI",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102009": {
+        "shopName": "BHIVKUND",
+        "samitiId": "SC101201",
+        "shopType": "Rural"
+    },
+    "3102010": {
+        "shopName": "CHILKAPUR",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102011": {
+        "shopName": "DHAMANGAOV",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102012": {
+        "shopName": "RAM GHATI",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102014": {
+        "shopName": "NIPANYA",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102015": {
+        "shopName": "VIJAYGRAM",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102017": {
+        "shopName": "BASNER KALA",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102018": {
+        "shopName": "MALEGAOV",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102019": {
+        "shopName": "TEMGAOV",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102020": {
+        "shopName": "JALLAR - 1",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102022": {
+        "shopName": "AMLA",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102023": {
+        "shopName": "GOREGAOV",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102024": {
+        "shopName": "BOTHIYA",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102025": {
+        "shopName": "BORGAOV",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102026": {
+        "shopName": "CHICH DHANA",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102027": {
+        "shopName": "KHERPANI",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102028": {
+        "shopName": "SAWAK MENDHA",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102029": {
+        "shopName": "GHADARA JHIRI",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102030": {
+        "shopName": "KOTHAL KHUND",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102031": {
+        "shopName": "SALAI DHANA",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102032": {
+        "shopName": "UDAMA",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102033": {
+        "shopName": "GUGARI",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102034": {
+        "shopName": "PALAS PANI",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102035": {
+        "shopName": "KORDI",
+        "samitiId": "SC101192",
+        "shopType": "Rural"
+    },
+    "3102036": {
+        "shopName": "KOMAI",
+        "samitiId": "SC101184",
+        "shopType": "Rural"
+    },
+    "3102037": {
+        "shopName": "DHABA",
+        "samitiId": "SC101184",
+        "shopType": "Rural"
+    },
+    "3102038": {
+        "shopName": "MUKTAGIRI",
+        "samitiId": "SC101184",
+        "shopType": "Rural"
+    },
+    "3102039": {
+        "shopName": "KHAMLA",
+        "samitiId": "SC101183",
+        "shopType": "Rural"
+    },
+    "3102040": {
+        "shopName": "DHEDPANI",
+        "samitiId": "SC101183",
+        "shopType": "Rural"
+    },
+    "3102041": {
+        "shopName": "DHAR",
+        "samitiId": "SC101183",
+        "shopType": "Rural"
+    },
+    "3102042": {
+        "shopName": "KUKRU",
+        "samitiId": "SC101183",
+        "shopType": "Rural"
+    },
+    "3102043": {
+        "shopName": "MALANI",
+        "samitiId": "SC101184",
+        "shopType": "Rural"
+    },
+    "3102044": {
+        "shopName": "BANUR",
+        "samitiId": "SC101183",
+        "shopType": "Rural"
+    },
+    "3102045": {
+        "shopName": "SARADI",
+        "samitiId": "SC100854",
+        "shopType": "Rural"
+    },
+    "3102046": {
+        "shopName": "POHAR",
+        "samitiId": "SC100854",
+        "shopType": "Rural"
+    },
+    "3102047": {
+        "shopName": "KATOL",
+        "samitiId": "SC100854",
+        "shopType": "Rural"
+    },
+    "3102048": {
+        "shopName": "PARDI",
+        "samitiId": "SC100854",
+        "shopType": "Rural"
+    },
+    "3102049": {
+        "shopName": "DEDWA KUND",
+        "samitiId": "SC101184",
+        "shopType": "Rural"
+    },
+    "3102051": {
+        "shopName": "aadim jati seva sah bhesdehi",
+        "samitiId": "SC101201",
+        "shopType": "Urban"
+    },
+    "3102052": {
+        "shopName": "पूर्णा मार्के. सोसाइटी भैंसदेही",
+        "samitiId": "SC100854",
+        "shopType": "Urban"
+    },
+    "3102053": {
+        "shopName": "purna marketing society navapur",
+        "samitiId": "SC100854",
+        "shopType": "Rural"
+    },
+    "3102054": {
+        "shopName": "purna marketing society chicholidhan",
+        "samitiId": "SC100854",
+        "shopType": "Rural"
+    },
+    "3102055": {
+        "shopName": "purna marketing society pokhran",
+        "samitiId": "SC100854",
+        "shopType": "Urban"
+    },
+    "3102056": {
+        "shopName": "Temurni",
+        "samitiId": "SC101178",
+        "shopType": "Rural"
+    },
+    "3102058": {
+        "shopName": "PALASIYA",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3102059": {
+        "shopName": "शासकीय उचित मूल्य दुकान जामु",
+        "samitiId": "SC101204",
+        "shopType": "Rural"
+    },
+    "3102060": {
+        "shopName": "shashkiya uchit muly dukan rambha",
+        "samitiId": "SC101714",
+        "shopType": "Rural"
+    },
+    "3102061": {
+        "shopName": "shaskiya uchit muly dukan batki",
+        "samitiId": "SC101715",
+        "shopType": "Rural"
+    },
+    "3102065": {
+        "shopName": "BHODIYA KUND - N.F. APURTI STORES",
+        "samitiId": "SC101183",
+        "shopType": "Rural"
+    },
+    "3102066": {
+        "shopName": "GARPATHAR - N.F. APURTI STORES",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102067": {
+        "shopName": "PIPARIYA",
+        "samitiId": "SC101176",
+        "shopType": "Rural"
+    },
+    "3102068": {
+        "shopName": "KALDONGRI",
+        "samitiId": "SC101578",
+        "shopType": "Rural"
+    },
+    "3102069": {
+        "shopName": "PIPALNAKLA",
+        "samitiId": "SC101184",
+        "shopType": "Rural"
+    },
+    "3102070": {
+        "shopName": "shaskiya uchit muly dukan basner khurd",
+        "samitiId": "SC101713",
+        "shopType": "Rural"
+    },
+    "3102071": {
+        "shopName": "shaskiya uchit muly dukan koudi",
+        "samitiId": "SC105524",
+        "shopType": "Rural"
+    },
+    "3103001": {
+        "shopName": "ATHNARE - 1",
+        "samitiId": "SC101281",
+        "shopType": "Urban"
+    },
+    "3103002": {
+        "shopName": "ATHNARE - 2",
+        "samitiId": "SC101281",
+        "shopType": "Urban"
+    },
+    "3103003": {
+        "shopName": "ATHNARE - 3",
+        "samitiId": "SC101281",
+        "shopType": "Urban"
+    },
+    "3103004": {
+        "shopName": "DHAMORI",
+        "samitiId": "SC101281",
+        "shopType": "Rural"
+    },
+    "3103005": {
+        "shopName": "SAWANGI",
+        "samitiId": "SC101281",
+        "shopType": "Rural"
+    },
+    "3103006": {
+        "shopName": "HIWARA",
+        "samitiId": "SC101281",
+        "shopType": "Rural"
+    },
+    "3103007": {
+        "shopName": "MANDVI - 1",
+        "samitiId": "SC101055",
+        "shopType": "Rural"
+    },
+    "3103009": {
+        "shopName": "BORPANI",
+        "samitiId": "SC101055",
+        "shopType": "Rural"
+    },
+    "3103010": {
+        "shopName": "MUSA KHEDI",
+        "samitiId": "SC101055",
+        "shopType": "Rural"
+    },
+    "3103011": {
+        "shopName": "DEHAGUD",
+        "samitiId": "SC101055",
+        "shopType": "Rural"
+    },
+    "3103012": {
+        "shopName": "PANDURNA",
+        "samitiId": "SC101055",
+        "shopType": "Rural"
+    },
+    "3103013": {
+        "shopName": "BHISA GHAT",
+        "samitiId": "SC101055",
+        "shopType": "Rural"
+    },
+    "3103015": {
+        "shopName": "DHANORA",
+        "samitiId": "SC101048",
+        "shopType": "Rural"
+    },
+    "3103016": {
+        "shopName": "DHANORI",
+        "samitiId": "SC101048",
+        "shopType": "Rural"
+    },
+    "3103017": {
+        "shopName": "JAWRA",
+        "samitiId": "SC101048",
+        "shopType": "Rural"
+    },
+    "3103018": {
+        "shopName": "PUSLI",
+        "samitiId": "SC101058",
+        "shopType": "Rural"
+    },
+    "3103019": {
+        "shopName": "TEMURNI",
+        "samitiId": "SC101058",
+        "shopType": "Rural"
+    },
+    "3103020": {
+        "shopName": "YENKHEDA",
+        "samitiId": "SC101058",
+        "shopType": "Rural"
+    },
+    "3103021": {
+        "shopName": "GUNKHED",
+        "samitiId": "SC101058",
+        "shopType": "Rural"
+    },
+    "3103022": {
+        "shopName": "GUJARMAL",
+        "samitiId": "SC101058",
+        "shopType": "Rural"
+    },
+    "3103023": {
+        "shopName": "SATHNER-1",
+        "samitiId": "SC101062",
+        "shopType": "Rural"
+    },
+    "3103024": {
+        "shopName": "SATHNER - 2",
+        "samitiId": "SC101062",
+        "shopType": "Rural"
+    },
+    "3103025": {
+        "shopName": "BAKUD",
+        "samitiId": "SC101062",
+        "shopType": "Rural"
+    },
+    "3103026": {
+        "shopName": "UMARI",
+        "samitiId": "SC101062",
+        "shopType": "Rural"
+    },
+    "3103027": {
+        "shopName": "KOYALARI",
+        "samitiId": "SC101062",
+        "shopType": "Rural"
+    },
+    "3103028": {
+        "shopName": "BOTHI",
+        "samitiId": "SC101045",
+        "shopType": "Rural"
+    },
+    "3103029": {
+        "shopName": "AMBADA",
+        "samitiId": "SC101045",
+        "shopType": "Rural"
+    },
+    "3103030": {
+        "shopName": "KHAIRWADA",
+        "samitiId": "SC101045",
+        "shopType": "Rural"
+    },
+    "3103031": {
+        "shopName": "HIDLI",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103032": {
+        "shopName": "PANBEHARA",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103033": {
+        "shopName": "ASTI",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103034": {
+        "shopName": "MENDHA CHINDWADA",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103035": {
+        "shopName": "VADALI",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103036": {
+        "shopName": "GONDI GOGRA",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103037": {
+        "shopName": "BARKHED",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103038": {
+        "shopName": "BELKUND",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103039": {
+        "shopName": "ANDHER BHAVDI",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103040": {
+        "shopName": "HIRADEHI",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103041": {
+        "shopName": "KHEL BEHARA",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103042": {
+        "shopName": "MANI",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103043": {
+        "shopName": "KABLA",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103044": {
+        "shopName": "GARGUD",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103045": {
+        "shopName": "DHAYAWANI",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103046": {
+        "shopName": "PALASPANI (APURTI STORE)",
+        "samitiId": "SC103140",
+        "shopType": "Rural"
+    },
+    "3103047": {
+        "shopName": "TEMNI",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103048": {
+        "shopName": "BAIRAMDHANA - N.F. APURTI SOTRE",
+        "samitiId": "SC103146",
+        "shopType": "Rural"
+    },
+    "3103049": {
+        "shopName": "dabona",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103050": {
+        "shopName": "satkund",
+        "samitiId": "SC101036",
+        "shopType": "Rural"
+    },
+    "3103051": {
+        "shopName": "AADIM JATI SEWA SAHKARI SAMITI SUKI",
+        "samitiId": "SC101053",
+        "shopType": "Rural"
+    },
+    "3103052": {
+        "shopName": "शासकीय उचित मूल्‍य दुकान अक्‍कलवाडी",
+        "samitiId": "SC101712",
+        "shopType": "Rural"
+    },
+    "3104001": {
+        "shopName": "CHICHOLI - 1",
+        "samitiId": "SC101290",
+        "shopType": "Urban"
+    },
+    "3104002": {
+        "shopName": "CHICHOLI - 2",
+        "samitiId": "SC101290",
+        "shopType": "Urban"
+    },
+    "3104003": {
+        "shopName": "HARRAWADI",
+        "samitiId": "SC101290",
+        "shopType": "Rural"
+    },
+    "3104004": {
+        "shopName": "NASIRABAD",
+        "samitiId": "SC101290",
+        "shopType": "Rural"
+    },
+    "3104005": {
+        "shopName": "BORI",
+        "samitiId": "SC101290",
+        "shopType": "Rural"
+    },
+    "3104006": {
+        "shopName": "DUDIYA",
+        "samitiId": "SC101290",
+        "shopType": "Rural"
+    },
+    "3104007": {
+        "shopName": "DEVPUR KOTMI",
+        "samitiId": "SC101290",
+        "shopType": "Rural"
+    },
+    "3104008": {
+        "shopName": "MALAJPUR",
+        "samitiId": "SC101236",
+        "shopType": "Rural"
+    },
+    "3104009": {
+        "shopName": "KATKUHI",
+        "samitiId": "SC101236",
+        "shopType": "Rural"
+    },
+    "3104010": {
+        "shopName": "ROJHADA",
+        "samitiId": "SC101236",
+        "shopType": "Rural"
+    },
+    "3104011": {
+        "shopName": "NIVARI",
+        "samitiId": "SC101236",
+        "shopType": "Rural"
+    },
+    "3104012": {
+        "shopName": "JOGLI",
+        "samitiId": "SC101236",
+        "shopType": "Rural"
+    },
+    "3104013": {
+        "shopName": "CHUNA HUJURI",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104014": {
+        "shopName": "UNCHA GOHAN",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104015": {
+        "shopName": "ALAMPUR",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104016": {
+        "shopName": "DHANIYA JAM",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104017": {
+        "shopName": "PATAKHEDA",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104018": {
+        "shopName": "CHUDIYA",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104019": {
+        "shopName": "HARDU",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104020": {
+        "shopName": "CHIRAPATLA",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104021": {
+        "shopName": "BELA",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104022": {
+        "shopName": "KURSANA",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104023": {
+        "shopName": "CHURNI",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104024": {
+        "shopName": "GAVASEN",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104025": {
+        "shopName": "DHARIYAV GANJ",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104026": {
+        "shopName": "BALLORE",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104027": {
+        "shopName": "KHAPARIYA",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104028": {
+        "shopName": "TOKRA NAVIN VANGRAM APURTI STORES",
+        "samitiId": "SC101228",
+        "shopType": "Rural"
+    },
+    "3104030": {
+        "shopName": "CHICHOLI - 3 [shikhsk up.]",
+        "samitiId": "SC103384",
+        "shopType": "Urban"
+    },
+    "3104031": {
+        "shopName": "GODHANA",
+        "samitiId": "SC103384",
+        "shopType": "Rural"
+    },
+    "3104032": {
+        "shopName": "AMAPURA NAVIN VANGRAM APURTI STORES",
+        "samitiId": "SC103085",
+        "shopType": "Rural"
+    },
+    "3104033": {
+        "shopName": "KAMTA (APURTI STORE)",
+        "samitiId": "SC103092",
+        "shopType": "Rural"
+    },
+    "3104034": {
+        "shopName": "BALAI MAL CHUNA U",
+        "samitiId": "SC101233",
+        "shopType": "Rural"
+    },
+    "3104035": {
+        "shopName": "AAMDHANA KATKUHI",
+        "samitiId": "SC101236",
+        "shopType": "Rural"
+    },
+    "3104037": {
+        "shopName": "BARKHEDA - N.F. APURTI SOTRE",
+        "samitiId": "SC103088",
+        "shopType": "Rural"
+    },
+    "3104038": {
+        "shopName": "SANGWANI - N.F. APURTI STORE",
+        "samitiId": "SC103098",
+        "shopType": "Rural"
+    },
+    "3104039": {
+        "shopName": "ASARDI",
+        "samitiId": "SC101561",
+        "shopType": "Rural"
+    },
+    "3104040": {
+        "shopName": "bhigwa",
+        "samitiId": "SC101567",
+        "shopType": "Rural"
+    },
+    "3104041": {
+        "shopName": "उचित मूल्य दुकान ग्राम पंचायत गोडू मण्डई",
+        "samitiId": "SC103828",
+        "shopType": "Rural"
+    },
+    "3104042": {
+        "shopName": "उचित मूल्‍य दुकान बोड रैयत",
+        "samitiId": "SC103828",
+        "shopType": "Rural"
+    },
+    "3105001": {
+        "shopName": "SOHAGPUR",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105002": {
+        "shopName": "MILANPUR",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105003": {
+        "shopName": "ARUL",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105004": {
+        "shopName": "LAKHAPUR",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105005": {
+        "shopName": "BARSALI",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105006": {
+        "shopName": "NAHIYA",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105007": {
+        "shopName": "KANNADGAOV",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105008": {
+        "shopName": "BARAVI",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105009": {
+        "shopName": "GONDIGOLA",
+        "samitiId": "SC101628",
+        "shopType": "Rural"
+    },
+    "3105011": {
+        "shopName": "BAGHOLI",
+        "samitiId": "SC101628",
+        "shopType": "Rural"
+    },
+    "3105012": {
+        "shopName": "SAIKHANDARA",
+        "samitiId": "SC101628",
+        "shopType": "Rural"
+    },
+    "3105013": {
+        "shopName": "JAWRA",
+        "samitiId": "SC101628",
+        "shopType": "Rural"
+    },
+    "3105014": {
+        "shopName": "RONDA",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105015": {
+        "shopName": "DANORA",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105016": {
+        "shopName": "BHADUS",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105017": {
+        "shopName": "DONDWADA",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105018": {
+        "shopName": "KARAJGAOV",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105019": {
+        "shopName": "BADORA",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105020": {
+        "shopName": "BOGHITEDA",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105021": {
+        "shopName": "BARKAWADI",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105022": {
+        "shopName": "SURGAOV",
+        "samitiId": "SC101127",
+        "shopType": "Rural"
+    },
+    "3105023": {
+        "shopName": "SEHARA",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105024": {
+        "shopName": "KOLGAOV",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105025": {
+        "shopName": "AMDHAR",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105026": {
+        "shopName": "GHORAKHAR",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105027": {
+        "shopName": "JASONDI",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105028": {
+        "shopName": "DIWAN CHARSI",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105029": {
+        "shopName": "PIPLA",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105030": {
+        "shopName": "KHEDI SAWALIGHAD - 1",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105031": {
+        "shopName": "KHEDI SAWALIGHAD - 2",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105032": {
+        "shopName": "MAHADGAOV",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105033": {
+        "shopName": "DEHARGAOV",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105034": {
+        "shopName": "SELGAOV",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105035": {
+        "shopName": "SAWANGA",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105036": {
+        "shopName": "SARADA",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105037": {
+        "shopName": "HIWARKHEDI",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105038": {
+        "shopName": "MOVPANI",
+        "samitiId": "SC101158",
+        "shopType": "Rural"
+    },
+    "3105039": {
+        "shopName": "JEEN",
+        "samitiId": "SC101138",
+        "shopType": "Rural"
+    },
+    "3105040": {
+        "shopName": "BORGAOV",
+        "samitiId": "SC101138",
+        "shopType": "Rural"
+    },
+    "3105041": {
+        "shopName": "DANORA",
+        "samitiId": "SC101138",
+        "shopType": "Rural"
+    },
+    "3105042": {
+        "shopName": "TAHALI",
+        "samitiId": "SC101138",
+        "shopType": "Rural"
+    },
+    "3105043": {
+        "shopName": "RATAMATI",
+        "samitiId": "SC101138",
+        "shopType": "Rural"
+    },
+    "3105044": {
+        "shopName": "SENDURJANA",
+        "samitiId": "SC101138",
+        "shopType": "Rural"
+    },
+    "3105045": {
+        "shopName": "KHANDARA",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105046": {
+        "shopName": "KHEDLA",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105047": {
+        "shopName": "KHEDLI",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105048": {
+        "shopName": "BODI",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105049": {
+        "shopName": "MALKAPUR",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105050": {
+        "shopName": "BAJPUR",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105051": {
+        "shopName": "CHIKLAR",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105052": {
+        "shopName": "MARAMJHIRI",
+        "samitiId": "SC101133",
+        "shopType": "Rural"
+    },
+    "3105053": {
+        "shopName": "MANDAI BUJURG",
+        "samitiId": "SC101162",
+        "shopType": "Rural"
+    },
+    "3105054": {
+        "shopName": "KUMHARIYA",
+        "samitiId": "SC101162",
+        "shopType": "Rural"
+    },
+    "3105055": {
+        "shopName": "KADHAI",
+        "samitiId": "SC101162",
+        "shopType": "Rural"
+    },
+    "3105056": {
+        "shopName": "TEMNI",
+        "samitiId": "SC101162",
+        "shopType": "Rural"
+    },
+    "3105057": {
+        "shopName": "UDDHAN",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105058": {
+        "shopName": "SAKADEHI",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105059": {
+        "shopName": "BASPANI",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105060": {
+        "shopName": "KALYANPUR",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105061": {
+        "shopName": "LAWANYA",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105062": {
+        "shopName": "CHILLOT",
+        "samitiId": "SC103750",
+        "shopType": "Rural"
+    },
+    "3105063": {
+        "shopName": "LAPHAJHIRI",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105064": {
+        "shopName": "MATHNI",
+        "samitiId": "SC101140",
+        "shopType": "Rural"
+    },
+    "3105065": {
+        "shopName": "Neemjhiri",
+        "samitiId": "SC101169",
+        "shopType": "Rural"
+    },
+    "3105066": {
+        "shopName": "MOUVAD (APURTI STORE)",
+        "samitiId": "SC103124",
+        "shopType": "Rural"
+    },
+    "3105067": {
+        "shopName": "JILA THOK UP.BHANDAR",
+        "samitiId": "SC102760",
+        "shopType": "Urban"
+    },
+    "3105068": {
+        "shopName": "Prathmik Up.Sah. Bhandar Tikari",
+        "samitiId": "SC102776",
+        "shopType": "Urban"
+    },
+    "3105069": {
+        "shopName": "Ambedkar Prathmik Up.Sah. Bhandar",
+        "samitiId": "SC102639",
+        "shopType": "Urban"
+    },
+    "3105071": {
+        "shopName": "Shakti Mahila Pra.UP. Saha. Bhandar",
+        "samitiId": "SC102785",
+        "shopType": "Urban"
+    },
+    "3105072": {
+        "shopName": "Aadrsh Mahila Pra. Up.Bhandar",
+        "samitiId": "SC102636",
+        "shopType": "Urban"
+    },
+    "3105073": {
+        "shopName": "Dee Cleark Colony Aapurti Store",
+        "samitiId": "SC102791",
+        "shopType": "Urban"
+    },
+    "3105074": {
+        "shopName": "Mahila Pra.UP. Saha. Bhandar",
+        "samitiId": "SC101729",
+        "shopType": "Urban"
+    },
+    "3105075": {
+        "shopName": "Janseva Pra. Up. Saha. Bandar Sadar",
+        "samitiId": "SC102756",
+        "shopType": "Urban"
+    },
+    "3105076": {
+        "shopName": "Gondhwana Pra. Up.Saha. Bhandar Ganj - 01+02",
+        "samitiId": "SC101731",
+        "shopType": "Urban"
+    },
+    "3105078": {
+        "shopName": "Papular Vipnan Saha. Sa. Subhash ward, Ganj - 01",
+        "samitiId": "SC102654",
+        "shopType": "Urban"
+    },
+    "3105079": {
+        "shopName": "Papular Vipnan Saha. Sa. Malviya ward, Ganj - 02",
+        "samitiId": "SC102654",
+        "shopType": "Urban"
+    },
+    "3105082": {
+        "shopName": "ADIM JATI SEVA SAH. S. BETUL BAZAR - 01",
+        "samitiId": "SC101286",
+        "shopType": "Urban"
+    },
+    "3105083": {
+        "shopName": "ADIM JATI SEVA SAH. S. BETUL BAZAR - 02",
+        "samitiId": "SC101286",
+        "shopType": "Urban"
+    },
+    "3105085": {
+        "shopName": "SUVIDHA BHANDAR",
+        "samitiId": "SC102787",
+        "shopType": "Urban"
+    },
+    "3105086": {
+        "shopName": "Machana Pra.Up. Bhandar",
+        "samitiId": "SC102773",
+        "shopType": "Urban"
+    },
+    "3105087": {
+        "shopName": "SATPUDA BHANDAR",
+        "samitiId": "SC101729",
+        "shopType": "Urban"
+    },
+    "3105088": {
+        "shopName": "Swami Vivekand Pra.Up.Bhadar",
+        "samitiId": "SC101731",
+        "shopType": "Urban"
+    },
+    "3105090": {
+        "shopName": "Annpurna Pra. Up.Bhandar",
+        "samitiId": "SC102753",
+        "shopType": "Urban"
+    },
+    "3105091": {
+        "shopName": "KAMAL Pra. Up. Bhandar",
+        "samitiId": "SC102763",
+        "shopType": "Urban"
+    },
+    "3105092": {
+        "shopName": "Ayodhya Pra. UP. Bhandar",
+        "samitiId": "SC102644",
+        "shopType": "Urban"
+    },
+    "3105093": {
+        "shopName": "KODAROTI",
+        "samitiId": "SC101162",
+        "shopType": "Rural"
+    },
+    "3105094": {
+        "shopName": "SELGOAN (Barvhi)",
+        "samitiId": "SC101628",
+        "shopType": "Rural"
+    },
+    "3105095": {
+        "shopName": "papular marketing society rajendra ward ganj betul",
+        "samitiId": "SC102654",
+        "shopType": "Urban"
+    },
+    "3105096": {
+        "shopName": "KUMHARTEK - N.F. APURTI SOTRE",
+        "samitiId": "SC103113",
+        "shopType": "Rural"
+    },
+    "3105097": {
+        "shopName": "Veer Chandrashekhar Pra. sha. Up. Bandar Sadar",
+        "samitiId": "SC102793",
+        "shopType": "Urban"
+    },
+    "3105098": {
+        "shopName": "saajpur van aapurti store n",
+        "samitiId": "SC103130",
+        "shopType": "Rural"
+    },
+    "3105099": {
+        "shopName": "JAITAPUR",
+        "samitiId": "SC102654",
+        "shopType": "Rural"
+    },
+    "3105100": {
+        "shopName": "KUMHLI",
+        "samitiId": "SC102760",
+        "shopType": "Rural"
+    },
+    "3105101": {
+        "shopName": "GURDI",
+        "samitiId": "SC101652",
+        "shopType": "Rural"
+    },
+    "3105102": {
+        "shopName": "MANDAIKHURD",
+        "samitiId": "SC101660",
+        "shopType": "Rural"
+    },
+    "3105103": {
+        "shopName": "THAWARDI",
+        "samitiId": "SC102654",
+        "shopType": "Rural"
+    },
+    "3105104": {
+        "shopName": "BHAYAWADI",
+        "samitiId": "SC101729",
+        "shopType": "Rural"
+    },
+    "3105106": {
+        "shopName": "CHARBAN",
+        "samitiId": "SC101695",
+        "shopType": "Rural"
+    },
+    "3105107": {
+        "shopName": "BHAINSDEHI",
+        "samitiId": "SC101667",
+        "shopType": "Rural"
+    },
+    "3105108": {
+        "shopName": "HATNAJHIRI",
+        "samitiId": "SC101670",
+        "shopType": "Rural"
+    },
+    "3105109": {
+        "shopName": "Borikas",
+        "samitiId": "SC101116",
+        "shopType": "Rural"
+    },
+    "3105110": {
+        "shopName": "उचित मूल्‍य दुकान देवगांव चौकी",
+        "samitiId": "SC101705",
+        "shopType": "Rural"
+    },
+    "3105111": {
+        "shopName": "उचित मूल्‍य दुकान रेढवा",
+        "samitiId": "SC101706",
+        "shopType": "Rural"
+    },
+    "3106001": {
+        "shopName": "GHORADONGRI - 1",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106002": {
+        "shopName": "GHORADONGRI - 2",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106003": {
+        "shopName": "JUWADI",
+        "samitiId": "SC101674",
+        "shopType": "Rural"
+    },
+    "3106004": {
+        "shopName": "PANDRA",
+        "samitiId": "SC101254",
+        "shopType": "Rural"
+    },
+    "3106005": {
+        "shopName": "MEHAKAR",
+        "samitiId": "SC101683",
+        "shopType": "Rural"
+    },
+    "3106006": {
+        "shopName": "RATAMATI",
+        "samitiId": "SC103258",
+        "shopType": "Rural"
+    },
+    "3106007": {
+        "shopName": "PHUL GOHAN",
+        "samitiId": "SC101254",
+        "shopType": "Rural"
+    },
+    "3106008": {
+        "shopName": "CHOPNA (GUGGI)",
+        "samitiId": "SC103258",
+        "shopType": "Rural"
+    },
+    "3106009": {
+        "shopName": "LONIYA",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106010": {
+        "shopName": "KHERVANI",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106011": {
+        "shopName": "CHATTARPUR",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106012": {
+        "shopName": "BAKUD",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106013": {
+        "shopName": "JAMKODAR",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106014": {
+        "shopName": "SHOBAPUR",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106015": {
+        "shopName": "RANIPUR",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106016": {
+        "shopName": "SIVANPAT",
+        "samitiId": "SC101258",
+        "shopType": "Rural"
+    },
+    "3106017": {
+        "shopName": "CHIKALI AMDHANA",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106018": {
+        "shopName": "KUHI",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106019": {
+        "shopName": "CHURI",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106020": {
+        "shopName": "SITHA KAMAT",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106021": {
+        "shopName": "SUKHA DHANA",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106022": {
+        "shopName": "SALAYA",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106023": {
+        "shopName": "KOLGAOV",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106024": {
+        "shopName": "DERI AMDHANA",
+        "samitiId": "SC101238",
+        "shopType": "Rural"
+    },
+    "3106025": {
+        "shopName": "PISAJHODI",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106026": {
+        "shopName": "NEEMPANI",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106027": {
+        "shopName": "CHIKALI",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106028": {
+        "shopName": "DOLIDHANA",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106029": {
+        "shopName": "KHARI",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106030": {
+        "shopName": "PACHAMA",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106031": {
+        "shopName": "CHOPANA",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106032": {
+        "shopName": "BADALPUR",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106033": {
+        "shopName": "GOPINAD PUR",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106034": {
+        "shopName": "HEERAPUR",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106035": {
+        "shopName": "JHOLI",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106036": {
+        "shopName": "AMDOH",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106037": {
+        "shopName": "GOLAI KURDH",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106038": {
+        "shopName": "BATKIDOH",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106039": {
+        "shopName": "SAKTIGHAD",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106040": {
+        "shopName": "GOPALPUR",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106041": {
+        "shopName": "GOLAI BUJURG",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106042": {
+        "shopName": "RAMPUR BATODI",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106043": {
+        "shopName": "NUTAN DANGA",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106044": {
+        "shopName": "BANJARI DAL",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3106045": {
+        "shopName": "SATALDEHI",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3106046": {
+        "shopName": "PADAR",
+        "samitiId": "SC102760",
+        "shopType": "Rural"
+    },
+    "3106047": {
+        "shopName": "MENDAPANI",
+        "samitiId": "SC102760",
+        "shopType": "Rural"
+    },
+    "3106048": {
+        "shopName": "BANSBODI - N.F. APURTI STORES",
+        "samitiId": "SC103258",
+        "shopType": "Rural"
+    },
+    "3106049": {
+        "shopName": "1-wcl karmachari up sah pathakeda",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106050": {
+        "shopName": "2-wcl karmachari up sah pathakeda",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106051": {
+        "shopName": "3-wcl karmachari up sah pathakeda",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106052": {
+        "shopName": "4-wcl karmachari up sah pathakeda",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106053": {
+        "shopName": "5-wcl karmachari up sah pathakeda",
+        "samitiId": "SC102803",
+        "shopType": "Urban"
+    },
+    "3106054": {
+        "shopName": "6-wcl karmachari up sah pathakeda-1",
+        "samitiId": "SC102798",
+        "shopType": "Urban"
+    },
+    "3106055": {
+        "shopName": "7-aadarsh prathmik upbhokta bhandar sarni",
+        "samitiId": "SC102798",
+        "shopType": "Urban"
+    },
+    "3106056": {
+        "shopName": "8-aadarsh prathmik upbhokta bhandar sarni",
+        "samitiId": "SC102798",
+        "shopType": "Urban"
+    },
+    "3106057": {
+        "shopName": "9-kalari karmachari sah up bhandar-1",
+        "samitiId": "SC102800",
+        "shopType": "Urban"
+    },
+    "3106058": {
+        "shopName": "10-kalari karmachari sah up bhandar-2",
+        "samitiId": "SC102800",
+        "shopType": "Urban"
+    },
+    "3106059": {
+        "shopName": "prathmik krashi sakh sah sanshtha aamla -1",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106060": {
+        "shopName": "Koliya Up. Dukan",
+        "samitiId": "SC101261",
+        "shopType": "Rural"
+    },
+    "3106061": {
+        "shopName": "KHADARA - N.F. APURTI SOTRE",
+        "samitiId": "SC103263",
+        "shopType": "Rural"
+    },
+    "3106062": {
+        "shopName": "IMALIKHERDA VAN AAPURTI STORE",
+        "samitiId": "SC103306",
+        "shopType": "Rural"
+    },
+    "3106063": {
+        "shopName": "MAHENDRWADI",
+        "samitiId": "SC101674",
+        "shopType": "Rural"
+    },
+    "3106064": {
+        "shopName": "DHASED",
+        "samitiId": "SC101675",
+        "shopType": "Rural"
+    },
+    "3106065": {
+        "shopName": "VIKRAMPUR",
+        "samitiId": "SC101698",
+        "shopType": "Rural"
+    },
+    "3106066": {
+        "shopName": "BANSPUR",
+        "samitiId": "SC101677",
+        "shopType": "Rural"
+    },
+    "3106067": {
+        "shopName": "BHOGAIKHAPA",
+        "samitiId": "SC101680",
+        "shopType": "Rural"
+    },
+    "3106068": {
+        "shopName": "RATANPUR",
+        "samitiId": "SC101683",
+        "shopType": "Rural"
+    },
+    "3106069": {
+        "shopName": "ANKAWADI",
+        "samitiId": "SC101685",
+        "shopType": "Rural"
+    },
+    "3106070": {
+        "shopName": "KANHAWADI",
+        "samitiId": "SC101688",
+        "shopType": "Rural"
+    },
+    "3106071": {
+        "shopName": "Zila Thok Upbhokta Sahakari Bhandar",
+        "samitiId": "SC102760",
+        "shopType": "Rural"
+    },
+    "3106072": {
+        "shopName": "jhadkund",
+        "samitiId": "SC101263",
+        "shopType": "Rural"
+    },
+    "3106073": {
+        "shopName": "उचित मूल्य की दुकान खापा",
+        "samitiId": "SC101693",
+        "shopType": "Rural"
+    },
+    "3107001": {
+        "shopName": "SHAHPUR",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107002": {
+        "shopName": "PATAVUPURA",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107003": {
+        "shopName": "MOTI DHANA",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107004": {
+        "shopName": "PATAI",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107005": {
+        "shopName": "SILPATI",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107006": {
+        "shopName": "PAHAWADI",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107007": {
+        "shopName": "PAWARJHANDA",
+        "samitiId": "SC103285",
+        "shopType": "Rural"
+    },
+    "3107008": {
+        "shopName": "BAYAWADI",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107009": {
+        "shopName": "DESHAWADI",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107010": {
+        "shopName": "BARETA",
+        "samitiId": "SC103298",
+        "shopType": "Rural"
+    },
+    "3107011": {
+        "shopName": "MOKHA",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107012": {
+        "shopName": "JHILPA - N.F. APURTI STORES",
+        "samitiId": "SC103329",
+        "shopType": "Rural"
+    },
+    "3107013": {
+        "shopName": "BHOURA",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107014": {
+        "shopName": "KUNDI",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107015": {
+        "shopName": "DHAPADA",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107016": {
+        "shopName": "GUVADI",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107017": {
+        "shopName": "SALIMET",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107018": {
+        "shopName": "KACHAR",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107019": {
+        "shopName": "BANABEDA",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107020": {
+        "shopName": "KOTHA - N.F. APURTI STORES",
+        "samitiId": "SC103337",
+        "shopType": "Rural"
+    },
+    "3107021": {
+        "shopName": "JHAPADI",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107022": {
+        "shopName": "BIJADEHI",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107023": {
+        "shopName": "POPALYA",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107024": {
+        "shopName": "BARJORPUR",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107025": {
+        "shopName": "DODRAMOV",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107026": {
+        "shopName": "DABRI",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107027": {
+        "shopName": "KAJALI",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107028": {
+        "shopName": "CHIKALI",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107029": {
+        "shopName": "DUMKA",
+        "samitiId": "SC101277",
+        "shopType": "Rural"
+    },
+    "3107030": {
+        "shopName": "KESIYA",
+        "samitiId": "SC101273",
+        "shopType": "Rural"
+    },
+    "3107031": {
+        "shopName": "AWARIYA",
+        "samitiId": "SC101273",
+        "shopType": "Rural"
+    },
+    "3107032": {
+        "shopName": "KANHEGAOV",
+        "samitiId": "SC101273",
+        "shopType": "Rural"
+    },
+    "3107033": {
+        "shopName": "TARA",
+        "samitiId": "SC101273",
+        "shopType": "Rural"
+    },
+    "3107034": {
+        "shopName": "RAMPUR",
+        "samitiId": "SC101273",
+        "shopType": "Rural"
+    },
+    "3107035": {
+        "shopName": "KOKRA",
+        "samitiId": "SC101273",
+        "shopType": "Rural"
+    },
+    "3107036": {
+        "shopName": "BOD NAVEEN F. (APURTI STORE)",
+        "samitiId": "SC103353",
+        "shopType": "Rural"
+    },
+    "3107037": {
+        "shopName": "SAWARIDA NAVEEN F. (APURTI STORE)",
+        "samitiId": "SC103358",
+        "shopType": "Rural"
+    },
+    "3107038": {
+        "shopName": "PAT NAVEEN F. (APURTI STORE)",
+        "samitiId": "SC103356",
+        "shopType": "Rural"
+    },
+    "3107039": {
+        "shopName": "Kotmi",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107040": {
+        "shopName": "Raipur",
+        "samitiId": "SC101266",
+        "shopType": "Rural"
+    },
+    "3107041": {
+        "shopName": "Gurgunda",
+        "samitiId": "SC101275",
+        "shopType": "Rural"
+    },
+    "3107043": {
+        "shopName": "KUPPA - N.F. APURTI SOTRE",
+        "samitiId": "SC103319",
+        "shopType": "Rural"
+    },
+    "3107044": {
+        "shopName": "HANDIPANI - N.F. APURTI SOTRE",
+        "samitiId": "SC103337",
+        "shopType": "Rural"
+    },
+    "3107045": {
+        "shopName": "KHARWAR - N.F. APURTI SOTRE",
+        "samitiId": "SC103323",
+        "shopType": "Rural"
+    },
+    "3107046": {
+        "shopName": "NISHANA - N.F. APURTI SOTRE",
+        "samitiId": "SC103298",
+        "shopType": "Rural"
+    },
+    "3107048": {
+        "shopName": "MUDHA - N.F. APURTI SOTRE",
+        "samitiId": "SC103280",
+        "shopType": "Rural"
+    },
+    "3107049": {
+        "shopName": "PAWARJHANDA - N.F. APURTI SOTRE",
+        "samitiId": "SC103285",
+        "shopType": "Rural"
+    },
+    "3107050": {
+        "shopName": "Bondri N.F. APURTI SOTRE",
+        "samitiId": "SC103346",
+        "shopType": "Rural"
+    },
+    "3107051": {
+        "shopName": "TEMRAMAL - N.F. APURTI STORE",
+        "samitiId": "SC103343",
+        "shopType": "Rural"
+    },
+    "3107052": {
+        "shopName": "उचित मूल्य दुकान सेहरा",
+        "samitiId": "SC101716",
+        "shopType": "Rural"
+    },
+    "3107053": {
+        "shopName": "उचित मूल्य दुकान खापा",
+        "samitiId": "SC101694",
+        "shopType": "Rural"
+    },
+    "3107054": {
+        "shopName": "उचित मूल्‍य दुकान शीतलझिरी",
+        "samitiId": "SC113919",
+        "shopType": "Rural"
+    },
+    "3108001": {
+        "shopName": "TURANWADA",
+        "samitiId": "SC101500",
+        "shopType": "Rural"
+    },
+    "3108002": {
+        "shopName": "KANOJIYA",
+        "samitiId": "SC101500",
+        "shopType": "Rural"
+    },
+    "3108003": {
+        "shopName": "TANI",
+        "samitiId": "SC101500",
+        "shopType": "Rural"
+    },
+    "3108004": {
+        "shopName": "ANDHARIYA",
+        "samitiId": "SC100733",
+        "shopType": "Rural"
+    },
+    "3108005": {
+        "shopName": "SASAWAD - 1",
+        "samitiId": "SC100733",
+        "shopType": "Rural"
+    },
+    "3108006": {
+        "shopName": "SASAWAD - 2",
+        "samitiId": "SC100733",
+        "shopType": "Rural"
+    },
+    "3108007": {
+        "shopName": "NANDPUR",
+        "samitiId": "SC100733",
+        "shopType": "Rural"
+    },
+    "3108008": {
+        "shopName": "RAMLI",
+        "samitiId": "SC100733",
+        "shopType": "Rural"
+    },
+    "3108009": {
+        "shopName": "CHIPANYA PIPARIYA",
+        "samitiId": "SC101086",
+        "shopType": "Rural"
+    },
+    "3108010": {
+        "shopName": "NARERA",
+        "samitiId": "SC101086",
+        "shopType": "Rural"
+    },
+    "3108011": {
+        "shopName": "JAMBADA",
+        "samitiId": "SC101632",
+        "shopType": "Rural"
+    },
+    "3108012": {
+        "shopName": "KUTKHEDI",
+        "samitiId": "SC101632",
+        "shopType": "Rural"
+    },
+    "3108013": {
+        "shopName": "RATEDAKALA",
+        "samitiId": "SC101093",
+        "shopType": "Rural"
+    },
+    "3108014": {
+        "shopName": "CHAVAL",
+        "samitiId": "SC101093",
+        "shopType": "Rural"
+    },
+    "3108015": {
+        "shopName": "DEVGAOV",
+        "samitiId": "SC101093",
+        "shopType": "Rural"
+    },
+    "3108016": {
+        "shopName": "BORI",
+        "samitiId": "SC101093",
+        "shopType": "Rural"
+    },
+    "3108017": {
+        "shopName": "KHAPA",
+        "samitiId": "SC101093",
+        "shopType": "Rural"
+    },
+    "3108018": {
+        "shopName": "SASUNDRA",
+        "samitiId": "SC101096",
+        "shopType": "Rural"
+    },
+    "3108019": {
+        "shopName": "BELMANDAI",
+        "samitiId": "SC101096",
+        "shopType": "Rural"
+    },
+    "3108020": {
+        "shopName": "BOTHIYA",
+        "samitiId": "SC101096",
+        "shopType": "Rural"
+    },
+    "3108021": {
+        "shopName": "TIRUMOV",
+        "samitiId": "SC101098",
+        "shopType": "Rural"
+    },
+    "3108022": {
+        "shopName": "HARDOLI",
+        "samitiId": "SC101098",
+        "shopType": "Rural"
+    },
+    "3108023": {
+        "shopName": "PARSODA",
+        "samitiId": "SC101098",
+        "shopType": "Rural"
+    },
+    "3108024": {
+        "shopName": "LALAWADI",
+        "samitiId": "SC101098",
+        "shopType": "Rural"
+    },
+    "3108025": {
+        "shopName": "BARANGWADI",
+        "samitiId": "SC101073",
+        "shopType": "Rural"
+    },
+    "3108026": {
+        "shopName": "JAMDEHI",
+        "samitiId": "SC101073",
+        "shopType": "Rural"
+    },
+    "3108027": {
+        "shopName": "KOTIYA",
+        "samitiId": "SC101073",
+        "shopType": "Rural"
+    },
+    "3108028": {
+        "shopName": "SONEGAOV",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108029": {
+        "shopName": "RAJEGAOV",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108030": {
+        "shopName": "BRAHMANWADA",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108031": {
+        "shopName": "BICHUVA",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108032": {
+        "shopName": "BABARBOH",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108033": {
+        "shopName": "UMARIYA",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108034": {
+        "shopName": "KOTAR KHAPA",
+        "samitiId": "SC101108",
+        "shopType": "Rural"
+    },
+    "3108035": {
+        "shopName": "CHOPNA",
+        "samitiId": "SC101742",
+        "shopType": "Rural"
+    },
+    "3108036": {
+        "shopName": "ITAVA",
+        "samitiId": "SC101742",
+        "shopType": "Rural"
+    },
+    "3108037": {
+        "shopName": "GHATAWADI",
+        "samitiId": "SC101742",
+        "shopType": "Rural"
+    },
+    "3108038": {
+        "shopName": "DEHARI",
+        "samitiId": "SC101742",
+        "shopType": "Rural"
+    },
+    "3108039": {
+        "shopName": "HATNORA",
+        "samitiId": "SC101742",
+        "shopType": "Rural"
+    },
+    "3108040": {
+        "shopName": "KHEDLI BAZAR",
+        "samitiId": "SC101103",
+        "shopType": "Rural"
+    },
+    "3108041": {
+        "shopName": "KUJABA",
+        "samitiId": "SC101103",
+        "shopType": "Rural"
+    },
+    "3108042": {
+        "shopName": "MORKHA",
+        "samitiId": "SC101111",
+        "shopType": "Rural"
+    },
+    "3108043": {
+        "shopName": "KATI",
+        "samitiId": "SC101102",
+        "shopType": "Rural"
+    },
+    "3108044": {
+        "shopName": "TARODA BUZURG",
+        "samitiId": "SC101102",
+        "shopType": "Rural"
+    },
+    "3108045": {
+        "shopName": "DUDARIYA",
+        "samitiId": "SC101102",
+        "shopType": "Rural"
+    },
+    "3108046": {
+        "shopName": "GUBREL",
+        "samitiId": "SC101102",
+        "shopType": "Rural"
+    },
+    "3108047": {
+        "shopName": "LELAJHAR",
+        "samitiId": "SC101102",
+        "shopType": "Rural"
+    },
+    "3108048": {
+        "shopName": "BOREDEHI",
+        "samitiId": "SC101598",
+        "shopType": "Rural"
+    },
+    "3108049": {
+        "shopName": "HARANYA",
+        "samitiId": "SC101598",
+        "shopType": "Rural"
+    },
+    "3108050": {
+        "shopName": "MALEGAOV",
+        "samitiId": "SC101598",
+        "shopType": "Rural"
+    },
+    "3108051": {
+        "shopName": "DANGARIYA",
+        "samitiId": "SC101087",
+        "shopType": "Rural"
+    },
+    "3108052": {
+        "shopName": "BARCHI",
+        "samitiId": "SC101087",
+        "shopType": "Rural"
+    },
+    "3108053": {
+        "shopName": "TARODA KALA",
+        "samitiId": "SC101087",
+        "shopType": "Rural"
+    },
+    "3108054": {
+        "shopName": "KALMESHWARA",
+        "samitiId": "SC101091",
+        "shopType": "Rural"
+    },
+    "3108055": {
+        "shopName": "RIKHDI",
+        "samitiId": "SC101091",
+        "shopType": "Rural"
+    },
+    "3108056": {
+        "shopName": "KHADE PIPARIYA",
+        "samitiId": "SC101091",
+        "shopType": "Rural"
+    },
+    "3108057": {
+        "shopName": "JAMUN BICHUVA",
+        "samitiId": "SC101091",
+        "shopType": "Rural"
+    },
+    "3108059": {
+        "shopName": "प्रा. क्रषि साख सह. संस्था आमला-1",
+        "samitiId": "SC101500",
+        "shopType": "Urban"
+    },
+    "3108060": {
+        "shopName": "prathmik krashi sakh sah sanshtha aamla -2",
+        "samitiId": "SC101500",
+        "shopType": "Urban"
+    },
+    "3108061": {
+        "shopName": "madhya railway pra up bhandar aamla",
+        "samitiId": "SC102608",
+        "shopType": "Urban"
+    },
+    "3108062": {
+        "shopName": "vipanan sah samiti aamla bhodhki",
+        "samitiId": "SC101500",
+        "shopType": "Urban"
+    },
+    "3108063": {
+        "shopName": "LADI",
+        "samitiId": "SC103027",
+        "shopType": "Rural"
+    },
+    "3108064": {
+        "shopName": "SURNADEHI N.F. APURTI SOTRE",
+        "samitiId": "SC103027",
+        "shopType": "Rural"
+    },
+    "3108065": {
+        "shopName": "awariya",
+        "samitiId": "SC103627",
+        "shopType": "Rural"
+    },
+    "3108066": {
+        "shopName": "prathmik krashi sakh sah sanshtha redas ward aamla-3",
+        "samitiId": "SC102607",
+        "shopType": "Urban"
+    },
+    "3108067": {
+        "shopName": "parsodi",
+        "samitiId": "SC101500",
+        "shopType": "Rural"
+    },
+    "3108068": {
+        "shopName": "biskhan",
+        "samitiId": "SC101102",
+        "shopType": "Rural"
+    },
+    "3108069": {
+        "shopName": "RANIDONGRI",
+        "samitiId": "SC103677",
+        "shopType": "Rural"
+    },
+    "3108070": {
+        "shopName": "BAMLA",
+        "samitiId": "SC101091",
+        "shopType": "Rural"
+    },
+    "3108071": {
+        "shopName": "DEVPIPARIYA",
+        "samitiId": "SC101093",
+        "shopType": "Rural"
+    },
+    "3108072": {
+        "shopName": "JAMDEHI KHURD",
+        "samitiId": "SC101073",
+        "shopType": "Rural"
+    },
+    "3108073": {
+        "shopName": "RAMBHAKHEDI",
+        "samitiId": "SC103644",
+        "shopType": "Rural"
+    },
+    "3108074": {
+        "shopName": "DIPAMANDAI",
+        "samitiId": "SC101696",
+        "shopType": "Rural"
+    },
+    "3108075": {
+        "shopName": "उचित मूल्‍य दुकान सोमलापुर",
+        "samitiId": "SC103683",
+        "shopType": "Rural"
+    },
+    "3108076": {
+        "shopName": "उचित मूल्‍य दुकान जम्‍बाडीखुर्द",
+        "samitiId": "SC103680",
+        "shopType": "Rural"
+    },
+    "3109001": {
+        "shopName": "PARAMANDAL",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109002": {
+        "shopName": "VALANI",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109003": {
+        "shopName": "BHILAI",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109004": {
+        "shopName": "CHANDORA",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109005": {
+        "shopName": "KARAPPA",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109006": {
+        "shopName": "DEVRI",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109007": {
+        "shopName": "CHIKALIKURDH",
+        "samitiId": "SC101439",
+        "shopType": "Rural"
+    },
+    "3109008": {
+        "shopName": "JAWAL KHEDA",
+        "samitiId": "SC101415",
+        "shopType": "Rural"
+    },
+    "3109009": {
+        "shopName": "MOHI",
+        "samitiId": "SC101415",
+        "shopType": "Rural"
+    },
+    "3109010": {
+        "shopName": "NIRGHUD",
+        "samitiId": "SC101415",
+        "shopType": "Rural"
+    },
+    "3109011": {
+        "shopName": "DIWATIYA",
+        "samitiId": "SC101415",
+        "shopType": "Rural"
+    },
+    "3109012": {
+        "shopName": "KHATEDA KALA",
+        "samitiId": "SC101425",
+        "shopType": "Rural"
+    },
+    "3109013": {
+        "shopName": "SARRA",
+        "samitiId": "SC101425",
+        "shopType": "Rural"
+    },
+    "3109014": {
+        "shopName": "TEMGHIRA",
+        "samitiId": "SC101425",
+        "shopType": "Rural"
+    },
+    "3109015": {
+        "shopName": "BARRAI",
+        "samitiId": "SC101425",
+        "shopType": "Rural"
+    },
+    "3109016": {
+        "shopName": "SEMJHIRA",
+        "samitiId": "SC101441",
+        "shopType": "Rural"
+    },
+    "3109017": {
+        "shopName": "UBHARIYA",
+        "samitiId": "SC101441",
+        "shopType": "Rural"
+    },
+    "3109018": {
+        "shopName": "BANUR",
+        "samitiId": "SC101441",
+        "shopType": "Rural"
+    },
+    "3109019": {
+        "shopName": "YENAS",
+        "samitiId": "SC101441",
+        "shopType": "Rural"
+    },
+    "3109020": {
+        "shopName": "BOTHIYA",
+        "samitiId": "SC101441",
+        "shopType": "Rural"
+    },
+    "3109021": {
+        "shopName": "JAMBADI",
+        "samitiId": "SC101441",
+        "shopType": "Rural"
+    },
+    "3109022": {
+        "shopName": "SANDIYA",
+        "samitiId": "SC101440",
+        "shopType": "Rural"
+    },
+    "3109023": {
+        "shopName": "SONORA",
+        "samitiId": "SC101440",
+        "shopType": "Rural"
+    },
+    "3109024": {
+        "shopName": "PISATA",
+        "samitiId": "SC101440",
+        "shopType": "Rural"
+    },
+    "3109025": {
+        "shopName": "CHOTHIYA",
+        "samitiId": "SC101440",
+        "shopType": "Rural"
+    },
+    "3109026": {
+        "shopName": "JAMGAOV",
+        "samitiId": "SC101440",
+        "shopType": "Rural"
+    },
+    "3109027": {
+        "shopName": "MALEGAOV",
+        "samitiId": "SC101636",
+        "shopType": "Rural"
+    },
+    "3109028": {
+        "shopName": "BAGHOLI",
+        "samitiId": "SC101636",
+        "shopType": "Rural"
+    },
+    "3109029": {
+        "shopName": "PADARSINGA",
+        "samitiId": "SC101636",
+        "shopType": "Rural"
+    },
+    "3109030": {
+        "shopName": "HATANAPUR",
+        "samitiId": "SC101636",
+        "shopType": "Rural"
+    },
+    "3109031": {
+        "shopName": "BARKHED",
+        "samitiId": "SC101405",
+        "shopType": "Rural"
+    },
+    "3109032": {
+        "shopName": "PANDRI",
+        "samitiId": "SC101405",
+        "shopType": "Rural"
+    },
+    "3109033": {
+        "shopName": "PIPARIYA",
+        "samitiId": "SC101405",
+        "shopType": "Rural"
+    },
+    "3109034": {
+        "shopName": "JAM",
+        "samitiId": "SC101405",
+        "shopType": "Rural"
+    },
+    "3109035": {
+        "shopName": "BHISADHAND",
+        "samitiId": "SC101405",
+        "shopType": "Rural"
+    },
+    "3109036": {
+        "shopName": "DAHUA",
+        "samitiId": "SC101413",
+        "shopType": "Rural"
+    },
+    "3109037": {
+        "shopName": "KHAIRWANI",
+        "samitiId": "SC101413",
+        "shopType": "Rural"
+    },
+    "3109038": {
+        "shopName": "PARBIROLI",
+        "samitiId": "SC101413",
+        "shopType": "Rural"
+    },
+    "3109039": {
+        "shopName": "CHIKALI KALA",
+        "samitiId": "SC101410",
+        "shopType": "Rural"
+    },
+    "3109040": {
+        "shopName": "KAPASIYA",
+        "samitiId": "SC101410",
+        "shopType": "Rural"
+    },
+    "3109041": {
+        "shopName": "RIGHORA",
+        "samitiId": "SC101410",
+        "shopType": "Rural"
+    },
+    "3109042": {
+        "shopName": "SAWARI",
+        "samitiId": "SC101410",
+        "shopType": "Rural"
+    },
+    "3109043": {
+        "shopName": "MAYAWADI",
+        "samitiId": "SC101410",
+        "shopType": "Rural"
+    },
+    "3109044": {
+        "shopName": "LENDAGONDI",
+        "samitiId": "SC101410",
+        "shopType": "Rural"
+    },
+    "3109045": {
+        "shopName": "DUNAWA",
+        "samitiId": "SC101414",
+        "shopType": "Rural"
+    },
+    "3109046": {
+        "shopName": "GHATPIPARIYA",
+        "samitiId": "SC101414",
+        "shopType": "Rural"
+    },
+    "3109047": {
+        "shopName": "SARAI",
+        "samitiId": "SC101414",
+        "shopType": "Rural"
+    },
+    "3109048": {
+        "shopName": "KHALLA",
+        "samitiId": "SC101414",
+        "shopType": "Rural"
+    },
+    "3109049": {
+        "shopName": "SIPAVA",
+        "samitiId": "SC101414",
+        "shopType": "Rural"
+    },
+    "3109050": {
+        "shopName": "MAHATPUR",
+        "samitiId": "SC101429",
+        "shopType": "Rural"
+    },
+    "3109051": {
+        "shopName": "MATHANI",
+        "samitiId": "SC101429",
+        "shopType": "Rural"
+    },
+    "3109052": {
+        "shopName": "CHINDI",
+        "samitiId": "SC101429",
+        "shopType": "Rural"
+    },
+    "3109053": {
+        "shopName": "PARASTANI",
+        "samitiId": "SC101429",
+        "shopType": "Rural"
+    },
+    "3109054": {
+        "shopName": "SAIKHEDA - 1",
+        "samitiId": "SC101440",
+        "shopType": "Rural"
+    },
+    "3109055": {
+        "shopName": "tapti sah vipanan samiti multai-3",
+        "samitiId": "SC100838",
+        "shopType": "Urban"
+    },
+    "3109056": {
+        "shopName": "MOHAR KHEDA",
+        "samitiId": "SC101402",
+        "shopType": "Rural"
+    },
+    "3109057": {
+        "shopName": "POHAR",
+        "samitiId": "SC101402",
+        "shopType": "Rural"
+    },
+    "3109058": {
+        "shopName": "DATORA",
+        "samitiId": "SC101402",
+        "shopType": "Rural"
+    },
+    "3109059": {
+        "shopName": "KHEDICOURT",
+        "samitiId": "SC101619",
+        "shopType": "Rural"
+    },
+    "3109060": {
+        "shopName": "NIMANWADA",
+        "samitiId": "SC101619",
+        "shopType": "Rural"
+    },
+    "3109061": {
+        "shopName": "yenkheda",
+        "samitiId": "SC101437",
+        "shopType": "Rural"
+    },
+    "3109062": {
+        "shopName": "GOULA",
+        "samitiId": "SC101390",
+        "shopType": "Rural"
+    },
+    "3109063": {
+        "shopName": "POUNI",
+        "samitiId": "SC101390",
+        "shopType": "Rural"
+    },
+    "3109064": {
+        "shopName": "RAWA",
+        "samitiId": "SC101390",
+        "shopType": "Rural"
+    },
+    "3109065": {
+        "shopName": "SABDI",
+        "samitiId": "SC101397",
+        "shopType": "Rural"
+    },
+    "3109066": {
+        "shopName": "JUNAPANI",
+        "samitiId": "SC101397",
+        "shopType": "Rural"
+    },
+    "3109067": {
+        "shopName": "TEMJHIRA",
+        "samitiId": "SC101397",
+        "shopType": "Rural"
+    },
+    "3109068": {
+        "shopName": "pra krashi sakhseva sah samiti multai",
+        "samitiId": "SC101446",
+        "shopType": "Urban"
+    },
+    "3109069": {
+        "shopName": "pra krashi sakhseva sah samiti multai",
+        "samitiId": "SC101446",
+        "shopType": "Urban"
+    },
+    "3109070": {
+        "shopName": "tapti sah vipanan samiti multai-1",
+        "samitiId": "SC100838",
+        "shopType": "Urban"
+    },
+    "3109071": {
+        "shopName": "tapti sah vipanan samiti multai-2",
+        "samitiId": "SC100838",
+        "shopType": "Urban"
+    },
+    "3109072": {
+        "shopName": "Jamgaon",
+        "samitiId": "SC101402",
+        "shopType": "Rural"
+    },
+    "3109073": {
+        "shopName": "LIHDA",
+        "samitiId": "SC101689",
+        "shopType": "Rural"
+    },
+    "3109074": {
+        "shopName": "HETI",
+        "samitiId": "SC101691",
+        "shopType": "Rural"
+    },
+    "3109075": {
+        "shopName": "उचित मूल्‍य दुकान बाडियाखापा",
+        "samitiId": "SC101636",
+        "shopType": "Rural"
+    },
+    "3109076": {
+        "shopName": "उचित मूल्‍य दुकान कान्‍हाखापा",
+        "samitiId": "SC101711",
+        "shopType": "Rural"
+    },
+    "3110001": {
+        "shopName": "BAGHODA",
+        "samitiId": "SC101482",
+        "shopType": "Rural"
+    },
+    "3110002": {
+        "shopName": "RAIAMLA",
+        "samitiId": "SC101482",
+        "shopType": "Rural"
+    },
+    "3110003": {
+        "shopName": "GHAT AMARAVATI",
+        "samitiId": "SC101482",
+        "shopType": "Rural"
+    },
+    "3110004": {
+        "shopName": "MONGONA KHURD",
+        "samitiId": "SC101482",
+        "shopType": "Rural"
+    },
+    "3110005": {
+        "shopName": "ASTA",
+        "samitiId": "SC101482",
+        "shopType": "Rural"
+    },
+    "3110006": {
+        "shopName": "HIWARKHED",
+        "samitiId": "SC101493",
+        "shopType": "Rural"
+    },
+    "3110007": {
+        "shopName": "KAJLI",
+        "samitiId": "SC101493",
+        "shopType": "Rural"
+    },
+    "3110008": {
+        "shopName": "BIRUL BAZAR - 1",
+        "samitiId": "SC101286",
+        "shopType": "Rural"
+    },
+    "3110010": {
+        "shopName": "TAIKHEDA",
+        "samitiId": "SC101286",
+        "shopType": "Rural"
+    },
+    "3110011": {
+        "shopName": "SIRSAWADI",
+        "samitiId": "SC101286",
+        "shopType": "Rural"
+    },
+    "3110012": {
+        "shopName": "DHABLA",
+        "samitiId": "SC101491",
+        "shopType": "Rural"
+    },
+    "3110013": {
+        "shopName": "PARSODI",
+        "samitiId": "SC101491",
+        "shopType": "Rural"
+    },
+    "3110014": {
+        "shopName": "VADEGAOV",
+        "samitiId": "SC101491",
+        "shopType": "Rural"
+    },
+    "3110015": {
+        "shopName": "BORGAOV",
+        "samitiId": "SC101491",
+        "shopType": "Rural"
+    },
+    "3110016": {
+        "shopName": "CHINDKHEDA",
+        "samitiId": "SC101490",
+        "shopType": "Rural"
+    },
+    "3110017": {
+        "shopName": "BIHARGAOV",
+        "samitiId": "SC101490",
+        "shopType": "Rural"
+    },
+    "3110018": {
+        "shopName": "SENDURJHANA",
+        "samitiId": "SC101490",
+        "shopType": "Rural"
+    },
+    "3110019": {
+        "shopName": "MASOD",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110020": {
+        "shopName": "DATORA",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110021": {
+        "shopName": "SAWANGI",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110022": {
+        "shopName": "VAYEGAON",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110023": {
+        "shopName": "SAIKHEDA",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110024": {
+        "shopName": "ITAVA",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110025": {
+        "shopName": "MAJRI",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110026": {
+        "shopName": "CHAKORA",
+        "samitiId": "SC101494",
+        "shopType": "Rural"
+    },
+    "3110027": {
+        "shopName": "BISNUR",
+        "samitiId": "SC101488",
+        "shopType": "Rural"
+    },
+    "3110028": {
+        "shopName": "SIRDI",
+        "samitiId": "SC101488",
+        "shopType": "Rural"
+    },
+    "3110029": {
+        "shopName": "NANDKUNDI",
+        "samitiId": "SC101488",
+        "shopType": "Rural"
+    },
+    "3110030": {
+        "shopName": "GARWA",
+        "samitiId": "SC101488",
+        "shopType": "Rural"
+    },
+    "3110031": {
+        "shopName": "PACHDHAR",
+        "samitiId": "SC101488",
+        "shopType": "Rural"
+    },
+    "3110032": {
+        "shopName": "GEHUBARSA",
+        "samitiId": "SC101492",
+        "shopType": "Rural"
+    },
+    "3110033": {
+        "shopName": "RAGADGAOV",
+        "samitiId": "SC101492",
+        "shopType": "Rural"
+    },
+    "3110034": {
+        "shopName": "BOREPED",
+        "samitiId": "SC101492",
+        "shopType": "Rural"
+    },
+    "3110035": {
+        "shopName": "CHARSI",
+        "samitiId": "SC101492",
+        "shopType": "Rural"
+    },
+    "3110036": {
+        "shopName": "RAJAPUR",
+        "samitiId": "SC101492",
+        "shopType": "Rural"
+    },
+    "3110037": {
+        "shopName": "NARKHED",
+        "samitiId": "SC101473",
+        "shopType": "Rural"
+    },
+    "3110038": {
+        "shopName": "MANGONAKALA",
+        "samitiId": "SC101473",
+        "shopType": "Rural"
+    },
+    "3110039": {
+        "shopName": "SHERGHAD",
+        "samitiId": "SC101473",
+        "shopType": "Rural"
+    },
+    "3110040": {
+        "shopName": "PRABHAT PATTAN -1",
+        "samitiId": "SC103534",
+        "shopType": "Rural"
+    },
+    "3110042": {
+        "shopName": "TIWAR KHED",
+        "samitiId": "SC101481",
+        "shopType": "Rural"
+    },
+    "3110043": {
+        "shopName": "GANGA PUR",
+        "samitiId": "SC101481",
+        "shopType": "Rural"
+    },
+    "3110044": {
+        "shopName": "BADALI",
+        "samitiId": "SC101481",
+        "shopType": "Rural"
+    },
+    "3110045": {
+        "shopName": "GODHNI",
+        "samitiId": "SC101481",
+        "shopType": "Rural"
+    },
+    "3110046": {
+        "shopName": "UMARI",
+        "samitiId": "SC101502",
+        "shopType": "Rural"
+    },
+    "3110047": {
+        "shopName": "MALEGAOV",
+        "samitiId": "SC101502",
+        "shopType": "Rural"
+    },
+    "3110048": {
+        "shopName": "DABKA",
+        "samitiId": "SC101459",
+        "shopType": "Rural"
+    },
+    "3110049": {
+        "shopName": "SALBARDI",
+        "samitiId": "SC101459",
+        "shopType": "Rural"
+    },
+    "3110050": {
+        "shopName": "GHAT BIROLI",
+        "samitiId": "SC101468",
+        "shopType": "Rural"
+    },
+    "3110051": {
+        "shopName": "CHICHANDA",
+        "samitiId": "SC101468",
+        "shopType": "Rural"
+    },
+    "3110052": {
+        "shopName": "NIMBOTI",
+        "samitiId": "SC101468",
+        "shopType": "Rural"
+    },
+    "3110053": {
+        "shopName": "KHEDI DEVNALA",
+        "samitiId": "SC101468",
+        "shopType": "Rural"
+    },
+    "3110054": {
+        "shopName": "JILPA BIROLI",
+        "samitiId": "SC103532",
+        "shopType": "Rural"
+    },
+    "3110055": {
+        "shopName": "CHLHATI",
+        "samitiId": "SC103532",
+        "shopType": "Rural"
+    },
+    "3110056": {
+        "shopName": "GHADRA",
+        "samitiId": "SC103532",
+        "shopType": "Rural"
+    },
+    "3110057": {
+        "shopName": "KUMUDRA(APURTI STORE)",
+        "samitiId": "SC103105",
+        "shopType": "Rural"
+    },
+    "3110058": {
+        "shopName": "BALEGAON",
+        "samitiId": "SC101482",
+        "shopType": "Rural"
+    },
+    "3110059": {
+        "shopName": "JHUNKARI - N.F. APURTI SOTRE",
+        "samitiId": "SC103041",
+        "shopType": "Rural"
+    },
+    "3110060": {
+        "shopName": "prabhat pattan 2",
+        "samitiId": "SC103534",
+        "shopType": "Rural"
+    },
+    "3110061": {
+        "shopName": "sahangav",
+        "samitiId": "SC101702",
+        "shopType": "Rural"
+    },
+    "3110063": {
+        "shopName": "devgav",
+        "samitiId": "SC101701",
+        "shopType": "Rural"
+    },
+    "3110064": {
+        "shopName": "उचित मूल्य दुकान, सोमगढ़",
+        "samitiId": "SC103532",
+        "shopType": "Rural"
+    },
+    "3110065": {
+        "shopName": "उचित मूल्य दुकान, डोहलन",
+        "samitiId": "SC101699",
+        "shopType": "Rural"
+    },
+    "3110066": {
+        "shopName": "उचित मूल्य दुकान, खड़की पांढरी",
+        "samitiId": "SC101502",
+        "shopType": "Rural"
+    },
+    "3110067": {
+        "shopName": "उचित मूल्य दुकान, चिखलीमाल",
+        "samitiId": "SC101703",
+        "shopType": "Rural"
+    },
+    "3110068": {
+        "shopName": "उचित मूल्य दुकान, खम्बारा",
+        "samitiId": "SC103532",
+        "shopType": "Rural"
+    },
+    "3110069": {
+        "shopName": "उचित मूल्‍य दुकान जामठी सवासन",
+        "samitiId": "SC101708",
+        "shopType": "Rural"
+    },
+    "3110070": {
+        "shopName": "उचित मूल्‍य दुकान मोरण्‍ड",
+        "samitiId": "SC101709",
+        "shopType": "Rural"
+    },
+    "3110071": {
+        "shopName": "उचित मूल्‍य दुकान खेडी रामोसी",
+        "samitiId": "SC101707",
+        "shopType": "Rural"
+    },
+    "3110072": {
+        "shopName": "उचित मूल्‍य दुकान प्रभातपटटन-2",
+        "samitiId": "SC108262",
+        "shopType": "Rural"
+    },
+    "3110073": {
+        "shopName": "maa sawasan aajivika swa sahayata samuh shaskiy uchit mulya dukan balni",
+        "samitiId": "SC114582",
+        "shopType": "Rural"
+    },
+    "3110074": {
+        "shopName": "SHASKIYA UCHIT MULY DUKAN BIRUL BAZAR 2(SHG)",
+        "samitiId": "SC114695",
+        "shopType": "Rural"
+    }
+}
