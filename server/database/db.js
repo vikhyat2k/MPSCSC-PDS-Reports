@@ -18,6 +18,18 @@ class DatabaseManager {
     }
 
     const dbPath = path.join(dbDir, 'pds-reports.db');
+    const seedPath = path.join(dbDir, 'pds-seed.db');
+
+    // Auto-seed database on fresh cloud instances if pds-reports.db is missing or empty
+    if ((!fs.existsSync(dbPath) || fs.statSync(dbPath).size === 0) && fs.existsSync(seedPath)) {
+      try {
+        fs.copyFileSync(seedPath, dbPath);
+        console.log('🌱 [Database] Auto-seeded database from pds-seed.db');
+      } catch (seedErr) {
+        console.warn('⚠️ [Database] Failed to auto-seed database:', seedErr.message);
+      }
+    }
+
     this.db = new sqlite3.Database(dbPath);
     this.initialized = false;
   }

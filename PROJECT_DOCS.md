@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Custom Subdomain URL Support in `START_REMOTE_ACCESS.bat` |
+| Last Code Change | 28 Jul 2026 — Add Cloud Database Auto-Seeding (`pds-seed.db`) for Google Colab & Cloud Hosts |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,19 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Cloud Database Auto-Seeding (`pds-seed.db`) for Colab & Cloud Hosts
+
+Files: database/pds-seed.db, server/database/db.js, .gitignore, PROJECT_DOCS.md
+Type: Database / Cloud Architecture Enhancement
+
+- BUG: On fresh cloud deployments (Colab / Render), database initialized empty with 0 reports, and live scraping failed due to MP Govt SCM portal foreign IP blocking.
+- FIX:
+  1. Created `database/pds-seed.db` bundling all 52 generated reports (NFSA August 2026, July 2026, ICDS, MDM, Welfare).
+  2. Updated `db.js` constructor to automatically copy `pds-seed.db` into `pds-reports.db` whenever a fresh cloud instance starts up.
+  3. All historical reports, analytics, PDF exports, and Excel exports now work 100% instantly on Google Colab and any cloud hosting platform without requiring live portal scraping.
 
 ---
 
