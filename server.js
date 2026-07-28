@@ -160,6 +160,21 @@ app.use('/reports', express.static('reports', {
 // Public assets from 'public' folder
 app.use(express.static('public', { index: false }));
 
+// Explicit PWA routes for PWABuilder & Mobile APK Support
+app.get('/manifest.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.sendFile(path.join(__dirname, 'public', 'manifest.json'));
+});
+
+app.get('/sw.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+
+app.get('/logo.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'logo.png'));
+});
+
 // Initialize services
 const db = new DatabaseManager();
 

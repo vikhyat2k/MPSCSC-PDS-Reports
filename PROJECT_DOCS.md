@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Add Web App Manifest (`manifest.json`) & Service Worker (`sw.js`) for PWABuilder APK |
+| Last Code Change | 28 Jul 2026 — Add Explicit PWA Routes (`/manifest.json`, `/sw.js`, `/logo.png`) in `server.js` |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,16 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Add Explicit PWA Routes (`/manifest.json`, `/sw.js`, `/logo.png`) in `server.js`
+
+Files: server.js, public/logo.png, PROJECT_DOCS.md
+Type: PWA / Mobile APK Routing Fix
+
+- FIX: Added explicit HTTP routes for `/manifest.json`, `/sw.js`, and `/logo.png` in `server.js` with proper `application/manifest+json` headers to guarantee zero 404 errors when PWABuilder scans the cloud deployment.
+- COPIED: `logo.png` to `public/logo.png`.
 
 ---
 
