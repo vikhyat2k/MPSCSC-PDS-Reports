@@ -2676,15 +2676,9 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
             `, [scheme, month, year]);
             let existingReport = existingReports && existingReports.length > 0 ? existingReports[0] : null;
 
-            if (existingReport) {
-                // If not forcing refresh, or if the report is very fresh (generated in the last 30 minutes), reuse it.
-                // This prevents redundant scraper runs and API timeouts during emailing.
-                const ageMs = Date.now() - new Date(existingReport.generated_at).getTime();
-                const thirtyMinutes = 30 * 60 * 1000;
-                if (!forceRefresh || ageMs < thirtyMinutes) {
-                    report = existingReport;
-                    console.log(`✅ [email-bundle] Using existing report for ${scheme} ${month}/${year} (Age: ${Math.round(ageMs / 60000)} mins)`);
-                }
+            if (existingReport && !forceRefresh) {
+                report = existingReport;
+                console.log(`✅ [email-bundle] Using existing report for ${scheme} ${month}/${year}`);
             }
 
             // 2. If report doesn't exist (or forced refresh), auto-generate it
