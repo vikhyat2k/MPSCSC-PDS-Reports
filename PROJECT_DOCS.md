@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Docker & Render.com 24/7 Free Cloud Hosting Setup |
+| Last Code Change | 28 Jul 2026 — Fix Docker GLIBC Mismatch via Node 22 & SQLite3 Native Source Build |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,16 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Fix Docker GLIBC Mismatch via Node 22 & SQLite3 Native Source Build
+
+Files: Dockerfile, PROJECT_DOCS.md
+Type: Infrastructure / Deployment Fix
+
+- BUG: Render deployment failed with `ERR_DLOPEN_FAILED: GLIBC_2.38 not found` due to `sqlite3` binary incompatibility on Debian 11.
+- FIX: Upgraded `Dockerfile` base image to `node:22-bookworm-slim` and added `npm rebuild sqlite3 --build-from-source` to compile native bindings directly inside the container.
 
 ---
 
