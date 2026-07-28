@@ -2141,19 +2141,11 @@ async function submitGlobalEmail(event) {
     const historySchemes = [];
     const freshSchemes = [];
     
-    // Check if a preset scheme is already in history (database) so we don't scrape it again
-    const historyChecks = Array.from(document.querySelectorAll('.history-check'));
-    
     allChecks.forEach(c => {
         const entry = { month: parseInt(c.dataset.month), year: parseInt(c.dataset.year), scheme: c.dataset.scheme };
         
-        const existsInHistory = historyChecks.some(hc => 
-            hc.dataset.scheme === entry.scheme && 
-            parseInt(hc.dataset.month) === entry.month && 
-            parseInt(hc.dataset.year) === entry.year
-        );
-
-        if (c.classList.contains('history-check') || existsInHistory) {
+        // If explicitly checked from History grid, use history; if checked from Preset pills, ALWAYS trigger fresh live scrape!
+        if (c.classList.contains('history-check')) {
             historySchemes.push(entry);
         } else {
             freshSchemes.push(entry);
