@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
-ENV PORT=10000
+ENV PORT=7860
 
 WORKDIR /app
 
@@ -30,8 +30,8 @@ RUN npm ci --omit=dev && npm rebuild sqlite3 --build-from-source
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 10000
+# Expose port (HuggingFace default: 7860, Render overrides via env)
+EXPOSE 7860
 
 # Start application server
 CMD ["node", "server.js"]
