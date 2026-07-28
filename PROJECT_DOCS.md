@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Add Cloud Database Auto-Seeding (`pds-seed.db`) for Google Colab & Cloud Hosts |
+| Last Code Change | 28 Jul 2026 — Fix Email Report Generation to Always Force Fresh SCM Portal Scrapes |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,19 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Fix Email Report Generation to Always Force Fresh SCM Portal Scrapes
+
+Files: server.js, public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / Email Dispatch Optimization
+
+- ROOT CAUSE: In `server.js` (`runEmailBundleJob`), an internal 30-minute age condition (`ageMs < thirtyMinutes`) was bypassing `forceRefresh: true` and serving stale cached reports from SQLite. Additionally, in `public/app.js` (`submitGlobalEmail`), preset month pills checked if a report existed in history and set `forceRefresh: false`.
+- FIX:
+  1. Removed `thirtyMinutes` cache override in `server.js` when `forceRefresh: true` is requested.
+  2. Updated `submitGlobalEmail` in `public/app.js` so selecting any month preset pill ALWAYS triggers `forceRefresh: true`.
+- RESULT: Sending emails via the Email modal now ALWAYS triggers a live login to the SCM portal, solves CAPTCHA, scrapes 100% fresh data, and emails the updated fresh report!
 
 ---
 
