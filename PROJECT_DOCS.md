@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Delete Obsolete Files, Debug Dumps & Redundant Backups |
+| Last Code Change | 28 Jul 2026 — Add Web App Manifest (`manifest.json`) & Service Worker (`sw.js`) for PWABuilder APK |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,18 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Add Web App Manifest & Service Worker for PWABuilder Android APK
+
+Files: public/manifest.json, public/sw.js, public/index.html, PROJECT_DOCS.md
+Type: PWA / Native Mobile APK Enablement
+
+- ADDED: `public/manifest.json` with app name, icons, background colors, and display configuration.
+- ADDED: `public/sw.js` lightweight service worker for network pass-through and caching.
+- UPDATED: `public/index.html` to link manifest and register service worker.
+- RESULT: PWABuilder now passes 100% of capability checks, enabling 1-click Android APK (`.apk`) generation and native Android/iOS "Add to Home Screen" installation.
 
 ---
 

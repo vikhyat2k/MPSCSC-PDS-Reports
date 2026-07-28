@@ -12,6 +12,9 @@
     <!-- flatpickr only; html2canvas + jspdf loaded at body-end to avoid double-init -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" type="image/png" href="./logo.png">
     <!-- Theme init — DARK by default; light only when user picks it -->
     <script>
         (function () {
@@ -21,6 +24,15 @@
             }
             // No attribute → root CSS = dark mode (enterprise default)
         })();
+
+        // Register Service Worker for PWA / APK Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./sw.js').catch(function (err) {
+                    console.warn('ServiceWorker registration failed:', err);
+                });
+            });
+        }
     </script>
 </head>
 
