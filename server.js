@@ -3238,6 +3238,12 @@ app.use((err, req, res, next) => {
 
         console.log('⏰ Initializing automated email schedule...');
         initEmailSchedule();
+
+        try {
+            require('./scripts/autoCloudSync').init();
+        } catch (syncErr) {
+            // Silently ignore if not available
+        }
     } catch (err) {
         console.error('❌ Failed to start server:', err);
         process.exit(1);

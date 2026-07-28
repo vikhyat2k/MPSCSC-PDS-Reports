@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Add 1-Click SYNC_TO_CLOUD.bat Script for Automated Cloud Deployment |
+| Last Code Change | 28 Jul 2026 — Integrated Zero-Click Background Cloud Sync Watcher (`autoCloudSync.js`) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,17 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Integrated Zero-Click Background Cloud Sync Watcher
+
+Files: scripts/autoCloudSync.js, server.js, PROJECT_DOCS.md
+Type: Automated Background Sync Feature
+
+- ADDED: `scripts/autoCloudSync.js` background file watcher module integrated into `server.js`.
+- FEATURE: Whenever any source code, HTML, CSS, or JS file is edited and saved on your laptop, the background watcher automatically debounces (waits 8 seconds after typing stops), commits, and pushes changes to GitHub (`git push`).
+- RESULT: **100% Zero-Click Cloud Sync** — Render (`autoDeploy: true`) automatically updates `https://pds-mpscsc.onrender.com` in real time as soon as you edit code on your computer.
 
 ---
 
