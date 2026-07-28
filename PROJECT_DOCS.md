@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Fix Docker GLIBC Mismatch via Node 22 & SQLite3 Native Source Build |
+| Last Code Change | 28 Jul 2026 — Add 1-Click SYNC_TO_CLOUD.bat Script for Automated Cloud Deployment |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,15 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Add 1-Click `SYNC_TO_CLOUD.bat` Script for Automated Deployment
+
+Files: SYNC_TO_CLOUD.bat, PROJECT_DOCS.md
+Type: Deployment Tooling
+
+- ADDED: `SYNC_TO_CLOUD.bat` helper script. Clicking this script automatically commits and pushes all local code changes to GitHub, triggering Render.com auto-deployment (`autoDeploy: true`) to update the live cloud website in ~1-2 minutes.
 
 ---
 
