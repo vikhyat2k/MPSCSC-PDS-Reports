@@ -16,5 +16,5 @@ if %errorlevel% neq 0 (
 
 echo [2/2] Launching Secure Cloudflare Tunnel...
 echo.
-"%~dp0cloudflared.exe" tunnel --url http://localhost:3000
+"%~dp0cloudflared.exe" tunnel --url http://127.0.0.1:3000
 pause
