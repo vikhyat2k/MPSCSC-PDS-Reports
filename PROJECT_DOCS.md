@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Add Explicit PWA Routes (`/manifest.json`, `/sw.js`, `/logo.png`) in `server.js` |
+| Last Code Change | 28 Jul 2026 — Fix Input Handling in `START_REMOTE_ACCESS.bat` Script |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,16 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Fix Input Handling in `START_REMOTE_ACCESS.bat` Script
+
+Files: START_REMOTE_ACCESS.bat, PROJECT_DOCS.md
+Type: Remote Access Bug Fix
+
+- ROOT CAUSE: Entering a full URL (`https://pds-betul.loca.lt`) when prompted for a subdomain caused localtunnel to fail string parsing and hang indefinitely.
+- FIX: Updated `START_REMOTE_ACCESS.bat` to safely handle custom subdomain input.
 
 ---
 
