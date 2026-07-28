@@ -6,5 +6,5 @@ echo ========================================================
 echo.
 echo Launching Secure Cloudflare Tunnel...
 echo.
-cloudflared.exe tunnel --url http://localhost:3000
+"%~dp0cloudflared.exe" tunnel --url http://localhost:3000
 pause
