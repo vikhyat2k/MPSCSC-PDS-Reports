@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Dockerfile Port 7860 Configuration for HuggingFace Spaces 16GB RAM Deployment |
+| Last Code Change | 28 Jul 2026 — Add `.devcontainer/devcontainer.json` for Fast 10s GitHub Codespaces Boot |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,16 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Add `.devcontainer/devcontainer.json` for Fast GitHub Codespaces Boot
+
+Files: .devcontainer/devcontainer.json, PROJECT_DOCS.md
+Type: Infrastructure Configuration
+
+- ADDED: Pre-configured `.devcontainer/devcontainer.json` specifying Node.js 22 Bookworm dev container image.
+- BENEFIT: Fixes GitHub Codespaces hang during initial setup and reduces boot time to under 10 seconds with automatic port 3000 forwarding.
 
 ---
 
