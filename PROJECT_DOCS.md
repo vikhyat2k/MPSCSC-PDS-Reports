@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Add `.devcontainer/devcontainer.json` for Fast 10s GitHub Codespaces Boot |
+| Last Code Change | 28 Jul 2026 — Custom Subdomain URL Support in `START_REMOTE_ACCESS.bat` |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,15 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Custom Subdomain URL Support in `START_REMOTE_ACCESS.bat`
+
+Files: START_REMOTE_ACCESS.bat, PROJECT_DOCS.md
+Type: Remote Access Enhancement
+
+- UPDATED: `START_REMOTE_ACCESS.bat` now offers a choice between Cloudflare Quick Tunnel (random URL) and Custom Subdomain (e.g. `https://pds-betul.loca.lt`).
 
 ---
 
