@@ -1,4 +1,0 @@
-2634: app.get('/api/directory/:type', async (req, res) => {
-2645: app.post('/api/directory/:type', async (req, res) => {
-2658: app.put('/api/directory/:type/:id', async (req, res) => {
-2674: app.delete('/api/directory/:type/:id', async (req, res) => {

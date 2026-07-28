@@ -1,1 +1,0 @@
-const fs = require('fs'); let js = fs.readFileSync('server.js','utf8'); js = js.replace(/groupPerformersHelper\(basePool, 'asc', 5\)/g, 'groupPerformersHelper(basePool, \'asc\', 10)'); js = js.replace(/groupTransporters\(activeSectors, 'asc', 5\)/g, 'groupTransporters(activeSectors, \'asc\', 10)'); fs.writeFileSync('server.js', js);

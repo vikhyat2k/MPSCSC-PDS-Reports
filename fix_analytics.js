@@ -1,1 +1,0 @@
-const fs = require('fs'); let js = fs.readFileSync('server/services/analytics.js','utf8'); js = js.replace(/bottomTransporters = groupTransporters\(activeSectors, 'asc', 5\);/g, 'bottomTransporters = groupTransporters(activeSectors, \'asc\', 10);'); fs.writeFileSync('server/services/analytics.js', js);

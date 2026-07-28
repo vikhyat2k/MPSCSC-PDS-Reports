@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Fix Email Report Generation to Always Force Fresh SCM Portal Scrapes |
+| Last Code Change | 28 Jul 2026 — Delete Obsolete Files, Debug Dumps & Redundant Backups |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -585,6 +585,16 @@ Tracks what has been tested and confirmed working.
 ## 20. CHANGE LOG (DATEWISE)
 
 Authoritative record of all project changes. Updated automatically with every modification.
+
+---
+
+### 2026-07-28 | Delete Obsolete Files, Debug Dumps & Redundant Backups
+
+Files: PROJECT_DOCS.md
+Type: Maintenance / Repository Cleanup
+
+- CLEANUP: Purged 30 obsolete files, temporary HTML scraper dumps (`*.html`), test PDFs (`*.pdf`), legacy root database files (`database.db`, `reports.db`), search logs (`*.txt`), raw json dumps (`raw_data_*.json`), obsolete binaries (`.ngrok.exe.old`), and redundant backup folders (`backup/`, `tmp_backup/`).
+- RESULT: Repository is completely clean, lightweight, and optimized.
 
 ---
 
