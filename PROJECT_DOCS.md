@@ -1139,6 +1139,23 @@ Closes: ISSUE-014
 
 ---
 
+### 2026-07-29 | Fix 30-Day Session Persistence & Add MPSCSC Logo + Creator Attribution (Vikhyat Hindoliya)
+
+Files: server.js, public/login.html, public/index.html
+Type: Feature / Bug Fix / UI Improvement
+
+- USER REQUIREMENT:
+  1. Fix "Remember me for 30 days" session expiration (was asking to re-login every 5-15 mins).
+  2. Add official MPSCSC logo and Creator attribution ("Vikhyat Hindoliya") to login and dashboard UI.
+- ROOT CAUSE:
+  1. `server.js` was using default express-session `MemoryStore`. When Render slept or restarted worker processes, memory was wiped, causing requests to return `401 Unauthorized`.
+  2. `login.html` lacked the MPSCSC logo emblem and creator metadata footer.
+- FIX:
+  1. Configured persistent `session-file-store` (`FileStore`) in `server.js` with `rolling: true` and explicit 30-day maxAge cookie persistence on disk (`sessions/`), keeping users logged in across server restarts.
+  2. Added official MPSCSC logo (`mpscsc_logo.png`), organization header ("म.प्र. स्टेट सिविल सप्लाईज़ कार्पो. लि."), and Creator attribution ("Created & Maintained by Vikhyat Hindoliya | MPSCSC District Office Betul") to `public/login.html` and `public/index.html`.
+
+---
+
 ### 2026-07-29 | Fix Email Modal "Send Now" Tab Button Submission & Add Primary Submit Footer
 
 Files: public/index.html, public/app.js

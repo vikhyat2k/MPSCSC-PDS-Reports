@@ -257,10 +257,13 @@ app.post('/api/auth/login', async (req, res) => {
             if (rememberMe) {
                 req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
             } else {
-                req.session.cookie.expires = false; // Session cookie
+                req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
             }
             
-            res.json({ success: true, user: req.session.user });
+            req.session.save((err) => {
+                if (err) console.error('Session save error:', err);
+                res.json({ success: true, user: req.session.user });
+            });
         } else {
             res.status(401).json({ error: 'invalid_credentials', message: 'Invalid username or password' });
         }
