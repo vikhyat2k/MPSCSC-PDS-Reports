@@ -1139,6 +1139,17 @@ Closes: ISSUE-014
 
 ---
 
+### 2026-07-29 | Fix Unexpected End of JSON Input Error in Global Email Modal
+
+Files: public/app.js
+Type: Bug Fix / Error Handling
+
+- BUG: Clicking Send Now in Global Email Modal raised `SyntaxError: Unexpected end of JSON input` when response was truncated or timed out by server/proxy.
+- ROOT CAUSE: `res.json()` failed when parsing empty or non-JSON HTTP error responses from proxies.
+- FIX: Wrapped `res.json()` in safe `try/catch` in `public/app.js` with `res.text()` fallback and formatted human-readable timeout guidance (`Server proxy / connection timed out...`).
+
+---
+
 ### 2026-07-29 | Fix Email Bundle HTTP Socket Timeout for Fresh Multi-RO Scraping
 
 Files: server.js
