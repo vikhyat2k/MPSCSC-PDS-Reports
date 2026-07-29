@@ -1139,6 +1139,17 @@ Closes: ISSUE-014
 
 ---
 
+### 2026-07-29 | Fix Email Bundle HTTP Socket Timeout for Fresh Multi-RO Scraping
+
+Files: server.js
+Type: Bug Fix / Performance Optimization
+
+- BUG: Fresh multi-RO scraping during `api/email-bundle` (e.g. for August 2026) returned `Failed to fetch` due to 60-second HTTP socket timeout.
+- ROOT CAUSE: Node's default HTTP request socket timeout (60 seconds) disconnected the client connection before Puppeteer finished extracting Regular, Portability, and Extra RO data (~90 seconds).
+- FIX: Added `req.setTimeout(300000)` (5 minutes) to `app.post('/api/email-bundle')` in `server.js` to ensure HTTP connections stay open during full live portal scraping.
+
+---
+
 ### 2026-07-29 | Fix 30-Day Session Persistence & Add MPSCSC Logo + Creator Attribution (Vikhyat Hindoliya)
 
 Files: server.js, public/login.html, public/index.html
