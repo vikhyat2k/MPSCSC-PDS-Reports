@@ -2177,7 +2177,7 @@ async function submitGlobalEmail(event) {
         // Step 1: Send history reports instantly (no scraping)
         if (historySchemes.length > 0) {
             if (statusDiv) statusDiv.innerHTML = `📂 Sending ${histCount} cached report(s) from history to ${to}...`;
-            const res = await fetch('api/email-bundle', {
+            const res = await fetch('/api/email-bundle', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ emailTo: to, cc, format, selectedSchemes: historySchemes, forceRefresh: false })
@@ -2196,7 +2196,7 @@ async function submitGlobalEmail(event) {
                 statusDiv.style.display = 'flex';
                 statusDiv.innerHTML = `🔄 Generating ${freshCount} fresh report(s) & emailing to ${to} (this may take 1-2 mins)...`;
             }
-            const res = await fetch('api/email-bundle', {
+            const res = await fetch('/api/email-bundle', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ emailTo: to, cc, format, selectedSchemes: freshSchemes, forceRefresh: true })
@@ -2238,13 +2238,17 @@ async function submitGlobalEmail(event) {
 
     } catch (err) {
         if (window.emailCountdownInterval) clearInterval(window.emailCountdownInterval);
+        let errorMsg = err.message || 'Unknown error';
+        if (errorMsg === 'Failed to fetch') {
+            errorMsg = 'Network response timed out while generating fresh reports live from portal. Please select cached reports or try again.';
+        }
         if (statusDiv) {
             statusDiv.style.background = 'rgba(239, 68, 68, 0.15)';
             statusDiv.style.color = '#b91c1c';
             statusDiv.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-            statusDiv.innerText = '❌ Mail Task Failed: ' + err.message;
+            statusDiv.innerText = '❌ Mail Task Failed: ' + errorMsg;
         }
-        showToast(`❌ Mail Task Failed: ${err.message}`, 'error', 7000);
+        showToast(`❌ Mail Task Failed: ${errorMsg}`, 'error', 7000);
         setTimeout(() => { loadEmailLogs(); }, 500);
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = '<span class="btn-icon">🚀</span> <span id="globalEmailBtnText">Send Now</span>'; }
