@@ -1827,6 +1827,8 @@ function switchEmailTab(tab) {
     const sendActionBtn = document.getElementById('globalEmailBtn');
     const timer = document.getElementById('emailHeaderTimer');
 
+    const isAlreadySendPanelActive = sendPanel && sendPanel.style.display !== 'none';
+
     // Reset visibility
     if (sendPanel) sendPanel.style.display = 'none';
     if (schedulePanel) schedulePanel.style.display = 'none';
@@ -1851,6 +1853,11 @@ function switchEmailTab(tab) {
         if (sendPanel) sendPanel.style.display = 'block';
         if (sendBtn) { sendBtn.classList.add('active'); sendBtn.style.background = 'var(--primary)'; sendBtn.style.color = '#fff'; }
         if (sendActionBtn) sendActionBtn.style.display = '';
+
+        // If Send panel was ALREADY active when user clicked "Send Now" button, trigger email submission!
+        if (isAlreadySendPanelActive && typeof submitGlobalEmail === 'function') {
+            submitGlobalEmail();
+        }
     }
 }
 
