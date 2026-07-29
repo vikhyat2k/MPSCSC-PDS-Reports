@@ -2995,6 +2995,7 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
  * Send" button in the Global Email Modal.
  */
 app.post('/api/email-bundle', async (req, res) => {
+    req.setTimeout(300000); // 5-minute socket timeout for multi-RO fresh bundle scraping
     try {
         const result = await runEmailBundleJob(req.body);
         res.json(result);
