@@ -1153,7 +1153,8 @@ Type: Feature / Bug Fix / UI Improvement
 - FIX:
   1. Updated `computePendingSummary()` in `balancesReportGenerator.js` to inspect sector config (`districtOffice`, `block`) and shop data. When an Issue Center filter is active, only transporters/sectors linked to that issue center are output.
   2. Updated PDF & Excel export generators to display the active Issue Center filter in title and subheaders.
-  3. Added a prominent **"⚡ Generate Report (रिपोर्ट तैयार करें)"** button to `index.html` card controls & header, and added `generatePendingSummaryReport()` in `public/app.js` to enable on-demand report generation.
+  3. Disabled automatic background fetching/loading on panel load (`initPendingAnalyticsPanel`) in `public/app.js`.
+  4. Added a prominent initial user prompt (`pendingAnalyticsPrompt`) in `index.html` and **"🚀 Generate Report (रिपोर्ट तैयार करें)"** action buttons, requiring users to explicitly click to generate analysis on demand.
 
 ---
 
