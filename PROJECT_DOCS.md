@@ -1139,6 +1139,19 @@ Closes: ISSUE-014
 
 ---
 
+### 2026-07-29 | Fix Email Modal "Send Now" Tab Button Submission & Add Primary Submit Footer
+
+Files: public/index.html, public/app.js
+Type: Bug Fix / UI Improvement
+
+- BUG: Clicking the `📤 Send Now` tab button (on the left of Automation) while inside the Global Email Modal did not trigger email submission.
+- ROOT CAUSE: `switchEmailTab('send')` only toggled visibility between tab panels without invoking `submitGlobalEmail()`, and the form lacked a primary submit button at the bottom of `emailSendPanel`.
+- FIX:
+  1. Updated `switchEmailTab()` in `public/app.js` so that if `Send Now` tab button is clicked while the Send panel is active, it invokes `submitGlobalEmail()` immediately.
+  2. Added a prominent, styled **"🚀 Send Email Now (ईमेल तुरंत भेजें)"** primary submit button at the bottom footer of `emailSendPanel` in `public/index.html`.
+
+---
+
 ### 2026-07-29 | Fix Issue Center Transporter Filtering & Add Manual On-Demand Report Generation Provision
 
 Files: server/services/balancesReportGenerator.js, public/index.html, public/app.js
