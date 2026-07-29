@@ -2192,9 +2192,16 @@ async function submitGlobalEmail(event) {
             if (res.ok) {
                 successCount++;
             } else {
-                const err = await res.json();
-                console.warn('History batch failed:', err.error);
-                errors.push('History reports failed: ' + (err.error || ''));
+                let errText = '';
+                try {
+                    const errData = await res.json();
+                    errText = errData.error || errData.message || '';
+                } catch (e) {
+                    const rawText = await res.text().catch(() => '');
+                    errText = rawText ? rawText.substring(0, 120) : `HTTP ${res.status} ${res.statusText}`;
+                }
+                console.warn('History batch failed:', errText);
+                errors.push('History reports failed: ' + errText);
             }
         }
 
@@ -2211,8 +2218,15 @@ async function submitGlobalEmail(event) {
             if (res.ok) {
                 successCount++;
             } else {
-                const err = await res.json();
-                errors.push('Fresh generation failed: ' + (err.error || ''));
+                let errText = '';
+                try {
+                    const errData = await res.json();
+                    errText = errData.error || errData.message || '';
+                } catch (e) {
+                    const rawText = await res.text().catch(() => '');
+                    errText = rawText ? rawText.substring(0, 120) : `HTTP ${res.status} ${res.statusText}`;
+                }
+                errors.push('Fresh generation failed: ' + errText);
             }
         }
 
@@ -2246,7 +2260,9 @@ async function submitGlobalEmail(event) {
     } catch (err) {
         if (window.emailCountdownInterval) clearInterval(window.emailCountdownInterval);
         let errorMsg = err.message || 'Unknown error';
-        if (errorMsg === 'Failed to fetch') {
+        if (errorMsg.includes('Unexpected end of JSON input') || errorMsg.includes('Unexpected token')) {
+            errorMsg = 'Server proxy / connection timed out during fresh live scraping. Please select a cached report from history or generate on main dashboard.';
+        } else if (errorMsg === 'Failed to fetch') {
             errorMsg = 'Network response timed out while generating fresh reports live from portal. Please select cached reports or try again.';
         }
         if (statusDiv) {
