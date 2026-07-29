@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 28 Jul 2026 — Fix Cloudflare IPv6 Loopback Connection Refused in `START_REMOTE_ACCESS.bat` |
+| Last Code Change | 29 Jul 2026 — Transporter linking to Issue Center & Manual Report Generation provision in Pending Dispatch Analysis |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1136,6 +1136,24 @@ Closes: ISSUE-014
   2. Updated `loadEmailLogs()` in `public/app.js` with fallback route handling (`/api/email-logs` & `api/email-logs`).
   3. Added auto-refresh `loadEmailLogs()` call immediately when `submitGlobalEmail()` completes.
   4. Moved status notification banner to the top of `.card-body` and bumped script query tag to `v=5.1`.
+
+---
+
+### 2026-07-29 | Fix Issue Center Transporter Filtering & Add Manual On-Demand Report Generation Provision
+
+Files: server/services/balancesReportGenerator.js, public/index.html, public/app.js
+Type: Feature / Bug Fix / UI Improvement
+
+- USER REQUIREMENT:
+  1. When an Issue Center (e.g. Amla) filter is selected in `⚖️ दुकान उठाव शेष — विश्लेषण रिपोर्ट`, show only transporters linked to that particular issue center (excluding unlinked transporters with zeroes).
+  2. Provide manual report generation functionality so users can explicitly generate/refresh the report on demand.
+- ROOT CAUSE:
+  1. `computePendingSummary()` in `balancesReportGenerator.js` pre-seeded all 22 district sectors regardless of `filterIssueCenter` and did not track sector `districtOffice`/`block` metadata in group records, causing unlinked transporters to be rendered with 0 values.
+  2. The Pending Dispatch Analysis card lacked a manual "Generate Report" action button for user-driven generation.
+- FIX:
+  1. Updated `computePendingSummary()` in `balancesReportGenerator.js` to inspect sector config (`districtOffice`, `block`) and shop data. When an Issue Center filter is active, only transporters/sectors linked to that issue center are output.
+  2. Updated PDF & Excel export generators to display the active Issue Center filter in title and subheaders.
+  3. Added a prominent **"⚡ Generate Report (रिपोर्ट तैयार करें)"** button to `index.html` card controls & header, and added `generatePendingSummaryReport()` in `public/app.js` to enable on-demand report generation.
 
 ---
 

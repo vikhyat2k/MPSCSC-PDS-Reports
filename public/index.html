@@ -1036,6 +1036,7 @@
                                     </div>
                                 </div>
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                                    <button onclick="generatePendingSummaryReport(this)" id="generatePendingReportBtn" class="btn btn-primary" style="padding:7px 16px;font-size:12px;font-weight:700;height:34px;background:linear-gradient(135deg,#4f46e5,#3b82f6);color:#fff;border:none;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(79,70,229,0.3);">⚡ Generate Report (रिपोर्ट तैयार करें)</button>
                                     <button onclick="exportPendingSummary('excel',this)" id="pendingExcelBtn" class="btn btn-primary" style="padding:7px 14px;font-size:12px;font-weight:700;height:34px;display:none;">🟢 Excel</button>
                                     <button onclick="exportPendingSummary('pdf',this)" id="pendingPdfBtn" class="btn" style="padding:7px 14px;font-size:12px;font-weight:700;height:34px;background:#dc2626;color:#fff;border:none;border-radius:8px;cursor:pointer;display:none;">🔴 PDF</button>
                                     <button onclick="exportPendingSummaryImage()" id="pendingImgBtn" class="btn" style="padding:7px 14px;font-size:12px;font-weight:700;height:34px;background:#f59e0b;color:#fff;border:none;border-radius:8px;cursor:pointer;display:none;">🟠 Image</button>
@@ -1044,38 +1045,54 @@
 
                             <!-- Controls -->
                             <div style="padding:16px 20px;border-bottom:1px solid var(--glass-border);display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:var(--bg-elevated);">
-                                <div style="flex:1;min-width:200px;">
+                                <div style="flex:1;min-width:180px;">
                                     <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Group By</label>
                                     <select id="pendingGroupBy" class="form-input" style="width:100%;padding:9px 12px;font-size:13px;" onchange="pendingAnalyticsFilterChanged()">
                                         <option value="transporter">Transporter-wise (परिवहनकर्तावार)</option>
                                         <option value="issuecenter">Issue Center-wise (प्रदाय केंद्रवार)</option>
                                     </select>
                                 </div>
-                                <div style="flex:1;min-width:190px;">
+                                <div style="flex:1;min-width:170px;">
                                     <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Sort By</label>
                                     <select id="pendingSortBy" class="form-input" style="width:100%;padding:9px 12px;font-size:13px;" onchange="pendingAnalyticsFilterChanged()">
                                         <option value="pendingQty">Pending Quantity ↓</option>
                                         <option value="pendingShops">Pending Shops ↓</option>
                                     </select>
                                 </div>
-                                <div style="flex:1;min-width:200px;" id="pendingTransporterFilterWrap">
+                                <div style="flex:1;min-width:190px;" id="pendingTransporterFilterWrap">
                                     <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Filter Transporter</label>
                                     <select id="pendingFilterTransporter" class="form-input" style="width:100%;padding:9px 12px;font-size:13px;" onchange="pendingAnalyticsFilterChanged()">
                                         <option value="">All Transporters</option>
                                     </select>
                                 </div>
-                                <div style="flex:1;min-width:200px;" id="pendingIssueCenterFilterWrap">
+                                <div style="flex:1;min-width:190px;" id="pendingIssueCenterFilterWrap">
                                     <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Filter Issue Center</label>
                                     <select id="pendingFilterIssueCenter" class="form-input" style="width:100%;padding:9px 12px;font-size:13px;" onchange="pendingAnalyticsFilterChanged()">
                                         <option value="">All Issue Centers</option>
                                     </select>
                                 </div>
+                                <div style="flex:0 0 auto;min-width:160px;">
+                                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Action</label>
+                                    <button onclick="generatePendingSummaryReport(this)" class="btn btn-primary" style="width:100%;padding:9px 12px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                                        <span>🚀</span> <span>Generate Report</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Table Area -->
                             <div id="pendingAnalyticsTableWrap" style="padding:16px 20px;">
+                                <div id="pendingAnalyticsPrompt" style="text-align:center;padding:36px 20px;background:rgba(79,70,229,0.03);border:2px dashed rgba(79,70,229,0.25);border-radius:12px;margin:10px 0;">
+                                    <span style="font-size:36px;">⚖️</span>
+                                    <div style="font-size:15px;font-weight:700;color:var(--text-main);margin-top:10px;">दुकान उठाव शेष — विश्लेषण रिपोर्ट</div>
+                                    <div style="font-size:13px;color:var(--text-muted);margin-top:6px;max-width:540px;margin-left:auto;margin-right:auto;">
+                                        ऊपर दिए गए फ़िल्टर (प्रदाय केंद्र / परिवहनकर्ता) चुनें और विश्लेषण रिपोर्ट तैयार करने के लिए <strong style="color:var(--primary);">"🚀 Generate Report"</strong> बटन पर क्लिक करें।
+                                    </div>
+                                    <button onclick="generatePendingSummaryReport(this)" class="btn btn-primary" style="margin-top:14px;padding:9px 20px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#4f46e5,#4338ca);color:#fff;border:none;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(79,70,229,0.25);">
+                                        <span>🚀</span> <span>Generate Report (रिपोर्ट तैयार करें)</span>
+                                    </button>
+                                </div>
                                 <div id="pendingAnalyticsLoader" style="text-align:center;padding:30px;color:var(--text-muted);display:none;">
-                                    <span style="font-size:24px;">⏳</span><br><span style="font-size:13px;margin-top:8px;display:block;">Loading pending summary…</span>
+                                    <span style="font-size:24px;">⏳</span><br><span style="font-size:13px;margin-top:8px;display:block;">Generating pending summary report…</span>
                                 </div>
                                 <div id="pendingAnalyticsEmpty" style="text-align:center;padding:30px;color:var(--text-muted);display:none;">
                                     <span style="font-size:28px;">✅</span><br><span style="font-size:13px;margin-top:8px;display:block;">No pending shops found for the selected filters.</span>

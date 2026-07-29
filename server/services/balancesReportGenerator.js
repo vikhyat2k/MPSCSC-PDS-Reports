@@ -406,7 +406,42 @@ class BalancesReportGenerator {
 
         const groups = {};
 
-        // Seed all 22 sectors from config & processedResult so 100% of sectors (1 to 22) appear in report
+        // Helper to normalize strings for robust comparison
+        const norm = (s) => (s || '').toString().trim().toLowerCase();
+        const targetIC = norm(filterIssueCenter);
+
+        // Helper to check if a sector is linked to filterIssueCenter
+        const isSectorLinkedToIC = (sec) => {
+            if (!targetIC) return true; // No filter: all linked
+            const dOffice = norm(sec.districtOffice);
+            const blk = norm(sec.block);
+            const sName = norm(sec.sectorName);
+            const ic = norm(sec.issueCenter || sec.issuePoint);
+
+            return Boolean(
+                (dOffice && (dOffice === targetIC || dOffice.includes(targetIC) || targetIC.includes(dOffice))) ||
+                (blk && (blk === targetIC || blk.includes(targetIC) || targetIC.includes(blk))) ||
+                (ic && (ic === targetIC || ic.includes(targetIC) || targetIC.includes(ic))) ||
+                (sName && (sName.includes(targetIC) || (sName.startsWith(targetIC))))
+            );
+        };
+
+        // Collect sectors in processedResult that actually contain shops matching targetIC
+        const sectorsWithMatchingShops = new Set();
+        (processedResult.sectors || []).forEach(sector => {
+            const sNo = String(sector.serialNo || '');
+            const tName = (sector.transporter || '').trim() || 'अज्ञात';
+            const key = `${tName}___${sNo}`;
+            (sector.shops || []).forEach(shop => {
+                const issueCenter = (shop.issuePoint || shop.issueCenter || sector.block || 'अज्ञात').trim();
+                const shopICNorm = norm(issueCenter);
+                if (!targetIC || shopICNorm === targetIC || shopICNorm.includes(targetIC) || targetIC.includes(shopICNorm)) {
+                    sectorsWithMatchingShops.add(key);
+                }
+            });
+        });
+
+        // Seed sectors when groupBy === 'transporter'
         if (groupBy === 'transporter') {
             const allSectorsMap = new Map();
             sectorsConfig.forEach(s => {
@@ -415,7 +450,14 @@ class BalancesReportGenerator {
                 const sName = (s.sectorName || `सेक्टर क्र ${sNo}`).trim();
                 const key = `${tName}___${sNo}`;
                 if (!allSectorsMap.has(key)) {
-                    allSectorsMap.set(key, { key, transporter: tName, sectorName: sName, serialNo: sNo });
+                    allSectorsMap.set(key, {
+                        key,
+                        transporter: tName,
+                        sectorName: sName,
+                        serialNo: sNo,
+                        districtOffice: s.districtOffice,
+                        block: s.block
+                    });
                 }
             });
             (processedResult.sectors || []).forEach(s => {
@@ -424,16 +466,32 @@ class BalancesReportGenerator {
                 const sName = (s.sectorName || `सेक्टर क्र ${sNo}`).trim();
                 const key = `${tName}___${sNo}`;
                 if (!allSectorsMap.has(key)) {
-                    allSectorsMap.set(key, { key, transporter: tName, sectorName: sName, serialNo: sNo });
+                    allSectorsMap.set(key, {
+                        key,
+                        transporter: tName,
+                        sectorName: sName,
+                        serialNo: sNo,
+                        districtOffice: s.districtOffice || s.block,
+                        block: s.block
+                    });
                 }
             });
 
             allSectorsMap.forEach((sec, key) => {
                 if (filterTransporter && sec.transporter !== filterTransporter) return;
+
+                // When Issue Center filter is active, only include transporters/sectors linked to that Issue Center
+                if (targetIC) {
+                    const linked = isSectorLinkedToIC(sec) || sectorsWithMatchingShops.has(key);
+                    if (!linked) return;
+                }
+
                 groups[key] = {
                     group: key,
                     transporter: sec.transporter,
                     sectorName: sec.sectorName,
+                    districtOffice: sec.districtOffice,
+                    block: sec.block,
                     displayLabel: `${sec.transporter} (${sec.sectorName})`,
                     pendingShops: 0,
                     pendingQty: 0,
@@ -457,7 +515,12 @@ class BalancesReportGenerator {
                 const issueCenter = (shop.issuePoint || shop.issueCenter || sector.block || 'अज्ञात').trim();
 
                 // Apply issue center filter
-                if (filterIssueCenter && issueCenter !== filterIssueCenter) return;
+                if (targetIC) {
+                    const shopICNorm = norm(issueCenter);
+                    if (shopICNorm !== targetIC && !shopICNorm.includes(targetIC) && !targetIC.includes(shopICNorm)) {
+                        return;
+                    }
+                }
 
                 // Unique group key
                 const groupKey = groupBy === 'issuecenter' ? issueCenter : `${sectorTransporter}___${serialNo}`;
@@ -502,6 +565,9 @@ class BalancesReportGenerator {
                         group: groupKey,
                         transporter: sectorTransporter,
                         sectorName: sectorName,
+                        districtOffice: sector.districtOffice || shop.districtOffice,
+                        block: sector.block || shop.block,
+                        issueCenter: issueCenter,
                         displayLabel: displayLabel,
                         pendingShops: 0,
                         pendingQty: 0,
@@ -527,8 +593,16 @@ class BalancesReportGenerator {
             });
         });
 
-        // Convert groups to array — retain all seeded sectors
+        // Convert groups to array
         let rows = Object.values(groups);
+
+        // If filterIssueCenter is set, filter out any row that has 0 pending shops AND is NOT linked to targetIC
+        if (targetIC) {
+            rows = rows.filter(r => {
+                if (r.pendingShops > 0) return true;
+                return isSectorLinkedToIC(r);
+            });
+        }
 
         // Sort
         if (sortBy === 'pendingShops') {
@@ -564,14 +638,14 @@ class BalancesReportGenerator {
             }
         };
 
-        return { groupBy, rows, grandTotal };
+        return { groupBy, rows, grandTotal, filterIssueCenter, filterTransporter };
     }
 
     /**
      * Generate Excel export for the pending summary report.
      */
     async generatePendingSummaryExcel(summaryData, report, res) {
-        const { groupBy, rows, grandTotal } = summaryData;
+        const { groupBy, rows, grandTotal, filterIssueCenter } = summaryData;
         const groupLabel = groupBy === 'issuecenter' ? 'प्रदाय केंद्र' : 'परिवहनकर्ता (सेक्टर क्र. एवं नाम)';
         const monthHindi = this.getMonthNameHindi(report.month);
         const monthEn = this.getMonthName(report.month);
@@ -581,8 +655,9 @@ class BalancesReportGenerator {
         const ws = workbook.addWorksheet('Pending Summary');
 
         // Header rows
-        const title = `दुकान उठाव शेष रिपोर्ट — ${groupLabel}वार विश्लेषण`;
-        const subTitle = `माह: ${monthHindi} ${year}  |  दिनांक: ${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
+        const icText = filterIssueCenter ? ` (प्रदाय केंद्र: ${filterIssueCenter})` : '';
+        const title = `दुकान उठाव शेष रिपोर्ट — ${groupLabel}वार विश्लेषण${icText}`;
+        const subTitle = `माह: ${monthHindi} ${year}${filterIssueCenter ? '  |  प्रदाय केंद्र: ' + filterIssueCenter : ''}  |  दिनांक: ${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
         ws.mergeCells('A1:J1');
         ws.getCell('A1').value = title;
@@ -682,12 +757,15 @@ class BalancesReportGenerator {
      * Generate HTML for the pending summary PDF (also used for HTML preview).
      */
     generatePendingSummaryHtml(summaryData, report) {
-        const { groupBy, rows, grandTotal } = summaryData;
+        const { groupBy, rows, grandTotal, filterIssueCenter } = summaryData;
         const groupLabel = groupBy === 'issuecenter' ? 'प्रदाय केंद्र' : 'परिवहनकर्ता (सेक्टर क्र. एवं नाम)';
         const monthHindi = this.getMonthNameHindi(report.month);
         const year = report.year || new Date().getFullYear();
 
         const dateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+        const icTitleText = filterIssueCenter ? ` (${filterIssueCenter})` : '';
+        const icSubText = filterIssueCenter ? ` &nbsp;|&nbsp; प्रदाय केंद्र: ${filterIssueCenter}` : '';
 
         const rowsHtml = rows.map((r, idx) => `
             <tr>
@@ -707,7 +785,7 @@ class BalancesReportGenerator {
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-  <title>दुकान उठाव शेष — ${groupLabel}वार</title>
+  <title>दुकान उठाव शेष — ${groupLabel}वार${icTitleText}</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 15px; font-size: 10px; color: #111; }
     h2 { text-align:center; font-size:14px; margin:3px 0; }
@@ -727,7 +805,7 @@ class BalancesReportGenerator {
 </head>
 <body>
   <h2>म.प्र. स्टेट सिविल सप्लाईज़ कार्पो. लि. — जिला कार्यालय बैतूल</h2>
-  <h3>दुकान उठाव शेष रिपोर्ट — ${groupLabel}वार विश्लेषण &nbsp;|&nbsp; माह: ${monthHindi} ${year}</h3>
+  <h3>दुकान उठाव शेष रिपोर्ट — ${groupLabel}वार विश्लेषण &nbsp;|&nbsp; माह: ${monthHindi} ${year}${icSubText}</h3>
   <table>
     <thead>
       <tr>

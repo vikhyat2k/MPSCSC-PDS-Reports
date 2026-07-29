@@ -3389,6 +3389,35 @@ function pendingAnalyticsFilterChanged() {
 }
 
 /**
+ * Manually generate/refresh pending dispatch analysis report on user demand.
+ */
+async function generatePendingSummaryReport(btnEl) {
+    const card = document.getElementById('pendingAnalyticsCard');
+    const reportId = card ? card.dataset.reportId : null;
+    if (!reportId) {
+        alert('No report loaded. Please select or generate a base report first.');
+        return;
+    }
+
+    const origContent = btnEl ? btnEl.innerHTML : '';
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = `<span>⏳</span> <span>Generating...</span>`;
+    }
+
+    try {
+        await loadPendingSummary(reportId);
+    } catch (err) {
+        console.error('Error generating pending summary report:', err);
+    } finally {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = origContent;
+        }
+    }
+}
+
+/**
  * Fetch summary from backend and render the table.
  */
 async function loadPendingSummary(reportId) {
