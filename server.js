@@ -16,6 +16,7 @@ const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const cron = require('node-cron');
 
 const DatabaseManager = require('./server/database/db');
@@ -102,14 +103,26 @@ const cap = val => (typeof val === 'number' && !isNaN(val)) ? Math.min(100, val)
 // Trust proxy (behind Unified Portal and Ngrok)
 app.set('trust proxy', 1);
 
-// Session Configuration (Using default MemoryStore to prevent EPERM file locking errors on Windows)
+// Session Configuration with Persistent Disk Storage (FileStore) for 30-day Remember Me
+const sessionsDir = path.join(__dirname, 'sessions');
+if (!fs.existsSync(sessionsDir)) {
+    try { fs.mkdirSync(sessionsDir, { recursive: true }); } catch (e) {}
+}
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('SESSION_SECRET is required in production'); })() : 'pds-lifting-dev-secret'),
+    store: new FileStore({
+        path: sessionsDir,
+        ttl: 30 * 24 * 60 * 60, // 30 days session TTL
+        retries: 2,
+        logFn: () => {}
+    }),
+    secret: process.env.SESSION_SECRET || 'pds-lifting-dev-secret',
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Reset cookie expiration on active usage
     name: 'pds.sid',
     cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days default
         secure: process.env.NODE_ENV === 'production' || process.env.FORCE_SECURE_COOKIE === 'true',
         httpOnly: true,
         sameSite: 'lax'
