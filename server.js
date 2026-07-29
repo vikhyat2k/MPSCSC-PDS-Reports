@@ -2823,11 +2823,6 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
                             report = await db.getReport(reportId);
                         }
                     }
-                } catch (genErr) {
-                    console.error(`❌ Auto-generation failed for ${scheme} ${month}/${year}:`, genErr);
-                    generationErrors.push(`[${scheme.toUpperCase()} ${month}/${year}] ${genErr.message}`);
-                    // Fallback: try the most recent cached report from DB
-                    if (forceRefresh) {
                         console.log(`⚠️ Scraping failed for ${scheme}, falling back to cached DB report...`);
                         try {
                             const cached = await db.all(`
