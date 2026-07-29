@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 29 Jul 2026 — Transporter linking to Issue Center & Manual Report Generation provision in Pending Dispatch Analysis |
+| Last Code Change | 29 Jul 2026 — Clean re-installation of corrupted node_modules dependencies & verified server startup |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1175,6 +1175,18 @@ Type: Feature / Bug Fix / UI Improvement
 - FIX:
   1. Configured persistent `session-file-store` (`FileStore`) in `server.js` with `rolling: true` and explicit 30-day maxAge cookie persistence on disk (`sessions/`), keeping users logged in across server restarts.
   2. Added official MPSCSC logo (`mpscsc_logo.png`), organization header ("म.प्र. स्टेट सिविल सप्लाईज़ कार्पो. लि."), and Creator attribution ("Created & Maintained by Vikhyat Hindoliya | MPSCSC District Office Betul") to `public/login.html` and `public/index.html`.
+
+---
+
+### 2026-07-29 | Fix Corrupted node_modules Dependencies & Clean Package Reinstallation
+
+Files: package-lock.json, node_modules (reinstalled 407 packages)
+Type: Bug Fix / Dependency Repair
+Closes: ISSUE-014
+
+- BUG: Server startup failed with `SyntaxError: Invalid or unexpected token` in `node_modules/jsonfile/index.js` and `node_modules/is-typedarray/index.js`.
+- ROOT CAUSE: Package files within `node_modules` became corrupted with NUL bytes/blank lines during an interrupted process or unclean shutdown.
+- FIX: Purged corrupted `node_modules` directory and executed a clean `npm install`, reinstalling all 407 packages fresh. Verified clean server startup (`http://localhost:3000`).
 
 ---
 
