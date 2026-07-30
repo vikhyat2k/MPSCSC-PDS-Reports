@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 30 Jul 2026 — Fixed District Intelligence messenger calculation to use Depot Dispatch (s.dispatch) instead of POS Receipt |
+| Last Code Change | 30 Jul 2026 — Unclubbed multi-sector transporters into separate sector-wise entries in District Intelligence messenger |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 

@@ -222,28 +222,48 @@ class AnalyticsService {
 
                 // Build allTransporters flat list (all transporters, including 0-dispatch)
                 // Used by District Intelligence / Messenger tab
-                const allStats = {};
-                // Seed from config so zero-dispatch transporters appear
-                sectorsConfig.forEach(s => {
-                    const name = s.transporter;
-                    if (!name) return;
-                    if (!allStats[name]) allStats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
+                const allSectorMap = new Map();
+                sectorsConfig.forEach(cfg => {
+                    const key = cfg.sectorName;
+                    if (!key) return;
+                    allSectorMap.set(key, {
+                        sectorName: cfg.sectorName,
+                        transporter: cfg.transporter || 'N/A',
+                        name: `${cfg.transporter || 'N/A'} (${cfg.sectorName})`,
+                        dispatchSum: 0,
+                        allottedSum: parseFloat(cfg.monthlyAllocation || 0)
+                    });
                 });
-                // Populate from actual sector data
                 activeSectors.forEach(s => {
-                    const name = s.transporter || 'N/A';
-                    if (!allStats[name]) allStats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
-                    allStats[name].dispatchSum += parseFloat(s.dispatch || 0);
-                    allStats[name].allottedSum += (s.allocation !== undefined ? s.allocation : (s.dispatch || 0));
-                    allStats[name].count++;
+                    const sName = s.sectorName || s.name;
+                    const key = sName;
+                    const existing = allSectorMap.get(key) || {
+                        sectorName: sName,
+                        transporter: s.transporter || 'N/A',
+                        name: `${s.transporter || 'N/A'} (${sName})`,
+                        dispatchSum: 0,
+                        allottedSum: 0
+                    };
+                    existing.dispatchSum += parseFloat(s.dispatch || 0);
+                    if (s.allocation !== undefined) {
+                        existing.allottedSum = parseFloat(s.allocation || 0);
+                    }
+                    if (s.transporter) existing.transporter = s.transporter;
+                    allSectorMap.set(key, existing);
                 });
-                const allTransportersList = Object.values(allStats).map(t => ({
-                    name: t.name,
-                    avgDispatch: t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0,
-                    dispatchPct: t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0,
-                    sectorCount: t.count,
-                    balance: parseFloat((t.allottedSum - t.dispatchSum).toFixed(2))
-                }));
+                const allTransportersList = Array.from(allSectorMap.values()).map(t => {
+                    const avgDispatch = t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0;
+                    const bal = parseFloat((t.allottedSum - t.dispatchSum).toFixed(2));
+                    return {
+                        name: t.name,
+                        transporter: t.transporter,
+                        sectorName: t.sectorName,
+                        avgDispatch,
+                        dispatchPct: avgDispatch,
+                        sectorCount: 1,
+                        balance: bal < 0 ? 0 : bal
+                    };
+                });
 
                 // Add insight for zero-dispatch transporters
                 const zeroDispatchTransporters = allTransportersList.filter(t => t.avgDispatch === 0).map(t => t.name);
