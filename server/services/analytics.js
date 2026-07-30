@@ -233,7 +233,7 @@ class AnalyticsService {
                 activeSectors.forEach(s => {
                     const name = s.transporter || 'N/A';
                     if (!allStats[name]) allStats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
-                    allStats[name].dispatchSum += parseFloat(s.posReceipt || s.receipt || s.received || s.totalReceived || s.dispatch || 0);
+                    allStats[name].dispatchSum += parseFloat(s.dispatch || 0);
                     allStats[name].allottedSum += (s.allocation !== undefined ? s.allocation : (s.dispatch || 0));
                     allStats[name].count++;
                 });
@@ -290,7 +290,7 @@ class AnalyticsService {
             processedResult.sectors.forEach(s => {
                 const name = s.transporter || 'N/A';
                 if (!flatStats[name]) flatStats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
-                flatStats[name].dispatchSum += parseFloat(s.posReceipt || s.receipt || s.received || s.totalReceived || s.dispatch || 0);
+                flatStats[name].dispatchSum += parseFloat(s.dispatch || 0);
                 flatStats[name].allottedSum += (s.allocation !== undefined ? s.allocation : (s.dispatch || 0));
                 flatStats[name].count++;
             });
