@@ -1,16 +1,18 @@
 @echo off
+title Stop PDS Report Server
+cd /d "%~dp0"
+
 echo ========================================
-echo Stopping PDS Report Server
+echo   Stopping PDS Report Server
 echo ========================================
 echo.
 
-REM Kill all Node.js processes (stops the server)
 taskkill /F /IM node.exe /T >nul 2>&1
 
 if %ERRORLEVEL% EQU 0 (
     echo Server stopped successfully!
 ) else (
-    echo No server was running.
+    echo No active PDS server instance was running.
 )
 
 echo.

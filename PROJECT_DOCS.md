@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 29 Jul 2026 — Compacted Pending Analytics prompt card layout to eliminate excessive vertical space |
+| Last Code Change | 30 Jul 2026 — Fixed Start PDS Portal batch launcher with dynamic Node.js PATH resolution and auto-browser opening |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -584,7 +584,19 @@ Tracks what has been tested and confirmed working.
 
 ## 20. CHANGE LOG (DATEWISE)
 
-Authoritative record of all project changes. Updated automatically with every modification.
+---
+
+### 2026-07-30 | Fix Start PDS Portal Desktop Launcher & Dynamic Node.js PATH Resolution
+
+Files: START_PORTAL.bat, STOP_PORTAL.bat, START_REMOTE_ACCESS.bat, create_shortcuts.ps1
+Type: Bug Fix / Launcher Hardening
+
+- BUG: Double-clicking "Start PDS Portal" desktop shortcut failed to launch the server or open the web browser.
+- ROOT CAUSE: Node.js was installed in `%USERPROFILE%\.cache\codex-runtimes\...` and was not registered in the Windows system environment PATH. Running `node server.js` directly from batch files failed with `'node' is not recognized as an internal or external command`. Additionally, `START_PORTAL.bat` lacked directory navigation (`cd /d "%~dp0"`) and browser auto-opening logic.
+- FIX:
+  1. Updated `START_PORTAL.bat` with automatic directory resolution (`cd /d "%~dp0"`), dynamic fallback PATH detection for local Node.js installations, and automated opening of `http://localhost:3000` in the default browser after server boot.
+  2. Updated `STOP_PORTAL.bat` and `START_REMOTE_ACCESS.bat` with directory context and Node.js PATH fallback.
+  3. Created and executed `create_shortcuts.ps1` to regenerate verified Desktop shortcuts for starting and stopping the PDS Portal.
 
 ---
 
