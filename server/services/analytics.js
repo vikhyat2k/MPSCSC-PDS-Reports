@@ -277,30 +277,61 @@ class AnalyticsService {
             }
         }
 
-        // Build flat allTransporters list for ALL reports (used by Messenger/District Intelligence)
-        // This ensures zero-dispatch transporters appear in the Messenger tab regardless of scheme
+        // Build flat allTransporters list SECTOR-WISE for ALL reports (used by Messenger/District Intelligence)
+        // Shows separate entry per sector (e.g. "श्री पीयूष आर्य (बैतूल सेक्टर क्र 2)", "श्री पीयूष आर्य (भीमपुर सेक्टर क्र 11)")
         let allTransportersFlatList = [];
-        if (processedResult && processedResult.sectors && metrics.totalAllocation > 0) {
-            const flatStats = {};
-            sectorsConfig.forEach(s => {
-                const name = s.transporter;
-                if (!name) return;
-                if (!flatStats[name]) flatStats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
+        if (processedResult && processedResult.sectors) {
+            const sectorMap = new Map();
+
+            // 1. Seed all 22 sectors from config so 0-dispatch sectors appear
+            sectorsConfig.forEach(cfg => {
+                const key = cfg.sectorName;
+                if (!key) return;
+                sectorMap.set(key, {
+                    sectorName: cfg.sectorName,
+                    transporter: cfg.transporter || 'N/A',
+                    name: `${cfg.transporter || 'N/A'} (${cfg.sectorName})`,
+                    dispatchSum: 0,
+                    allottedSum: 0
+                });
             });
+
+            // 2. Populate from actual processed sector data
             processedResult.sectors.forEach(s => {
-                const name = s.transporter || 'N/A';
-                if (!flatStats[name]) flatStats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
-                flatStats[name].dispatchSum += parseFloat(s.dispatch || 0);
-                flatStats[name].allottedSum += (s.allocation !== undefined ? s.allocation : (s.dispatch || 0));
-                flatStats[name].count++;
+                const sName = s.sectorName || s.name;
+                const key = sName;
+                const existing = sectorMap.get(key) || {
+                    sectorName: sName,
+                    transporter: s.transporter || 'N/A',
+                    name: `${s.transporter || 'N/A'} (${sName})`,
+                    dispatchSum: 0,
+                    allottedSum: 0
+                };
+
+                existing.dispatchSum += parseFloat(s.dispatch || 0);
+                if (s.allocation !== undefined) {
+                    existing.allottedSum = parseFloat(s.allocation || 0);
+                } else if (existing.allottedSum === 0) {
+                    existing.allottedSum = parseFloat(s.dispatch || 0);
+                }
+
+                if (s.transporter) existing.transporter = s.transporter;
+                sectorMap.set(key, existing);
             });
-            allTransportersFlatList = Object.values(flatStats).map(t => ({
-                name: t.name,
-                avgDispatch: t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0,
-                dispatchPct: t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0,
-                sectorCount: t.count,
-                balance: parseFloat((t.allottedSum - t.dispatchSum).toFixed(2))
-            }));
+
+            allTransportersFlatList = Array.from(sectorMap.values()).map(t => {
+                const avgDispatch = t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0;
+                const bal = parseFloat((t.allottedSum - t.dispatchSum).toFixed(2));
+                return {
+                    name: t.name,
+                    transporter: t.transporter,
+                    sectorName: t.sectorName,
+                    avgDispatch,
+                    dispatchPct: avgDispatch,
+                    sectorCount: 1,
+                    balance: bal < 0 ? 0 : bal
+                };
+            });
         }
 
         return {

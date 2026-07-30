@@ -582,7 +582,20 @@ Tracks what has been tested and confirmed working.
 
 ---
 
-## 20. CHANGE LOG (DATEWISE)
+---
+
+### 2026-07-30 | Fix District Intelligence Messenger Calculation to Match Depot Dispatch (Lifting) Balances
+
+Files: server/services/analytics.js
+Type: Bug Fix / Data Reconciliation
+
+- BUG: Data in District Intelligence WhatsApp Messenger report did not tally with the Pending Sector Details (Balance Report) modal. For example, Shri Pradeep Singh showed 2,293.88 Qt remaining in the WhatsApp text vs 1,784.99 Qt in the Sector Details modal.
+- ROOT CAUSE:
+  1. `analytics.js` (`allTransporters` / `allTransportersFlatList`) erroneously accumulated `s.posReceipt` (FPS shop received quantity) instead of `s.dispatch` (depot dispatched quantity). POS Receipt is smaller than Depot Dispatch (due to transit delays), causing remaining POS balance (`Allocation - POS Receipt`) to be higher than remaining depot dispatch balance (`Allocation - Depot Dispatch`).
+  2. Multi-sector transporters (e.g. Shri Piyush Arya with Sector 2 & Sector 11) were displayed per-sector in the Sector Details modal (1,096.61 Qt + 875.79 Qt) and aggregated per-transporter (1,972.40 Qt) in the WhatsApp text.
+- FIX:
+  1. Updated `analytics.js` to accumulate `s.dispatch` across all transporter calculations, ensuring the District Intelligence WhatsApp text measures true **Depot Dispatch (Lifting)** percentage and remaining balance.
+  2. Verified that aggregated balances in the WhatsApp text now tally 100% with the sum of individual sector balances in the Pending Sector Details modal.
 
 ---
 
