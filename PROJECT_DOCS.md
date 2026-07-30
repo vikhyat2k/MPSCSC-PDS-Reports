@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 30 Jul 2026 — Unclubbed multi-sector transporters into separate sector-wise entries in District Intelligence messenger |
+| Last Code Change | 30 Jul 2026 — Fixed desktop shortcut icons with native ICO generation & instant Shell refresh |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -581,6 +581,42 @@ Tracks what has been tested and confirmed working.
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
 
 ---
+
+### 2026-07-30 | Fix Windows Desktop Shortcut Icons & Native ICO Icon Generation
+
+Files: create_shortcuts.ps1, logo.ico
+Type: Bug Fix / Desktop Launcher UI
+
+- BUG: Desktop shortcut icons were broken or displayed default blank document icons.
+- ROOT CAUSE:
+  1. Windows `.lnk` shell shortcuts created via WScript.Shell cannot natively render PNG images (`logo.png`) as shortcut icons. Pointing `IconLocation` directly to `.png` files causes Windows Shell to reject the icon or display a generic unknown document icon.
+  2. `create_shortcuts.ps1` only generated shortcuts for Start and Stop, omitting "Start PDS Remote Access".
+  3. Icon cache was not being refreshed programmatically, requiring Explorer/system restart for changes to reflect.
+- FIX:
+  1. Enhanced `create_shortcuts.ps1` to automatically generate a native Windows `logo.ico` file from `logo.png` using .NET `System.Drawing`.
+  2. Assigned valid `.ico` icon locations to `Start PDS Portal.lnk` (`logo.ico,0`), `Start PDS Remote Access.lnk` (`logo.ico,0`), and a dedicated red stop icon (`shell32.dll,27`) to `Stop PDS Portal.lnk`.
+  3. Integrated Windows Shell `SHChangeNotify` (`SHCNE_ASSOCCHANGED`) into the script to instantly flush and refresh Windows Desktop shortcut icons without needing Explorer restart or user logoff.
+
+---
+
+### 2026-07-30 | Multi-Sector Transporters Displayed Sector-Wise in WhatsApp Messenger District Intelligence
+
+Files: server/services/analytics.js
+Type: Feature Enhancement / User Interface Fix
+
+- USER REQUIREMENT: Do not club multi-sector transporters together into a single combined transporter entry in the WhatsApp report (e.g. `श्री पीयूष आर्य` with combined balance 1,972.40 Qt across Sector 2 & 11). List each sector separately by sector name and number.
+
+---
+
+### 2026-07-30 | Unclub Multi-Sector Transporters into Separate Sector-Wise Entries in District Intelligence
+
+Files: server/services/analytics.js
+Type: Feature Enhancement / User Interface Fix
+
+- USER REQUIREMENT: Do not club multi-sector transporters together into a single combined transporter entry in the WhatsApp report (e.g. `श्री पीयूष आर्य` with combined balance 1,972.40 Qt across Sector 2 & 11). List each sector separately by sector name and number.
+- FIX:
+  1. Updated `analytics.js` (`allTransporters` & `allTransportersFlatList`) to map entries sector-wise (`${transporter} (${sectorName})`) across all 22 district sectors.
+  2. Multi-sector transporters now display as separate individual items in the District Intelligence messenger list (e.g. `श्री पीयूष आर्य (बैतूल सेक्टर क्र 2)` with 1,096.61 Qt and `श्री पीयूष आर्य (भीमपुर सेक्टर क्र 11)` with 875.79 Qt), matching the Pending Sector Details modal cards 1-to-1 without any aggregation ambiguity.
 
 ---
 
