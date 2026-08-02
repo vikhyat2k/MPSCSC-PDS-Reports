@@ -1369,9 +1369,10 @@ Closes: ISSUE-014
   3. Restored Date Range reports used generic `analytics.analyzeReport()` instead of `computeNFSADaterangeAnalytics()`.
 - FIX:
   1. Updated `nfsaDaterangeDataProcessor.js` to pre-seed all 22 sectors from `config/sectors.json` into `sectorsMap`.
-  2. Updated `computeNFSADaterangeAnalytics()` in `server.js`, `reportRestorer.js`, and `Technical Audit/server.js` to backfill missing sectors and generate explicit zero-dispatch insights: `⚠️ 0 डिस्पैच / शून्य उठाओ: दिनांक ... को X सेक्टरों (Y परिवहनकर्ता) में कोई डिस्पैच दर्ज नहीं हुआ (...)`.
-  3. Configured `bottomPerformers` to explicitly list 0-dispatch transporters/sectors (0.00% / 0.00 Qt) as low performers.
-  4. Added a fallback guard in `renderInsightsList()` in `public/app.js` to prevent printing `⚠️ कम प्रदर्शनकर्ता` if `bottomTransporters` names are identical to `topTransporters`.
+  2. Moved `sectorsConfig` backfill to the very top of `computeNFSADaterangeAnalytics()` in `server.js`, `reportRestorer.js`, and `Technical Audit/server.js` before active/low performers are calculated.
+  3. Added explicit zero-dispatch insight generation: `⚠️ 0 डिस्पैच / शून्य उठाओ: दिनांक ... को X सेक्टरों (Y परिवहनकर्ता) में कोई डिस्पैच दर्ज नहीं हुआ (...)`.
+  4. Updated `GET /api/reports/:id` and `GET /api/reports/:id/analytics` to dynamically re-evaluate `computeNFSADaterangeAnalytics` on the fly so cached database reports and Messenger tab instantly reflect 0-dispatch analytics.
+  5. Added a fallback guard in `renderInsightsList()` in `public/app.js` to prevent printing `⚠️ कम प्रदर्शनकर्ता` if `bottomTransporters` names are identical to `topTransporters`.
 
 ---
 
