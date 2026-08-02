@@ -447,8 +447,7 @@ function computeWelfareAnalytics(processedResult) {
 
 function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMapping = null) {
     const { sectors, totals } = processedResult || {};
-    const basePool = sectors || [];
-    const activeSectorsCount = basePool.filter(s => parseFloat(s.dispatch || 0) > 0).length;
+    const basePool = sectors ? [...sectors] : [];
 
     if (Array.isArray(sectorsConfig) && sectorsConfig.length > 0) {
         const existingSectorNames = new Set(basePool.map(s => s.sectorName));
@@ -467,6 +466,8 @@ function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotm
             }
         });
     }
+
+    const activeSectorsCount = basePool.filter(s => parseFloat(s.dispatch || 0) > 0).length;
 
     const groupPerformersHelper = (data, sortOrder = 'desc', limit = 5) => {
         const groups = {};

@@ -1283,8 +1283,21 @@ app.get('/api/reports/:id', async (req, res) => {
         if (report.insights) {
             let insights = typeof report.insights === 'string' ? JSON.parse(report.insights) : report.insights;
             
-            // If it's the legacy "AI Summary" format (missing .metrics or .needsAttention), restore details from Excel
-            if (!insights.metrics || !insights.needsAttention) {
+            // For Date Range reports, re-compute analytics dynamically so 0-dispatch sectors & transporters are always up-to-date
+            if (report.scheme === 'nfsa_daterange' && report.raw_data) {
+                try {
+                    const rawData = typeof report.raw_data === 'string' ? JSON.parse(report.raw_data) : report.raw_data;
+                    const rData = rawData.rawData || rawData;
+                    const summaryTotals = rawData.summaryTotals || null;
+                    const allotmentMap = rawData.allotmentMapping || null;
+                    const fromDate = report.fromDate || report.from_date || '';
+                    const toDate = report.toDate || report.to_date || '';
+                    const processedResult = nfsaDaterangeDataProcessor.processData(rData, summaryTotals, allotmentMap);
+                    insights = computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMap);
+                } catch (e) {
+                    console.error('Error re-evaluating daterange insights:', e);
+                }
+            } else if (!insights.metrics || !insights.needsAttention) {
                 const restoredInsights = await reportRestorer.restoreReport(report);
                 if (restoredInsights) {
                     await db.db.run(`UPDATE reports SET insights = ? WHERE id = ?`, [JSON.stringify(restoredInsights), report.id]);
@@ -1318,6 +1331,21 @@ app.get('/api/reports/:id/analytics', async (req, res) => {
         let insights = report.insights;
         if (typeof insights === 'string') {
             insights = JSON.parse(insights);
+        }
+
+        if (report.scheme === 'nfsa_daterange' && report.raw_data) {
+            try {
+                const rawData = typeof report.raw_data === 'string' ? JSON.parse(report.raw_data) : report.raw_data;
+                const rData = rawData.rawData || rawData;
+                const summaryTotals = rawData.summaryTotals || null;
+                const allotmentMap = rawData.allotmentMapping || null;
+                const fromDate = report.fromDate || report.from_date || '';
+                const toDate = report.toDate || report.to_date || '';
+                const processedResult = nfsaDaterangeDataProcessor.processData(rData, summaryTotals, allotmentMap);
+                insights = computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMap);
+            } catch (e) {
+                console.error('Error re-evaluating daterange insights for messenger:', e);
+            }
         }
         
         // Ensure format is what Messenger expects (has topPerformers, bottomPerformers, metrics)
