@@ -42,6 +42,25 @@ class NFSADaterangeDataProcessor {
         }
         
         const sectorsMap = {};
+        
+        // Pre-seed sectorsMap with all configured sectors so 0-dispatch sectors are included in processedResult.sectors
+        if (Array.isArray(sectorsConfig)) {
+            sectorsConfig.forEach(cfg => {
+                const secId = String(cfg.serialNo || '');
+                if (!secId) return;
+                sectorsMap[secId] = {
+                    sectorName: cfg.sectorName || `Sector ${secId}`,
+                    serialNo: secId,
+                    transporter: cfg.transporter || '',
+                    mobileNumber: cfg.mobile || '',
+                    block: cfg.block || cfg.districtOffice || '',
+                    dispatch: 0,
+                    totalShops: cfg.totalShops || mappedCounts[secId] || 0,
+                    shops: []
+                };
+            });
+        }
+
         const shops = Array.isArray(rawData) ? rawData : [];
 
         // Values are already in Quintals from the scraper — this is a generic numeric parser.
