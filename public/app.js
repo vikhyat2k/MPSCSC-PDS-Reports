@@ -662,14 +662,19 @@ function renderInsightsList(id, insights, topTransporters = [], bottomTransporte
     }
 
     if (bottomTransporters && bottomTransporters.length > 0) {
-        displayInsights.push({
-            icon: '⚠️', 
-            severity: 'warning', 
-            message: `⚠️ कम प्रदर्शनकर्ता (Dispatch % के अनुसार): ${bottomTransporters.map(t => {
-                const pct = t.dispatchPct || t.avgDispatch || t.dispatchPercentage || 0;
-                return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${pct}%)`;
-            }).join(', ')}`
-        });
+        const topNames = (topTransporters || []).map(t => (t.name || t.sectorName || '').trim()).sort().join('|');
+        const bottomNames = bottomTransporters.map(t => (t.name || t.sectorName || '').trim()).sort().join('|');
+
+        if (!topNames || topNames !== bottomNames) {
+            displayInsights.push({
+                icon: '⚠️', 
+                severity: 'warning', 
+                message: `⚠️ कम प्रदर्शनकर्ता (Dispatch % के अनुसार): ${bottomTransporters.map(t => {
+                    const pct = t.dispatchPct || t.avgDispatch || t.dispatchPercentage || 0;
+                    return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${pct}%)`;
+                }).join(', ')}`
+            });
+        }
     }
 
     if (displayInsights.length === 0) {

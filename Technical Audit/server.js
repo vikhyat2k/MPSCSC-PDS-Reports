@@ -787,7 +787,26 @@ function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotm
         insights.push({ icon: '🎯', severity: 'info', message: 'प्रगति की गणना डेटाबेस में उपलब्ध मासिक आवंटन लक्ष्यों के आधार पर की जा रही है।' });
     }
 
-    // Add insight for zero-dispatch transporters
+    // Ensure basePool contains all configured sectors so 0-dispatch sectors/transporters are fully analyzed
+    if (Array.isArray(sectorsConfig) && sectorsConfig.length > 0) {
+        const existingSectorNames = new Set(basePool.map(s => s.sectorName));
+        sectorsConfig.forEach(cfg => {
+            if (cfg.sectorName && !existingSectorNames.has(cfg.sectorName)) {
+                basePool.push({
+                    sectorName: cfg.sectorName,
+                    serialNo: String(cfg.serialNo || ''),
+                    transporter: cfg.transporter || '',
+                    mobileNumber: cfg.mobile || '',
+                    block: cfg.block || cfg.districtOffice || '',
+                    dispatch: 0,
+                    totalShops: cfg.totalShops || 0,
+                    shops: []
+                });
+            }
+        });
+    }
+
+    // Add insight for zero-dispatch transporters & sectors
     const zeroDispatchSectors = basePool.filter(s => parseFloat(s.dispatch || 0) === 0);
     if (zeroDispatchSectors.length > 0) {
         const zeroTransporters = [...new Set(zeroDispatchSectors.map(s => s.transporter).filter(t => t && t !== 'श्री - '))];
@@ -795,7 +814,13 @@ function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotm
             insights.push({ 
                 icon: '⚠️', 
                 severity: 'warning', 
-                message: `${dateContext} निम्नलिखित परिवहनकर्ताओं के लिए शून्य उठाओ दर्ज किया गया: ${zeroTransporters.join(', ')}` 
+                message: `⚠️ 0 डिस्पैच / शून्य उठाओ: ${dateContext} ${zeroDispatchSectors.length} सेक्टरों (${zeroTransporters.length} परिवहनकर्ता) में कोई डिस्पैच दर्ज नहीं हुआ (${zeroTransporters.join(', ')})` 
+            });
+        } else {
+            insights.push({ 
+                icon: '⚠️', 
+                severity: 'warning', 
+                message: `⚠️ 0 डिस्पैच / शून्य उठाओ: ${dateContext} ${zeroDispatchSectors.length} सेक्टरों में कोई डिस्पैच दर्ज नहीं हुआ` 
             });
         }
     }

@@ -445,6 +445,127 @@ function computeWelfareAnalytics(processedResult) {
     };
 }
 
+function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMapping = null) {
+    const { sectors, totals } = processedResult || {};
+    const basePool = sectors || [];
+    const activeSectorsCount = basePool.filter(s => parseFloat(s.dispatch || 0) > 0).length;
+
+    if (Array.isArray(sectorsConfig) && sectorsConfig.length > 0) {
+        const existingSectorNames = new Set(basePool.map(s => s.sectorName));
+        sectorsConfig.forEach(cfg => {
+            if (cfg.sectorName && !existingSectorNames.has(cfg.sectorName)) {
+                basePool.push({
+                    sectorName: cfg.sectorName,
+                    serialNo: String(cfg.serialNo || ''),
+                    transporter: cfg.transporter || '',
+                    mobileNumber: cfg.mobile || '',
+                    block: cfg.block || cfg.districtOffice || '',
+                    dispatch: 0,
+                    totalShops: cfg.totalShops || 0,
+                    shops: []
+                });
+            }
+        });
+    }
+
+    const groupPerformersHelper = (data, sortOrder = 'desc', limit = 5) => {
+        const groups = {};
+        data.forEach(s => {
+            const t = s.transporter;
+            if (!t || t === 'श्री - ') return;
+            if (!groups[t]) {
+                groups[t] = { dispatchQty: 0, sectorCount: 0 };
+            }
+            let rec = s.posReceipt !== undefined ? s.posReceipt : (s.received !== undefined ? s.received : (s.receipt !== undefined ? s.receipt : s.dispatch));
+            groups[t].dispatchQty += (parseFloat(rec) || 0);
+            groups[t].sectorCount += 1;
+        });
+
+        let pool = Object.keys(groups).map(t => ({
+            name: t,
+            transporter: t,
+            dispatchQty: groups[t].dispatchQty,
+            dispatchPercentage: groups[t].dispatchQty,
+            sectorCount: groups[t].sectorCount
+        }));
+
+        if (sortOrder === 'desc') {
+            pool = pool.filter(p => p.dispatchQty > 0);
+        }
+
+        pool.sort((a, b) => sortOrder === 'desc' ? b.dispatchQty - a.dispatchQty : a.dispatchQty - b.dispatchQty);
+
+        return pool.slice(0, limit).map(p => ({
+            name: p.name,
+            transporter: p.transporter,
+            dispatchPercentage: p.dispatchPercentage.toFixed(2),
+            dispatchQty: p.dispatchQty.toFixed(2),
+            items: [{
+                name: p.name,
+                transporter: p.transporter,
+                dispatchQty: p.dispatchQty.toFixed(2),
+                sectorCount: p.sectorCount
+            }]
+        }));
+    };
+
+    const topPerformers = groupPerformersHelper(basePool, 'desc', 5);
+    const bottomPerformers = groupPerformersHelper(basePool, 'asc', 10);
+
+    let dateContext = "इस अवधि के दौरान";
+    if (fromDate && toDate) {
+        if (fromDate === toDate) {
+            dateContext = `दिनांक ${fromDate} को`;
+        } else {
+            const partsFrom = fromDate.split('/');
+            const partsTo = toDate.split('/');
+            const d1 = new Date(partsFrom[2], partsFrom[1] - 1, partsFrom[0]);
+            const d2 = new Date(partsTo[2], partsTo[1] - 1, partsTo[0]);
+            const diffTime = Math.abs(d2 - d1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            dateContext = `दिनांक ${fromDate} से ${toDate} (${diffDays} दिन) के दौरान`;
+        }
+    }
+
+    const insights = [];
+    insights.push({ icon: '🚚', severity: 'success', message: `${dateContext} जिले भर में कुल ${parseFloat((totals && totals.totalDispatch) || 0).toFixed(2)} क्विंटल सामग्री प्रेषित (dispatched) की गई।` });
+    insights.push({ icon: '📋', severity: 'info', message: `${dateContext} कुल ${activeSectorsCount} सेक्टरों में डिस्पैच गतिविधि दर्ज की गई।` });
+    
+    if (allotmentMapping) {
+        insights.push({ icon: '🎯', severity: 'info', message: 'प्रगति की गणना डेटाबेस में उपलब्ध मासिक आवंटन लक्ष्यों के आधार पर की जा रही है।' });
+    }
+
+    const zeroDispatchSectors = basePool.filter(s => parseFloat(s.dispatch || 0) === 0);
+    if (zeroDispatchSectors.length > 0) {
+        const zeroTransporters = [...new Set(zeroDispatchSectors.map(s => s.transporter).filter(t => t && t !== 'श्री - '))];
+        if (zeroTransporters.length > 0) {
+            insights.push({ 
+                icon: '⚠️', 
+                severity: 'warning', 
+                message: `⚠️ 0 डिस्पैच / शून्य उठाओ: ${dateContext} ${zeroDispatchSectors.length} सेक्टरों (${zeroTransporters.length} परिवहनकर्ता) में कोई डिस्पैच दर्ज नहीं हुआ (${zeroTransporters.join(', ')})` 
+            });
+        } else {
+            insights.push({ 
+                icon: '⚠️', 
+                severity: 'warning', 
+                message: `⚠️ 0 डिस्पैच / शून्य उठाओ: ${dateContext} ${zeroDispatchSectors.length} सेक्टरों में कोई डिस्पैच दर्ज नहीं हुआ` 
+            });
+        }
+    }
+
+    return {
+        metrics: {
+            totalDispatch: (totals && totals.totalDispatch) || 0,
+            activeSectors: activeSectorsCount
+        },
+        topTransporters: topPerformers,
+        bottomTransporters: bottomPerformers,
+        insights,
+        fromDate,
+        toDate
+    };
+}
+
 class ReportRestorer {
     async restoreReport(report) {
         if (!report || !report.raw_data) return null;

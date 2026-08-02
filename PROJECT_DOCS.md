@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 30 Jul 2026 — Fixed desktop shortcut icons with native ICO generation & instant Shell refresh |
+| Last Code Change | 02 Aug 2026 — Fixed 0-dispatch analytics & top/low performer duplication in Date Range reports |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1353,6 +1353,25 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-02 | Fix 0-Dispatch Analytics & Low Performer Duplication in Date Range Reports
+
+Files: server/services/nfsaDaterangeDataProcessor.js, server.js, server/services/reportRestorer.js, public/app.js, Technical Audit/server.js
+Type: Bug Fix / Analytics Enhancement
+Closes: ISSUE-014
+
+- BUG:
+  1. Date Range / Daily reports showed low performers as the exact duplicate of top performers in reverse order (e.g. listing top 5 performers as bottom 5 performers).
+  2. 0-dispatch sectors (e.g. 17 out of 22 sectors with 0 lifting on 02/08/2026) were missing from analytics, top/low performer classification, and analytical review insights.
+- ROOT CAUSE:
+  1. `nfsaDaterangeDataProcessor.js` only added sectors to `sectorsMap` if a shop had `dispatch > 0`, excluding 0-dispatch sectors from `processedResult.sectors`.
+  2. `computeNFSADaterangeAnalytics` evaluated `basePool` on active sectors only, causing top and bottom performer helper functions to sort the exact same 5 active transporters in forward/reverse order and skipping zero-dispatch transporters.
+  3. Restored Date Range reports used generic `analytics.analyzeReport()` instead of `computeNFSADaterangeAnalytics()`.
+- FIX:
+  1. Updated `nfsaDaterangeDataProcessor.js` to pre-seed all 22 sectors from `config/sectors.json` into `sectorsMap`.
+  2. Updated `computeNFSADaterangeAnalytics()` in `server.js`, `reportRestorer.js`, and `Technical Audit/server.js` to backfill missing sectors and generate explicit zero-dispatch insights: `⚠️ 0 डिस्पैच / शून्य उठाओ: दिनांक ... को X सेक्टरों (Y परिवहनकर्ता) में कोई डिस्पैच दर्ज नहीं हुआ (...)`.
+  3. Configured `bottomPerformers` to explicitly list 0-dispatch transporters/sectors (0.00% / 0.00 Qt) as low performers.
+  4. Added a fallback guard in `renderInsightsList()` in `public/app.js` to prevent printing `⚠️ कम प्रदर्शनकर्ता` if `bottomTransporters` names are identical to `topTransporters`.
 
 ---
 

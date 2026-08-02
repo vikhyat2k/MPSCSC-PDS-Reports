@@ -695,9 +695,28 @@ async function generateAiInsights(processedData, scheme, month, year) {
  * Compute NFSA Date Range analytics from processedResult
  */
 function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMapping = null, shopAllotmentMapping = null) {
-    const { sectors, totals } = processedResult;
-    // Base pool for analytics should be all sectors, not just active ones
-    const basePool = sectors || [];
+    const { sectors, totals } = processedResult || {};
+    const basePool = sectors ? [...sectors] : [];
+
+    // Ensure basePool contains all 22 configured sectors FIRST so 0-dispatch sectors & transporters are fully analyzed
+    if (Array.isArray(sectorsConfig) && sectorsConfig.length > 0) {
+        const existingSectorNames = new Set(basePool.map(s => s.sectorName));
+        sectorsConfig.forEach(cfg => {
+            if (cfg.sectorName && !existingSectorNames.has(cfg.sectorName)) {
+                basePool.push({
+                    sectorName: cfg.sectorName,
+                    serialNo: String(cfg.serialNo || ''),
+                    transporter: cfg.transporter || '',
+                    mobileNumber: cfg.mobile || '',
+                    block: cfg.block || cfg.districtOffice || '',
+                    dispatch: 0,
+                    totalShops: cfg.totalShops || 0,
+                    shops: []
+                });
+            }
+        });
+    }
+
     const activeSectorsCount = basePool.filter(s => parseFloat(s.dispatch || 0) > 0).length;
     
     // Sort all sectors by dispatch
@@ -842,25 +861,6 @@ function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotm
     
     if (allotmentMapping) {
         insights.push({ icon: '🎯', severity: 'info', message: 'प्रगति की गणना डेटाबेस में उपलब्ध मासिक आवंटन लक्ष्यों के आधार पर की जा रही है।' });
-    }
-
-    // Ensure basePool contains all configured sectors so 0-dispatch sectors/transporters are fully analyzed
-    if (Array.isArray(sectorsConfig) && sectorsConfig.length > 0) {
-        const existingSectorNames = new Set(basePool.map(s => s.sectorName));
-        sectorsConfig.forEach(cfg => {
-            if (cfg.sectorName && !existingSectorNames.has(cfg.sectorName)) {
-                basePool.push({
-                    sectorName: cfg.sectorName,
-                    serialNo: String(cfg.serialNo || ''),
-                    transporter: cfg.transporter || '',
-                    mobileNumber: cfg.mobile || '',
-                    block: cfg.block || cfg.districtOffice || '',
-                    dispatch: 0,
-                    totalShops: cfg.totalShops || 0,
-                    shops: []
-                });
-            }
-        });
     }
 
     // Add insight for zero-dispatch transporters & sectors
