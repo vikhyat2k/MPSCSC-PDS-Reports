@@ -1,9 +1,19 @@
+const fs = require('fs');
+const path = require('path');
 const DataProcessor = require('./dataProcessor');
 const MDMDataProcessor = require('./mdmDataProcessor');
 const ICDSDataProcessor = require('./icdsDataProcessor');
 const WelfareDataProcessor = require('./welfareDataProcessor');
 const NFSADaterangeDataProcessor = require('./nfsaDaterangeDataProcessor');
 const AnalyticsService = require('./analytics');
+
+let sectorsConfig = [];
+try {
+    const configPath = path.join(__dirname, '../../config/sectors.json');
+    sectorsConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+} catch (e) {
+    console.error('Could not load sectors.json in reportRestorer.js', e);
+}
 
 const dataProcessor = new DataProcessor();
 const mdmDataProcessor = new MDMDataProcessor();
@@ -466,9 +476,11 @@ class ReportRestorer {
                 const rData = rawData.rawData || rawData;
                 const summaryTotals = rawData.summaryTotals || null;
                 const allotmentMap = rawData.allotmentMapping || null;
+                const fromDate = report.fromDate || report.from_date || '';
+                const toDate = report.toDate || report.to_date || '';
                 processedResult = nfsaDaterangeDataProcessor.processData(rData, summaryTotals, allotmentMap);
                 isDateRange = true;
-                analyticsResult = analytics.analyzeReport(processedResult, null, null);
+                analyticsResult = computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMap);
                 analyticsResult.isDateRange = true;
             } else if (scheme === 'mdm') {
                 processedResult = mdmDataProcessor.processData(rawData);
