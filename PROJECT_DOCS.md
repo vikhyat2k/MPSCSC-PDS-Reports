@@ -357,6 +357,7 @@ npm run dev                # development (auto-restart)
 | GET | /api/download/pdf/:id | Download PDF |
 | GET | /api/reports/:id/advanced-analytics/excel | Download Advanced Analytics 5-Sheet Excel |
 | GET | /api/reports/:id/advanced-analytics/pdf | Download Advanced Analytics 9-Page Executive PDF |
+| GET | /api/reports/:id/advanced-analytics/html | Interactive HTML Report Preview |
 
 ---
 
