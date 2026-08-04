@@ -4285,47 +4285,47 @@ window.exportFullDashboard = exportFullDashboard;
 window.closeExportPreview = closeExportPreview;
 window.downloadExport = downloadExport;
 
-/* ── Advanced Analytics Choice Modal Logic ─────────────────── */
+/* ── Advanced Analytics Preview Modal & Export Logic ─────────────────── */
 function showAdvancedAnalyticsModal(reportId) {
-    let modal = document.getElementById('advAnalyticsModal');
+    let modal = document.getElementById('advAnalyticsPreviewModal');
     if (!modal) {
         modal = document.createElement('div');
-        modal.id = 'advAnalyticsModal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); z-index:99999; display:flex; align-items:center; justify-content:center; animation:fadeInModal 0.2s ease;';
+        modal.id = 'advAnalyticsPreviewModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.85); backdrop-filter:blur(6px); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:15px; box-sizing:border-box;';
         document.body.appendChild(modal);
     }
 
     modal.innerHTML = `
-        <div style="background:#ffffff; border-radius:16px; padding:28px; max-width:500px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.3); font-family:var(--font-family, sans-serif); position:relative;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-                <div>
-                    <h3 style="margin:0; font-size:18px; color:#0b2545; font-weight:800; display:flex; align-items:center; gap:8px;">
-                        <span>📊</span> उन्नत विश्लेषण रिपोर्ट / Advanced Analytics
-                    </h3>
-                    <p style="margin:4px 0 0 0; color:#64748b; font-size:13px;">रिपोर्ट प्रारूप चुनें (Choose deliverable format):</p>
+        <div style="background:#ffffff; border-radius:14px; width:96%; height:94%; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+            <!-- Toolbar -->
+            <div style="background:#0b2545; color:#ffffff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-bottom:3px solid #c9a227;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:22px;">📊</span>
+                    <div>
+                        <div style="font-size:15px; font-weight:800;">उन्नत विश्लेषण रिपोर्ट प्रीव्यू / Advanced Analytics Executive Report</div>
+                        <div style="font-size:11px; color:#c9a227;">MP State Civil Supplies Corporation Ltd. • District Office Betul</div>
+                    </div>
                 </div>
-                <button onclick="closeAdvAnalyticsModal()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; padding:0;">&times;</button>
+                
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <button onclick="downloadAdvAnalyticsImage()" class="btn btn-sm" style="background:#2563eb; color:#ffffff; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        🖼️ Image सेव करें (Export Image)
+                    </button>
+                    <button onclick="downloadAdvAnalytics('${reportId}', 'pdf')" class="btn btn-sm" style="background:#4338ca; color:#ffffff; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        📄 PDF डाउनलोड (.pdf)
+                    </button>
+                    <button onclick="downloadAdvAnalytics('${reportId}', 'excel')" class="btn btn-sm" style="background:#15803d; color:#ffffff; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        📊 Excel डाउनलोड (.xlsx)
+                    </button>
+                    <button onclick="closeAdvAnalyticsModal()" style="background:rgba(255,255,255,0.18); color:#ffffff; border:none; padding:8px 14px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; margin-left:6px;">
+                        ❌ बंद करें (Close)
+                    </button>
+                </div>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:12px; margin:20px 0;">
-                <button onclick="downloadAdvAnalytics('${reportId}', 'excel')" style="background:linear-gradient(135deg,#0b2545,#1e3a8a); color:#ffffff; padding:14px 18px; border-radius:10px; border:none; cursor:pointer; text-align:left; font-size:13px; font-weight:600; transition:transform 0.15s ease; box-shadow:0 4px 12px rgba(11,37,69,0.25);">
-                    <div style="font-weight:700; font-size:14px;">📊 1. Enterprise Multi-Sheet Excel Workbook (.xlsx)</div>
-                    <div style="font-size:11px; opacity:0.85; margin-top:2px;">5 Sheets • Formula-driven • Native theme • KPI Cards & Charts</div>
-                </button>
-
-                <button onclick="downloadAdvAnalytics('${reportId}', 'pdf')" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6); color:#ffffff; padding:14px 18px; border-radius:10px; border:none; cursor:pointer; text-align:left; font-size:13px; font-weight:600; transition:transform 0.15s ease; box-shadow:0 4px 12px rgba(30,58,138,0.25);">
-                    <div style="font-weight:700; font-size:14px;">📄 2. Executive Bilingual PDF Report (.pdf)</div>
-                    <div style="font-size:11px; opacity:0.85; margin-top:2px;">9 Pages • High-res charts • Risk tiers • POS Gap analysis</div>
-                </button>
-
-                <button onclick="downloadAdvAnalytics('${reportId}', 'both')" style="background:linear-gradient(135deg,#15803d,#16a34a); color:#ffffff; padding:14px 18px; border-radius:10px; border:none; cursor:pointer; text-align:left; font-size:13px; font-weight:600; transition:transform 0.15s ease; box-shadow:0 4px 12px rgba(21,128,61,0.25);">
-                    <div style="font-weight:700; font-size:14px;">📦 3. Both Deliverables (Excel + PDF)</div>
-                    <div style="font-size:11px; opacity:0.85; margin-top:2px;">Download both files simultaneously in sequence</div>
-                </button>
-            </div>
-
-            <div style="text-align:right;">
-                <button onclick="closeAdvAnalyticsModal()" style="background:#f1f5f9; border:none; color:#475569; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">रद्द करें / Cancel</button>
+            <!-- Report Content Iframe -->
+            <div style="flex:1; width:100%; background:#f8fafc; position:relative; overflow:hidden;">
+                <iframe id="advAnalyticsPreviewIframe" src="/api/reports/${reportId}/advanced-analytics/html" style="width:100%; height:100%; border:none; background:#ffffff;"></iframe>
             </div>
         </div>
     `;
@@ -4334,27 +4334,66 @@ function showAdvancedAnalyticsModal(reportId) {
 }
 
 function closeAdvAnalyticsModal() {
-    const modal = document.getElementById('advAnalyticsModal');
+    const modal = document.getElementById('advAnalyticsPreviewModal');
     if (modal) modal.style.display = 'none';
 }
 
 function downloadAdvAnalytics(reportId, type) {
-    closeAdvAnalyticsModal();
     if (type === 'excel') {
         showToast('📊 Generating Enterprise Advanced Analytics Excel...', 'info', 4000);
-        window.location.href = `api/reports/${reportId}/advanced-analytics/excel`;
+        window.location.href = `/api/reports/${reportId}/advanced-analytics/excel`;
     } else if (type === 'pdf') {
         showToast('📄 Generating Executive Analytics PDF Report...', 'info', 5000);
-        window.location.href = `api/reports/${reportId}/advanced-analytics/pdf`;
-    } else if (type === 'both') {
-        showToast('📦 Generating both Excel and PDF reports...', 'info', 6000);
-        window.location.href = `api/reports/${reportId}/advanced-analytics/excel`;
-        setTimeout(() => {
-            window.location.href = `api/reports/${reportId}/advanced-analytics/pdf`;
-        }, 1500);
+        window.location.href = `/api/reports/${reportId}/advanced-analytics/pdf`;
+    }
+}
+
+async function downloadAdvAnalyticsImage() {
+    const iframe = document.getElementById('advAnalyticsPreviewIframe');
+    const iframeDoc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
+
+    if (!iframeDoc || !iframeDoc.body || iframeDoc.body.innerHTML.trim().length === 0) {
+        alert('कृपया प्रीव्यू लोड होने तक प्रतीक्षा करें। (Please wait for preview to load completely.)');
+        return;
+    }
+
+    try {
+        showToast('🖼️ Generating Image export from report preview...', 'info', 4000);
+        await new Promise(r => setTimeout(r, 400));
+
+        if (typeof html2canvas === 'undefined') {
+            throw new Error('html2canvas library is not loaded');
+        }
+
+        const canvas = await html2canvas(iframeDoc.body, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: 0,
+            width: iframeDoc.body.scrollWidth,
+            height: iframeDoc.body.scrollHeight,
+            windowWidth: iframeDoc.body.scrollWidth,
+            windowHeight: iframeDoc.body.scrollHeight
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        const link = document.createElement('a');
+        link.download = `Advanced_Analytics_Executive_Report_${Date.now()}.jpg`;
+        link.href = imgData;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showToast('✅ Image exported successfully!', 'success', 3000);
+    } catch (err) {
+        console.error('Image export error:', err);
+        alert('इमेज बनाने में त्रुटि हुई: ' + err.message);
     }
 }
 
 window.showAdvancedAnalyticsModal = showAdvancedAnalyticsModal;
 window.closeAdvAnalyticsModal = closeAdvAnalyticsModal;
 window.downloadAdvAnalytics = downloadAdvAnalytics;
+window.downloadAdvAnalyticsImage = downloadAdvAnalyticsImage;
