@@ -530,6 +530,22 @@ function showSuccess(data) {
 
     if (msg) msg.style.display = 'flex';
 
+    // Render Advanced Analytics button on success card for NFSA Monthly reports
+    const advBtnContainer = document.getElementById('advAnalyticsSuccessBtnContainer');
+    if (advBtnContainer) {
+        const reportId = data.report ? data.report.id : null;
+        if (currentScheme === 'nfsa' && currentReportMode === 'monthly' && reportId) {
+            advBtnContainer.style.display = 'block';
+            advBtnContainer.innerHTML = `
+                <button class="btn btn-sm" onclick="showAdvancedAnalyticsModal('${reportId}')" style="background:linear-gradient(135deg,#0b2545,#1e3a8a);color:#fff;border:none;cursor:pointer;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;">
+                    📊 उन्नत विश्लेषण / Advanced Analytics
+                </button>
+            `;
+        } else {
+            advBtnContainer.style.display = 'none';
+        }
+    }
+
     const timeVal = data.generationTime || (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
     const mins = Math.floor(timeVal / 60);
     const secs = timeVal % 60;
@@ -1528,6 +1544,10 @@ async function loadReports() {
                         <button class="btn-action btn-action-pdf" onclick="generatePDF('${r.id}', event)" title="Export PDF">
                             <span>📄</span> PDF
                         </button>
+                        ${(r.scheme || 'nfsa') === 'nfsa' ? `
+                        <button class="btn-action" onclick="showAdvancedAnalyticsModal('${r.id}')" title="Advanced Analytics / उन्नत विश्लेषण" style="background:linear-gradient(135deg,#0b2545,#1e3a8a);color:#fff;">
+                            <span>📊</span> विश्लेषण
+                        </button>` : ''}
                         <button class="btn-action" onclick="openEmailModal('${r.id}', '${r.scheme || 'nfsa'}')" title="Email Report" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;">
                             <span>✉️</span> Email
                         </button>
@@ -4264,3 +4284,77 @@ window.toggleExportMenu = toggleExportMenu;
 window.exportFullDashboard = exportFullDashboard;
 window.closeExportPreview = closeExportPreview;
 window.downloadExport = downloadExport;
+
+/* ── Advanced Analytics Choice Modal Logic ─────────────────── */
+function showAdvancedAnalyticsModal(reportId) {
+    let modal = document.getElementById('advAnalyticsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'advAnalyticsModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); z-index:99999; display:flex; align-items:center; justify-content:center; animation:fadeInModal 0.2s ease;';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div style="background:#ffffff; border-radius:16px; padding:28px; max-width:500px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.3); font-family:var(--font-family, sans-serif); position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                <div>
+                    <h3 style="margin:0; font-size:18px; color:#0b2545; font-weight:800; display:flex; align-items:center; gap:8px;">
+                        <span>📊</span> उन्नत विश्लेषण रिपोर्ट / Advanced Analytics
+                    </h3>
+                    <p style="margin:4px 0 0 0; color:#64748b; font-size:13px;">रिपोर्ट प्रारूप चुनें (Choose deliverable format):</p>
+                </div>
+                <button onclick="closeAdvAnalyticsModal()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer; padding:0;">&times;</button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px; margin:20px 0;">
+                <button onclick="downloadAdvAnalytics('${reportId}', 'excel')" style="background:linear-gradient(135deg,#0b2545,#1e3a8a); color:#ffffff; padding:14px 18px; border-radius:10px; border:none; cursor:pointer; text-align:left; font-size:13px; font-weight:600; transition:transform 0.15s ease; box-shadow:0 4px 12px rgba(11,37,69,0.25);">
+                    <div style="font-weight:700; font-size:14px;">📊 1. Enterprise Multi-Sheet Excel Workbook (.xlsx)</div>
+                    <div style="font-size:11px; opacity:0.85; margin-top:2px;">5 Sheets • Formula-driven • Native theme • KPI Cards & Charts</div>
+                </button>
+
+                <button onclick="downloadAdvAnalytics('${reportId}', 'pdf')" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6); color:#ffffff; padding:14px 18px; border-radius:10px; border:none; cursor:pointer; text-align:left; font-size:13px; font-weight:600; transition:transform 0.15s ease; box-shadow:0 4px 12px rgba(30,58,138,0.25);">
+                    <div style="font-weight:700; font-size:14px;">📄 2. Executive Bilingual PDF Report (.pdf)</div>
+                    <div style="font-size:11px; opacity:0.85; margin-top:2px;">9 Pages • High-res charts • Risk tiers • POS Gap analysis</div>
+                </button>
+
+                <button onclick="downloadAdvAnalytics('${reportId}', 'both')" style="background:linear-gradient(135deg,#15803d,#16a34a); color:#ffffff; padding:14px 18px; border-radius:10px; border:none; cursor:pointer; text-align:left; font-size:13px; font-weight:600; transition:transform 0.15s ease; box-shadow:0 4px 12px rgba(21,128,61,0.25);">
+                    <div style="font-weight:700; font-size:14px;">📦 3. Both Deliverables (Excel + PDF)</div>
+                    <div style="font-size:11px; opacity:0.85; margin-top:2px;">Download both files simultaneously in sequence</div>
+                </button>
+            </div>
+
+            <div style="text-align:right;">
+                <button onclick="closeAdvAnalyticsModal()" style="background:#f1f5f9; border:none; color:#475569; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">रद्द करें / Cancel</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function closeAdvAnalyticsModal() {
+    const modal = document.getElementById('advAnalyticsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function downloadAdvAnalytics(reportId, type) {
+    closeAdvAnalyticsModal();
+    if (type === 'excel') {
+        showToast('📊 Generating Enterprise Advanced Analytics Excel...', 'info', 4000);
+        window.location.href = `api/reports/${reportId}/advanced-analytics/excel`;
+    } else if (type === 'pdf') {
+        showToast('📄 Generating Executive Analytics PDF Report...', 'info', 5000);
+        window.location.href = `api/reports/${reportId}/advanced-analytics/pdf`;
+    } else if (type === 'both') {
+        showToast('📦 Generating both Excel and PDF reports...', 'info', 6000);
+        window.location.href = `api/reports/${reportId}/advanced-analytics/excel`;
+        setTimeout(() => {
+            window.location.href = `api/reports/${reportId}/advanced-analytics/pdf`;
+        }, 1500);
+    }
+}
+
+window.showAdvancedAnalyticsModal = showAdvancedAnalyticsModal;
+window.closeAdvAnalyticsModal = closeAdvAnalyticsModal;
+window.downloadAdvAnalytics = downloadAdvAnalytics;
