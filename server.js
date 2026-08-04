@@ -46,6 +46,10 @@ const NFSADaterangeScraper = require('./server/automation/nfsa_daterange_scraper
 const NFSADaterangeDataProcessor = require('./server/services/nfsaDaterangeDataProcessor');
 const NFSADaterangeExcelGenerator = require('./server/services/nfsaDaterangeExcelGenerator');
 const NFSADaterangePdfGenerator = require('./server/services/nfsaDaterangePdfGenerator');
+const AdvancedAnalyticsCompute = require('./server/services/advancedAnalytics/advancedAnalyticsCompute');
+const AdvancedAnalyticsChartRenderer = require('./server/services/advancedAnalytics/advancedAnalyticsChartRenderer');
+const AdvancedAnalyticsExcelGenerator = require('./server/services/advancedAnalytics/advancedAnalyticsExcelGenerator');
+const AdvancedAnalyticsPdfGenerator = require('./server/services/advancedAnalytics/advancedAnalyticsPdfGenerator');
 const { exec } = require('child_process');
 
 const app = express();
@@ -212,6 +216,10 @@ const balancesReportGenerator = new BalancesReportGenerator();
 const nfsaDaterangeDataProcessor = new NFSADaterangeDataProcessor();
 const nfsaDaterangeExcelGenerator = new NFSADaterangeExcelGenerator();
 const nfsaDaterangePdfGenerator = new NFSADaterangePdfGenerator();
+const advAnalyticsCompute = new AdvancedAnalyticsCompute();
+const advAnalyticsChartRenderer = new AdvancedAnalyticsChartRenderer();
+const advAnalyticsExcelGenerator = new AdvancedAnalyticsExcelGenerator();
+const advAnalyticsPdfGenerator = new AdvancedAnalyticsPdfGenerator();
 // Request tracking (already declared line 48)
 
 /**
@@ -1352,6 +1360,56 @@ app.get('/api/reports/:id/analytics', async (req, res) => {
         res.json(insights || {});
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch analytics', message: error.message });
+    }
+});
+
+// Advanced Analytics Excel Download (NFSA Monthly only in v1)
+app.get('/api/reports/:id/advanced-analytics/excel', async (req, res) => {
+    try {
+        const report = await db.getReport(req.params.id);
+        if (!report) return res.status(404).json({ error: 'Report not found' });
+        
+        if ((report.scheme || 'nfsa') !== 'nfsa') {
+            return res.status(400).json({ error: 'Advanced Analytics is currently available only for NFSA Monthly reports.' });
+        }
+
+        const computed = advAnalyticsCompute.compute(report);
+        const chartBuffers = await advAnalyticsChartRenderer.renderCharts(computed);
+        const workbook = await advAnalyticsExcelGenerator.generateWorkbook(computed, chartBuffers);
+
+        const filename = `Advanced_Analytics_NFSA_${computed.month}_${computed.year}_${Date.now()}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error('❌ Advanced Analytics Excel Generation Error:', error.message);
+        res.status(500).json({ error: 'Failed to generate Advanced Analytics Excel report', message: error.message });
+    }
+});
+
+// Advanced Analytics PDF Download (NFSA Monthly only in v1)
+app.get('/api/reports/:id/advanced-analytics/pdf', async (req, res) => {
+    try {
+        const report = await db.getReport(req.params.id);
+        if (!report) return res.status(404).json({ error: 'Report not found' });
+        
+        if ((report.scheme || 'nfsa') !== 'nfsa') {
+            return res.status(400).json({ error: 'Advanced Analytics is currently available only for NFSA Monthly reports.' });
+        }
+
+        const computed = advAnalyticsCompute.compute(report);
+        const chartBuffers = await advAnalyticsChartRenderer.renderCharts(computed);
+        const pdfBuffer = await advAnalyticsPdfGenerator.generatePdf(computed, chartBuffers);
+
+        const filename = `Executive_Analytics_Report_NFSA_${computed.month}_${computed.year}_${Date.now()}.pdf`;
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(pdfBuffer);
+    } catch (error) {
+        console.error('❌ Advanced Analytics PDF Generation Error:', error.message);
+        res.status(500).json({ error: 'Failed to generate Advanced Analytics PDF report', message: error.message });
     }
 });
 
