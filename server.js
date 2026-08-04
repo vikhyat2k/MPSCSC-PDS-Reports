@@ -1413,6 +1413,28 @@ app.get('/api/reports/:id/advanced-analytics/pdf', async (req, res) => {
     }
 });
 
+// Advanced Analytics HTML Preview (NFSA Monthly only in v1)
+app.get('/api/reports/:id/advanced-analytics/html', async (req, res) => {
+    try {
+        const report = await db.getReport(req.params.id);
+        if (!report) return res.status(404).json({ error: 'Report not found' });
+        
+        if ((report.scheme || 'nfsa') !== 'nfsa') {
+            return res.status(400).send('<h3>Advanced Analytics is currently available only for NFSA Monthly reports.</h3>');
+        }
+
+        const computed = advAnalyticsCompute.compute(report);
+        const chartBuffers = await advAnalyticsChartRenderer.renderCharts(computed);
+        const html = advAnalyticsPdfGenerator.generateHtml(computed, chartBuffers);
+
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.send(html);
+    } catch (error) {
+        console.error('❌ Advanced Analytics HTML Generation Error:', error.message);
+        res.status(500).send(`<h3>Failed to generate Advanced Analytics HTML Preview: ${error.message}</h3>`);
+    }
+});
+
 // Get unique filters (transporters, depots) for shop balances report
 app.get('/api/reports/:id/balances/filters', async (req, res) => {
     try {

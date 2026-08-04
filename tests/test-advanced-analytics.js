@@ -1,6 +1,7 @@
 const DatabaseManager = require('../server/database/db');
 const AdvancedAnalyticsCompute = require('../server/services/advancedAnalytics/advancedAnalyticsCompute');
 const AdvancedAnalyticsExcelGenerator = require('../server/services/advancedAnalytics/advancedAnalyticsExcelGenerator');
+const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,7 +12,7 @@ async function testAdvancedAnalytics() {
     await db.init();
 
     // Get reports from DB
-    const reports = await db.all("SELECT id, scheme, month, year, created_at, raw_data, insights FROM reports WHERE scheme = 'nfsa' LIMIT 5");
+    const reports = await db.all("SELECT id, scheme, month, year, generated_at, raw_data, insights FROM reports WHERE scheme = 'nfsa' LIMIT 5");
     console.log(`📊 Found ${reports.length} NFSA reports in database.`);
 
     if (reports.length === 0) {

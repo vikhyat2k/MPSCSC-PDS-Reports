@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 02 Aug 2026 — Fixed 0-dispatch analytics & top/low performer duplication in Date Range reports |
+| Last Code Change | 04 Aug 2026 — Added Standalone Advanced Analytics Report Feature (5-Sheet Excel & 9-Page PDF) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -279,6 +279,12 @@ GET /api/reports/:id
 - `loadMessengerAnalytics()` - District Intelligence
 - `getMonthName(n)` / `getHindiMonthName(n)` - number to month name
 
+### server/services/advancedAnalytics/
+- `advancedAnalyticsCompute.js`: Derives KPIs, block/transporter rollups, risk tiers, dual-direction POS gap flags, district ranks, and action plan.
+- `advancedAnalyticsChartRenderer.js`: Uses Puppeteer and Chart.js to render 4 high-res chart image PNG buffers (block bar, tier donut, grouped dispatch vs receipt bar, top POS gap bar).
+- `advancedAnalyticsExcelGenerator.js`: Generates 5-sheet formula-driven Excel workbook (`Dashboard`, `Sector Detail`, `Block Summary`, `Transporter Analysis`, `Action Plan`) with Excel formulas referencing Sheet 2 helper cells (`='Sector Detail'!Q2`).
+- `advancedAnalyticsPdfGenerator.js`: Compiles 9-page bilingual PDF executive report via Puppeteer print PDF.
+
 ### config/sectors.json
 - CRITICAL: Master list of all sectors + their transporters
 - Seeds zero-dispatch transporter detection in analytics.js
@@ -349,6 +355,8 @@ npm run dev                # development (auto-restart)
 | GET | /api/reports/:id/balances | Transporter balance data |
 | GET | /api/download/excel/:id | Download Excel |
 | GET | /api/download/pdf/:id | Download PDF |
+| GET | /api/reports/:id/advanced-analytics/excel | Download Advanced Analytics 5-Sheet Excel |
+| GET | /api/reports/:id/advanced-analytics/pdf | Download Advanced Analytics 9-Page Executive PDF |
 
 ---
 
@@ -460,6 +468,7 @@ Tracks implementation status of all major features.
 | Active Shops Details | COMPLETE | YES | Full/Partial lists |
 | District Intelligence Messenger | COMPLETE | YES | Shows all transporters incl 0-dispatch |
 | Transporter Balance Report | COMPLETE | YES | Commodity-level progress bars |
+| Advanced Analytics Report (Excel + PDF) | COMPLETE | YES | 5-sheet Excel & 9-page bilingual PDF for NFSA Monthly |
 | Excel Export | COMPLETE | YES | All schemes |
 | PDF Export | COMPLETE | YES | Client-side + server-side |
 | Historical Report Viewer | COMPLETE | YES | reportRestorer.js |
@@ -491,15 +500,16 @@ Tracks implementation status of all major features.
 | M8 | allTransporters flat list (0-dispatch visible) | 17 Jul 2026 | Seeded from sectors.json |
 | M9 | Dispatch % calculation corrected | 17 Jul 2026 | dispatch not posReceipt |
 | M10 | Dynamic Pending Sector Details title | 17 Jul 2026 | Month name or date range |
+| M11 | Standalone Advanced Analytics Report (Excel & PDF) | 04 Aug 2026 | 5-sheet formula Excel & 9-page bilingual PDF |
 
 ### Upcoming Milestones
 
 | # | Milestone | Priority | Target |
 |---|-----------|----------|--------|
-| M11 | RBAC / Login protection for delete endpoints | High | TBD |
-| M12 | Report deletion with file cleanup (fs.unlink) | Medium | TBD |
-| M13 | UI polling error recovery (network drop handling) | Medium | TBD |
-| M14 | History lazy-loading (exclude raw_data from list query) | Medium | TBD |
+| M12 | RBAC / Login protection for delete endpoints | High | TBD |
+| M13 | Report deletion with file cleanup (fs.unlink) | Medium | TBD |
+| M14 | UI polling error recovery (network drop handling) | Medium | TBD |
+| M15 | History lazy-loading (exclude raw_data from list query) | Medium | TBD |
 
 ---
 
@@ -518,6 +528,7 @@ Tasks that are identified but not yet implemented.
 | T7 | Verify Auto-Schedule cron job with real credentials | Low | — | 06 Jul 2026 |
 | T8 | Test FPS Shop Directory with live data | Low | — | 17 Jul 2026 |
 | T9 | Verify email notification flow end-to-end | Low | — | 17 Jul 2026 |
+| T10 | Expand Advanced Analytics Report to MDM/ICDS/Welfare schemes (v2) | Medium | — | 04 Aug 2026 |
 
 ---
 
@@ -556,6 +567,7 @@ Tracks what has been tested and confirmed working.
 | dispatch % (not posReceipt) | Code Review | VERIFIED | 17 Jul 2026 | Values now <= 100% |
 | Dynamic title in Pending Sector Details | Code Review | VERIFIED | 17 Jul 2026 | Month name / date range |
 | NFSA Category Verification & Reconciliation | Unit & Integration | VERIFIED | 28 Jul 2026 | Enforces Regular+Extra & summary reconciliation |
+| Advanced Analytics Report (Excel + PDF) | Unit & Integration | VERIFIED | 04 Aug 2026 | 5-sheet formula Excel & 9-page bilingual PDF verified |
 | CAPTCHA retry loop + headless | Manual | PARTIAL | 06 Jul 2026 | Works in most cases, ~60% accuracy |
 | 2Captcha fallback | Unit Test | NOT VERIFIED | — | Not tested in production |
 | Email notifications | Manual | NOT VERIFIED | — | Requires email config |
@@ -579,6 +591,22 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-04 | Add Standalone Advanced Analytics Report Feature (5-Sheet Excel & 9-Page Bilingual Executive PDF)
+
+Files: server/services/advancedAnalytics/advancedAnalyticsCompute.js, server/services/advancedAnalytics/advancedAnalyticsChartRenderer.js, server/services/advancedAnalytics/advancedAnalyticsExcelGenerator.js, server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server.js, public/app.js, public/index.html
+Type: New Feature / Executive Deliverables
+
+- FEATURE: Added on-demand "📊 उन्नत विश्लेषण रिपोर्ट / Advanced Analytics Report" feature for NFSA Monthly reports.
+- IMPLEMENTATION:
+  1. `advancedAnalyticsCompute.js`: Computes sector, block, transporter rollups, risk tiers (Critical/Watch/Good/Excellent), POS gap flags with dual-direction detection (POS Feeding Lag > +15 pp vs POS Over-Receipt Anomaly < -15 pp), and descending district ranks (`Lift %` rank 1 = best sector).
+  2. `advancedAnalyticsExcelGenerator.js`: Builds 5-sheet formula-driven Excel workbook (`Dashboard`, `Sector Detail`, `Block Summary`, `Transporter Analysis`, `Action Plan`) with Excel formulas referencing Sheet 2 helper cells (`='Sector Detail'!Q2`), number formatting (`0.00%`), and embedded chart PNGs.
+  3. `advancedAnalyticsChartRenderer.js`: Uses Puppeteer to render 4 Chart.js canvas graphics to high-resolution PNG image buffers.
+  4. `advancedAnalyticsPdfGenerator.js`: Uses Puppeteer to render a 9-page bilingual PDF executive report with cover page, executive summary, block performance, risk matrix, POS gap analysis, action plan, transporter table, and full sector appendix.
+  5. Added API endpoints `GET /api/reports/:id/advanced-analytics/excel` and `GET /api/reports/:id/advanced-analytics/pdf`.
+  6. Added "📊 उन्नत विश्लेषण" button to report history rows (NFSA Monthly only) and generation success box, opening a choice dialog (Excel / PDF / Both).
 
 ---
 
