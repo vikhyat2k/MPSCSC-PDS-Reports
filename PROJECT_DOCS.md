@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 10 August 2026, 09:20 IST
+> **Last Sync:** 10 August 2026, 18:50 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Comprehensive ICDS Report Fixes (Scraper Navigation, Rice & Salt UI Cards, Analytics Capping, Balance Reports & PDF/Excel Receipt %) |
+| Last Code Change | 10 Aug 2026 — Update IC Directory Operator & Manager Contact Records for District Betul |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -574,6 +574,7 @@ Tracks what has been tested and confirmed working.
 | Email notifications | Manual | NOT VERIFIED | — | Requires email config |
 | Auto-Schedule cron | Manual | NOT VERIFIED | — | Requires enabled flag |
 | FPS Shop Directory | Manual | NOT VERIFIED | — | Not confirmed with live data |
+| IC Directory Operator & Manager Contacts | Unit & Integration | VERIFIED | 10 Aug 2026 | All 10 Issue Centers & District Office contacts updated |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -592,6 +593,30 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Update IC Directory Operator & Manager Contact Records
+
+Files: public/ic_directory_logic.js, public/directory.html, database/pds-reports.db, database/pds-seed.db, PROJECT_DOCS.md
+Type: Operational Data Update / IC Directory Sync
+
+- REQUIREMENT: Update complete Issue Center (IC) manager, operator, and district office contact numbers for District Betul.
+- UPDATED CONTACTS:
+  1. Aathner: Operator Vijay Barthe (9406506766), Manager Sunil Kadu (9753030976)
+  2. Bhainsdehi: Operator Raju Sirsam (8463040802), Manager Sunil Kadu (9753030976)
+  3. Betul: Operator Shailesh Gujre (9399093004), Manager Parvatrao Mahski (9302278164)
+  4. Bhimpur: Operator Rohit Patil (8305136324), Manager Gangaram Vanjare (9406938890)
+  5. Multai: Operator Omprakash Photfode (9131550210), Manager Namrata Batti (9098261807)
+  6. Amla: Operator Gaurav Pawar (6262050062), Manager Sanjay Pahade (9691965380)
+  7. PrabhatPattan: Operator Govinddas Pandole (6260647027), Manager Namrata Batti (9098261807)
+  8. Ghodadongri: Operator Yatish Nirapure (7415771495), Manager Baldev Mahski (9893781561)
+  9. Shahpur: Operator Neeraj Pawar (8319067070), Manager Poonam Thakur (9340502158)
+  10. District Office: Operator Durga (9111443451), PDS In-charge Surendra Joshi (9826329445), District Manager Vikhyat Hindoliya (8839223715)
+- FIX & SYNC:
+  1. Updated `SEED_ISSUE_CENTERS` array in `public/ic_directory_logic.js` and added `seedICDataIfEmpty()` to auto-sync latest contact information upon web launch.
+  2. Streamlined `public/directory.html` to reference `ic_directory_logic.js` directly.
+  3. Seeded and persisted all 10 Issue Center records into SQLite database (`pds-reports.db` & `pds-seed.db`) to ensure server-side API (`/api/directory/issue-centers`) returns updated contact details.
 
 ---
 
