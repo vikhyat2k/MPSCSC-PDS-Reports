@@ -168,9 +168,13 @@ class SCMScraper {
           const base64Image = rawBuffer.toString('base64');
           bestResult = await this.solveWith2Captcha(base64Image);
         } else if (process.env.OCRSPACE_API_KEY) {
-          // Use OCR.space API (Free Tier) with upscaled raw color image
-          const base64Image = 'data:image/png;base64,' + rawUpscaledBuffer.toString('base64');
-          bestResult = await this.solveWithOCRSpace(base64Image);
+          // Try OCR.space Engine 2 on raw color image, fallback to Engine 1 on processed image
+          const rawBase64 = 'data:image/png;base64,' + rawUpscaledBuffer.toString('base64');
+          bestResult = await this.solveWithOCRSpace(rawBase64, '2');
+          if (!bestResult) {
+            const procBase64 = 'data:image/png;base64,' + processedBuffer.toString('base64');
+            bestResult = await this.solveWithOCRSpace(procBase64, '1');
+          }
         }
 
         if (!bestResult) {
@@ -538,13 +542,13 @@ class SCMScraper {
   /**
    * Solve CAPTCHA using OCR.space API (Free 25,000 requests/month)
    */
-  async solveWithOCRSpace(base64Image) {
+  async solveWithOCRSpace(base64Image, engine = '2') {
     try {
-      console.log('   🌐 Solving CAPTCHA with OCR.space API...');
+      console.log(`   🌐 Solving CAPTCHA with OCR.space API (Engine ${engine})...`);
       const body = new URLSearchParams();
       body.append('apikey', process.env.OCRSPACE_API_KEY || 'K88463128788957');
       body.append('base64Image', base64Image);
-      body.append('OCREngine', '2');
+      body.append('OCREngine', engine);
       body.append('scale', 'true');
       body.append('isTable', 'false');
 
@@ -557,10 +561,11 @@ class SCMScraper {
       if (data && data.ParsedResults && data.ParsedResults.length > 0) {
         const rawText = data.ParsedResults[0].ParsedText || '';
         const cleaned = rawText.replace(/[^a-zA-Z0-9]/g, '').trim();
-        console.log(`   ✅ OCR.space Result: "${cleaned}"`);
-        return cleaned;
+        if (cleaned.length >= 4 && cleaned.length <= 8) {
+          console.log(`   ✅ OCR.space Result: "${cleaned}"`);
+          return cleaned;
+        }
       }
-      console.log('   ⚠️ OCR.space returned no parsed result');
       return '';
     } catch (error) {
       console.error('   ❌ OCR.space API error:', error.message);

@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Fix SCM Login Form Selectors (#uid, #pwd, #lobtn), HTTP Protocol Fallback & Adaptive CAPTCHA Thresholding |
+| Last Code Change | 10 Aug 2026 — Integrated OCR.space Free API Key (K88463128788957) & Configured HEADLESS_MODE=false |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -596,6 +596,18 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Integrate OCR.space Free Online CAPTCHA API & Configure Visible Browser Fallback
+
+Files: .env, server/automation/scraper_v2.js, PROJECT_DOCS.md
+Type: Feature / Free CAPTCHA Automation & Reliability
+
+- ADDED:
+  1. Integrated the user's free **OCR.space API key** (`K88463128788957`) into `.env` (`OCRSPACE_API_KEY`) and [server/automation/scraper_v2.js](file:///f:/AI%20Projects/Anti%20Gravity/PDS%20lifting%20Report/server/automation/scraper_v2.js#L528-L557) (`solveWithOCRSpace()`).
+  2. Implemented upscaled 3x full-color buffer (`rawUpscaledBuffer`) forwarding to OCR.space Engine 2 for sub-second (~600ms) online CAPTCHA recognition.
+  3. Configured `HEADLESS_MODE=false` in `.env` so Chrome opens visibly on screen for easy 5-second manual CAPTCHA entry whenever needed.
 
 ---
 
