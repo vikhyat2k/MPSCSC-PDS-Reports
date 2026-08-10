@@ -86,9 +86,9 @@ class SCMScraper {
    * Attempt automatic CAPTCHA solving using Tesseract.js or 2Captcha
    * Returns true if successful, false otherwise
    */
-  async attemptAutoCaptcha(maxAttempts = 8, onProgress = null) {
+  async attemptAutoCaptcha(maxAttempts = 12, onProgress = null) {
     if (this.isHeadless) {
-      maxAttempts = Math.min(maxAttempts, 8); // Cap attempts to 8 in headless mode (~1.5 min max)
+      maxAttempts = Math.min(maxAttempts, 12); // Cap attempts to 12 in headless mode (~2 min max)
     }
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
