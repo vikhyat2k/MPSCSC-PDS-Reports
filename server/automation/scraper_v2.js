@@ -243,9 +243,9 @@ class SCMScraper {
         await captchaInput.type(bestResult, { delay: 80 });
         console.log(`   ⌨️ Typed CAPTCHA: "${bestResult}"`);
 
-        // 6. Click Login/Submit button
+        // 6. Click Login/Submit button (#lobtn is the actual login button on Login.jsp)
         const submitBtn = await this.page.$(
-          'input[type="submit"], button[type="submit"], input[value="Login"]'
+          '#lobtn, input[name="lobtn"], input[value="Login"]'
         );
 
         if (!submitBtn) {
@@ -319,7 +319,7 @@ class SCMScraper {
           console.log(`   ⌨️ Trying variant: "${candidate}"`);
 
           const submitBtn2 = await this.page.$(
-            'input[type="submit"], button[type="submit"], input[value="Login"]'
+            '#lobtn, input[name="lobtn"], input[value="Login"]'
           ).catch(() => null);
           if (!submitBtn2) {
             await this.page.keyboard.press('Enter');
@@ -563,6 +563,8 @@ class SCMScraper {
       console.log('Entering username...');
       if (typeof onProgress === 'function') onProgress('Entering credentials...');
       const usernameSelectors = [
+        '#uid',
+        'input[name="user_id"]',
         'input[name="userName"]',
         'input[name="username"]',
         'input[id="userName"]',
@@ -580,6 +582,7 @@ class SCMScraper {
       // Enter password
       console.log('Entering password...');
       const passwordSelectors = [
+        '#pwd',
         'input[name="password"]',
         'input[id="password"]',
         'input[type="password"]'
@@ -645,10 +648,10 @@ class SCMScraper {
         let submitted = false;
 
         const submitSelectors = [
-          'input[type="submit"]',
-          'button[type="submit"]',
-          'input[value="Submit"]',
-          'input[value="Login"]'
+          '#lobtn',
+          'input[name="lobtn"]',
+          'input[value="Login"]',
+          'input[type="submit"]'
         ];
 
         for (const selector of submitSelectors) {
