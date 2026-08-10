@@ -14,6 +14,8 @@ class ICDSScraper {
         this.VERSION = '1.0.0';
         this.browser = null;
         this.page = null;
+        this.ICDS_URL = 'https://scm.mp.gov.in/ICDS_allotment.jsp';
+        this.DISTRICT_NAME = 'Betul';
         this.SKIP_DEPOT_SL = []; // No depots to skip by default
         this.SKIP_DEPOT_IDS = ['233100404']; // Exclude Aamla (233100404) - zero data entry point on portal
 

@@ -1355,7 +1355,7 @@ Closes: ISSUE-013
   5. `balancesReportGenerator.js` omitted `salt` from ICDS commodity lists in `getCommodities()`.
   6. `icdsPdfGenerator.js` calculated Receipt % against allotment (`Received / Allotted`) instead of dispatched stock (`Received / Dispatched`).
 - FIX:
-  1. Implemented dynamic DOM extraction in `_getDepotList()` in `icds_scraper.js` to automatically extract all 10 depots directly from `#depotreport` table links (including `Aamla 233100404`), with updated 10-depot fallback list and updated `config/icds-shop-counts.json`.
+  1. Configured `icds_scraper.js` with `SKIP_DEPOT_IDS = ['233100404']` to exclude zero-data `Aamla (233100404)` from scraping while dynamically processing all 9 active depots (`AMLA 2331007`, `Athner`, `Betul`, `Bhainsdehi`, `BHIMPUR`, `Ghoradongri`, `Multai`, `PATTAN`, `Shahpur`).
   2. Added full portal navigation steps (`_selectFilters`, `_clickGetReport`, `_clickDistrict`) to `icds_scraper.js`.
   3. Added Rice (`🍚 Rice`) and Fortified Salt (`🧂 Fortified Salt`) cards to `index.html` under `#icdsAnalyticsSection` and updated `displayICDSAnalytics()` in `app.js` to populate all 3 commodity metrics.
   4. Fixed `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` to report actual unclipped total quantities, accumulate true dispatched quantities for transporter rankings, and calculate Receipt % relative to dispatched stock.
