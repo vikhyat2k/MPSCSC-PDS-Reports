@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 10 August 2026, 19:45 IST
+> **Last Sync:** 10 August 2026, 20:30 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Fix 16-Minute Headless Scraper CAPTCHA Loop & Add Real-Time Login Progress Updates |
+| Last Code Change | 10 Aug 2026 — Fix Executive Analytics PDF Download Binary Buffer Encoding (Failed to load PDF document) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -577,6 +577,7 @@ Tracks what has been tested and confirmed working.
 | IC Directory Operator & Manager Contacts | Unit & Integration | VERIFIED | 10 Aug 2026 | All 10 Issue Centers & District Office contacts updated |
 | Pending Sector Details & UI Percentage Formatting | Unit & Integration | VERIFIED | 10 Aug 2026 | Multi-scheme sector fallback & 2-decimal formatting verified |
 | Scraper Headless CAPTCHA Loop & Real-Time Status | Unit & Integration | VERIFIED | 10 Aug 2026 | Headless CAPTCHA capped to 8 attempts (~1.5m max) with live status updates |
+| Executive Analytics PDF Binary Buffer Encoding | Unit & Integration | VERIFIED | 10 Aug 2026 | Puppeteer Uint8Array wrapped in Buffer.from for binary HTTP response |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -595,6 +596,18 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Fix Executive Analytics PDF Download Binary Buffer Encoding (Failed to Load PDF Document)
+
+Files: server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server.js, PROJECT_DOCS.md
+Type: Bug Fix / File Download Reliability
+
+- ROOT CAUSE: 
+  Puppeteer v21+ returns a raw `Uint8Array` from `page.pdf()`. When `res.send(pdfBuffer)` in `server.js` received a `Uint8Array` (where `Buffer.isBuffer(pdfBuffer)` was `false`), Express passed it to `JSON.stringify(pdfBuffer)`. This sent a 13.6 MB text file containing `{"0":37,"1":80,"2":68,"3":70,...}` instead of binary PDF bytes (`%PDF-1.4`). When Chrome tried to open the downloaded file in its built-in PDF viewer, Chrome threw: `Failed to load PDF document.`.
+- FIX:
+  Explicitly wrapped `pdfBuffer` in `Buffer.from(pdfBuffer)` in both `advancedAnalyticsPdfGenerator.js` (`generatePdf()`) and `server.js` (`/api/reports/:id/advanced-analytics/pdf`). Verified end-to-end PDF generation producing valid 957 KB binary PDF buffers starting with `%PDF-1.4`.
 
 ---
 

@@ -186,8 +186,7 @@ class SCMScraper {
           for (const psm of psmModes) {
             await this.ocrWorker.setParameters({
               tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-              tessedit_pageseg_mode: psm,
-              tessedit_ocr_engine_mode: '1',  // LSTM only — most accurate
+              tessedit_pageseg_mode: psm
             });
             const { data } = await this.ocrWorker.recognize(processedBuffer);
             const cleaned = data.text.replace(/[^a-zA-Z0-9]/g, '').trim();
