@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 10 August 2026, 19:10 IST
+> **Last Sync:** 10 August 2026, 19:45 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Fix Pending Sector Details & Percentage Formatting for ICDS, MDM, Welfare & Historical Reports |
+| Last Code Change | 10 Aug 2026 — Fix 16-Minute Headless Scraper CAPTCHA Loop & Add Real-Time Login Progress Updates |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -576,6 +576,7 @@ Tracks what has been tested and confirmed working.
 | FPS Shop Directory | Manual | NOT VERIFIED | — | Not confirmed with live data |
 | IC Directory Operator & Manager Contacts | Unit & Integration | VERIFIED | 10 Aug 2026 | All 10 Issue Centers & District Office contacts updated |
 | Pending Sector Details & UI Percentage Formatting | Unit & Integration | VERIFIED | 10 Aug 2026 | Multi-scheme sector fallback & 2-decimal formatting verified |
+| Scraper Headless CAPTCHA Loop & Real-Time Status | Unit & Integration | VERIFIED | 10 Aug 2026 | Headless CAPTCHA capped to 8 attempts (~1.5m max) with live status updates |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -594,6 +595,21 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Fix 16-Minute Headless Scraper CAPTCHA Loop & Add Real-Time Login Progress Updates
+
+Files: server/automation/scraper_v2.js, server.js, Technical Audit/scraper_v2.js, Technical Audit/server.js, PROJECT_DOCS.md
+Type: Bug Fix / Performance Optimization & Scraper Reliability
+
+- ROOT CAUSE:
+  1. `attemptAutoCaptcha()` in `server/automation/scraper_v2.js` had `maxAttempts = 50` hardcoded in headless mode. When CAPTCHA solving failed continuously (e.g. SCM portal returning unreadable CAPTCHA or invalid session), the loop ran 50 attempts x 20 seconds = **16 minutes and 40 seconds**, stalling progress at `11%` (`Time: 16m 9s`).
+  2. During the 50 attempts, `updateGlobalProgress` was never called with progress updates, keeping the status text frozen at `[Regular] Logging in...` without showing attempt counters.
+- FIX:
+  1. Capped `maxAttempts` to **8 attempts** in headless mode in `server/automation/scraper_v2.js` and `Technical Audit/scraper_v2.js`. If CAPTCHA auto-solving fails after 8 attempts (~1.5 minutes max), it fails fast with a clear error: `CAPTCHA could not be solved automatically in headless mode.`
+  2. Added real-time progress callbacks (`onProgress`) to `login()` and `attemptAutoCaptcha()`, reporting live status to the UI on every attempt (e.g. `Logging in... Solving CAPTCHA (attempt 3/8)`).
+  3. Wired progress callbacks in `server.js` and `Technical Audit/server.js`.
 
 ---
 

@@ -79,13 +79,16 @@ class SCMScraper {
    * Attempt automatic CAPTCHA solving using Tesseract.js or 2Captcha
    * Returns true if successful, false otherwise
    */
-  async attemptAutoCaptcha(maxAttempts = 50) {
+  async attemptAutoCaptcha(maxAttempts = 8, onProgress = null) {
     if (this.isHeadless) {
-      maxAttempts = 50; // Give plenty of attempts in headless mode
+      maxAttempts = Math.min(maxAttempts, 8); // Cap attempts to 8 in headless mode (~1.5 min max)
     }
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         console.log(`🤖 Auto-CAPTCHA Attempt ${attempt}/${maxAttempts}...`);
+        if (typeof onProgress === 'function') {
+          onProgress(`Logging in... Solving CAPTCHA (attempt ${attempt}/${maxAttempts})`);
+        }
 
         // PRE-PROCESSING: Inject CSS to the CAPTCHA image to make it sharper for OCR
         await this.page.evaluate(() => {
@@ -295,8 +298,9 @@ class SCMScraper {
    * Login to SCM Portal
    * Handles CAPTCHA with automatic retry and manual fallback
    */
-  async login(username, password, maxRetries = 5) {
+  async login(username, password, maxRetries = 5, onProgress = null) {
     console.log('🔐 Attempting login...');
+    if (typeof onProgress === 'function') onProgress('Navigating to SCM portal...');
 
     try {
       // Navigate to login page
@@ -327,6 +331,7 @@ class SCMScraper {
 
       // Enter credentials with multiple selector attempts
       console.log('Entering username...');
+      if (typeof onProgress === 'function') onProgress('Entering credentials...');
       const usernameSelectors = [
         'input[name="userName"]',
         'input[name="username"]',
@@ -395,7 +400,7 @@ class SCMScraper {
         await this.screenshot('06_captcha_detected.png');
 
         // Try automatic CAPTCHA solving first
-        let captchaSolved = await this.attemptAutoCaptcha();
+        let captchaSolved = await this.attemptAutoCaptcha(this.isHeadless ? 8 : 15, onProgress);
 
         if (!captchaSolved && maxRetries > 0) {
           if (this.isHeadless) {
