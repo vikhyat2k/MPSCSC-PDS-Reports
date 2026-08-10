@@ -160,11 +160,11 @@ class SCMScraper {
 
         if (process.env.TWOCAPTCHA_API_KEY) {
           // Use 2Captcha if API key is provided
-          const base64Image = processedBuffer.toString('base64');
+          const base64Image = rawBuffer.toString('base64');
           bestResult = await this.solveWith2Captcha(base64Image);
         } else if (process.env.OCRSPACE_API_KEY) {
-          // Use OCR.space API (Free Tier) if API key is provided
-          const base64Image = 'data:image/png;base64,' + processedBuffer.toString('base64');
+          // Use OCR.space API (Free Tier) with raw image for max anti-aliased accuracy
+          const base64Image = 'data:image/png;base64,' + rawBuffer.toString('base64');
           bestResult = await this.solveWithOCRSpace(base64Image);
         }
 
