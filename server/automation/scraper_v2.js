@@ -535,19 +535,20 @@ class SCMScraper {
     if (typeof onProgress === 'function') onProgress('Navigating to SCM portal...');
 
     try {
-      // Navigate to login page
-      // Using 'domcontentloaded' instead of 'networkidle2' to handle slow government portals
-      // with persistent tracking scripts that prevent network idle.
+      // Navigate to login page with automatic HTTP/HTTPS fallback for portal timeouts
       try {
         await this.page.goto(this.baseURL, {
           waitUntil: 'domcontentloaded',
-          timeout: 120000  // Increased to 120 seconds
+          timeout: 30000
         });
       } catch (err) {
-        console.warn(`⚠️ Navigation warning (domcontentloaded): ${err.message}. Retrying with 'load'...`);
-        await this.page.goto(this.baseURL, {
-          waitUntil: 'load',
-          timeout: 60000
+        const altURL = this.baseURL.startsWith('https://')
+          ? this.baseURL.replace('https://', 'http://')
+          : this.baseURL.replace('http://', 'https://');
+        console.warn(`⚠️ Primary navigation warning for ${this.baseURL}: ${err.message}. Retrying with ${altURL}...`);
+        await this.page.goto(altURL, {
+          waitUntil: 'domcontentloaded',
+          timeout: 45000
         });
       }
 
