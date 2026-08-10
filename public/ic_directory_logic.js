@@ -1084,10 +1084,156 @@ var SEED_BRANCHES = [
     }
 ];
 
+var SEED_ISSUE_CENTERS = [
+    {
+        id: 'IC_Aathner',
+        name: 'Aathner',
+        sector: 'Aathner',
+        district: 'Betul',
+        managerName: 'Sunil Kadu',
+        managerMobile: '9753030976',
+        operatorName: 'Vijay Barthe',
+        operatorMobile: '9406506766',
+        status: 'active'
+    },
+    {
+        id: 'IC_Bhainsdehi',
+        name: 'Bhainsdehi',
+        sector: 'Bhainsdehi',
+        district: 'Betul',
+        managerName: 'Sunil Kadu',
+        managerMobile: '9753030976',
+        operatorName: 'Raju Sirsam',
+        operatorMobile: '8463040802',
+        status: 'active'
+    },
+    {
+        id: 'IC_Betul',
+        name: 'Betul',
+        sector: 'Betul',
+        district: 'Betul',
+        managerName: 'Parvatrao Mahski',
+        managerMobile: '9302278164',
+        operatorName: 'Shailesh Gujre',
+        operatorMobile: '9399093004',
+        status: 'active'
+    },
+    {
+        id: 'IC_Bhimpur',
+        name: 'Bhimpur',
+        sector: 'Bhimpur',
+        district: 'Betul',
+        managerName: 'Gangaram Vanjare',
+        managerMobile: '9406938890',
+        operatorName: 'Rohit Patil',
+        operatorMobile: '8305136324',
+        status: 'active'
+    },
+    {
+        id: 'IC_Multai',
+        name: 'Multai',
+        sector: 'Multai',
+        district: 'Betul',
+        managerName: 'Namrata Batti',
+        managerMobile: '9098261807',
+        operatorName: 'Omprakash Photfode',
+        operatorMobile: '9131550210',
+        status: 'active'
+    },
+    {
+        id: 'IC_Amla',
+        name: 'Amla',
+        sector: 'Amla',
+        district: 'Betul',
+        managerName: 'Sanjay Pahade',
+        managerMobile: '9691965380',
+        operatorName: 'Gaurav Pawar',
+        operatorMobile: '6262050062',
+        status: 'active'
+    },
+    {
+        id: 'IC_PrabhatPattan',
+        name: 'PrabhatPattan',
+        sector: 'PrabhatPattan',
+        district: 'Betul',
+        managerName: 'Namrata Batti',
+        managerMobile: '9098261807',
+        operatorName: 'Govinddas Pandole',
+        operatorMobile: '6260647027',
+        status: 'active'
+    },
+    {
+        id: 'IC_Ghodadongri',
+        name: 'Ghodadongri',
+        sector: 'Ghodadongri',
+        district: 'Betul',
+        managerName: 'Baldev Mahski',
+        managerMobile: '9893781561',
+        operatorName: 'Yatish Nirapure',
+        operatorMobile: '7415771495',
+        status: 'active'
+    },
+    {
+        id: 'IC_Shahpur',
+        name: 'Shahpur',
+        sector: 'Shahpur',
+        district: 'Betul',
+        managerName: 'Poonam Thakur',
+        managerMobile: '9340502158',
+        operatorName: 'Neeraj Pawar',
+        operatorMobile: '8319067070',
+        status: 'active'
+    },
+    {
+        id: 'IC_DistrictOffice',
+        name: 'District Office (Betul)',
+        sector: 'District Office',
+        district: 'Betul',
+        managerName: 'Vikhyat Hindoliya (District Manager)',
+        managerMobile: '8839223715',
+        operatorName: 'Durga (District Office Operator)',
+        operatorMobile: '9111443451',
+        inchargeName: 'Surendra Joshi (PDS In-charge)',
+        inchargeMobile: '9826329445',
+        status: 'active'
+    }
+];
+
 function seedBranchDataIfEmpty() {
     if (DirDB.getBranches().length > 0) return; // already seeded or user has data
     SEED_BRANCHES.forEach(function(b) { DirDB.addBranch(b); });
     console.log('[Directory] Seeded ' + SEED_BRANCHES.length + ' MPWLC branches for District Betul.');
+}
+
+function seedICDataIfEmpty() {
+    let existing = DirDB.getICs();
+    const branches = DirDB.getBranches();
+    
+    SEED_ISSUE_CENTERS.forEach(function(icSeed) {
+        const idx = existing.findIndex(e => e.id === icSeed.id || e.name.toLowerCase() === icSeed.name.toLowerCase() || e.sector.toLowerCase() === icSeed.sector.toLowerCase());
+        const matchedBranch = branches.find(b => 
+            b.name.toLowerCase().includes(icSeed.name.toLowerCase()) || 
+            icSeed.name.toLowerCase().includes(b.name.toLowerCase())
+        );
+        if (idx === -1) {
+            const rec = { 
+                ...icSeed, 
+                branchId: matchedBranch ? matchedBranch.id : '',
+                createdAt: DirDB.ts(), 
+                updatedAt: DirDB.ts() 
+            };
+            DirDB.addIC(rec);
+        } else {
+            const updated = {
+                ...existing[idx],
+                ...icSeed,
+                branchId: existing[idx].branchId || (matchedBranch ? matchedBranch.id : ''),
+                updatedAt: DirDB.ts()
+            };
+            DirDB.updateIC(existing[idx].id, updated);
+        }
+    });
+    console.log('[Directory] Seeded/Updated ' + SEED_ISSUE_CENTERS.length + ' Issue Centers.');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1106,8 +1252,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('dirViewModal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
     document.getElementById('dirDeleteModal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
 
-    // Seed branch data if this is first launch
+    // Seed branch & IC data if needed
     seedBranchDataIfEmpty();
+    seedICDataIfEmpty();
 
     // Render dashboard
     renderDashboard();
