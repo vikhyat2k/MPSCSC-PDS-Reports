@@ -14,9 +14,8 @@ class ICDSScraper {
         this.VERSION = '1.0.0';
         this.browser = null;
         this.page = null;
-        this.ICDS_URL = 'https://scm.mp.gov.in/ICDS_allotment.jsp';
-        this.DISTRICT_NAME = 'Betul';
         this.SKIP_DEPOT_SL = []; // No depots to skip by default
+        this.SKIP_DEPOT_IDS = ['233100404']; // Exclude Aamla (233100404) - zero data entry point on portal
 
         this.logsDir = path.join(__dirname, '../../logs');
         if (!fs.existsSync(this.logsDir)) {
@@ -143,8 +142,13 @@ class ICDSScraper {
                 throw new Error('No depots found after clicking district. Check icds_district_debug.html for table structure.');
             }
 
-            const validDepots = depots.filter(d => !this.SKIP_DEPOT_SL.includes(d.slNo));
-            console.log(`   Processing ${validDepots.length} depots.`);
+            const validDepots = depots.filter(d => {
+                if (this.SKIP_DEPOT_SL.includes(d.slNo)) return false;
+                if (this.SKIP_DEPOT_IDS.includes(String(d.depotId))) return false;
+                if (d.name && d.name.includes('233100404')) return false;
+                return true;
+            });
+            console.log(`   Processing ${validDepots.length} valid depots (excluded Aamla 233100404).`);
 
             const rawData = [];
             const summaryTotals = {

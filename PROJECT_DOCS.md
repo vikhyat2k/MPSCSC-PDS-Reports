@@ -1340,25 +1340,28 @@ Closes: ISSUE-013
 
 ---
 
-### 2026-08-10 | Fix ICDS Report Scraping, Analytics, UI, Exports, and Balance Reports
+### 2026-08-10 | Fix ICDS Report Scraping, 10-Depot Resolution, Analytics, UI, Exports, and Balance Reports
 
-Files: server/automation/icds_scraper.js, server.js, server/services/reportRestorer.js, server/services/balancesReportGenerator.js, server/services/icdsPdfGenerator.js, server/services/icdsExcelGenerator.js, public/index.html, public/app.js
+Files: server/automation/icds_scraper.js, server/services/icdsDataProcessor.js, config/icds-shop-counts.json, server.js, server/services/reportRestorer.js, server/services/balancesReportGenerator.js, server/services/icdsPdfGenerator.js, server/services/icdsExcelGenerator.js, public/index.html, public/app.js
 Type: Bug Fix / Enhancement
 Closes: ISSUE-013
 
-- BUG: ICDS reports were incorrect across scraping, analytics calculations, dashboard UI rendering, balance reports, and PDF exports.
+- BUG: ICDS reports were incorrect across scraping, missing 10th depot `Aamla 233100404`, analytics calculations, dashboard UI rendering, balance reports, and PDF exports.
 - ROOT CAUSE:
-  1. `icds_scraper.js` was skipping `_selectFilters(month, year)`, `_clickGetReport()`, and `_clickDistrict()` inside `extractData()`, failing portal navigation prior to depot extraction.
-  2. `index.html` & `app.js` only included UI elements for Wheat, leaving out Rice and Fortified Salt.
-  3. `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` artificially clipped real dispatched/received quantities using `Math.min(total, allotted)` and miscalculated transporter dispatch sums using received quantities.
-  4. `balancesReportGenerator.js` omitted `salt` from ICDS commodity lists in `getCommodities()`.
-  5. `icdsPdfGenerator.js` calculated Receipt % against allotment (`Received / Allotted`) instead of dispatched stock (`Received / Dispatched`).
+  1. `icds_scraper.js` hardcoded list had only 9 depots, omitting `Aamla (233100404)` which caused district totals to be incomplete compared to SCM portal.
+  2. `icds_scraper.js` was skipping `_selectFilters(month, year)`, `_clickGetReport()`, and `_clickDistrict()` inside `extractData()`, failing portal navigation prior to depot extraction.
+  3. `index.html` & `app.js` only included UI elements for Wheat, leaving out Rice and Fortified Salt.
+  4. `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` artificially clipped real dispatched/received quantities using `Math.min(total, allotted)` and miscalculated transporter dispatch sums using received quantities.
+  5. `balancesReportGenerator.js` omitted `salt` from ICDS commodity lists in `getCommodities()`.
+  6. `icdsPdfGenerator.js` calculated Receipt % against allotment (`Received / Allotted`) instead of dispatched stock (`Received / Dispatched`).
 - FIX:
-  1. Added full portal navigation steps (`_selectFilters`, `_clickGetReport`, `_clickDistrict`) to `icds_scraper.js`.
-  2. Added Rice (`🍚 Rice`) and Fortified Salt (`🧂 Fortified Salt`) cards to `index.html` under `#icdsAnalyticsSection` and updated `displayICDSAnalytics()` in `app.js` to populate all 3 commodity metrics.
-  3. Fixed `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` to report actual unclipped total quantities, accumulate true dispatched quantities for transporter rankings, and calculate Receipt % relative to dispatched stock.
-  4. Added `salt` to `getCommodities('icds')` in `balancesReportGenerator.js` to ensure complete ICDS Balance Lifting Reports.
-  5. Standardized Receipt % to `(Receipt / Dispatched) * 100` in `icdsPdfGenerator.js` and `icdsExcelGenerator.js`.
+  1. Implemented dynamic DOM extraction in `_getDepotList()` in `icds_scraper.js` to automatically extract all 10 depots directly from `#depotreport` table links (including `Aamla 233100404`), with updated 10-depot fallback list and updated `config/icds-shop-counts.json`.
+  2. Added full portal navigation steps (`_selectFilters`, `_clickGetReport`, `_clickDistrict`) to `icds_scraper.js`.
+  3. Added Rice (`🍚 Rice`) and Fortified Salt (`🧂 Fortified Salt`) cards to `index.html` under `#icdsAnalyticsSection` and updated `displayICDSAnalytics()` in `app.js` to populate all 3 commodity metrics.
+  4. Fixed `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` to report actual unclipped total quantities, accumulate true dispatched quantities for transporter rankings, and calculate Receipt % relative to dispatched stock.
+  5. Updated `icdsDataProcessor.js` to track `totalAwc` (1,621 AWCs) and `totalInmates` (117,061 inmates).
+  6. Added `salt` to `getCommodities('icds')` in `balancesReportGenerator.js` to ensure complete ICDS Balance Lifting Reports.
+  7. Standardized Receipt % to `(Receipt / Dispatched) * 100` in `icdsPdfGenerator.js` and `icdsExcelGenerator.js`.
 
 ---
 
