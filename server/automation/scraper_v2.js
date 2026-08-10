@@ -156,6 +156,11 @@ class SCMScraper {
         fs.writeFileSync(debugPath, processedBuffer);
         console.log(`   📁 Saved processed CAPTCHA: ${debugPath}`);
 
+        // Also prepare an upscaled full-color buffer for online OCR engines
+        const rawJimp = await Jimp.read(Buffer.from(rawBuffer));
+        rawJimp.resize({ w: rawJimp.width * 3, h: rawJimp.height * 3 });
+        const rawUpscaledBuffer = await rawJimp.getBuffer('image/png');
+
         let bestResult = '';
 
         if (process.env.TWOCAPTCHA_API_KEY) {
@@ -163,8 +168,8 @@ class SCMScraper {
           const base64Image = rawBuffer.toString('base64');
           bestResult = await this.solveWith2Captcha(base64Image);
         } else if (process.env.OCRSPACE_API_KEY) {
-          // Use OCR.space API (Free Tier) with raw image for max anti-aliased accuracy
-          const base64Image = 'data:image/png;base64,' + rawBuffer.toString('base64');
+          // Use OCR.space API (Free Tier) with upscaled raw color image
+          const base64Image = 'data:image/png;base64,' + rawUpscaledBuffer.toString('base64');
           bestResult = await this.solveWithOCRSpace(base64Image);
         }
 
