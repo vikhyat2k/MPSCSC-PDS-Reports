@@ -30,22 +30,37 @@ class ICDSExcelGenerator {
 
         const sectors = (processedResult && processedResult.sectors) ? processedResult.sectors : [];
 
-        // Per-sector grain aggregation from shops
+        // Per-sector grain aggregation — use sector-level totals directly from data processor
         let totWA=0, totWD=0, totWR=0, totRA=0, totRD=0, totRR=0, totSA=0, totSD=0, totSR=0;
 
         sectors.forEach((sector, i) => {
-            let wA=0, wD=0, wR=0, rA=0, rD=0, rR=0, sA=0, sD=0, sR=0;
-            (sector.shops || []).forEach(shop => {
-                wA += shop.wheatAllotted    || 0;
-                wD += shop.wheatDispatched  || 0;
-                wR += shop.wheatReceived    || 0;
-                rA += shop.riceAllotted     || 0;
-                rD += shop.riceDispatched   || 0;
-                rR += shop.riceReceived     || 0;
-                sA += shop.fsaltAllotted    || 0;
-                sD += shop.fsaltDispatched  || 0;
-                sR += shop.fsaltReceived    || 0;
-            });
+            let wA = sector.wheatAllotted !== undefined ? sector.wheatAllotted : 0;
+            let wD = sector.wheatDispatched !== undefined ? sector.wheatDispatched : 0;
+            let wR = sector.wheatReceived !== undefined ? sector.wheatReceived : 0;
+
+            let rA = sector.riceAllotted !== undefined ? sector.riceAllotted : 0;
+            let rD = sector.riceDispatched !== undefined ? sector.riceDispatched : 0;
+            let rR = sector.riceReceived !== undefined ? sector.riceReceived : 0;
+
+            let sA = sector.fsaltAllotted !== undefined ? sector.fsaltAllotted : 0;
+            let sD = sector.fsaltDispatched !== undefined ? sector.fsaltDispatched : 0;
+            let sR = sector.fsaltReceived !== undefined ? sector.fsaltReceived : 0;
+
+            // Fallback to summing shops if sector-level metrics are missing
+            if (wA === 0 && wD === 0 && rA === 0 && rD === 0 && (sector.shops && sector.shops.length > 0)) {
+                (sector.shops || []).forEach(shop => {
+                    wA += shop.wheatAllotted    || 0;
+                    wD += shop.wheatDispatched  || 0;
+                    wR += shop.wheatReceived    || 0;
+                    rA += shop.riceAllotted     || 0;
+                    rD += shop.riceDispatched   || 0;
+                    rR += shop.riceReceived     || 0;
+                    sA += shop.fsaltAllotted    || 0;
+                    sD += shop.fsaltDispatched  || 0;
+                    sR += shop.fsaltReceived    || 0;
+                });
+            }
+
             totWA+=wA; totWD+=wD; totWR+=wR;
             totRA+=rA; totRD+=rD; totRR+=rR;
             totSA+=sA; totSD+=sD; totSR+=sR;
