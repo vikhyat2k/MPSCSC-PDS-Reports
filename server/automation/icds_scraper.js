@@ -350,6 +350,7 @@ class ICDSScraper {
                         const match = onclick.match(/['"](\d+)['"]\s*,\s*['"]([^'"]+)['"]/);
                         const depotId = match ? match[1] : '';
                         const depotName = match ? match[2] : text;
+                        if (depotId === '233100404' || text.includes('233100404')) return; // Exclude empty Aamla entry
                         const key = `${depotId}_${text}`;
                         if (!seen.has(key)) {
                             seen.add(key);
@@ -374,9 +375,8 @@ class ICDSScraper {
             console.warn('⚠️ Dynamic depot extraction failed, using hardcoded fallback list:', e.message);
         }
 
-        console.log('   Using fallback 10 ICDS ISSUE_POINTS list...');
+        console.log('   Using fallback 9 active ICDS ISSUE_POINTS list (excluding 233100404)...');
         const ISSUE_POINTS = [
-            { id: '233100404', name: 'Aamla' },
             { id: '2331007',   name: 'AMLA' },
             { id: '2331003',   name: 'Athner' },
             { id: '2331001',   name: 'Betul' },
