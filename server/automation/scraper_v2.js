@@ -134,13 +134,16 @@ class SCMScraper {
         const h = jimpImg.height;
         jimpImg.resize({ w: w * 3, h: h * 3 });
 
-        // Manual grayscale + threshold (binary black/white) via scan
+        // Manual grayscale + adaptive thresholding per attempt (binary black/white) via scan
+        const thresholdList = [140, 160, 120, 150, 170, 130, 180, 110];
+        const currentThresh = thresholdList[(attempt - 1) % thresholdList.length];
+
         jimpImg.scan(function(x, y, idx) {
           const r = this.bitmap.data[idx];
           const g = this.bitmap.data[idx + 1];
           const b = this.bitmap.data[idx + 2];
           const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-          const bin = gray < 150 ? 0 : 255; // threshold at 150
+          const bin = gray < currentThresh ? 0 : 255;
           this.bitmap.data[idx]     = bin;
           this.bitmap.data[idx + 1] = bin;
           this.bitmap.data[idx + 2] = bin;
