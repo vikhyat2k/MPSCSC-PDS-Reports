@@ -1340,6 +1340,24 @@ Closes: ISSUE-013
 
 ---
 
+### 2026-08-10 | Fix MDM and Welfare PDF/Excel Generators and Analytics
+
+Files: server/services/mdmPdfGenerator.js, server/services/mdmExcelGenerator.js, server/services/welfarePdfGenerator.js, server/services/welfareExcelGenerator.js, server.js, server/services/reportRestorer.js
+Type: Bug Fix / Refactoring
+Closes: ISSUE-014
+
+- BUG: MDM and Welfare PDF and Excel exports under-reported dispatches on restored reports; Welfare analytics miscalculated transporter dispatch sums and artificially capped totals.
+- ROOT CAUSE:
+  1. `mdmPdfGenerator.js`, `mdmExcelGenerator.js`, `welfarePdfGenerator.js`, and `welfareExcelGenerator.js` calculated sector totals by looping over `(s.shops || [])`, which on restored reports only contained pending shops (omitting fully dispatched shops).
+  2. `computeMDMAnalytics()` and `computeWelfareAnalytics()` in `server.js` accumulated `totalReceived` instead of actual commodity dispatches into transporter `dispatchSum`.
+  3. `computeWelfareAnalytics()` in `server.js` and `reportRestorer.js` artificially capped quantities with `Math.min(total, allotted)` and calculated receipt percentages relative to allotment instead of dispatched stock.
+- FIX:
+  1. Updated all 4 export generators (`mdmPdfGenerator.js`, `mdmExcelGenerator.js`, `welfarePdfGenerator.js`, `welfareExcelGenerator.js`) to read sector-level commodity totals directly (`s.wheatAllotted`, `s.wheatDispatched`, `s.riceAllotted`, `s.riceDispatched`, etc.).
+  2. Updated `computeMDMAnalytics()` and `computeWelfareAnalytics()` in `server.js` to accumulate true commodity dispatches into `dispatchSum`.
+  3. Removed `Math.min` capping in `computeWelfareAnalytics()` across `server.js` and `reportRestorer.js`, and calculated receipt percentages as `(Received / Dispatched) * 100`.
+
+---
+
 ### 2026-08-10 | Fix ICDS Report Scraping, 10-Depot Resolution, Analytics, UI, Exports, and Balance Reports
 
 Files: server/automation/icds_scraper.js, server/services/icdsDataProcessor.js, config/icds-shop-counts.json, server.js, server/services/reportRestorer.js, server/services/balancesReportGenerator.js, server/services/icdsPdfGenerator.js, server/services/icdsExcelGenerator.js, public/index.html, public/app.js
