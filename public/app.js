@@ -1261,12 +1261,26 @@ function displayICDSAnalytics(analytics, v, genTime) {
         if (document.getElementById('icds-wheat-allotted')) document.getElementById('icds-wheat-allotted').innerText = `${m.wheatAllotted} Qt`;
         if (document.getElementById('icds-wheat-dispatched')) document.getElementById('icds-wheat-dispatched').innerText = `${m.wheatDispatched} Qt`;
         if (document.getElementById('icds-wheat-received')) document.getElementById('icds-wheat-received').innerText = `${m.wheatReceived} Qt`;
-        
         if (document.getElementById('icds-wheat-dispatch-pct-label')) document.getElementById('icds-wheat-dispatch-pct-label').innerText = `${m.wheatDispatchPct}%`;
         if (document.getElementById('icds-wheat-receipt-pct-label')) document.getElementById('icds-wheat-receipt-pct-label').innerText = `${m.wheatReceiptPct}%`;
-
         if (document.getElementById('icds-wheat-dispatch-bar')) document.getElementById('icds-wheat-dispatch-bar').style.width = `${m.wheatDispatchPct}%`;
         if (document.getElementById('icds-wheat-receipt-bar')) document.getElementById('icds-wheat-receipt-bar').style.width = `${m.wheatReceiptPct}%`;
+
+        if (document.getElementById('icds-rice-allotted')) document.getElementById('icds-rice-allotted').innerText = `${m.riceAllotted} Qt`;
+        if (document.getElementById('icds-rice-dispatched')) document.getElementById('icds-rice-dispatched').innerText = `${m.riceDispatched} Qt`;
+        if (document.getElementById('icds-rice-received')) document.getElementById('icds-rice-received').innerText = `${m.riceReceived} Qt`;
+        if (document.getElementById('icds-rice-dispatch-pct-label')) document.getElementById('icds-rice-dispatch-pct-label').innerText = `${m.riceDispatchPct}%`;
+        if (document.getElementById('icds-rice-receipt-pct-label')) document.getElementById('icds-rice-receipt-pct-label').innerText = `${m.riceReceiptPct}%`;
+        if (document.getElementById('icds-rice-dispatch-bar')) document.getElementById('icds-rice-dispatch-bar').style.width = `${m.riceDispatchPct}%`;
+        if (document.getElementById('icds-rice-receipt-bar')) document.getElementById('icds-rice-receipt-bar').style.width = `${m.riceReceiptPct}%`;
+
+        if (document.getElementById('icds-fsalt-allotted')) document.getElementById('icds-fsalt-allotted').innerText = `${m.fsaltAllotted} Qt`;
+        if (document.getElementById('icds-fsalt-dispatched')) document.getElementById('icds-fsalt-dispatched').innerText = `${m.fsaltDispatched} Qt`;
+        if (document.getElementById('icds-fsalt-received')) document.getElementById('icds-fsalt-received').innerText = `${m.fsaltReceived} Qt`;
+        if (document.getElementById('icds-fsalt-dispatch-pct-label')) document.getElementById('icds-fsalt-dispatch-pct-label').innerText = `${m.fsaltDispatchPct}%`;
+        if (document.getElementById('icds-fsalt-receipt-pct-label')) document.getElementById('icds-fsalt-receipt-pct-label').innerText = `${m.fsaltReceiptPct}%`;
+        if (document.getElementById('icds-fsalt-dispatch-bar')) document.getElementById('icds-fsalt-dispatch-bar').style.width = `${m.fsaltDispatchPct}%`;
+        if (document.getElementById('icds-fsalt-receipt-bar')) document.getElementById('icds-fsalt-receipt-bar').style.width = `${m.fsaltReceiptPct}%`;
     }
 
     if (document.getElementById('icdsMetricsGrid')) {

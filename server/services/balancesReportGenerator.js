@@ -19,7 +19,8 @@ class BalancesReportGenerator {
     getCommodities(scheme) {
         if (scheme === 'nfsa') return ['wheat', 'rice', 'sugar', 'salt'];
         if (scheme === 'welfare') return ['wheat', 'rice'];
-        return ['wheat', 'rice']; // MDM, ICDS
+        if (scheme === 'icds') return ['wheat', 'rice', 'salt'];
+        return ['wheat', 'rice']; // MDM
     }
 
     getSchemeLabelHindi(scheme) {

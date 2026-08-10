@@ -61,17 +61,17 @@ class ICDSPDFGenerator {
                     <td class="nowrap">${fmt(s.wD)}</td>
                     <td class="nowrap">${pct(s.wD, s.wA)}</td>
                     <td class="nowrap">${fmt(s.wR)}</td>
-                    <td class="nowrap">${pct(s.wR, s.wA)}</td>
+                    <td class="nowrap">${pct(s.wR, s.wD)}</td>
                     <td class="nowrap">${fmt(s.rA)}</td>
                     <td class="nowrap">${fmt(s.rD)}</td>
                     <td class="nowrap">${pct(s.rD, s.rA)}</td>
                     <td class="nowrap">${fmt(s.rR)}</td>
-                    <td class="nowrap">${pct(s.rR, s.rA)}</td>
+                    <td class="nowrap">${pct(s.rR, s.rD)}</td>
                     <td class="nowrap">${fmt(s.sA)}</td>
                     <td class="nowrap">${fmt(s.sD)}</td>
                     <td class="nowrap">${pct(s.sD, s.sA)}</td>
                     <td class="nowrap">${fmt(s.sR)}</td>
-                    <td class="nowrap">${pct(s.sR, s.sA)}</td>
+                    <td class="nowrap">${pct(s.sR, s.sD)}</td>
                     <td>${s.transporter || ''}</td>
                     <td class="nowrap">${s.mobileNumber || ''}</td>
                 </tr>`;
@@ -87,17 +87,17 @@ class ICDSPDFGenerator {
                 <td class="nowrap">${fmt(totWheatDisp)}</td>
                 <td class="nowrap">${pct(totWheatDisp, totWheatAllot)}</td>
                 <td class="nowrap">${fmt(totWheatRec)}</td>
-                <td class="nowrap">${pct(totWheatRec, totWheatAllot)}</td>
+                <td class="nowrap">${pct(totWheatRec, totWheatDisp)}</td>
                 <td class="nowrap">${fmt(totRiceAllot)}</td>
                 <td class="nowrap">${fmt(totRiceDisp)}</td>
                 <td class="nowrap">${pct(totRiceDisp, totRiceAllot)}</td>
                 <td class="nowrap">${fmt(totRiceRec)}</td>
-                <td class="nowrap">${pct(totRiceRec, totRiceAllot)}</td>
+                <td class="nowrap">${pct(totRiceRec, totRiceDisp)}</td>
                 <td class="nowrap">${fmt(totSaltAllot)}</td>
                 <td class="nowrap">${fmt(totSaltDisp)}</td>
                 <td class="nowrap">${pct(totSaltDisp, totSaltAllot)}</td>
                 <td class="nowrap">${fmt(totSaltRec)}</td>
-                <td class="nowrap">${pct(totSaltRec, totSaltAllot)}</td>
+                <td class="nowrap">${pct(totSaltRec, totSaltDisp)}</td>
                 <td colspan="2"></td>
             </tr>`;
 

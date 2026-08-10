@@ -2111,9 +2111,8 @@ function computeICDSAnalytics(processedResult) {
         filteredData.forEach(s => {
             const name = s.transporter || 'N/A';
             if (!stats[name]) stats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
-            let rec = s.totalReceived;
-            if (rec === undefined) rec = s.totalDispatched;
-            stats[name].dispatchSum += (parseFloat(rec) || 0);
+            const disp = (s.wheatDispatched || 0) + (s.riceDispatched || 0) + (s.fsaltDispatched || 0);
+            stats[name].dispatchSum += (parseFloat(disp) || (s.totalDispatched || 0));
             stats[name].allottedSum += (s.totalAllotted || 0);
             stats[name].count++;
         });
@@ -2173,8 +2172,8 @@ function computeICDSAnalytics(processedResult) {
         totalAllotted: s.totalAllotted, totalDispatched: s.totalDispatched, totalReceived: s.totalReceived,
         totalDispatchPct: s.totalAllotted > 0
             ? cap(parseFloat(((s.totalDispatched / s.totalAllotted) * 100).toFixed(2))) : 0,
-        totalReceiptPct: s.totalAllotted > 0
-            ? cap(parseFloat(((s.totalReceived / s.totalAllotted) * 100).toFixed(2))) : 0
+        totalReceiptPct: s.totalDispatched > 0
+            ? cap(parseFloat(((s.totalReceived / s.totalDispatched) * 100).toFixed(2))) : 0
     }));
 
 
@@ -2188,25 +2187,25 @@ function computeICDSAnalytics(processedResult) {
     return {
         metrics: {
             wheatAllotted: totals.wheatAllotted,
-            wheatDispatched: Math.min(totals.wheatDispatched, totals.wheatAllotted),
-            wheatReceived: Math.min(totals.wheatReceived || 0, totals.wheatAllotted),
+            wheatDispatched: totals.wheatDispatched,
+            wheatReceived: totals.wheatReceived || 0,
             wheatDispatchPct: cap(totals.wheatDispatchPct),
-            wheatReceiptPct: totals.wheatAllotted > 0 ? cap(parseFloat(((Math.min(totals.wheatReceived || 0, totals.wheatAllotted) / totals.wheatAllotted) * 100).toFixed(2))) : 0,
+            wheatReceiptPct: totals.wheatDispatched > 0 ? cap(parseFloat((((totals.wheatReceived || 0) / totals.wheatDispatched) * 100).toFixed(2))) : 0,
             riceAllotted: totals.riceAllotted,
-            riceDispatched: Math.min(totals.riceDispatched, totals.riceAllotted),
-            riceReceived: Math.min(totals.riceReceived || 0, totals.riceAllotted),
+            riceDispatched: totals.riceDispatched,
+            riceReceived: totals.riceReceived || 0,
             riceDispatchPct: cap(totals.riceDispatchPct),
-            riceReceiptPct: totals.riceAllotted > 0 ? cap(parseFloat(((Math.min(totals.riceReceived || 0, totals.riceAllotted) / totals.riceAllotted) * 100).toFixed(2))) : 0,
+            riceReceiptPct: totals.riceDispatched > 0 ? cap(parseFloat((((totals.riceReceived || 0) / totals.riceDispatched) * 100).toFixed(2))) : 0,
             fsaltAllotted: totals.fsaltAllotted,
-            fsaltDispatched: Math.min(totals.fsaltDispatched, totals.fsaltAllotted),
-            fsaltReceived: Math.min(totals.fsaltReceived || 0, totals.fsaltAllotted),
+            fsaltDispatched: totals.fsaltDispatched,
+            fsaltReceived: totals.fsaltReceived || 0,
             fsaltDispatchPct: cap(totals.fsaltDispatchPct),
-            fsaltReceiptPct: totals.fsaltAllotted > 0 ? cap(parseFloat(((Math.min(totals.fsaltReceived || 0, totals.fsaltAllotted) / totals.fsaltAllotted) * 100).toFixed(2))) : 0,
+            fsaltReceiptPct: totals.fsaltDispatched > 0 ? cap(parseFloat((((totals.fsaltReceived || 0) / totals.fsaltDispatched) * 100).toFixed(2))) : 0,
             totalAllotted: totals.totalAllotted,
-            totalDispatched: Math.min(totals.totalDispatched, totals.totalAllotted),
-            totalReceived: Math.min(totals.totalReceived || 0, totals.totalAllotted),
+            totalDispatched: totals.totalDispatched,
+            totalReceived: totals.totalReceived || 0,
             totalDispatchPct: cap(totals.totalDispatchPct),
-            totalReceiptPct: cap(totals.totalReceiptPct),
+            totalReceiptPct: totals.totalDispatched > 0 ? cap(parseFloat((((totals.totalReceived || 0) / totals.totalDispatched) * 100).toFixed(2))) : 0,
             totalShops: totals.totalIcdsShops,
             totalShopsLeft: totals.totalShopsLeft || 0,
             activeSectors: activeSectors.length

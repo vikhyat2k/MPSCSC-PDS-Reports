@@ -1439,6 +1439,34 @@
                                     <span>Receipt: <span id="icds-wheat-receipt-pct-label" style="font-weight:bold;color:var(--accent);">0%</span></span>
                                 </div>
                             </div>
+                            <div class="card" style="padding:15px;box-shadow:none;">
+                                <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;">
+                                    <strong style="color:var(--success);">🍚 Rice</strong>
+                                    <span>Allotted: <span id="icds-rice-allotted" style="font-weight:600;">0 Qt</span> | Disp: <span id="icds-rice-dispatched" style="color:var(--success);font-weight:600;">0 Qt</span> | Rec: <span id="icds-rice-received" style="color:var(--accent);font-weight:600;">0 Qt</span></span>
+                                </div>
+                                <div style="background:var(--glass-border);height:12px;border-radius:6px;overflow:hidden;position:relative;margin-bottom:5px;">
+                                    <div id="icds-rice-dispatch-bar" style="background:var(--success);height:100%;width:0%;position:absolute;top:0;left:0;transition:width 0.5s;"></div>
+                                    <div id="icds-rice-receipt-bar" style="background:var(--accent);height:100%;width:0%;position:absolute;top:0;left:0;transition:width 0.5s;"></div>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+                                    <span>Dispatch: <span id="icds-rice-dispatch-pct-label" style="font-weight:bold;color:var(--success);">0%</span></span>
+                                    <span>Receipt: <span id="icds-rice-receipt-pct-label" style="font-weight:bold;color:var(--accent);">0%</span></span>
+                                </div>
+                            </div>
+                            <div class="card" style="padding:15px;box-shadow:none;">
+                                <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;">
+                                    <strong style="color:#06b6d4;">🧂 Fortified Salt</strong>
+                                    <span>Allotted: <span id="icds-fsalt-allotted" style="font-weight:600;">0 Qt</span> | Disp: <span id="icds-fsalt-dispatched" style="color:#06b6d4;font-weight:600;">0 Qt</span> | Rec: <span id="icds-fsalt-received" style="color:var(--accent);font-weight:600;">0 Qt</span></span>
+                                </div>
+                                <div style="background:var(--glass-border);height:12px;border-radius:6px;overflow:hidden;position:relative;margin-bottom:5px;">
+                                    <div id="icds-fsalt-dispatch-bar" style="background:#06b6d4;height:100%;width:0%;position:absolute;top:0;left:0;transition:width 0.5s;"></div>
+                                    <div id="icds-fsalt-receipt-bar" style="background:var(--accent);height:100%;width:0%;position:absolute;top:0;left:0;transition:width 0.5s;"></div>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);">
+                                    <span>Dispatch: <span id="icds-fsalt-dispatch-pct-label" style="font-weight:bold;color:#06b6d4;">0%</span></span>
+                                    <span>Receipt: <span id="icds-fsalt-receipt-pct-label" style="font-weight:bold;color:var(--accent);">0%</span></span>
+                                </div>
+                            </div>
                         </div>
                         <div class="metrics-grid" id="icdsMetricsGrid"></div>
                         <div id="icdsInsightsSection" style="display:none;margin-top:20px;border:1px solid var(--glass-border);padding:15px;border-radius:16px;background:var(--bg-elevated);">

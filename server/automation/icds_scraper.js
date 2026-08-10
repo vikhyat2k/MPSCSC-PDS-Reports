@@ -41,11 +41,11 @@ class ICDSScraper {
         });
         this.page = await this.browser.newPage();
     
-    // Auto-dismiss any javascript alerts to prevent Puppeteer from hanging
-    this.page.on('dialog', async dialog => {
-      console.log('⚠️ Handled alert dialog:', dialog.message());
-      await dialog.accept().catch(() => {});
-    });
+        // Auto-dismiss any javascript alerts to prevent Puppeteer from hanging
+        this.page.on('dialog', async dialog => {
+            console.log('⚠️ Handled alert dialog:', dialog.message());
+            await dialog.accept().catch(() => {});
+        });
         this.page.setDefaultTimeout(30000);
 
         // Block unnecessary resources to speed up scraping
@@ -98,6 +98,49 @@ class ICDSScraper {
         } catch (e) {
             // Timeout — continue anyway
         }
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    /**
+     * Main extraction entry point.
+     */
+    async extractData(month, year, onProgress = null) {
+        this.currentMonth = month;
+        console.log(`\n📊 [ICDS] Starting extraction for ${month}/${year}...\n`);
+
+        try {
+            // 1. Navigate to ICDS page
+            try {
+                await this.page.goto(this.ICDS_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
+            } catch (err) {
+                console.warn(`⚠️ Navigation warning (domcontentloaded): ${err.message}. Retrying with 'load'...`);
+                await this.page.goto(this.ICDS_URL, { waitUntil: 'load', timeout: 60000 });
+            }
+            console.log('✅ [ICDS] Navigated to ICDS allotment page.');
+
+            // Save debug HTML
+            const html = await this.page.content();
+            fs.writeFileSync(path.join(this.logsDir, 'icds_page_debug.html'), html);
+
+            // 2. Select Month and Year
+            await this._selectFilters(month, year);
+
+            // 3. Click "Get Report"
+            await this._clickGetReport();
+
+            // 4. Find and click Betul district (page content changes in-place, no navigation)
+            await this._clickDistrict();
+
+            // 5. Save state after clicking district
+            const districtHtml = await this.page.content();
+            fs.writeFileSync(path.join(this.logsDir, 'icds_district_debug.html'), districtHtml);
+
+            // 6. Get list of depots
+            const depots = await this._getDepotList();
+            console.log(`📍 [ICDS] Found ${depots.length} depots.`);
+
+            if (depots.length === 0) {
+                throw new Error('No depots found after clicking district. Check icds_district_debug.html for table structure.');
             }
 
             const validDepots = depots.filter(d => !this.SKIP_DEPOT_SL.includes(d.slNo));
@@ -188,7 +231,7 @@ class ICDSScraper {
             await this.page.waitForSelector('#loading', { visible: true, timeout: 2000 });
             await this.page.waitForSelector('#loading', { hidden: true, timeout: 30000 });
         } catch (e) {
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 500));
         }
     }
 
@@ -222,13 +265,13 @@ class ICDSScraper {
         // INTERMITTENT FIX: If portal says No data found, retry once
         if (noData) {
             console.log(`   ⚠️ Portal reported No Data for ${this.currentMonth}. Retrying in 2s...`);
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 2000));
             await this.page.evaluate(() => {
                 const btn = document.querySelector('input[value="Get Report"]');
                 if (btn) btn.click();
             });
             await this._waitForLoading();
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 2000));
             
             noData = await this.page.evaluate(() => {
                 const txt = document.body.innerText;
@@ -289,17 +332,56 @@ class ICDSScraper {
     }
 
     async _getDepotList() {
-        console.log('   Using hardcoded ICDS ISSUE_POINTS to avoid government portal depot list corruption...');
+        try {
+            const dynamicDepots = await this.page.evaluate(() => {
+                const container = document.getElementById('depotreport') || document.querySelector('#detailsED table');
+                if (!container) return [];
+                const links = container.querySelectorAll('a');
+                const list = [];
+                const seen = new Set();
+                links.forEach((a) => {
+                    const text = a.innerText.trim();
+                    const onclick = a.getAttribute('onclick') || '';
+                    if (text && (onclick.includes('getreportfps') || onclick.includes('getreportdepot'))) {
+                        const match = onclick.match(/['"](\d+)['"]\s*,\s*['"]([^'"]+)['"]/);
+                        const depotId = match ? match[1] : '';
+                        const depotName = match ? match[2] : text;
+                        const key = `${depotId}_${text}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            list.push({
+                                slNo: list.length + 1,
+                                name: text,
+                                depotName: depotName,
+                                depotId: depotId,
+                                onclick: onclick || `getreportfps('${depotId}','${depotName}')`
+                            });
+                        }
+                    }
+                });
+                return list;
+            });
+
+            if (dynamicDepots && dynamicDepots.length > 0) {
+                console.log(`📍 [ICDS] Dynamically extracted ${dynamicDepots.length} depots from #depotreport table:`, dynamicDepots.map(d => d.name).join(', '));
+                return dynamicDepots;
+            }
+        } catch (e) {
+            console.warn('⚠️ Dynamic depot extraction failed, using hardcoded fallback list:', e.message);
+        }
+
+        console.log('   Using fallback 10 ICDS ISSUE_POINTS list...');
         const ISSUE_POINTS = [
+            { id: '233100404', name: 'Aamla' },
+            { id: '2331007',   name: 'AMLA' },
+            { id: '2331003',   name: 'Athner' },
             { id: '2331001',   name: 'Betul' },
             { id: '2331002',   name: 'Bhainsdehi' },
-            { id: '2331003',   name: 'Athner' },
-            { id: '2331004',   name: 'Multai' },
-            { id: '233100401', name: 'Shahpur' },
-            { id: '233100406', name: 'Ghoradongri' },
             { id: '2331005',   name: 'BHIMPUR' },
+            { id: '233100406', name: 'Ghoradongri' },
+            { id: '2331004',   name: 'Multai' },
             { id: '2331006',   name: 'PATTAN' },
-            { id: '2331007',   name: 'AMLA' }
+            { id: '233100401', name: 'Shahpur' }
         ];
 
         return ISSUE_POINTS.map((d, index) => ({
@@ -423,7 +505,7 @@ class ICDSScraper {
             console.log('   #depotreport gone — re-clicking district...');
             await this._clickDistrict();
         }
-        await new Promise(r => setTimeout(r, ));
+        await new Promise(r => setTimeout(r, 500));
     }
 }
 

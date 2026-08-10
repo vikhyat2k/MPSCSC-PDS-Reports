@@ -1,13 +1,16 @@
 {
-  "_comment": "Official ICDS AWC shop counts per issue point for Betul district (as per portal ICDS RO Status page). Update this when the portal count changes.",
-  "AMLA": 31,
-  "Athner": 53,
-  "Betul": 80,
-  "Bhainsdehi": 50,
-  "BHIMPUR": 88,
-  "Ghoradongri": 33,
-  "Multai": 101,
-  "PATTAN": 56,
-  "Shahpur": 70,
-  "total": 562
+  "_comment": "Official ICDS AWC shop counts per issue point for Betul district (as per portal ICDS RO Status page).",
+  "Aamla": 0,
+  "AMLA": 87,
+  "Athner": 144,
+  "Betul": 189,
+  "Bhainsdehi": 152,
+  "BHIMPUR": 375,
+  "Ghoradongri": 126,
+  "Multai": 210,
+  "PATTAN": 114,
+  "Shahpur": 224,
+  "totalAwc": 1621,
+  "totalInmates": 117061,
+  "totalShops": 562
 }

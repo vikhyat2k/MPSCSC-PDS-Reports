@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 26 July 2026, 23:30 IST
+> **Last Sync:** 10 August 2026, 09:20 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Aug 2026 — Added Standalone Advanced Analytics Report Feature (5-Sheet Excel & 9-Page PDF) |
+| Last Code Change | 10 Aug 2026 — Comprehensive ICDS Report Fixes (Scraper Navigation, Rice & Salt UI Cards, Analytics Capping, Balance Reports & PDF/Excel Receipt %) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1337,6 +1337,28 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-10 | Fix ICDS Report Scraping, Analytics, UI, Exports, and Balance Reports
+
+Files: server/automation/icds_scraper.js, server.js, server/services/reportRestorer.js, server/services/balancesReportGenerator.js, server/services/icdsPdfGenerator.js, server/services/icdsExcelGenerator.js, public/index.html, public/app.js
+Type: Bug Fix / Enhancement
+Closes: ISSUE-013
+
+- BUG: ICDS reports were incorrect across scraping, analytics calculations, dashboard UI rendering, balance reports, and PDF exports.
+- ROOT CAUSE:
+  1. `icds_scraper.js` was skipping `_selectFilters(month, year)`, `_clickGetReport()`, and `_clickDistrict()` inside `extractData()`, failing portal navigation prior to depot extraction.
+  2. `index.html` & `app.js` only included UI elements for Wheat, leaving out Rice and Fortified Salt.
+  3. `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` artificially clipped real dispatched/received quantities using `Math.min(total, allotted)` and miscalculated transporter dispatch sums using received quantities.
+  4. `balancesReportGenerator.js` omitted `salt` from ICDS commodity lists in `getCommodities()`.
+  5. `icdsPdfGenerator.js` calculated Receipt % against allotment (`Received / Allotted`) instead of dispatched stock (`Received / Dispatched`).
+- FIX:
+  1. Added full portal navigation steps (`_selectFilters`, `_clickGetReport`, `_clickDistrict`) to `icds_scraper.js`.
+  2. Added Rice (`🍚 Rice`) and Fortified Salt (`🧂 Fortified Salt`) cards to `index.html` under `#icdsAnalyticsSection` and updated `displayICDSAnalytics()` in `app.js` to populate all 3 commodity metrics.
+  3. Fixed `computeICDSAnalytics()` in `server.js` and `reportRestorer.js` to report actual unclipped total quantities, accumulate true dispatched quantities for transporter rankings, and calculate Receipt % relative to dispatched stock.
+  4. Added `salt` to `getCommodities('icds')` in `balancesReportGenerator.js` to ensure complete ICDS Balance Lifting Reports.
+  5. Standardized Receipt % to `(Receipt / Dispatched) * 100` in `icdsPdfGenerator.js` and `icdsExcelGenerator.js`.
 
 ---
 

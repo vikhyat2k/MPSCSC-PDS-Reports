@@ -67,6 +67,8 @@ class ICDSDataProcessor {
             return 0;
         };
 
+        let totalAwc = 0, totalInmates = 0;
+
         shops.forEach(shop => {
             // ICDS typical commodities: wheat, rice, fsalt
             const wheatAlloc = parseNumeric(shop.wheatAllotted || 0);
@@ -84,7 +86,10 @@ class ICDSDataProcessor {
             const saltRec = parseNumeric(shop.fsaltReceived || 0);
             const totalRec = wheatRec + riceRec + saltRec;
 
-            if (totalAlloc === 0 && totalDisp === 0 && totalRec === 0) return;
+            const awc = parseNumeric(shop.awcCount || 0);
+            const inmates = parseNumeric(shop.inmatesCount || 0);
+
+            if (totalAlloc === 0 && totalDisp === 0 && totalRec === 0 && awc === 0) return;
 
             const shopCode = shop.shopCode || '';
             const sectorId = this.shopMapping[shopCode] || 'Unmapped';
@@ -109,6 +114,8 @@ class ICDSDataProcessor {
                     fsaltAllotted: 0,
                     fsaltDispatched: 0,
                     fsaltReceived: 0,
+                    awcCount: 0,
+                    inmatesCount: 0,
                     totalShops: 0, // computed after rawData is processed
                     shops: []
                 };
@@ -126,6 +133,8 @@ class ICDSDataProcessor {
             totalSaltAllotted += saltAlloc;
             totalSaltDispatched += saltDisp;
             totalSaltReceived += saltRec;
+            totalAwc += awc;
+            totalInmates += inmates;
 
             sectorsMap[sectorId].allotted += totalAlloc;
             sectorsMap[sectorId].dispatched += totalDisp;
@@ -139,6 +148,8 @@ class ICDSDataProcessor {
             sectorsMap[sectorId].fsaltAllotted += saltAlloc;
             sectorsMap[sectorId].fsaltDispatched += saltDisp;
             sectorsMap[sectorId].fsaltReceived += saltRec;
+            sectorsMap[sectorId].awcCount += awc;
+            sectorsMap[sectorId].inmatesCount += inmates;
 
             
             const existingShop = sectorsMap[sectorId].shops.find(s => s.shopCode === shopCode);
@@ -158,6 +169,8 @@ class ICDSDataProcessor {
                 existingShop.fsaltAllotted += saltAlloc;
                 existingShop.fsaltDispatched += saltDisp;
                 existingShop.fsaltReceived += saltRec;
+                existingShop.awcCount += awc;
+                existingShop.inmatesCount += inmates;
             } else {
                 const details = shopsDetails[shopCode] || {};
                 const extractedName = details.shopName || shop.shopName || shopCode;
@@ -183,7 +196,9 @@ class ICDSDataProcessor {
                     riceReceived: riceRec,
                     fsaltAllotted: saltAlloc,
                     fsaltDispatched: saltDisp,
-                    fsaltReceived: saltRec
+                    fsaltReceived: saltRec,
+                    awcCount: awc,
+                    inmatesCount: inmates
                 });
             }
         });
@@ -266,7 +281,9 @@ class ICDSDataProcessor {
                 fsaltDispatchPct: totalSaltAllotted > 0 ? Number((totalSaltDispatched / totalSaltAllotted * 100).toFixed(2)) : 0,
                 totalReceiptPct: totalAllotted > 0 ? Number((totalReceived / totalAllotted * 100).toFixed(2)) : 0,
                 totalShopsLeft: totalShopsLeft,
-                totalIcdsShops: totalIcdsShops
+                totalIcdsShops: totalIcdsShops,
+                totalAwc: totalAwc,
+                totalInmates: totalInmates
             },
             verification: summaryTotals || {},
             sectors: sectors
