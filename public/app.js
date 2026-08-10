@@ -1369,7 +1369,8 @@ function displayWELFAREAnalytics(analytics, v, genTime) {
         if (document.getElementById('welfareRiceAllotted')) document.getElementById('welfareRiceAllotted').innerText = `${m.riceAllotted} Qt`;
         if (document.getElementById('welfareRiceDispatched')) document.getElementById('welfareRiceDispatched').innerText = `${m.riceDispatched} Qt`;
         if (document.getElementById('welfareRiceReceived')) document.getElementById('welfareRiceReceived').innerText = `${m.riceReceived} Qt`;
-        if (document.getElementById('welfareRiceRcptPct')) document.getElementById('welfareRiceRcptPct').innerText = `${m.riceReceiptPct}%`;
+        if (document.getElementById('welfareRiceDispPct')) document.getElementById('welfareRiceDispPct').innerText = `${fmtPct(m.riceDispatchPct)}%`;
+        if (document.getElementById('welfareRiceRcptPct')) document.getElementById('welfareRiceRcptPct').innerText = `${fmtPct(m.riceReceiptPct)}%`;
 
         if (document.getElementById('welfareWheatDispBar')) document.getElementById('welfareWheatDispBar').style.width = `${m.wheatDispatchPct}%`;
         if (document.getElementById('welfareWheatRcptBar')) document.getElementById('welfareWheatRcptBar').style.width = `${m.wheatReceiptPct}%`;
