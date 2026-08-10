@@ -33,15 +33,25 @@ class MDMExcelGenerator {
         let totalShops = 0;
 
         sectors.forEach((sector, i) => {
-            let wA=0, wD=0, wR=0, rA=0, rD=0, rR=0;
-            (sector.shops || []).forEach(shop => {
-                wA += shop.wheatAllotted              || 0;
-                wD += shop.wheatDispatched             || 0;
-                wR += shop.wheatReceived               || 0;
-                rA += shop.fortifiedRiceAllotted       || shop.riceAllotted     || 0;
-                rD += shop.fortifiedRiceDispatched     || shop.riceDispatched   || 0;
-                rR += shop.fortifiedRiceReceived       || shop.riceReceived     || 0;
-            });
+            let wA = sector.wheatAllotted !== undefined ? sector.wheatAllotted : 0;
+            let wD = sector.wheatDispatched !== undefined ? sector.wheatDispatched : 0;
+            let wR = sector.wheatReceived !== undefined ? sector.wheatReceived : 0;
+
+            let rA = (sector.fortifiedRiceAllotted !== undefined ? sector.fortifiedRiceAllotted : sector.riceAllotted) || 0;
+            let rD = (sector.fortifiedRiceDispatched !== undefined ? sector.fortifiedRiceDispatched : sector.riceDispatched) || 0;
+            let rR = (sector.fortifiedRiceReceived !== undefined ? sector.fortifiedRiceReceived : sector.riceReceived) || 0;
+
+            // Fallback to summing shops if sector-level metrics are missing
+            if (wA === 0 && wD === 0 && rA === 0 && rD === 0 && (sector.shops && sector.shops.length > 0)) {
+                (sector.shops || []).forEach(shop => {
+                    wA += shop.wheatAllotted              || 0;
+                    wD += shop.wheatDispatched             || 0;
+                    wR += shop.wheatReceived               || 0;
+                    rA += shop.fortifiedRiceAllotted       || shop.riceAllotted     || 0;
+                    rD += shop.fortifiedRiceDispatched     || shop.riceDispatched   || 0;
+                    rR += shop.fortifiedRiceReceived       || shop.riceReceived     || 0;
+                });
+            }
             totWA+=wA; totWD+=wD; totWR+=wR;
             totRA+=rA; totRD+=rD; totRR+=rR;
 

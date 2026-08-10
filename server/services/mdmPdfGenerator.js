@@ -20,17 +20,28 @@ class MDMPDFGenerator {
         let totWheatAllot = 0, totWheatDisp = 0, totWheatRec = 0;
         let totRiceAllot  = 0, totRiceDisp  = 0, totRiceRec  = 0;
 
-        // Per-sector grain aggregation — populate wR, rR from received fields
+        // Per-sector grain aggregation — use sector-level totals directly from data processor
         const sectorGrains = sectors.map(s => {
-            let wA=0, wD=0, wR=0, rA=0, rD=0, rR=0;
-            (s.shops || []).forEach(shop => {
-                wA += shop.wheatAllotted            || 0;
-                wD += shop.wheatDispatched           || 0;
-                wR += shop.wheatReceived             || 0;
-                rA += shop.fortifiedRiceAllotted     || shop.riceAllotted     || 0;
-                rD += shop.fortifiedRiceDispatched   || shop.riceDispatched   || 0;
-                rR += shop.fortifiedRiceReceived     || shop.riceReceived     || 0;
-            });
+            let wA = s.wheatAllotted !== undefined ? s.wheatAllotted : 0;
+            let wD = s.wheatDispatched !== undefined ? s.wheatDispatched : 0;
+            let wR = s.wheatReceived !== undefined ? s.wheatReceived : 0;
+
+            let rA = (s.fortifiedRiceAllotted !== undefined ? s.fortifiedRiceAllotted : s.riceAllotted) || 0;
+            let rD = (s.fortifiedRiceDispatched !== undefined ? s.fortifiedRiceDispatched : s.riceDispatched) || 0;
+            let rR = (s.fortifiedRiceReceived !== undefined ? s.fortifiedRiceReceived : s.riceReceived) || 0;
+
+            // Fallback to summing shops if sector-level metrics are missing
+            if (wA === 0 && wD === 0 && rA === 0 && rD === 0 && (s.shops && s.shops.length > 0)) {
+                (s.shops || []).forEach(shop => {
+                    wA += shop.wheatAllotted            || 0;
+                    wD += shop.wheatDispatched           || 0;
+                    wR += shop.wheatReceived             || 0;
+                    rA += shop.fortifiedRiceAllotted     || shop.riceAllotted     || 0;
+                    rD += shop.fortifiedRiceDispatched   || shop.riceDispatched   || 0;
+                    rR += shop.fortifiedRiceReceived     || shop.riceReceived     || 0;
+                });
+            }
+
             totWheatAllot += wA; totWheatDisp += wD; totWheatRec += wR;
             totRiceAllot  += rA; totRiceDisp  += rD; totRiceRec  += rR;
             return { ...s, wA, wD, wR, rA, rD, rR };

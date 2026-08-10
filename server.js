@@ -1831,9 +1831,8 @@ function computeMDMAnalytics(processedResult) {
         data.forEach(s => {
             const name = s.transporter || 'N/A';
             if (!stats[name]) stats[name] = { name, dispatchSum: 0, allottedSum: 0, count: 0 };
-            let rec = s.totalReceived;
-            if (rec === undefined) rec = s.totalDispatched;
-            stats[name].dispatchSum += (parseFloat(rec) || 0);
+            const disp = (s.wheatDispatched || 0) + (s.fortifiedRiceDispatched || s.riceDispatched || 0);
+            stats[name].dispatchSum += (parseFloat(disp) || (s.totalDispatched || 0));
             stats[name].allottedSum += (s.totalAllotted || 0);
             stats[name].count++;
         });
