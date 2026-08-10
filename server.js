@@ -1408,7 +1408,7 @@ app.get('/api/reports/:id/advanced-analytics/pdf', async (req, res) => {
         const filename = `Executive_Analytics_Report_NFSA_${computed.month}_${computed.year}_${Date.now()}.pdf`;
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.send(pdfBuffer);
+        res.send(Buffer.from(pdfBuffer));
     } catch (error) {
         console.error('❌ Advanced Analytics PDF Generation Error:', error.message);
         res.status(500).json({ error: 'Failed to generate Advanced Analytics PDF report', message: error.message });

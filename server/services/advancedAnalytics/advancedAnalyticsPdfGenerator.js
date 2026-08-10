@@ -616,7 +616,7 @@ class AdvancedAnalyticsPdfGenerator {
                 margin: { top: '14mm', right: '12mm', bottom: '16mm', left: '12mm' }
             });
 
-            return pdfBuffer;
+            return Buffer.from(pdfBuffer);
         } catch (error) {
             console.error('Failed to generate advanced analytics PDF:', error);
             throw error;
