@@ -98,35 +98,6 @@ class ICDSScraper {
         } catch (e) {
             // Timeout — continue anyway
         }
-        await new Promise(r => setTimeout(r, ));
-    }
-
-    /**
-     * Main extraction entry point.
-     */
-    async extractData(month, year, onProgress = null) {
-        console.log(`\n📊 [ICDS] Starting extraction for ${month}/${year}...\n`);
-
-        try {
-            // 1. Navigate to ICDS page
-            try {
-                await this.page.goto(this.ICDS_URL, { waitUntil: 'domcontentloaded', timeout: 120000 });
-            } catch (err) {
-                console.warn(`⚠️ Navigation warning (domcontentloaded): ${err.message}. Retrying with 'load'...`);
-                await this.page.goto(this.ICDS_URL, { waitUntil: 'load', timeout: 60000 });
-            }
-            console.log('✅ [ICDS] Navigated to ICDS allotment page.');
-
-            // Save debug HTML
-            const html = await this.page.content();
-            fs.writeFileSync(path.join(this.logsDir, 'icds_page_debug.html'), html);
-
-            // 6. Get list of depots
-            const depots = await this._getDepotList();
-            console.log(`📍 [ICDS] Found ${depots.length} depots.`);
-
-            if (depots.length === 0) {
-                throw new Error('No depots found after clicking district. Check icds_district_debug.html for table structure.');
             }
 
             const validDepots = depots.filter(d => !this.SKIP_DEPOT_SL.includes(d.slNo));
