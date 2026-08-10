@@ -779,8 +779,11 @@ function togglePerformerNames(btn) {
 }
 
 function toggleShopsLeftDetails() {
-    const section = document.getElementById(currentScheme === 'nfsa' ? 'shopsDetailSection' : `${currentScheme}ShopsDetailSection`);
-    const listEl = document.getElementById(currentScheme === 'nfsa' ? 'shopsDetailList' : `${currentScheme}ShopsDetailList`);
+    const scheme = (window.currentReportAnalytics && window.currentReportAnalytics.scheme) || currentScheme || 'nfsa';
+    let targetScheme = scheme === 'nfsa_daterange' ? 'nfsa' : scheme;
+    
+    const section = document.getElementById(targetScheme === 'nfsa' ? 'shopsDetailSection' : `${targetScheme}ShopsDetailSection`);
+    const listEl = document.getElementById(targetScheme === 'nfsa' ? 'shopsDetailList' : `${targetScheme}ShopsDetailList`);
     
     if (section && section.style.display === 'block') {
         section.style.display = 'none';
@@ -788,90 +791,166 @@ function toggleShopsLeftDetails() {
     }
     
     const analytics = window.currentReportAnalytics;
-    const sourceData = analytics ? (analytics.needsAttention || analytics.bottomPerformers) : null;
 
     // Dynamically update the section title based on report type
-    const titleEl = document.getElementById('nfsaShopsDetailTitle');
+    const titleEl = document.getElementById(`${targetScheme}ShopsDetailTitle`) || document.getElementById('nfsaShopsDetailTitle');
     if (titleEl && analytics) {
         if (analytics.isDateRange || analytics.fromDate) {
-            // Date Range report — show date range instead of month
             const from = analytics.fromDate || '';
             const to = analytics.toDate || '';
             titleEl.textContent = from && to && from !== to
                 ? `🏪 Pending Sector Details (${from} to ${to})`
                 : `🏪 Pending Sector Details (${from || 'Date Range'})`;
         } else if (analytics.month) {
-            // Monthly report — show month name
             const monthName = getMonthName(analytics.month);
             titleEl.textContent = `🏪 Pending Sector Details for Month of ${monthName}`;
         }
     }
 
-    if (section && listEl && sourceData) {
-        section.style.display = 'block';
-        listEl.innerHTML = sourceData.filter(s => {
-            const count = Array.isArray(s.pendingShops) ? s.pendingShops.length : (s.shopsLeft || 0);
-            const bal = parseFloat(s.balance || s.balanceQt || 0);
-            return count > 0 || bal > 0.01;
-        }).map((s, idx) => {
-            const count = Array.isArray(s.pendingShops) ? s.pendingShops.length : (s.shopsLeft || 0);
-            const bal = parseFloat(s.balance || s.balanceQt || 0);
-            const shops = s.pendingShops || [];
-            
-            const shopListHtml = shops.length > 0 
-                ? `<div id="shops-${idx}" class="pending-shops-container" style="display:none;">
-                    <div style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:12px;">Pending Shops:</div>
-                    ${shops.map(sh => {
-                        const commList = sh.commodities ? Object.entries(sh.commodities)
-                            .filter(([_, v]) => parseFloat(v) > 0)
-                            .map(([k, v]) => `<span style="background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; font-size:11px; border:1px solid var(--primary); margin-right:4px; font-weight:700;">${k}: ${v}</span>`)
-                            .join('') : '';
-                        
-                        return `
-                        <div class="shop-item">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                <span style="color:var(--text-main); font-weight:700; font-size:15px;">${escapeHtml(sh.name)}</span>
-                                <span style="color:var(--error); font-weight:800;">${sh.totalBalance} Qt</span>
-                            </div>
-                            <div style="display:flex; flex-wrap:wrap; gap:4px;">
-                                ${commList}
-                            </div>
-                        </div>`;
-                    }).join('')}
-                   </div>`
-                : '';
+    // Primary: shop-level detail (NFSA monthly → needsAttention, other schemes → bottomPerformers / matrix / sectors / allSectors)
+    let rawData = null;
+    if (analytics) {
+        if (Array.isArray(analytics.needsAttention) && analytics.needsAttention.length > 0) {
+            rawData = analytics.needsAttention;
+        } else if (Array.isArray(analytics.allSectors) && analytics.allSectors.length > 0) {
+            rawData = analytics.allSectors;
+        } else if (Array.isArray(analytics.matrix) && analytics.matrix.length > 0) {
+            rawData = analytics.matrix;
+        } else if (Array.isArray(analytics.sectors) && analytics.sectors.length > 0) {
+            rawData = analytics.sectors;
+        } else if (Array.isArray(analytics.bottomPerformers) && analytics.bottomPerformers.length > 0 && (analytics.bottomPerformers[0].shops || analytics.bottomPerformers[0].pendingShops || analytics.bottomPerformers[0].icdsShops || analytics.bottomPerformers[0].mdmShops || analytics.bottomPerformers[0].welfareShops || analytics.bottomPerformers[0].shopsLeft)) {
+            rawData = analytics.bottomPerformers;
+        }
+    }
+    
+    let sourceData = [];
+    if (rawData && rawData.length > 0) {
+        if (rawData[0].shopCode) {
+            // NFSA Monthly: flat list of shops. Group by sector.
+            const grouped = {};
+            rawData.forEach(shop => {
+                const sec = shop.sectorName || 'Unknown Sector';
+                if (!grouped[sec]) grouped[sec] = { name: sec, transporter: shop.transporter, balance: 0, pendingShops: [] };
+                grouped[sec].balance += (shop.balance || 0);
+                grouped[sec].pendingShops.push({
+                    name: shop.shopName || shop.shopCode,
+                    totalBalance: shop.balance,
+                    commodities: shop.commodities || {}
+                });
+            });
+            sourceData = Object.values(grouped).map(g => ({ ...g, shopsLeft: g.pendingShops.length }));
+        } else {
+            // DateRange or MDM/ICDS/Welfare / matrix / sectors
+            sourceData = rawData.map(s => {
+                const pendingArr = s.icdsShops || s.mdmShops || s.welfareShops || s.pendingShops || (Array.isArray(s.shops) ? s.shops.filter(sh => {
+                    const wA = sh.wheatAllotted || sh.allocation || 0;
+                    const wD = sh.wheatDispatched || sh.dispatch || 0;
+                    const rA = sh.riceAllotted || 0;
+                    const rD = sh.riceDispatched || 0;
+                    const sA = sh.fsaltAllotted || 0;
+                    const sD = sh.fsaltDispatched || 0;
+                    const bal = sh.balance !== undefined ? sh.balance : ((wA - wD) + (rA - rD) + (sA - sD));
+                    return bal > 0.01;
+                }) : []);
 
-            return `
-            <div class="sector-detail-card" onclick="toggleSectorShops('${idx}')">
-                <div class="card-header-row" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <strong class="sector-name">${escapeHtml(s.name)}</strong>
-                        <span class="badge-details">Details</span>
+                const count = pendingArr.length > 0 ? pendingArr.length : (s.shopsLeft || s.mdmShopCount || s.icdsShopCount || s.welfareShopCount || (s.shops ? s.shops.length : 0));
+                const bal = s.balance !== undefined ? s.balance : parseFloat(Math.max(0, (s.totalAllotted || s.allotted || 0) - (s.totalDispatched || s.dispatched || 0)).toFixed(2));
+
+                return {
+                    name: s.name || s.sectorName || 'Unknown',
+                    transporter: s.transporter || s.transporter_name || 'N/A',
+                    balance: bal,
+                    shopsLeft: count,
+                    pendingShops: pendingArr
+                };
+            });
+        }
+    }
+
+    if (section && listEl) {
+        section.style.display = 'block';
+        
+        const filteredSourceData = sourceData.filter(s => s.shopsLeft > 0 || s.balance > 0.01);
+
+        if (filteredSourceData.length === 0) {
+            listEl.innerHTML = `
+                <div style="grid-column:1/-1; padding:24px; text-align:center; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); border-radius:12px; color:var(--success);">
+                    <div style="font-size:28px; margin-bottom:8px;">🎉</div>
+                    <div style="font-size:15px; font-weight:700;">All Sectors Completed</div>
+                    <div style="font-size:12px; opacity:0.8; margin-top:4px;">100% lifting completed across all sectors for this report.</div>
+                </div>`;
+        } else {
+            listEl.innerHTML = filteredSourceData.map((s, idx) => {
+                const count = s.shopsLeft;
+                const bal = s.balance;
+                const shops = s.pendingShops;
+                
+                const shopListHtml = shops.length > 0 
+                    ? `<div id="shops-${idx}" class="pending-shops-container" style="display:none;">
+                        <div style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:12px;">Pending Shops / Institutes:</div>
+                        ${shops.map(sh => {
+                            const commList = sh.commodities ? Object.entries(sh.commodities)
+                                .map(([k, v]) => {
+                                    let val = 0;
+                                    if (typeof v === 'number') {
+                                        val = v;
+                                    } else if (v && typeof v === 'object') {
+                                        val = v.balance !== undefined ? parseFloat(v.balance) : parseFloat((v.allotted || 0) - (v.dispatched || 0));
+                                    } else {
+                                        val = parseFloat(v);
+                                    }
+                                    if (isNaN(val) || val <= 0.001) return null;
+                                    let displayVal = Number.isInteger(val) ? val : parseFloat(val.toFixed(2));
+                                    return `<span style="background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:4px; font-size:11px; border:1px solid var(--primary); margin-right:4px; font-weight:700;">${k}: ${displayVal}</span>`;
+                                })
+                                .filter(Boolean)
+                                .join('') : '';
+                            
+                            const shopBal = sh.totalBalance !== undefined ? sh.totalBalance : (sh.balance !== undefined ? sh.balance : 0);
+
+                            return `
+                            <div class="shop-item">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <span style="color:var(--text-main); font-weight:700; font-size:15px;">${escapeHtml(sh.name || sh.shopName || sh.shopCode || 'Unknown Shop')}</span>
+                                    <span style="color:var(--error); font-weight:800;">${parseFloat(shopBal).toFixed(2)} Qt</span>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                    ${commList}
+                                </div>
+                            </div>`;
+                        }).join('')}
+                       </div>`
+                    : '';
+
+                return `
+                <div class="sector-detail-card" onclick="toggleSectorShops('${idx}')">
+                    <div class="card-header-row" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong class="sector-name">${escapeHtml(s.name)}</strong>
+                            <span class="badge-details">Details</span>
+                        </div>
+                        <div style="display:flex; gap: 4px;">
+                            <button class="btn-action" onclick="event.stopPropagation(); exportSectorCard(this, '${count}', '${escapeHtml(s.name).replace(/'/g, "\\'")}', '${escapeHtml(s.transporter || '').replace(/'/g, "\\'")}', 'image')" style="background:#4f46e5; color:#fff; padding:2px 6px; font-size:11px; border-radius:4px; border:none; display:flex; align-items:center; gap:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);" title="Export as Image">
+                                📷 Image
+                            </button>
+                            <button class="btn-action" onclick="event.stopPropagation(); exportSectorCard(this, '${count}', '${escapeHtml(s.name).replace(/'/g, "\\'")}', '${escapeHtml(s.transporter || '').replace(/'/g, "\\'")}', 'pdf')" style="background:#dc2626; color:#fff; padding:2px 6px; font-size:11px; border-radius:4px; border:none; display:flex; align-items:center; gap:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);" title="Export as PDF">
+                                📄 PDF
+                            </button>
+                        </div>
                     </div>
-                    <div style="display:flex; gap: 4px;">
-                        <button class="btn-action" onclick="event.stopPropagation(); exportSectorCard(this, '${escapeHtml(s.name).replace(/'/g, "\\'")}', 'image')" style="background:#4f46e5; color:#fff; padding:2px 6px; font-size:11px; border-radius:4px; border:none; display:flex; align-items:center; gap:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);" title="Export as Image">
-                            📷 Image
-                        </button>
-                        <button class="btn-action" onclick="event.stopPropagation(); exportSectorCard(this, '${escapeHtml(s.name).replace(/'/g, "\\'")}', 'pdf')" style="background:#dc2626; color:#fff; padding:2px 6px; font-size:11px; border-radius:4px; border:none; display:flex; align-items:center; gap:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);" title="Export as PDF">
-                            📄 PDF
-                        </button>
+                    <div class="transporter-name">Transporter: ${escapeHtml(s.transporter)}</div>
+                    <div class="stats-row">
+                        <span style="color:var(--text-secondary);">${count} shops left</span>
+                        <span style="color:var(--error);">Bal: ${bal.toFixed(2)} Qt</span>
                     </div>
-                </div>
-                <div class="transporter-name">Transporter: ${escapeHtml(s.transporter || s.transporter_name || 'N/A')}</div>
-                <div class="stats-row">
-                    <span style="color:var(--text-secondary);">${count} shops left</span>
-                    <span style="color:var(--error);">Bal: ${bal.toFixed(2)} Qt</span>
-                </div>
-                ${shopListHtml}
-            </div>`;
-        }).join('');
+                    ${shopListHtml}
+                </div>`;
+            }).join('');
+        }
         
         // Scroll to the details section
         setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-    } else {
-        alert('Analytics data is not yet available for this report.');
     }
-}
 }
 
 async function exportSectorCard(btn, secName, type) {
@@ -1099,23 +1178,24 @@ function renderTransporterInsights(id, list, isTop) {
 }
 
 function displayMDMAnalytics(analytics, v, genTime) {
-    console.log('📊 [DEBUG] MDM Analytics Received:', analytics);
+    if (!document.getElementById('mdmAnalyticsSection')) return;
     document.getElementById('mdmAnalyticsSection').style.display = 'block';
     const m = analytics.metrics || analytics.totals || {}; 
+    const fmtPct = (val) => parseFloat(val || 0).toFixed(2);
     
     // Update Detailed Labels
     if (m.wheatAllotted !== undefined) {
         if (document.getElementById('mdm-wheat-allotted')) document.getElementById('mdm-wheat-allotted').innerText = `${m.wheatAllotted} Qt`;
         if (document.getElementById('mdm-wheat-dispatched')) document.getElementById('mdm-wheat-dispatched').innerText = `${m.wheatDispatched} Qt`;
         if (document.getElementById('mdm-wheat-received')) document.getElementById('mdm-wheat-received').innerText = `${m.wheatReceived} Qt`;
-        if (document.getElementById('mdm-wheat-dispatch-pct-label')) document.getElementById('mdm-wheat-dispatch-pct-label').innerText = `${m.wheatDispatchPct}%`;
-        if (document.getElementById('mdm-wheat-receipt-pct-label')) document.getElementById('mdm-wheat-receipt-pct-label').innerText = `${m.wheatReceiptPct}%`;
+        if (document.getElementById('mdm-wheat-dispatch-pct-label')) document.getElementById('mdm-wheat-dispatch-pct-label').innerText = `${fmtPct(m.wheatDispatchPct)}%`;
+        if (document.getElementById('mdm-wheat-receipt-pct-label')) document.getElementById('mdm-wheat-receipt-pct-label').innerText = `${fmtPct(m.wheatReceiptPct)}%`;
         
         if (document.getElementById('mdm-rice-allotted')) document.getElementById('mdm-rice-allotted').innerText = `${m.riceAllotted} Qt`;
         if (document.getElementById('mdm-rice-dispatched')) document.getElementById('mdm-rice-dispatched').innerText = `${m.riceDispatched} Qt`;
         if (document.getElementById('mdm-rice-received')) document.getElementById('mdm-rice-received').innerText = `${m.riceReceived} Qt`;
-        if (document.getElementById('mdm-rice-dispatch-pct-label')) document.getElementById('mdm-rice-dispatch-pct-label').innerText = `${m.riceDispatchPct}%`;
-        if (document.getElementById('mdm-rice-receipt-pct-label')) document.getElementById('mdm-rice-receipt-pct-label').innerText = `${m.riceReceiptPct}%`;
+        if (document.getElementById('mdm-rice-dispatch-pct-label')) document.getElementById('mdm-rice-dispatch-pct-label').innerText = `${fmtPct(m.riceDispatchPct)}%`;
+        if (document.getElementById('mdm-rice-receipt-pct-label')) document.getElementById('mdm-rice-receipt-pct-label').innerText = `${fmtPct(m.riceReceiptPct)}%`;
     }
 
     // Commodities bars
@@ -1137,7 +1217,7 @@ function displayMDMAnalytics(analytics, v, genTime) {
         document.getElementById('mdmMetricsGrid').innerHTML = `
             <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">📦</div><div class="stat-content"><div class="stat-label">Dispatch</div><div class="stat-value">${parseFloat(dispatchPct).toFixed(2)}%</div></div></div>
             <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">✅</div><div class="stat-content"><div class="stat-label">Received</div><div class="stat-value">${parseFloat(receiptPct).toFixed(2)}%</div></div></div>
-            <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${m.totalShopsLeft || 0}</div></div></div>
+            <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${m.totalShopsLeft || m.totalPendingShops || 0}</div></div></div>
         `;
     }
 
@@ -1148,7 +1228,7 @@ function displayMDMAnalytics(analytics, v, genTime) {
 
     // AI Insights
     if (analytics.insights) {
-        renderInsightsList('mdmInsightsList', analytics.insights);
+        renderInsightsList('mdmInsightsList', analytics.insights, analytics.topTransporters, analytics.bottomTransporters);
         document.getElementById('mdmInsightsSection').style.display = 'block';
     }
 }
@@ -1158,18 +1238,33 @@ function displayICDSAnalytics(analytics, v, genTime) {
     document.getElementById('icdsAnalyticsSection').style.display = 'block';
     
     const m = analytics.metrics || analytics.totals || {};
+    const fmtPct = (val) => parseFloat(val || 0).toFixed(2);
     
     // Update labels if exist
     if (m.wheatAllotted !== undefined) {
         if (document.getElementById('icds-wheat-allotted')) document.getElementById('icds-wheat-allotted').innerText = `${m.wheatAllotted} Qt`;
         if (document.getElementById('icds-wheat-dispatched')) document.getElementById('icds-wheat-dispatched').innerText = `${m.wheatDispatched} Qt`;
         if (document.getElementById('icds-wheat-received')) document.getElementById('icds-wheat-received').innerText = `${m.wheatReceived} Qt`;
-        
-        if (document.getElementById('icds-wheat-dispatch-pct-label')) document.getElementById('icds-wheat-dispatch-pct-label').innerText = `${m.wheatDispatchPct}%`;
-        if (document.getElementById('icds-wheat-receipt-pct-label')) document.getElementById('icds-wheat-receipt-pct-label').innerText = `${m.wheatReceiptPct}%`;
-
+        if (document.getElementById('icds-wheat-dispatch-pct-label')) document.getElementById('icds-wheat-dispatch-pct-label').innerText = `${fmtPct(m.wheatDispatchPct)}%`;
+        if (document.getElementById('icds-wheat-receipt-pct-label')) document.getElementById('icds-wheat-receipt-pct-label').innerText = `${fmtPct(m.wheatReceiptPct)}%`;
         if (document.getElementById('icds-wheat-dispatch-bar')) document.getElementById('icds-wheat-dispatch-bar').style.width = `${m.wheatDispatchPct}%`;
         if (document.getElementById('icds-wheat-receipt-bar')) document.getElementById('icds-wheat-receipt-bar').style.width = `${m.wheatReceiptPct}%`;
+
+        if (document.getElementById('icds-rice-allotted')) document.getElementById('icds-rice-allotted').innerText = `${m.riceAllotted} Qt`;
+        if (document.getElementById('icds-rice-dispatched')) document.getElementById('icds-rice-dispatched').innerText = `${m.riceDispatched} Qt`;
+        if (document.getElementById('icds-rice-received')) document.getElementById('icds-rice-received').innerText = `${m.riceReceived} Qt`;
+        if (document.getElementById('icds-rice-dispatch-pct-label')) document.getElementById('icds-rice-dispatch-pct-label').innerText = `${fmtPct(m.riceDispatchPct)}%`;
+        if (document.getElementById('icds-rice-receipt-pct-label')) document.getElementById('icds-rice-receipt-pct-label').innerText = `${fmtPct(m.riceReceiptPct)}%`;
+        if (document.getElementById('icds-rice-dispatch-bar')) document.getElementById('icds-rice-dispatch-bar').style.width = `${m.riceDispatchPct}%`;
+        if (document.getElementById('icds-rice-receipt-bar')) document.getElementById('icds-rice-receipt-bar').style.width = `${m.riceReceiptPct}%`;
+
+        if (document.getElementById('icds-fsalt-allotted')) document.getElementById('icds-fsalt-allotted').innerText = `${m.fsaltAllotted} Qt`;
+        if (document.getElementById('icds-fsalt-dispatched')) document.getElementById('icds-fsalt-dispatched').innerText = `${m.fsaltDispatched} Qt`;
+        if (document.getElementById('icds-fsalt-received')) document.getElementById('icds-fsalt-received').innerText = `${m.fsaltReceived} Qt`;
+        if (document.getElementById('icds-fsalt-dispatch-pct-label')) document.getElementById('icds-fsalt-dispatch-pct-label').innerText = `${fmtPct(m.fsaltDispatchPct)}%`;
+        if (document.getElementById('icds-fsalt-receipt-pct-label')) document.getElementById('icds-fsalt-receipt-pct-label').innerText = `${fmtPct(m.fsaltReceiptPct)}%`;
+        if (document.getElementById('icds-fsalt-dispatch-bar')) document.getElementById('icds-fsalt-dispatch-bar').style.width = `${m.fsaltDispatchPct}%`;
+        if (document.getElementById('icds-fsalt-receipt-bar')) document.getElementById('icds-fsalt-receipt-bar').style.width = `${m.fsaltReceiptPct}%`;
     }
 
     if (document.getElementById('icdsMetricsGrid')) {
@@ -1179,7 +1274,7 @@ function displayICDSAnalytics(analytics, v, genTime) {
         document.getElementById('icdsMetricsGrid').innerHTML = `
             <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">📦</div><div class="stat-content"><div class="stat-label">Dispatch</div><div class="stat-value">${parseFloat(dispatchPct).toFixed(2)}%</div></div></div>
             <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">✅</div><div class="stat-content"><div class="stat-label">Received</div><div class="stat-value">${parseFloat(receiptPct).toFixed(2)}%</div></div></div>
-            <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${m.totalShopsLeft || 0}</div></div></div>
+            <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${m.totalShopsLeft || m.totalPendingShops || 0}</div></div></div>
         `;
     }
     
@@ -1190,7 +1285,7 @@ function displayICDSAnalytics(analytics, v, genTime) {
 
     // AI Insights
     if (analytics.insights) {
-        renderInsightsList('icdsInsightsList', analytics.insights);
+        renderInsightsList('icdsInsightsList', analytics.insights, analytics.topTransporters, analytics.bottomTransporters);
         document.getElementById('icdsInsightsSection').style.display = 'block';
     }
 }
@@ -1200,20 +1295,21 @@ function displayWELFAREAnalytics(analytics, v, genTime) {
     document.getElementById('welfareAnalyticsSection').style.display = 'block';
     
     const m = analytics.metrics || analytics.totals || {};
+    const fmtPct = (val) => parseFloat(val || 0).toFixed(2);
     
     // Update labels
     if (m.wheatAllotted !== undefined) {
         if (document.getElementById('welfareWheatAllotted')) document.getElementById('welfareWheatAllotted').innerText = `${m.wheatAllotted} Qt`;
         if (document.getElementById('welfareWheatDispatched')) document.getElementById('welfareWheatDispatched').innerText = `${m.wheatDispatched} Qt`;
         if (document.getElementById('welfareWheatReceived')) document.getElementById('welfareWheatReceived').innerText = `${m.wheatReceived} Qt`;
-        if (document.getElementById('welfareWheatDispPct')) document.getElementById('welfareWheatDispPct').innerText = `${m.wheatDispatchPct}%`;
-        if (document.getElementById('welfareWheatRcptPct')) document.getElementById('welfareWheatRcptPct').innerText = `${m.wheatReceiptPct}%`;
+        if (document.getElementById('welfareWheatDispPct')) document.getElementById('welfareWheatDispPct').innerText = `${fmtPct(m.wheatDispatchPct)}%`;
+        if (document.getElementById('welfareWheatRcptPct')) document.getElementById('welfareWheatRcptPct').innerText = `${fmtPct(m.wheatReceiptPct)}%`;
         
         if (document.getElementById('welfareRiceAllotted')) document.getElementById('welfareRiceAllotted').innerText = `${m.riceAllotted} Qt`;
         if (document.getElementById('welfareRiceDispatched')) document.getElementById('welfareRiceDispatched').innerText = `${m.riceDispatched} Qt`;
         if (document.getElementById('welfareRiceReceived')) document.getElementById('welfareRiceReceived').innerText = `${m.riceReceived} Qt`;
-        if (document.getElementById('welfareRiceDispPct')) document.getElementById('welfareRiceDispPct').innerText = `${m.riceDispatchPct}%`;
-        if (document.getElementById('welfareRiceRcptPct')) document.getElementById('welfareRiceRcptPct').innerText = `${m.riceReceiptPct}%`;
+        if (document.getElementById('welfareRiceDispPct')) document.getElementById('welfareRiceDispPct').innerText = `${fmtPct(m.riceDispatchPct)}%`;
+        if (document.getElementById('welfareRiceRcptPct')) document.getElementById('welfareRiceRcptPct').innerText = `${fmtPct(m.riceReceiptPct)}%`;
 
         if (document.getElementById('welfareWheatDispBar')) document.getElementById('welfareWheatDispBar').style.width = `${m.wheatDispatchPct}%`;
         if (document.getElementById('welfareWheatRcptBar')) document.getElementById('welfareWheatRcptBar').style.width = `${m.wheatReceiptPct}%`;
@@ -1228,7 +1324,7 @@ function displayWELFAREAnalytics(analytics, v, genTime) {
         document.getElementById('welfareMetricsGrid').innerHTML = `
             <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">📦</div><div class="stat-content"><div class="stat-label">Dispatch</div><div class="stat-value">${parseFloat(dispatchPct).toFixed(2)}%</div></div></div>
             <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">✅</div><div class="stat-content"><div class="stat-label">Received</div><div class="stat-value">${parseFloat(receiptPct).toFixed(2)}%</div></div></div>
-            <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${m.totalShopsLeft || 0}</div></div></div>
+            <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${m.totalShopsLeft || m.totalPendingShops || 0}</div></div></div>
         `;
     }
     

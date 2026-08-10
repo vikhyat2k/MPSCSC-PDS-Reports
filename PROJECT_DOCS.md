@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 10 August 2026, 18:50 IST
+> **Last Sync:** 10 August 2026, 19:10 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Update IC Directory Operator & Manager Contact Records for District Betul |
+| Last Code Change | 10 Aug 2026 — Fix Pending Sector Details & Percentage Formatting for ICDS, MDM, Welfare & Historical Reports |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -575,6 +575,7 @@ Tracks what has been tested and confirmed working.
 | Auto-Schedule cron | Manual | NOT VERIFIED | — | Requires enabled flag |
 | FPS Shop Directory | Manual | NOT VERIFIED | — | Not confirmed with live data |
 | IC Directory Operator & Manager Contacts | Unit & Integration | VERIFIED | 10 Aug 2026 | All 10 Issue Centers & District Office contacts updated |
+| Pending Sector Details & UI Percentage Formatting | Unit & Integration | VERIFIED | 10 Aug 2026 | Multi-scheme sector fallback & 2-decimal formatting verified |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -593,6 +594,24 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Fix Pending Sector Details & Percentage Formatting for ICDS, MDM, Welfare & Historical Reports
+
+Files: public/app.js, Technical Audit/app.js, PROJECT_DOCS.md
+Type: Bug Fix / UI Analytics & Historical View Hardening
+
+- ROOT CAUSE: 
+  1. Clicking "Pending" card or calling `toggleShopsLeftDetails()` on non-NFSA schemes (ICDS, MDM, Welfare) or historical report views triggered alert `Analytics data is not yet available for this report.` because `rawData` selection only inspected `analytics.needsAttention` or `analytics.bottomPerformers`. Non-NFSA analytics store sector structures under `analytics.matrix`, `analytics.sectors`, or `analytics.allSectors`.
+  2. Commodity balance breakdown rendering (`commList`) failed to parse commodity objects containing `{ balance: X }`, resulting in empty commodity tags.
+  3. Unformatted raw float numbers (e.g. `99.56931933265818%`) were rendered on commodity cards due to missing `.toFixed(2)` formatting in display labels.
+- FIX:
+  1. Updated `toggleShopsLeftDetails()` in `public/app.js` and `Technical Audit/app.js` to inspect `analytics.needsAttention`, `analytics.allSectors`, `analytics.matrix`, `analytics.sectors`, and `analytics.bottomPerformers`.
+  2. Added scheme-aware target section & list ID resolution (`icdsShopsDetailSection`, `mdmShopsDetailSection`, `welfareShopsDetailSection`).
+  3. Updated `commList` parser to handle both numeric values and `{ balance: X }` commodity objects cleanly.
+  4. Added positive "🎉 All Sectors Completed (100% lifting completed across all sectors)" empty state card when zero sectors remain pending.
+  5. Added `fmtPct()` helper (`.toFixed(2)`) across `displayICDSAnalytics`, `displayMDMAnalytics`, and `displayWELFAREAnalytics` for clean 2-decimal percentage display (`99.57%`).
 
 ---
 

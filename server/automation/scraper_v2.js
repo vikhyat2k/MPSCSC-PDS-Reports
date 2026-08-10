@@ -86,14 +86,17 @@ class SCMScraper {
    * Attempt automatic CAPTCHA solving using Tesseract.js or 2Captcha
    * Returns true if successful, false otherwise
    */
-  async attemptAutoCaptcha(maxAttempts = 50) {
+  async attemptAutoCaptcha(maxAttempts = 8, onProgress = null) {
     if (this.isHeadless) {
-      maxAttempts = 50; // Give plenty of attempts in headless mode
+      maxAttempts = Math.min(maxAttempts, 8); // Cap attempts to 8 in headless mode (~1.5 min max)
     }
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         console.log(`🤖 Auto-CAPTCHA Attempt ${attempt}/${maxAttempts}...`);
+        if (typeof onProgress === 'function') {
+          onProgress(`Logging in... Solving CAPTCHA (attempt ${attempt}/${maxAttempts})`);
+        }
 
         // 1. Find the CAPTCHA image element
         const captchaElement = await this.page.$(
