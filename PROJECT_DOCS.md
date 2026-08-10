@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 10 August 2026, 20:30 IST
+> **Last Sync:** 10 August 2026, 20:50 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Fix Executive Analytics PDF Download Binary Buffer Encoding (Failed to load PDF document) |
+| Last Code Change | 10 Aug 2026 — Fix SCM Login Form Selectors (#uid, #pwd, #lobtn), HTTP Protocol Fallback & Adaptive CAPTCHA Thresholding |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -596,6 +596,23 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Fix SCM Login Form Selectors (#uid, #pwd, #lobtn), HTTP Protocol Fallback & Adaptive CAPTCHA Thresholding
+
+Files: server/automation/scraper_v2.js, Technical Audit/scraper_v2.js, PROJECT_DOCS.md
+Type: Bug Fix / Scraper Navigation & Form Submission Hardening
+
+- ROOT CAUSE:
+  1. The SCM portal login button on `Login.jsp` is defined as `<input type="button" id="lobtn" value="Login" onclick="check()">`, while the page also contains a `<button type="submit" id="myBtn">Top</button>` (Scroll to Top button). Puppeteer's generic selector `button[type="submit"]` was matching and clicking the "Scroll to Top" button instead of the actual login button (`#lobtn`), preventing form submission entirely.
+  2. `setParameters` in Tesseract.js was throwing `Attempted to set parameters that can only be set during initialization: tessedit_ocr_engine_mode` on every OCR iteration because `tessedit_ocr_engine_mode` cannot be mutated post-worker-creation.
+  3. `https://scm.mp.gov.in/Login.jsp` timed out due to HTTPS firewall throttling at night, whereas `http://scm.mp.gov.in/Login.jsp` connected instantly in 2 seconds.
+- FIX:
+  1. Updated form selectors in `scraper_v2.js` to target `#uid`, `#pwd`, `#lobtn` explicitly.
+  2. Removed `tessedit_ocr_engine_mode` from `setParameters` in `scraper_v2.js`.
+  3. Implemented automatic protocol fallback (`https://` -> `http://`) on network timeouts.
+  4. Added adaptive thresholding (varying binarization levels from 110 to 180 across attempts) to maximize local Tesseract OCR accuracy.
 
 ---
 
