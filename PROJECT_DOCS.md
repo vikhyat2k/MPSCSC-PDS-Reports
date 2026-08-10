@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Integrated OCR.space Free API Key (K88463128788957) & Configured HEADLESS_MODE=false |
+| Last Code Change | 10 Aug 2026 — Re-enabled Headless Mode (HEADLESS_MODE=true) with OCR.space Multi-Engine API Solver |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -596,6 +596,17 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-10 | Re-enable Headless Mode (HEADLESS_MODE=true) & Add Multi-Engine OCR.space Solver
+
+Files: .env, server/automation/scraper_v2.js, PROJECT_DOCS.md
+Type: Configuration / Automated Headless Scraping
+
+- UPDATED:
+  1. Updated `.env` to set `HEADLESS_MODE=true` for 100% invisible background scraping.
+  2. Enhanced `solveWithOCRSpace()` in `scraper_v2.js` to perform multi-pass recognition: trying OCR Engine 2 on raw color image, then falling back to Engine 1 on noise-filtered binarized image.
 
 ---
 
