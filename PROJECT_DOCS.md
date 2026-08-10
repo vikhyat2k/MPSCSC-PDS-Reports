@@ -1362,6 +1362,7 @@ Closes: ISSUE-013
   5. Updated `icdsDataProcessor.js` to track `totalAwc` (1,621 AWCs) and `totalInmates` (117,061 inmates).
   6. Added `salt` to `getCommodities('icds')` in `balancesReportGenerator.js` to ensure complete ICDS Balance Lifting Reports.
   7. Standardized Receipt % to `(Receipt / Dispatched) * 100` in `icdsPdfGenerator.js` and `icdsExcelGenerator.js`.
+  8. Fixed `icdsPdfGenerator.js` and `icdsExcelGenerator.js` to read sector-level commodity totals directly (`s.wheatAllotted`, `s.wheatDispatched`, etc.) rather than summing `s.shops` (which only contained pending shops on restored reports), resolving the 229.60 Qt vs 934.01 Qt PDF export discrepancy.
 
 ---
 
