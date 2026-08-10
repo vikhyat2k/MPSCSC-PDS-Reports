@@ -608,7 +608,7 @@ class SCMScraper {
         await this.screenshot('06_captcha_detected.png');
 
         // Try automatic CAPTCHA solving first
-        let captchaSolved = await this.attemptAutoCaptcha(this.isHeadless ? 8 : 15, onProgress);
+        let captchaSolved = await this.attemptAutoCaptcha(this.isHeadless ? 12 : 20, onProgress);
 
         if (!captchaSolved && maxRetries > 0) {
           if (this.isHeadless) {
