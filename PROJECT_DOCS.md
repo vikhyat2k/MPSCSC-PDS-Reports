@@ -606,8 +606,8 @@ Type: New Feature / Executive Deliverables
   2. `advancedAnalyticsExcelGenerator.js`: Builds 5-sheet formula-driven Excel workbook (`Dashboard`, `Sector Detail`, `Block Summary`, `Transporter Analysis`, `Action Plan`) with Excel formulas referencing Sheet 2 helper cells (`='Sector Detail'!Q2`), number formatting (`0.00%`), and embedded chart PNGs.
   3. `advancedAnalyticsChartRenderer.js`: Uses Puppeteer to render 4 Chart.js canvas graphics to high-resolution PNG image buffers.
   4. `advancedAnalyticsPdfGenerator.js`: Uses Puppeteer to render a 9-page bilingual PDF executive report with cover page, executive summary, block performance, risk matrix, POS gap analysis, action plan, transporter table, and full sector appendix.
-  5. Added API endpoints `GET /api/reports/:id/advanced-analytics/excel` and `GET /api/reports/:id/advanced-analytics/pdf`.
-  6. Added "📊 उन्नत विश्लेषण" button to report history rows (NFSA Monthly only) and generation success box, opening a choice dialog (Excel / PDF / Both).
+  5. Added API endpoints `GET /api/reports/:id/advanced-analytics/excel`, `GET /api/reports/:id/advanced-analytics/pdf`, and `GET /api/reports/:id/advanced-analytics/html`.
+  6. Enhanced UI flow: clicking "📊 उन्नत विश्लेषण" opens an interactive full-screen Report Preview Modal with persistent toolbar allowing users to view the entire 9-page executive report on screen first, and then export to Image (PNG/JPG via html2canvas), Executive PDF, or Multi-Sheet Excel as needed.
 
 ---
 
