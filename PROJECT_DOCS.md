@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Upgraded header search to interactive floating Live Search Dropdown |
+| Last Code Change | 11 Aug 2026 — Fixed "Could not load defaulters for messenger" error across all schemes |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1467,6 +1467,23 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Fix "Could not load defaulters for messenger" Error Across All Schemes
+
+Files: server/services/balancesReportGenerator.js, public/app.js
+Type: Bug Fix
+Closes: N/A
+
+- BUG: Clicking the "Message" button in the Balance Report section popped up an alert "Could not load defaulters for messenger."
+- ROOT CAUSE:
+  1. `balancesReportGenerator.extractDefaulters()` returned array of shop objects `{ shopCode, shopName, balance, groupLabel }`, whereas `updateDefaultersPreview()` in `app.js` expected aggregated group objects `{ role, pendingShops, totalBalance, centerBreakdown }`. Accessing `d.role` threw a `TypeError` inside `updateDefaultersPreview()` which was caught by `openMessengerModal()`.
+  2. `groupShops()` in `balancesReportGenerator.js` called `sector.shops.forEach()`, throwing a `TypeError` on MDM/ICDS/Welfare reports where shops were stored under `sector.mdmShops`, `sector.icdsShops`, or `sector.welfareShops`.
+- FIX:
+  1. Updated `groupShops()` in `balancesReportGenerator.js` to safely resolve `sector.shops || sector.mdmShops || sector.icdsShops || sector.welfareShops || []`.
+  2. Updated `extractDefaulters()` in `balancesReportGenerator.js` to aggregate pending shops into role groups containing `role`, `pendingShops`, `totalBalance`, and `centerBreakdown`.
+  3. Added fallbacks in `openMessengerModal()` and `updateDefaultersPreview()` in `public/app.js` with detailed error reporting.
 
 ---
 

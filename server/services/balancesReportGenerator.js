@@ -103,33 +103,50 @@ class BalancesReportGenerator {
 
                 // For NFSA raw commodities data which uses 'fortifiedRice' and 'fSalt'
                 if (allotedComm['fortifiedRice']) {
-                    allotedComm['rice'] = (allotedComm['rice'] || 0) + allotedComm['fortifiedRice'];
+                    allotedComm['rice'] = (allotedComm['rice'] || 0) + (typeof allotedComm['fortifiedRice'] === 'number' ? allotedComm['fortifiedRice'] : (allotedComm['fortifiedRice'].allotted || 0));
                     delete allotedComm['fortifiedRice'];
                 }
                 if (dispatchedComm['fortifiedRice']) {
-                    dispatchedComm['rice'] = (dispatchedComm['rice'] || 0) + dispatchedComm['fortifiedRice'];
+                    dispatchedComm['rice'] = (dispatchedComm['rice'] || 0) + (typeof dispatchedComm['fortifiedRice'] === 'number' ? dispatchedComm['fortifiedRice'] : (dispatchedComm['fortifiedRice'].dispatched || 0));
                     delete dispatchedComm['fortifiedRice'];
                 }
                 if (allotedComm['fSalt']) {
-                    allotedComm['salt'] = (allotedComm['salt'] || 0) + allotedComm['fSalt'];
+                    allotedComm['salt'] = (allotedComm['salt'] || 0) + (typeof allotedComm['fSalt'] === 'number' ? allotedComm['fSalt'] : (allotedComm['fSalt'].allotted || 0));
                     delete allotedComm['fSalt'];
                 }
                 if (dispatchedComm['fSalt']) {
-                    dispatchedComm['salt'] = (dispatchedComm['salt'] || 0) + dispatchedComm['fSalt'];
+                    dispatchedComm['salt'] = (dispatchedComm['salt'] || 0) + (typeof dispatchedComm['fSalt'] === 'number' ? dispatchedComm['fSalt'] : (dispatchedComm['fSalt'].dispatched || 0));
                     delete dispatchedComm['fSalt'];
                 }
 
+                let balance = shop.balance;
                 let allocation = shop.allocation;
                 let dispatch = shop.dispatch;
-                if (allocation === undefined) {
-                    allocation = Object.values(allotedComm).reduce((sum, v) => sum + v, 0);
-                    dispatch = Object.values(dispatchedComm).reduce((sum, v) => sum + v, 0);
+
+                if (balance !== undefined && !isNaN(balance)) {
+                    balance = parseFloat(balance);
+                } else if (allocation !== undefined && dispatch !== undefined) {
+                    balance = parseFloat(allocation) - parseFloat(dispatch);
+                } else {
+                    let sumAlloc = 0;
+                    let sumDisp = 0;
+                    let commBalSum = 0;
+                    Object.values(allotedComm).forEach(v => {
+                        if (typeof v === 'number') sumAlloc += v;
+                        else if (v && typeof v.balance === 'number') commBalSum += v.balance;
+                    });
+                    Object.values(dispatchedComm).forEach(v => {
+                        if (typeof v === 'number') sumDisp += v;
+                    });
+                    allocation = sumAlloc;
+                    dispatch = sumDisp;
+                    balance = commBalSum > 0 ? commBalSum : Math.max(0, sumAlloc - sumDisp);
                 }
 
-                return { ...shop, allotedComm, dispatchedComm, allocation, dispatch };
+                return { ...shop, allotedComm, dispatchedComm, allocation, dispatch, balance };
             }).filter(shop => {
-                const bal = parseFloat(((shop.allocation || 0) - (shop.dispatch || 0)).toFixed(2));
-                return bal > 0;
+                const b = (shop.balance !== undefined && !isNaN(shop.balance)) ? shop.balance : ((shop.allocation || 0) - (shop.dispatch || 0));
+                return b > 0;
             });
 
             if (g.shops.length === 0) return null;
@@ -138,10 +155,14 @@ class BalancesReportGenerator {
                 totals.allocation += (shop.allocation || 0);
                 totals.dispatch += (shop.dispatch || 0);
                 Object.keys(shop.allotedComm || {}).forEach(c => {
-                    totals.allotedComm[c] = (totals.allotedComm[c] || 0) + shop.allotedComm[c];
+                    const val = shop.allotedComm[c];
+                    const num = typeof val === 'number' ? val : (val && val.balance) || 0;
+                    totals.allotedComm[c] = (totals.allotedComm[c] || 0) + num;
                 });
                 Object.keys(shop.dispatchedComm || {}).forEach(c => {
-                    totals.dispatchedComm[c] = (totals.dispatchedComm[c] || 0) + shop.dispatchedComm[c];
+                    const val = shop.dispatchedComm[c];
+                    const num = typeof val === 'number' ? val : (val && val.balance) || 0;
+                    totals.dispatchedComm[c] = (totals.dispatchedComm[c] || 0) + num;
                 });
             });
             g.totals = totals;
@@ -161,7 +182,7 @@ class BalancesReportGenerator {
             let centerBreakdownMap = {};
 
             group.shops.forEach(shop => {
-                const bal = parseFloat(((shop.allocation || 0) - (shop.dispatch || 0)).toFixed(2));
+                const bal = parseFloat((shop.balance !== undefined && !isNaN(shop.balance) ? shop.balance : ((shop.allocation || 0) - (shop.dispatch || 0))).toFixed(2));
                 if (bal > 0) {
                     totalBalance += bal;
                     const centerName = shop.issuePoint ? shop.issuePoint.trim() : (shop.depot || shop.block || 'प्रदाय केंद्र');
