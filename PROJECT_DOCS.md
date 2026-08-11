@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Universal text copyability & selection styling across all portal modules |
+| Last Code Change | 11 Aug 2026 — Removed Portal Status LIVE card from dashboard KPI strip |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1467,6 +1467,31 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Remove Portal Status LIVE Card from Dashboard
+
+Files: public/index.html
+Type: UI Improvement
+Closes: N/A
+
+- CHANGE: Removed the "Portal Status / LIVE" KPI card (`kpi-card-live`) from the dashboard KPI strip.
+- REASON: User request — the LIVE label was redundant and not needed on the dashboard.
+- IMPACT: KPI strip now shows 4 cards instead of 5; no layout collapse (flexbox strip reflows naturally).
+
+---
+
+### 2026-08-11 | Universal Text Copyability Across All Portal Modules
+
+Files: public/theme.css, public/styles.css, public/login.html, public/directory.css
+Type: UI Improvement
+Closes: N/A
+
+- CHANGE: Enforced `user-select: text !important` globally via `public/theme.css` and removed all `user-select: none` rules from `public/styles.css` and `public/directory.css`.
+- Added `::selection` highlight styling for a consistent copy experience.
+- Enabled `pointer-events: auto` on ring charts so text labels are selectable.
+- Applied text-selection overrides to login page elements in `public/login.html`.
 
 ---
 
