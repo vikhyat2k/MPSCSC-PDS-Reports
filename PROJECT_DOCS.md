@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 10 Aug 2026 — Re-enabled Headless Mode (HEADLESS_MODE=true) with OCR.space Multi-Engine API Solver |
+| Last Code Change | 11 Aug 2026 — Fixed Cloudflare Tunnel local DNS resolver timeout by specifying --dns-resolver-addrs 1.1.1.1:53 in START_REMOTE_ACCESS.bat |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1450,6 +1450,29 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Fix Cloudflare Tunnel Local DNS Resolver Timeout Warning
+
+Files: START_REMOTE_ACCESS.bat
+Type: Bug Fix / Script Improvement
+Closes: N/A
+
+- BUG: `cloudflared.exe` continuously printed `ERR Failed to refresh DNS local resolver error="lookup region1.v2.argotunnel.com: i/o timeout"` every 5 minutes on Windows.
+- ROOT CAUSE: Cloudflare's default background DNS lookup targeted local ISP DNS resolvers which timed out or dropped UDP DNS packets for `argotunnel.com`.
+- FIX: Added `--dns-resolver-addrs 1.1.1.1:53` flag to `START_REMOTE_ACCESS.bat` to route Cloudflare DNS resolution directly through 1.1.1.1.
+
+---
+
+### 2026-08-11 | Update SCM Login Password
+
+Files: .env
+Type: Configuration
+Closes: N/A
+
+- REQUIREMENT: Updated SCM portal authentication password to "dmnan@2026".
+- FIX: Updated `SCM_PASSWORD` key in `.env` configuration file to `dmnan@2026`.
 
 ---
 

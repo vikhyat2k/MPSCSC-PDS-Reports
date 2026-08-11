@@ -30,5 +30,5 @@ timeout /t 4 /nobreak >nul
 
 echo [2/2] Launching Secure Cloudflare Tunnel...
 echo.
-"%~dp0cloudflared.exe" tunnel --url http://127.0.0.1:3000
+"%~dp0cloudflared.exe" tunnel --dns-resolver-addrs 1.1.1.1:53 --url http://127.0.0.1:3000
 pause
