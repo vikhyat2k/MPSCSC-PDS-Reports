@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Fixed sidebar hover expand to push page content cleanly (no title/card overlapping) |
+| Last Code Change | 11 Aug 2026 — Implemented functional instant search on the main dashboard header |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1467,6 +1467,20 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Functional Global Search on Dashboard Header
+
+Files: public/index.html
+Type: Feature
+Closes: N/A
+
+- FEATURE: Replaced the mockup search input in the main dashboard header with a fully functional instant-search bar.
+- SEARCH SCOPE:
+  1. **Scheme Cards**: Filters and highlights scheme performance cards (NFSA, MDM, ICDS, Welfare) based on the search query.
+  2. **Transporter Leaderboard**: Real-time filtering of top and bottom performers by transporter name or scheme.
+  3. **Report History & Matrix Tables**: Instantly filters table rows by matching scheme, month, status, or transporter across all history and detailed matrix tables.
 
 ---
 
