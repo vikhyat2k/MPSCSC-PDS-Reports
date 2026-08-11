@@ -568,22 +568,28 @@ class AdvancedAnalyticsPdfGenerator {
                 </div>
 
                 <!-- POS Gap Section -->
-                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-                    <div style="width: 55%; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 6px; text-align: center;">
-                        <div style="font-size: 8pt; font-weight: 700; color: #0B192C; margin-bottom: 4px;">शीर्ष POS अंतर विसंगतियां / Top POS Gap Anomalies (%)</div>
-                        ${posGapUri ? `<img src="${posGapUri}" class="chart-img-fitted" style="max-height: 160px;" />` : ''}
+                <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: stretch;">
+                    <div style="width: 55%; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 8px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="font-size: 8pt; font-weight: 700; color: #0B192C; margin-bottom: 6px;">शीर्ष POS अंतर विसंगतियां / Top POS Gap Anomalies (%)</div>
+                        ${posGapUri ? `<img src="${posGapUri}" class="chart-img-fitted" style="max-height: 200px;" />` : ''}
                     </div>
-                    <div style="width: 45%; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #D97706; border-radius: 6px; padding: 8px 10px; font-size: 7.8pt; line-height: 1.4;">
-                        <div style="font-weight: 800; color: #0B192C; margin-bottom: 4px; font-size: 8.5pt;">ℹ️ POS अंतर (POS Gap) व्याख्या:</div>
-                        POS Gap सूत्र: <code>(डिपो उठाव % - POS प्राप्ति %) * 100</code><br/><br/>
-                        <strong style="color:#D97706;">1. POS फीडिंग विलंब (Gap > +15%):</strong> डिपो से प्रेषित हो चुका है, लेकिन FPS स्तर मशीनों में एंट्री लंबित है।<br/>
-                        <em>घोड़ाडोंगरी सेक्टर क्र 7 में +17.3% का फीडिंग विलंब दर्ज है।</em><br/><br/>
-                        <strong style="color:#7C3AED;">2. POS ओवर-रिसीट विसंगति (Gap < -15%):</strong> डिपो प्रेषण से अधिक POS प्रविष्टि दर्ज।
+                    <div style="width: 45%; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #D97706; border-radius: 6px; padding: 12px 14px; font-size: 8pt; line-height: 1.55; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="font-weight: 800; color: #0B192C; margin-bottom: 8px; font-size: 9pt;">ℹ️ POS अंतर (POS Gap) व्याख्या:</div>
+                        <div style="margin-bottom: 8px; color: #475569;">POS Gap सूत्र: <code style="background:#E2E8F0; padding:1px 4px; border-radius:3px;">(डिपो उठाव % − POS प्राप्ति %) × 100</code></div>
+                        <div style="background: #FFFBEB; border-left: 3px solid #D97706; padding: 6px 8px; border-radius: 0 4px 4px 0; margin-bottom: 8px;">
+                            <strong style="color:#D97706;">1. POS फीडिंग विलंब (Gap &gt; +15%):</strong><br/>
+                            डिपो से प्रेषित हो चुका है, लेकिन FPS स्तर मशीनों में एंट्री लंबित है।<br/>
+                            <em style="color:#92400E;">घोड़ाडोंगरी सेक्टर क्र 7 में +17.3% का फीडिंग विलंब दर्ज है।</em>
+                        </div>
+                        <div style="background: #F5F3FF; border-left: 3px solid #7C3AED; padding: 6px 8px; border-radius: 0 4px 4px 0;">
+                            <strong style="color:#7C3AED;">2. POS ओवर-रिसीट विसंगति (Gap &lt; -15%):</strong><br/>
+                            डिपो प्रेषण से अधिक POS प्रविष्टि दर्ज — डिपो डिस्पैच एवं POS डेटा विसंगति की त्वरित जांच आवश्यक है।
+                        </div>
                     </div>
                 </div>
 
                 <!-- Transporter Table -->
-                <div style="font-size: 8.5pt; font-weight: 800; color: #0B192C; margin-bottom: 4px;">🚚 परिवहनकर्ता प्रदर्शन एवं क्षमता समीक्षा तालिका / Transporter Operational Review:</div>
+                <div style="font-size: 8.5pt; font-weight: 800; color: #0B192C; margin-bottom: 5px; padding-bottom: 4px; border-bottom: 2px solid #E2E8F0;">🚚 परिवहनकर्ता प्रदर्शन एवं क्षमता समीक्षा तालिका / Transporter Operational Review:</div>
                 <table class="report-table">
                     <thead>
                         <tr>
