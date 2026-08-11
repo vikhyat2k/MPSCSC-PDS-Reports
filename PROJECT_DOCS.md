@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 10 August 2026, 20:50 IST
+> **Last Sync:** 11 August 2026, 19:35 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Report updates: removed multi-sector card, डिपो→प्रदाय केंद्र, org name, Piyush Arya per-sector rows, deep analytics |
+| Last Code Change | 11 Aug 2026 — Universal text copyability & selection styling across all portal modules |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -578,6 +578,7 @@ Tracks what has been tested and confirmed working.
 | Pending Sector Details & UI Percentage Formatting | Unit & Integration | VERIFIED | 10 Aug 2026 | Multi-scheme sector fallback & 2-decimal formatting verified |
 | Scraper Headless CAPTCHA Loop & Real-Time Status | Unit & Integration | VERIFIED | 10 Aug 2026 | Headless CAPTCHA capped to 8 attempts (~1.5m max) with live status updates |
 | Executive Analytics PDF Binary Buffer Encoding | Unit & Integration | VERIFIED | 10 Aug 2026 | Puppeteer Uint8Array wrapped in Buffer.from for binary HTTP response |
+| Universal Portal Text Copyability | UI & CSS Verification | VERIFIED | 11 Aug 2026 | Enforced user-select: text !important & ::selection highlight styles across all modules |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -596,6 +597,22 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+
+---
+
+### 2026-08-11 | Universal Portal Text Copyability Across All Modules
+
+Files: public/theme.css, public/styles.css, public/login.html, public/directory.css
+Type: UI Improvement / UX Enhancement
+
+- REQUIREMENT: Make all portal text fully copyable and selectable across all modules (Dashboard, Scheme Reports, Advanced Analytics, Email Broadcast, Data Management, Directory, History, Login).
+- ROOT CAUSE: Certain CSS rules (`user-select: none;` on `.nav-item`, `.user-avatar`, `.checkbox-container`, and `pointer-events: none` on chart ring text) restricted text selection or cursor focus. Furthermore, default text selection highlight styling (`::selection`) was missing.
+- FIX:
+  1. Updated `public/theme.css` with a base reset applying `-webkit-user-select: text !important`, `-moz-user-select: text !important`, `user-select: text !important` globally across all elements.
+  2. Added high-contrast custom `::selection` and `::-moz-selection` styling for both Dark Mode (`rgba(242,107,43,0.35)`) and Light Mode (`rgba(242,107,43,0.3)`).
+  3. Removed restrictive `user-select: none` declarations in `public/styles.css` (`.nav-item`, `.user-avatar`) and `public/login.html` (`.checkbox-container`).
+  4. Updated `.ring-center-text` in `public/styles.css` to `pointer-events: auto` to allow selecting and copying donut chart percentage values.
+  5. Added universal text copyability rules to `public/directory.css` covering directory cards, tables, badges, headers, and modals.
 
 ---
 
