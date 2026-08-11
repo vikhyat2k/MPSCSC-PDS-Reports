@@ -2217,6 +2217,68 @@ function loadEmailSchemeGrid() {
         });
 }
 
+async function generateFreshSchemeForEmail(item, statusDiv, index, total) {
+    let endpoint = 'api/generate-report';
+    let body = { month: parseInt(item.month), year: parseInt(item.year) };
+
+    if (item.scheme === 'nfsa_daterange') {
+        endpoint = 'api/generate-nfsa-daterange-report';
+        body.fromDate = item.fromDate;
+        body.toDate = item.toDate;
+    } else if (item.scheme !== 'nfsa') {
+        endpoint = `api/generate-${item.scheme}-report`;
+    }
+
+    const startRes = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (!startRes.ok) {
+        let errTxt = '';
+        try {
+            const errData = await startRes.json();
+            errTxt = errData.error || errData.message || '';
+        } catch (e) {
+            errTxt = `HTTP ${startRes.status}`;
+        }
+        throw new Error(`Failed to start ${item.scheme.toUpperCase()} generation: ${errTxt}`);
+    }
+
+    const startData = await startRes.json();
+    const requestId = startData.requestId;
+    if (!requestId) throw new Error(`No request ID returned for ${item.scheme.toUpperCase()}`);
+
+    return new Promise((resolve, reject) => {
+        const pollInt = setInterval(async () => {
+            try {
+                const statusRes = await fetch(`api/generate-status/${requestId}`);
+                if (!statusRes.ok) return;
+                const statusData = await statusRes.json();
+                if (!statusData) return;
+
+                const pct = statusData.progress || 0;
+                const msg = statusData.message || statusData.status || 'processing';
+
+                if (statusDiv) {
+                    statusDiv.innerHTML = `🔄 [${index}/${total}] Fresh ${item.scheme.toUpperCase()} (${pct}%): ${msg}`;
+                }
+
+                if (statusData.status === 'complete') {
+                    clearInterval(pollInt);
+                    resolve(statusData);
+                } else if (statusData.status === 'error') {
+                    clearInterval(pollInt);
+                    reject(new Error(statusData.error || `${item.scheme.toUpperCase()} extraction failed`));
+                }
+            } catch (e) {
+                console.error(`Poll error for ${requestId}:`, e);
+            }
+        }, 1500);
+    });
+}
+
 async function submitGlobalEmail(event) {
     if (event) event.preventDefault();
     
