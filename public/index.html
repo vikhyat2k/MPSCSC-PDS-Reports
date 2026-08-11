@@ -151,7 +151,8 @@
 
             <div class="header-search">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input class="search-input" id="dashboardSearchInput" oninput="handleGlobalSearch(this.value)" placeholder="Search reports, schemes, transporters…" autocomplete="off">
+                <input class="search-input" id="dashboardSearchInput" oninput="handleGlobalSearch(this.value)" onfocus="handleGlobalSearch(this.value)" placeholder="Search reports, schemes, transporters…" autocomplete="off">
+                <div id="globalSearchResults" class="search-results-dropdown" style="display:none;"></div>
             </div>
 
             <div class="header-right">
