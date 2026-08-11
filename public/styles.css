@@ -344,6 +344,94 @@ body:has(.app-sidebar:hover) .sidebar-tooltip {
 }
 .search-input::placeholder { color: var(--text-muted); }
 
+/* ─── GLOBAL SEARCH DROPDOWN ────────────────────────── */
+.header-search {
+    position: relative;
+}
+.search-results-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 420px;
+    max-width: 90vw;
+    max-height: 480px;
+    overflow-y: auto;
+    background: var(--bg-card, #1e293b);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.15);
+    z-index: 1000;
+    padding: 8px;
+    backdrop-filter: blur(16px);
+}
+.search-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--primary, #f26b2b);
+    padding: 8px 10px 4px;
+    border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.06));
+    margin-bottom: 4px;
+}
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md, 8px);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-decoration: none;
+    color: var(--text-main, #f8fafc);
+}
+.search-result-item:hover {
+    background: var(--nav-hover-bg, rgba(255,255,255,0.08));
+}
+.search-item-icon {
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+.search-item-body {
+    flex: 1;
+    min-width: 0;
+}
+.search-item-title {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.search-item-sub {
+    font-size: 11px;
+    color: var(--text-muted, #94a3b8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.search-item-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+.search-no-results {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted, #94a3b8);
+    font-size: 13px;
+}
+
+
 .header-right {
     display: flex;
     align-items: center;
