@@ -241,9 +241,9 @@ class AdvancedAnalyticsCompute {
 
                 if (Math.abs(s.posGapPP) > 15) {
                     if (s.posGapPP > 15) {
-                        recAction += `\n[ध्वज: POS फीडिंग विलंब (+${s.posGapPP.toFixed(1)} pp) - दुकान स्तर एंट्री सत्यापित करें]`;
+                        recAction += `\n[ध्वज: POS फीडिंग विलंब (+${s.posGapPP.toFixed(1)}%) - दुकान स्तर एंट्री सत्यापित करें]`;
                     } else {
-                        recAction += `\n[ध्वज: POS ओवर-रिसीट विसंगति (${s.posGapPP.toFixed(1)} pp) - डिपो डिस्पैच एवं POS डेटा विसंगति जांचें]`;
+                        recAction += `\n[ध्वज: POS ओवर-रिसीट विसंगति (${s.posGapPP.toFixed(1)}%) - डिपो डिस्पैच एवं POS डेटा विसंगति जांचें]`;
                     }
                 }
 

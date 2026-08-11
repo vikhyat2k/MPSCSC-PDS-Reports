@@ -18,10 +18,8 @@ async function testPdfGen() {
     }
     const r = reports[0];
     const fullReport = await db.getReport(r.id);
-    const rawData = JSON.parse(fullReport.raw_data);
-
     const compute = new AdvancedAnalyticsCompute();
-    const computed = compute.compute(rawData, fullReport.month, fullReport.year, fullReport.created_at);
+    const computed = compute.compute(fullReport);
 
     const chartRenderer = new AdvancedAnalyticsChartRenderer();
     const chartBuffers = await chartRenderer.renderCharts(computed);
