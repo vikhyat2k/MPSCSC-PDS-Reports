@@ -1017,13 +1017,11 @@
 
 /* ─── RESPONSIVE ────────────────────────────────────── */
 @media (max-width: 900px) {
+    :root { --sidebar-width: 220px; }
     .kpi-strip { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 700px) {
     .kpi-strip { grid-template-columns: 1fr 1fr; gap: 12px; }
-}
-@media (max-width: 900px) {
-    :root { --sidebar-width: 220px; }
 }
 @media (max-width: 768px) {
     .app-sidebar {
@@ -1032,7 +1030,6 @@
     }
     .app-wrapper.sidebar-open .app-sidebar { transform: translateX(0); }
     .app-shell { margin-left: 0 !important; }
-    .kpi-strip { grid-template-columns: 1fr 1fr; gap: 12px; }
     .app-main { padding: 16px 14px 32px; }
     .card-body { padding: 18px; }
     .card-header { padding: 16px 18px; }
