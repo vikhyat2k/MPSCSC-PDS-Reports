@@ -22,7 +22,7 @@
     position: fixed;
     top: 0; left: 0;
     z-index: 200;
-    transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+    transition: width 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s ease;
     overflow: hidden;
     box-shadow: 2px 0 8px rgba(0,0,0,0.35);
 }
@@ -61,7 +61,7 @@
     transition: var(--transition);
 }
 .sidebar-logo-img:hover { transform: scale(1.08) rotate(3deg); }
-.sidebar-brand { overflow: hidden; }
+.sidebar-brand { overflow: hidden; transition: opacity 0.25s ease, width 0.25s ease; }
 .sidebar-brand-name {
     font-family: 'Outfit', sans-serif;
     font-size: 14px; font-weight: 800;
