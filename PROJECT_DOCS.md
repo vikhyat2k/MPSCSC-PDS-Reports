@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Implemented functional instant search on the main dashboard header |
+| Last Code Change | 11 Aug 2026 — Upgraded header search to interactive floating Live Search Dropdown |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1476,11 +1476,14 @@ Files: public/index.html
 Type: Feature
 Closes: N/A
 
-- FEATURE: Replaced the mockup search input in the main dashboard header with a fully functional instant-search bar.
+- FEATURE: Added an interactive, floating **Live Search Dropdown Menu** (`#globalSearchResults`) directly below the main header search bar.
 - SEARCH SCOPE:
-  1. **Scheme Cards**: Filters and highlights scheme performance cards (NFSA, MDM, ICDS, Welfare) based on the search query.
-  2. **Transporter Leaderboard**: Real-time filtering of top and bottom performers by transporter name or scheme.
-  3. **Report History & Matrix Tables**: Instantly filters table rows by matching scheme, month, status, or transporter across all history and detailed matrix tables.
+  1. **Schemes**: Instant shortcuts to open analytics & reports for NFSA, MDM, ICDS, Welfare, and Date Range.
+  2. **Generated Reports**: Live search matching month names (English & Hindi), years, scheme names, and allocation volumes — clicking opens the report directly (`viewReport`).
+  3. **Transporters & Sectors**: Matches all 22 Betul district transporters and sectors — clicking filters the transporter analytics.
+  4. **Tools & Navigation**: Direct shortcuts to Dashboard, Generate Report, IC Directory, and Email Reports.
+- IN-PAGE FILTRATION: Also real-time filters scheme cards, transporter leaderboard rows, and report history tables on input.
+- KEYBOARD & MOUSE: Auto-hides on click outside or `Escape` key press.
 
 ---
 
