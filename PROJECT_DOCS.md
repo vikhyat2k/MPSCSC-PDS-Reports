@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Hover auto-expand effect added for collapsed left menu (sidebar) |
+| Last Code Change | 11 Aug 2026 — Fixed sidebar hover expand to push page content cleanly (no title/card overlapping) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1477,7 +1477,8 @@ Type: Feature / UI Improvement
 Closes: N/A
 
 - FEATURE: Added smooth hover auto-expand effect to `.app-wrapper.sidebar-collapsed .app-sidebar`.
-- BEHAVIOR: When the user hovers over the collapsed sidebar (72px wide), it automatically expands to full width (260px) with smooth `0.3s cubic-bezier` transition, high-contrast overlay box shadow (`rgba(0,0,0,0.45)`), and `z-index: 300` overlay depth.
+- BEHAVIOR: When the user hovers over the collapsed sidebar (72px wide), it automatically expands to full width (260px) with smooth `0.3s cubic-bezier` transition, while `.app-shell` margin-left shifts simultaneously to `260px`.
+- CONTENT ALIGNMENT: Prevents header title ("Madhya Pradesh State Civil Supplies Corporation"), "Intelligence Dashboard" title, and left cards from being covered or obscured during hover expansion.
 - LABELS: Navigation labels (`.nav-label`), brand subtitle (`.sidebar-brand`), section headers (`.nav-section-label`), and system pill expand seamlessly in place.
 - TOOLTIPS: Suppressed redundant floating JS tooltips during hover expand via `:has(.app-sidebar:hover)` CSS rule.
 
