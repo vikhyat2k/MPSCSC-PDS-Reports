@@ -94,29 +94,6 @@
 
     --border:           rgba(15,23,42,0.1);
 
-    --shadow-sm:      0 1px 3px rgba(0,0,0,0.06);
-    --shadow-md:      0 4px 16px rgba(0,0,0,0.08);
-    --shadow-lg:      0 10px 32px rgba(0,0,0,0.10);
-    --shadow-premium: 0 8px 40px rgba(0,0,0,0.09);
-    --glow-primary:   0 0 24px rgba(242,107,43,0.15);
-
-    --header-bg:         rgba(255,255,255,0.97);
-    --tab-strip-bg:      #e4eaf6;
-    --tab-inactive-color:#334155;
-    --table-head-bg:     #eef2fa;
-    --table-head-color:  #0a1628;
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-    background: rgba(242,107,43,0.3);
-    border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(242,107,43,0.6); }
-
-/* ═══════════════════════════════════════════════════════
-   LIGHT MODE COMPONENT OVERRIDES
-═══════════════════════════════════════════════════════ */
-[data-theme="light"] .card { background: var(--card-bg) !important; border-color: var(--glass-border) !important; }
 [data-theme="light"] .card-title { color: #0a1628 !important; }
 [data-theme="light"] .card-subtitle { color: #334155 !important; }
 [data-theme="light"] .form-group label { color: #334155 !important; font-weight: 600 !important; }
