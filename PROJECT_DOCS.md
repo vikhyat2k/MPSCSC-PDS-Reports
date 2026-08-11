@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — KPI strip re-arranged to 3 equal columns after removing LIVE card |
+| Last Code Change | 11 Aug 2026 — Hover auto-expand effect added for collapsed left menu (sidebar) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1467,6 +1467,19 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Hover Auto-Expand Effect for Collapsed Left Menu (Sidebar)
+
+Files: public/styles.css
+Type: Feature / UI Improvement
+Closes: N/A
+
+- FEATURE: Added smooth hover auto-expand effect to `.app-wrapper.sidebar-collapsed .app-sidebar`.
+- BEHAVIOR: When the user hovers over the collapsed sidebar (72px wide), it automatically expands to full width (260px) with smooth `0.3s cubic-bezier` transition, high-contrast overlay box shadow (`rgba(0,0,0,0.45)`), and `z-index: 300` overlay depth.
+- LABELS: Navigation labels (`.nav-label`), brand subtitle (`.sidebar-brand`), section headers (`.nav-section-label`), and system pill expand seamlessly in place.
+- TOOLTIPS: Suppressed redundant floating JS tooltips during hover expand via `:has(.app-sidebar:hover)` CSS rule.
 
 ---
 

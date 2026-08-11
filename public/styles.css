@@ -232,8 +232,8 @@
         justify-content: flex-start;
         padding: 10px 12px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-divider {
-        margin: 10px 10px;
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover ~ .app-shell {
+        margin-left: var(--sidebar-width);
     }
 }
 
