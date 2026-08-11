@@ -61,23 +61,6 @@
     --header-bg:         rgba(4,8,15,0.97);
     --tab-strip-bg:      rgba(22,40,67,0.6);
     --tab-inactive-color:#4a6283;
-    --table-head-bg:     rgba(17,30,51,0.9);
-    --table-head-color:  #8ea3c2;
-    --table-border:      rgba(255,255,255,0.06);
-    --table-row-hover:   rgba(242,107,43,0.06);
-    --input-bg:          #162843;
-    --card-bg:           #0d1526;
-    --footer-bg:         #020508;
-    --footer-color:      #4a6283;
-    --sidebar-bg:        #030609;
-    --nav-active-bg:     rgba(242,107,43,0.1);
-    --nav-active-border: #f26b2b;
-[data-theme="light"] .scheme-tabs-container { background: var(--tab-strip-bg) !important; }
-[data-theme="light"] .scheme-tab { color: #475569 !important; }
-[data-theme="light"] .scheme-tab.active-tab { color: white !important; }
-[data-theme="light"] .reports-table th { background: var(--table-head-bg) !important; color: #0a1628 !important; }
-[data-theme="light"] .reports-table td { color: #0a1628 !important; border-color: var(--table-border) !important; }
-[data-theme="light"] .stat-label, [data-theme="light"] .metric-label { color: #475569 !important; }
 [data-theme="light"] .stat-value, [data-theme="light"] .metric-value { color: #0a1628 !important; }
 [data-theme="light"] .kpi-card { background: #ffffff !important; border-color: rgba(15,23,42,0.1) !important; }
 [data-theme="light"] .kpi-label { color: #64748b !important; }
