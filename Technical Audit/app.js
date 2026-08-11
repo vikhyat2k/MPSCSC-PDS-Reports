@@ -2141,6 +2141,68 @@ function loadEmailSchemeGrid() {
         });
 }
 
+async function generateFreshSchemeForEmail(item, statusDiv, index, total) {
+    let endpoint = 'api/generate-report';
+    let body = { month: parseInt(item.month), year: parseInt(item.year) };
+
+    if (item.scheme === 'nfsa_daterange') {
+        endpoint = 'api/generate-nfsa-daterange-report';
+        body.fromDate = item.fromDate;
+        body.toDate = item.toDate;
+    } else if (item.scheme !== 'nfsa') {
+        endpoint = `api/generate-${item.scheme}-report`;
+    }
+
+    const startRes = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    if (!startRes.ok) {
+        let errTxt = '';
+        try {
+            const errData = await startRes.json();
+            errTxt = errData.error || errData.message || '';
+        } catch (e) {
+            errTxt = `HTTP ${startRes.status}`;
+        }
+        throw new Error(`Failed to start ${item.scheme.toUpperCase()} generation: ${errTxt}`);
+    }
+
+    const startData = await startRes.json();
+    const requestId = startData.requestId;
+    if (!requestId) throw new Error(`No request ID returned for ${item.scheme.toUpperCase()}`);
+
+    return new Promise((resolve, reject) => {
+        const pollInt = setInterval(async () => {
+            try {
+                const statusRes = await fetch(`api/generate-status/${requestId}`);
+                if (!statusRes.ok) return;
+                const statusData = await statusRes.json();
+                if (!statusData) return;
+
+                const pct = statusData.progress || 0;
+                const msg = statusData.message || statusData.status || 'processing';
+
+                if (statusDiv) {
+                    statusDiv.innerHTML = `🔄 [${index}/${total}] Fresh ${item.scheme.toUpperCase()} (${pct}%): ${msg}`;
+                }
+
+                if (statusData.status === 'complete') {
+                    clearInterval(pollInt);
+                    resolve(statusData);
+                } else if (statusData.status === 'error') {
+                    clearInterval(pollInt);
+                    reject(new Error(statusData.error || `${item.scheme.toUpperCase()} extraction failed`));
+                }
+            } catch (e) {
+                console.error(`Poll error for ${requestId}:`, e);
+            }
+        }, 1500);
+    });
+}
+
 async function submitGlobalEmail(event) {
     if (event) event.preventDefault();
     
@@ -2196,6 +2258,7 @@ async function submitGlobalEmail(event) {
 
     try {
         let successCount = 0;
+        let errors = [];
 
         // Step 1: Send history reports instantly (no scraping)
         if (historySchemes.length > 0) {
@@ -2208,26 +2271,39 @@ async function submitGlobalEmail(event) {
             if (res.ok) {
                 successCount++;
             } else {
-                const err = await res.json();
+                const err = await res.json().catch(() => ({}));
                 console.warn('History batch failed:', err.error);
+                errors.push('History reports failed: ' + (err.error || 'delivery error'));
             }
         }
 
         if (freshSchemes.length > 0) {
             if (statusDiv) {
                 statusDiv.style.display = 'flex';
-                statusDiv.innerHTML = `🔄 Generating ${freshCount} fresh report(s) & emailing to ${to} (this may take 1-2 mins)...`;
+                statusDiv.innerHTML = `🔄 Generating ${freshCount} fresh report(s) live from portal...`;
             }
+
+            for (let i = 0; i < freshSchemes.length; i++) {
+                const item = freshSchemes[i];
+                try {
+                    await generateFreshSchemeForEmail(item, statusDiv, i + 1, freshCount);
+                } catch (genErr) {
+                    console.warn(`Fresh generation failed for ${item.scheme}:`, genErr.message);
+                    errors.push(`${item.scheme.toUpperCase()} fresh generation failed: ${genErr.message}`);
+                }
+            }
+
+            if (statusDiv) statusDiv.innerHTML = `✉️ Emailing freshly generated report(s) to ${to}...`;
             const res = await fetch('api/email-bundle', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ emailTo: to, cc, format, selectedSchemes: freshSchemes, forceRefresh: true })
+                body: JSON.stringify({ emailTo: to, cc, format, selectedSchemes: freshSchemes, forceRefresh: false })
             });
             if (res.ok) {
                 successCount++;
             } else {
-                const err = await res.json();
-                throw new Error(err.error || 'Fresh generation failed');
+                const err = await res.json().catch(() => ({}));
+                errors.push('Fresh bundle email delivery failed: ' + (err.error || 'delivery error'));
             }
         }
 

@@ -331,8 +331,8 @@ class AdvancedAnalyticsPdfGenerator {
                         <li><strong>सर्वश्रेष्ठ प्रदर्शनकर्ता ब्लॉक:</strong> <strong>${computed.findings.bestBlock ? computed.findings.bestBlock.block : 'N/A'}</strong> (उठाव: ${(computed.findings.bestBlock ? computed.findings.bestBlock.liftPct * 100 : 0).toFixed(2)}%)</li>
                         <li><strong>न्यूनतम प्रदर्शनकर्ता ब्लॉक:</strong> <strong>${computed.findings.worstBlock ? computed.findings.worstBlock.block : 'N/A'}</strong> (उठाव: ${(computed.findings.worstBlock ? computed.findings.worstBlock.liftPct * 100 : 0).toFixed(2)}%)</li>
                         <li><strong>सर्वाधिक लंबित सेक्टर:</strong> <strong>${computed.findings.worstSector ? computed.findings.worstSector.sectorName : 'N/A'}</strong> (उठाव: ${(computed.findings.worstSector ? computed.findings.worstSector.liftPct * 100 : 0).toFixed(2)}%, लंबित: ${computed.findings.worstSector ? computed.findings.worstSector.remaining.toFixed(2) : 0} Qt)</li>
-                        ${computed.findings.biggestLagSector ? `<li><strong>POS फीडिंग विलंब विसंगति:</strong> सेक्टर <strong>${computed.findings.biggestLagSector.sectorName}</strong> में POS फीडिंग में +${computed.findings.biggestLagSector.posGapPP.toFixed(1)} pp का विलंब दर्ज किया गया है।</li>` : ''}
-                        ${computed.findings.biggestOverReceiptSector ? `<li><strong>POS ओवर-रिसीट विसंगति:</strong> सेक्टर <strong>${computed.findings.biggestOverReceiptSector.sectorName}</strong> में दुकान स्तर POS प्राप्ति प्रेषित उठाव से ${computed.findings.biggestOverReceiptSector.posGapPP.toFixed(1)} pp अधिक दर्शाई गई है।</li>` : ''}
+                        ${computed.findings.biggestLagSector ? `<li><strong>POS फीडिंग विलंब विसंगति:</strong> सेक्टर <strong>${computed.findings.biggestLagSector.sectorName}</strong> में POS फीडिंग में +${computed.findings.biggestLagSector.posGapPP.toFixed(1)}% का विलंब दर्ज किया गया है।</li>` : ''}
+                        ${computed.findings.biggestOverReceiptSector ? `<li><strong>POS ओवर-रिसीट विसंगति:</strong> सेक्टर <strong>${computed.findings.biggestOverReceiptSector.sectorName}</strong> में दुकान स्तर POS प्राप्ति प्रेषित उठाव से ${computed.findings.biggestOverReceiptSector.posGapPP.toFixed(1)}% अधिक दर्शाई गई है।</li>` : ''}
                         <li><strong>एकाधिक सेक्टर परिवहनकर्ता:</strong> कुल <strong>${computed.findings.multiSectorTransporters.length}</strong> परिवहनकर्ताओं के पास 1 से अधिक सेक्टर का प्रभार है।</li>
                         <li><strong>त्वरित समीक्षा आवश्यक:</strong> कुल <strong>${computed.findings.sub85Count}</strong> सेक्टरों में उठाव प्रगति 85% से कम है।</li>
                     </ul>
@@ -414,10 +414,10 @@ class AdvancedAnalyticsPdfGenerator {
                         POS अंतर की गणना <code>(डिपो उठाव % - POS प्राप्ति %) * 100</code> के रूप में की जाती है।
                     </p>
                     <div style="margin-bottom:8px;">
-                        <strong style="color:#D98E04;">1. POS फीडिंग विलंब (Gap > +15 pp):</strong> डिपो से सामग्री जारी कर दी गई है, लेकिन उचित मूल्य दुकानों द्वारा मशीनों में प्रविष्टि में विलंब किया गया है।
+                        <strong style="color:#D98E04;">1. POS फीडिंग विलंब (Gap > +15%):</strong> डिपो से सामग्री जारी कर दी गई है, लेकिन उचित मूल्य दुकानों द्वारा मशीनों में प्रविष्टि में विलंब किया गया है।
                     </div>
                     <div>
-                        <strong style="color:#6B4C93;">2. POS ओवर-रिसीट विसंगति (Gap < -15 pp):</strong> दुकान स्तर POS में डिपो द्वारा जारी प्रेषित मात्रा से अधिक प्राप्ति दर्ज हुई है। यह डिपो डिस्पैच एवं POS डेटा के मध्य विसंगति को दर्शाता है जिसकी त्वरित तकनीकी जांच आवश्यक है।
+                        <strong style="color:#6B4C93;">2. POS ओवर-रिसीट विसंगति (Gap < -15%):</strong> दुकान स्तर POS में डिपो द्वारा जारी प्रेषित मात्रा से अधिक प्राप्ति दर्ज हुई है। यह डिपो डिस्पैच एवं POS डेटा के मध्य विसंगति को दर्शाता है जिसकी त्वरित तकनीकी जांच आवश्यक है।
                     </div>
                 </div>
 
@@ -435,12 +435,12 @@ class AdvancedAnalyticsPdfGenerator {
                     <thead>
                         <tr>
                             <th style="width:5%;">क्र.</th>
-                            <th style="width:20%;">सेक्टर नाम</th>
-                            <th style="width:12%;">ब्लॉक</th>
+                            <th style="width:14%;">सेक्टर नाम</th>
+                            <th style="width:11%;">ब्लॉक</th>
                             <th style="width:10%;">उठाव %</th>
                             <th style="width:12%;">लंबित (Qt)</th>
-                            <th style="width:12%;">श्रेणी</th>
-                            <th style="width:29%;">अनुशंसित त्वरित कार्रवाई</th>
+                            <th style="width:11%;">श्रेणी</th>
+                            <th style="width:37%;">अनुशंसित त्वरित कार्रवाई</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -511,16 +511,16 @@ class AdvancedAnalyticsPdfGenerator {
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th>रैंक</th>
-                            <th>ब्लॉक</th>
-                            <th>सेक्टर नाम</th>
-                            <th>आवंटन</th>
-                            <th>उठाव</th>
-                            <th>उठाव %</th>
-                            <th>POS %</th>
-                            <th>POS Gap</th>
-                            <th>श्रेणी</th>
-                            <th>परिवहनकर्ता</th>
+                            <th style="width:5%;">रैंक</th>
+                            <th style="width:9%;">ब्लॉक</th>
+                            <th style="width:14%;">सेक्टर नाम</th>
+                            <th style="width:9%;">आवंटन</th>
+                            <th style="width:9%;">उठाव</th>
+                            <th style="width:9%;">उठाव %</th>
+                            <th style="width:9%;">POS %</th>
+                            <th style="width:9%;">POS Gap (%)</th>
+                            <th style="width:9%;">श्रेणी</th>
+                            <th style="width:18%;">परिवहनकर्ता</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -533,7 +533,7 @@ class AdvancedAnalyticsPdfGenerator {
                                 <td style="text-align:right;">${s.dispatch.toFixed(1)}</td>
                                 <td style="text-align:center; font-weight:700;">${(s.liftPct * 100).toFixed(2)}%</td>
                                 <td style="text-align:center;">${(s.posReceiptPct * 100).toFixed(2)}%</td>
-                                <td style="text-align:center; ${Math.abs(s.posGapPP) > 15 ? (s.posGapPP > 0 ? 'color:#D98E04; font-weight:700;' : 'color:#6B4C93; font-weight:700;') : ''}">${s.posGapPP > 0 ? '+' : ''}${s.posGapPP.toFixed(1)} pp</td>
+                                <td style="text-align:center; ${Math.abs(s.posGapPP) > 15 ? (s.posGapPP > 0 ? 'color:#D98E04; font-weight:700;' : 'color:#6B4C93; font-weight:700;') : ''}">${s.posGapPP > 0 ? '+' : ''}${s.posGapPP.toFixed(1)}%</td>
                                 <td style="text-align:center;"><span class="badge badge-${s.riskTier.toLowerCase()}">${s.riskTierHindi}</span></td>
                                 <td>${s.transporter}</td>
                             </tr>
@@ -553,16 +553,16 @@ class AdvancedAnalyticsPdfGenerator {
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th>रैंक</th>
-                            <th>ब्लॉक</th>
-                            <th>सेक्टर नाम</th>
-                            <th>आवंटन</th>
-                            <th>उठाव</th>
-                            <th>उठाव %</th>
-                            <th>POS %</th>
-                            <th>POS Gap</th>
-                            <th>श्रेणी</th>
-                            <th>परिवहनकर्ता</th>
+                            <th style="width:5%;">रैंक</th>
+                            <th style="width:9%;">ब्लॉक</th>
+                            <th style="width:14%;">सेक्टर नाम</th>
+                            <th style="width:9%;">आवंटन</th>
+                            <th style="width:9%;">उठाव</th>
+                            <th style="width:9%;">उठाव %</th>
+                            <th style="width:9%;">POS %</th>
+                            <th style="width:9%;">POS Gap (%)</th>
+                            <th style="width:9%;">श्रेणी</th>
+                            <th style="width:18%;">परिवहनकर्ता</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -575,7 +575,7 @@ class AdvancedAnalyticsPdfGenerator {
                                 <td style="text-align:right;">${s.dispatch.toFixed(1)}</td>
                                 <td style="text-align:center; font-weight:700;">${(s.liftPct * 100).toFixed(2)}%</td>
                                 <td style="text-align:center;">${(s.posReceiptPct * 100).toFixed(2)}%</td>
-                                <td style="text-align:center; ${Math.abs(s.posGapPP) > 15 ? (s.posGapPP > 0 ? 'color:#D98E04; font-weight:700;' : 'color:#6B4C93; font-weight:700;') : ''}">${s.posGapPP > 0 ? '+' : ''}${s.posGapPP.toFixed(1)} pp</td>
+                                <td style="text-align:center; ${Math.abs(s.posGapPP) > 15 ? (s.posGapPP > 0 ? 'color:#D98E04; font-weight:700;' : 'color:#6B4C93; font-weight:700;') : ''}">${s.posGapPP > 0 ? '+' : ''}${s.posGapPP.toFixed(1)}%</td>
                                 <td style="text-align:center;"><span class="badge badge-${s.riskTier.toLowerCase()}">${s.riskTierHindi}</span></td>
                                 <td>${s.transporter}</td>
                             </tr>

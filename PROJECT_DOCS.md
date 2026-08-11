@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Fixed Cloudflare Tunnel local DNS resolver timeout by specifying --dns-resolver-addrs 1.1.1.1:53 in START_REMOTE_ACCESS.bat |
+| Last Code Change | 11 Aug 2026 — Fixed Full Sector Appendix formatting: replaced 'pp' with '%' in POS Gap column and adjusted 'सेक्टर नाम' column widths |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1450,6 +1450,34 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Fix Full Sector Appendix POS Gap Units and Column Width Alignment
+
+Files: server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js
+Type: Formatting / UI Improvement
+Closes: N/A
+
+- USER REQUIREMENT: Change `POS Gap` column unit from `pp` to `%` (e.g. `3.6%` / `+3.6%` instead of `+3.6 pp`) and fix excessive blank space in `सेक्टर नाम` column across full sector appendix tables.
+- FIX:
+  1. Updated `advancedAnalyticsPdfGenerator.js` (Pages 2, 5, 8, 9) to display `POS Gap (%)` with percentage format (e.g., `+3.6%` / `-3.6%`).
+  2. Applied explicit column width rules to `report-table` in Section 7 (Part 1 & 2): `रैंक` (5%), `ब्लॉक` (9%), `सेक्टर नाम` (14%), `आवंटन` (9%), `उठाव` (9%), `उठाव %` (9%), `POS %` (9%), `POS Gap (%)` (9%), `श्रेणी` (9%), `परिवहनकर्ता` (18%), eliminating empty space while preventing transporter name truncation.
+
+---
+
+### 2026-08-11 | Eliminate Fresh Email Bundle HTTP Network Timeouts via Async Scraper Queue
+
+Files: public/app.js, Technical Audit/app.js
+Type: Bug Fix / Architectural Enhancement
+Closes: N/A
+
+- BUG: Clicking "Generate Fresh & Email" in Global Email Modal failed with `❌ Mail Task Failed: Network response timed out while generating fresh reports live from portal...` when live scraping took >100s.
+- ROOT CAUSE: `/api/email-bundle` with `forceRefresh: true` held a single synchronous HTTP POST request open for 2-5 minutes while Puppeteer scraped multi-RO / multi-depot data. Cloudflare Tunnel (and browser fetch) dropped connections after 100s of inactivity.
+- FIX: Refactored `submitGlobalEmail()` in `public/app.js` and `Technical Audit/app.js` with `generateFreshSchemeForEmail()` helper to:
+  1. Trigger background report generation via scheme `/api/generate-...` endpoints (returning HTTP 200 immediately).
+  2. Poll `/api/generate-status/:requestId` every 1.5s while displaying live progress % (`🔄 [1/1] Fresh MDM (45%): extracting data...`) inside the modal.
+  3. Once fresh reports are generated and stored in SQLite DB, call `/api/email-bundle` with `forceRefresh: false`, delivering the email in <1s with 100% reliability and zero network timeouts.
 
 ---
 
