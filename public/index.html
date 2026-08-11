@@ -2653,83 +2653,196 @@ setInterval(updateClock, 1000);
 updateClock();
 
 /* ── Global Search Filter ────────────────────────── */
+var SECTORS_LIST = [
+    { sector: "बैतूल सेक्टर 1", block: "बैतूल", transporter: "श्री प्रदीप सिंह" },
+    { sector: "बैतूल सेक्टर 2", block: "बैतूल", transporter: "श्री पीयूष आर्य" },
+    { sector: "बैतूल सेक्टर 3", block: "बैतूल", transporter: "श्री राहुल परिहार" },
+    { sector: "शाहपुर सेक्टर 4", block: "शाहपुर", transporter: "श्री विनोद यादव" },
+    { sector: "शाहपुर सेक्टर 5", block: "शाहपुर", transporter: "श्री प्रितम कावरे" },
+    { sector: "शाहपुर सेक्टर 6", block: "शाहपुर", transporter: "श्री मुकेश वर्मा" },
+    { sector: "घोड़ाडोंगरी सेक्टर 7", block: "घोड़ाडोंगरी", transporter: "श्री गिरीश पटेल" },
+    { sector: "घोड़ाडोंगरी सेक्टर 8", block: "घोड़ाडोंगरी", transporter: "श्री सुभाष बारोड़े" },
+    { sector: "चिचोली सेक्टर 9", block: "चिचोली", transporter: "श्री रामकृष्ण पवार" },
+    { sector: "चिचोली सेक्टर 10", block: "चिचोली", transporter: "श्री सुरेश देशमुख" },
+    { sector: "आमला सेक्टर 11", block: "आमला", transporter: "श्री आशीष चौहान" },
+    { sector: "आमला सेक्टर 12", block: "आमला", transporter: "श्री धनराज सोनी" },
+    { sector: "मुलताई सेक्टर 13", block: "मुलताई", transporter: "श्री सतीश रघुवंशी" },
+    { sector: "मुलताई सेक्टर 14", block: "मुलताई", transporter: "श्री राकेश शर्मा" },
+    { sector: "प्रभातपट्टन सेक्टर 15", block: "प्रभातपट्टन", transporter: "श्री सुनील साहू" },
+    { sector: "प्रभातपट्टन सेक्टर 16", block: "प्रभातपट्टन", transporter: "श्री अनिल गुप्ता" },
+    { sector: "भैंसदेही सेक्टर 17", block: "भैंसदेही", transporter: "श्री विजय राठौर" },
+    { sector: "भैंसदेही सेक्टर 18", block: "भैंसदेही", transporter: "श्री संजय पंद्राम" },
+    { sector: "भीमपुर सेक्टर 19", block: "भीमपुर", transporter: "श्री देवेंद्र यादव" },
+    { sector: "भीमपुर सेक्टर 20", block: "भीमपुर", transporter: "श्री रामेश्वर काकोड़िया" },
+    { sector: "आठनेर सेक्टर 21", block: "आठनेर", transporter: "श्री दिनेश उइके" },
+    { sector: "आठनेर सेक्टर 22", block: "आठनेर", transporter: "श्री राजेश भूमरकर" }
+];
+
+var NAV_MODULES = [
+    { title: "Dashboard", sub: "District Intelligence Overview", action: "dashboard", icon: "📊" },
+    { title: "Generate Report", sub: "Create fresh scheme reports", action: "generate", icon: "🚀" },
+    { title: "IC Directory", sub: "Godowns, Centers & Transporters", action: "directory", icon: "📖" },
+    { title: "Email Reports", sub: "Send reports via Email", action: "email", icon: "✉️" }
+];
+
+window.selectSearchResult = function(type, val) {
+    var dropdown = document.getElementById('globalSearchResults');
+    if (dropdown) dropdown.style.display = 'none';
+    var input = document.getElementById('dashboardSearchInput');
+    if (input) input.blur();
+
+    if (type === 'nav') {
+        if (val === 'dashboard' && typeof showDashboard === 'function') showDashboard();
+        else if (val === 'generate' && typeof showGenerate === 'function') showGenerate();
+        else if (val === 'directory') window.location.href = 'directory.html';
+        else if (val === 'email' && typeof openGlobalEmailModal === 'function') openGlobalEmailModal();
+    } else if (type === 'scheme') {
+        if (typeof navigateToScheme === 'function') navigateToScheme(val);
+        else if (typeof switchScheme === 'function') switchScheme(val);
+    } else if (type === 'report') {
+        if (typeof showGenerate === 'function') showGenerate();
+        if (typeof switchScheme === 'function') switchScheme(val.scheme || 'nfsa');
+        if (typeof viewReport === 'function') viewReport(val.id);
+    } else if (type === 'transporter') {
+        if (typeof showDashboard === 'function') showDashboard();
+        if (input) {
+            input.value = val;
+            window.handleGlobalSearch(val);
+        }
+    }
+};
+
 window.handleGlobalSearch = function(query) {
     query = (query || '').toLowerCase().trim();
+    var dropdown = document.getElementById('globalSearchResults');
     
-    // 1. Dashboard Section Search
-    var dashSection = document.getElementById('dashboardSection');
-    var isDash = dashSection && dashSection.style.display !== 'none';
-    if (isDash) {
-        // A. Filter Scheme Performance Cards
-        var schemeCards = document.querySelectorAll('.scheme-perf-card');
-        schemeCards.forEach(function(card) {
-            var text = card.textContent.toLowerCase();
-            if (!query || text.includes(query)) {
-                card.style.display = '';
-                card.style.opacity = '1';
-            } else {
-                card.style.opacity = '0.15';
-            }
-        });
-        
-        // B. Filter Transporter Leaderboards
-        var lbRows = document.querySelectorAll('.leaderboard-row');
-        lbRows.forEach(function(row) {
-            var name = row.querySelector('.lb-name') ? row.querySelector('.lb-name').textContent.toLowerCase() : '';
-            var scheme = row.querySelector('.lb-scheme-tag') ? row.querySelector('.lb-scheme-tag').textContent.toLowerCase() : '';
-            if (!query || name.includes(query) || scheme.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+    if (!query) {
+        if (dropdown) dropdown.style.display = 'none';
+        document.querySelectorAll('.scheme-perf-card').forEach(function(c) { c.style.display = ''; c.style.opacity = '1'; });
+        document.querySelectorAll('.leaderboard-row').forEach(function(r) { r.style.display = ''; });
+        document.querySelectorAll('tr').forEach(function(r) { r.style.display = ''; });
+        return;
+    }
+
+    if (dropdown) dropdown.style.display = 'block';
+
+    var resultsHtml = '';
+
+    // A. Schemes Match
+    var schemeMatches = Object.keys(SCHEME_META || {}).filter(function(key) {
+        var m = SCHEME_META[key];
+        return key.includes(query) || (m.label && m.label.toLowerCase().includes(query));
+    });
+    if (schemeMatches.length > 0) {
+        resultsHtml += '<div class="search-group-title">📊 Schemes</div>';
+        schemeMatches.forEach(function(key) {
+            var m = SCHEME_META[key];
+            resultsHtml += '<div class="search-result-item" onclick="selectSearchResult(\'scheme\', \'' + key + '\')">' +
+                '<div class="search-item-icon" style="color:' + m.color + ';">📊</div>' +
+                '<div class="search-item-body">' +
+                    '<div class="search-item-title">' + m.label + ' Scheme</div>' +
+                    '<div class="search-item-sub">View analytics and reports</div>' +
+                '</div>' +
+                '<span class="search-item-badge" style="background:' + m.bg + ';color:' + m.color + ';">OPEN</span>' +
+            '</div>';
         });
     }
-    
-    // 2. Report History Tables Search
-    var tableBodies = [
-        'reportsTableBody',
-        'daterangeReportsTableBody',
-        'mdmReportsTableBody',
-        'icdsReportsTableBody',
-        'welfareReportsTableBody',
-        'drReportsTableBody'
-    ];
-    tableBodies.forEach(function(id) {
-        var tbody = document.getElementById(id);
-        if (!tbody) return;
-        var rows = tbody.querySelectorAll('tr');
-        rows.forEach(function(row) {
-            var text = row.textContent.toLowerCase();
-            if (!query || text.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
 
-    // 3. Matrix Details Tables Search
-    var matrixBodies = [
-        'matrixTableBody',
-        'drMatrixTableBody',
-        'mdmMatrixTableBody',
-        'icdsMatrixTableBody',
-        'welfareMatrixTableBody'
-    ];
-    matrixBodies.forEach(function(id) {
-        var tbody = document.getElementById(id);
-        if (!tbody) return;
-        var rows = tbody.querySelectorAll('tr');
-        rows.forEach(function(row) {
-            var text = row.textContent.toLowerCase();
-            if (!query || text.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+    // B. Reports Match
+    var reportMatches = window._allCachedReports || [];
+    var matchedReports = reportMatches.filter(function(r) {
+        var monthEn = typeof getMonthName === 'function' ? getMonthName(r.month) : '';
+        var monthHi = typeof getHindiMonthName === 'function' ? getHindiMonthName(r.month) : '';
+        var str = ((r.scheme || '') + ' ' + monthEn + ' ' + monthHi + ' ' + (r.year || '') + ' ' + (r.total_allocation || '')).toLowerCase();
+        return str.includes(query);
+    }).slice(0, 5);
+
+    if (matchedReports.length > 0) {
+        resultsHtml += '<div class="search-group-title">📜 Generated Reports</div>';
+        matchedReports.forEach(function(r) {
+            var mName = typeof getMonthName === 'function' ? getMonthName(r.month) : r.month;
+            resultsHtml += '<div class="search-result-item" onclick="selectSearchResult(\'report\', {id:\'' + r.id + '\', scheme:\'' + r.scheme + '\'})">' +
+                '<div class="search-item-icon">📄</div>' +
+                '<div class="search-item-body">' +
+                    '<div class="search-item-title">' + (r.scheme || 'NFSA').toUpperCase() + ' Report — ' + mName + ' ' + r.year + '</div>' +
+                    '<div class="search-item-sub">Allotted: ' + (r.total_allocation || 0) + ' Qt &nbsp;·&nbsp; Dispatch: ' + (r.dispatch_percentage || 0) + '%</div>' +
+                '</div>' +
+                '<span class="search-item-badge" style="background:rgba(16,185,129,0.15);color:#10b981;">VIEW</span>' +
+            '</div>';
         });
+    }
+
+    // C. Transporters & Sectors Match
+    var transporterMatches = SECTORS_LIST.filter(function(s) {
+        return s.transporter.toLowerCase().includes(query) || s.sector.toLowerCase().includes(query) || s.block.toLowerCase().includes(query);
+    }).slice(0, 5);
+
+    if (transporterMatches.length > 0) {
+        resultsHtml += '<div class="search-group-title">🚛 Transporters & Sectors</div>';
+        transporterMatches.forEach(function(s) {
+            resultsHtml += '<div class="search-result-item" onclick="selectSearchResult(\'transporter\', \'' + s.transporter.replace(/'/g, "\\'") + '\')">' +
+                '<div class="search-item-icon">🚛</div>' +
+                '<div class="search-item-body">' +
+                    '<div class="search-item-title">' + s.transporter + '</div>' +
+                    '<div class="search-item-sub">' + s.sector + ' (' + s.block + ')</div>' +
+                '</div>' +
+                '<span class="search-item-badge" style="background:rgba(242,107,43,0.15);color:#f26b2b;">FILTER</span>' +
+            '</div>';
+        });
+    }
+
+    // D. Navigation Modules Match
+    var navMatches = NAV_MODULES.filter(function(n) {
+        return n.title.toLowerCase().includes(query) || n.sub.toLowerCase().includes(query);
     });
+    if (navMatches.length > 0) {
+        resultsHtml += '<div class="search-group-title">📍 Tools & Navigation</div>';
+        navMatches.forEach(function(n) {
+            resultsHtml += '<div class="search-result-item" onclick="selectSearchResult(\'nav\', \'' + n.action + '\')">' +
+                '<div class="search-item-icon">' + n.icon + '</div>' +
+                '<div class="search-item-body">' +
+                    '<div class="search-item-title">' + n.title + '</div>' +
+                    '<div class="search-item-sub">' + n.sub + '</div>' +
+                '</div>' +
+            '</div>';
+        });
+    }
+
+    if (!resultsHtml) {
+        var safeQ = (query || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        resultsHtml = '<div class="search-no-results">🔍 No results matching "<strong>' + safeQ + '</strong>"</div>';
+    }
+
+    if (dropdown) dropdown.innerHTML = resultsHtml;
+
+    // Filter in-page elements as well
+    var isDash = document.getElementById('dashboardSection') && document.getElementById('dashboardSection').style.display !== 'none';
+    if (isDash) {
+        document.querySelectorAll('.scheme-perf-card').forEach(function(card) {
+            var text = card.textContent.toLowerCase();
+            card.style.opacity = (!query || text.includes(query)) ? '1' : '0.15';
+        });
+        document.querySelectorAll('.leaderboard-row').forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            row.style.display = (!query || text.includes(query)) ? '' : 'none';
+        });
+    }
 };
+
+// Global click-outside & Escape handlers
+document.addEventListener('click', function(e) {
+    var searchContainer = document.querySelector('.header-search');
+    var dropdown = document.getElementById('globalSearchResults');
+    if (dropdown && searchContainer && !searchContainer.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var dropdown = document.getElementById('globalSearchResults');
+        if (dropdown) dropdown.style.display = 'none';
+    }
+});
 
 /* ── DOM-Ready init ───────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
