@@ -3353,7 +3353,10 @@ async function openMessengerModal(scheme) {
     try {
         const queryParams = new URLSearchParams({ type, value }).toString();
         const response = await fetch(`/api/reports/${reportId}/balances/defaulters?${queryParams}`);
-        if (!response.ok) throw new Error('Failed to fetch defaulters');
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${response.status}`);
+        }
         
         currentMessengerDefaulters = await response.json();
         
@@ -3362,29 +3365,35 @@ async function openMessengerModal(scheme) {
         else if (type === 'depot') currentMessengerTargetRole = 'All Issue Centers';
         else if (type === 'individual_depot') currentMessengerTargetRole = `Issue Center: ${value}`;
         
-        document.getElementById('messengerTargetRole').innerText = currentMessengerTargetRole;
-        document.getElementById('messengerDefaulterCount').innerText = currentMessengerDefaulters.length;
+        const roleEl = document.getElementById('messengerTargetRole');
+        if (roleEl) roleEl.innerText = currentMessengerTargetRole;
+        const countEl = document.getElementById('messengerDefaulterCount');
+        if (countEl) countEl.innerText = currentMessengerDefaulters.length;
         
-        document.getElementById('defaultersMessengerModal').style.display = 'flex';
+        const modalEl = document.getElementById('defaultersMessengerModal');
+        if (modalEl) modalEl.style.display = 'flex';
         updateDefaultersPreview();
         
     } catch (error) {
         console.error('Error opening messenger:', error);
-        alert('Could not load defaulters for messenger.');
+        alert('Could not load defaulters for messenger: ' + error.message);
     }
 }
 
 function updateDefaultersPreview() {
-    const level = document.querySelector('input[name="warningLevel"]:checked').value;
+    const levelEl = document.querySelector('input[name="warningLevel"]:checked');
+    const level = levelEl ? levelEl.value : 'simple';
     const previewBox = document.getElementById('defaulterMessagePreview');
+    if (!previewBox) return;
     
-    if (currentMessengerDefaulters.length === 0) {
+    if (!currentMessengerDefaulters || currentMessengerDefaulters.length === 0) {
         previewBox.innerText = "No defaulters found for the selected filter. Everyone has completed their lifting! 🎉";
         return;
     }
     
     let msg = '';
-    const primaryRole = currentMessengerDefaulters[0].role;
+    const primaryRole = (currentMessengerDefaulters[0] && currentMessengerDefaulters[0].role) ? currentMessengerDefaulters[0].role : 'संबंधित अधिकारी / परिवहनकर्ता';
+
     
     if (level === 'simple') {
         if (primaryRole.includes('केंद्र')) {
