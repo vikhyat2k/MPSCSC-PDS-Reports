@@ -2293,12 +2293,24 @@ async function submitGlobalEmail(event) {
         if (freshSchemes.length > 0) {
             if (statusDiv) {
                 statusDiv.style.display = 'flex';
-                statusDiv.innerHTML = `🔄 Generating ${freshCount} fresh report(s) & emailing to ${to} (this may take 1-2 mins)...`;
+                statusDiv.innerHTML = `🔄 Generating ${freshCount} fresh report(s) live from portal...`;
             }
+
+            for (let i = 0; i < freshSchemes.length; i++) {
+                const item = freshSchemes[i];
+                try {
+                    await generateFreshSchemeForEmail(item, statusDiv, i + 1, freshCount);
+                } catch (genErr) {
+                    console.warn(`Fresh generation failed for ${item.scheme}:`, genErr.message);
+                    errors.push(`${item.scheme.toUpperCase()} fresh generation failed: ${genErr.message}`);
+                }
+            }
+
+            if (statusDiv) statusDiv.innerHTML = `✉️ Emailing freshly generated report(s) to ${to}...`;
             const res = await fetch('/api/email-bundle', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ emailTo: to, cc, format, selectedSchemes: freshSchemes, forceRefresh: true })
+                body: JSON.stringify({ emailTo: to, cc, format, selectedSchemes: freshSchemes, forceRefresh: false })
             });
             if (res.ok) {
                 successCount++;
@@ -2311,7 +2323,7 @@ async function submitGlobalEmail(event) {
                     const rawText = await res.text().catch(() => '');
                     errText = rawText ? rawText.substring(0, 120) : `HTTP ${res.status} ${res.statusText}`;
                 }
-                errors.push('Fresh generation failed: ' + errText);
+                errors.push('Fresh bundle email delivery failed: ' + errText);
             }
         }
 
