@@ -2339,6 +2339,8 @@ async function loadDashboard() {
         var welfareRaw = results[3].status === 'fulfilled' ? results[3].value : [];
         var stats      = results[4].status === 'fulfilled' ? results[4].value : {};
 
+        window._allCachedReports = [].concat(nfsaRaw, mdmRaw, icdsRaw, welfareRaw);
+
         // Filter reports according to current month mode (single vs double)
         var nfsaData    = getFilteredSummary(nfsaRaw);
         var mdmData     = getFilteredSummary(mdmRaw);
