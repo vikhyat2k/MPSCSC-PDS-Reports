@@ -186,9 +186,63 @@
 .app-wrapper.sidebar-collapsed .app-sidebar .sidebar-bottom { padding: 12px 8px; }
 .app-wrapper.sidebar-collapsed .app-sidebar .sidebar-system-pill { justify-content: center; padding: 10px; }
 .app-wrapper.sidebar-collapsed .app-sidebar .sidebar-divider { margin: 10px 8px; }
-/* Collapsed sidebar: icon-only. Tooltip (JS) shows label on hover.
-   No CSS hover-expansion here — it caused the sidebar to overlay
-   content because margin-left stays at collapsed-width during hover. */
+/* Collapsed sidebar: icon-only by default. Auto-expands on hover. */
+@media (min-width: 769px) {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover {
+        width: var(--sidebar-width);
+        box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.15);
+        z-index: 300;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-label,
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-brand,
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-bottom .nav-label {
+        opacity: 1;
+        width: auto;
+        overflow: visible;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-section-label {
+        opacity: 1;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-item {
+        justify-content: flex-start;
+        padding: 10px 12px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-item.active::before {
+        display: block;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-icon {
+        width: 18px;
+        height: 18px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-header {
+        justify-content: flex-start;
+        padding: 18px 16px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-logo-img {
+        width: 36px;
+        height: 36px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-nav {
+        padding: 16px 10px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-bottom {
+        padding: 12px 10px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-system-pill {
+        justify-content: flex-start;
+        padding: 10px 12px;
+    }
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-divider {
+        margin: 10px 10px;
+    }
+}
+
+/* Hide floating tooltip when sidebar is hovered (since menu expands inline) */
+body:has(.app-sidebar:hover) .sidebar-nav-tooltip,
+body:has(.app-sidebar:hover) .sidebar-tooltip {
+    display: none !important;
+    opacity: 0 !important;
+}
 
 /* ─── APP SHELL ─────────────────────────────────────── */
 .app-shell {

@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Removed Portal Status LIVE card from dashboard KPI strip |
+| Last Code Change | 11 Aug 2026 — KPI strip re-arranged to 3 equal columns after removing LIVE card |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1467,6 +1467,18 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | KPI Strip — Arrange 3 Cards (3-Column Grid)
+
+Files: public/styles.css
+Type: UI Improvement
+Closes: N/A
+
+- CHANGE: Updated `.kpi-strip` grid from `repeat(4, 1fr)` → `repeat(3, 1fr)` to evenly fill the strip with the 3 remaining cards after removing the LIVE card.
+- Merged duplicate `@media (max-width: 900px)` blocks and removed redundant `kpi-strip` rule inside the 768px breakpoint.
+- Responsive ladder: 3-col ≥700px, 2-col at ≤700px, 1-col at ≤520px.
 
 ---
 
