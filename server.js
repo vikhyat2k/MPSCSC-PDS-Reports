@@ -1289,42 +1289,48 @@ app.get('/api/reports/:id', async (req, res) => {
             return res.status(404).json({ error: 'Report not found' });
         }
 
-        // DEEP RESTORE: Check if detailed metrics are missing from insights
+        let insights = null;
         if (report.insights) {
-            let insights = typeof report.insights === 'string' ? JSON.parse(report.insights) : report.insights;
-            
-            // For Date Range reports, re-compute analytics dynamically so 0-dispatch sectors & transporters are always up-to-date
-            if (report.scheme === 'nfsa_daterange' && report.raw_data) {
-                try {
-                    const rawData = typeof report.raw_data === 'string' ? JSON.parse(report.raw_data) : report.raw_data;
-                    const rData = rawData.rawData || rawData;
-                    const summaryTotals = rawData.summaryTotals || null;
-                    const allotmentMap = rawData.allotmentMapping || null;
-                    const fromDate = report.fromDate || report.from_date || '';
-                    const toDate = report.toDate || report.to_date || '';
-                    const processedResult = nfsaDaterangeDataProcessor.processData(rData, summaryTotals, allotmentMap);
-                    insights = computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMap);
-                } catch (e) {
-                    console.error('Error re-evaluating daterange insights:', e);
-                }
-            } else if (!insights.metrics || !insights.needsAttention) {
+            try {
+                insights = typeof report.insights === 'string' ? JSON.parse(report.insights) : report.insights;
+            } catch (e) {
+                insights = null;
+            }
+        }
+
+        // DEEP RESTORE: Re-compute analytics dynamically if insights are missing, incomplete, or for daterange
+        if (report.scheme === 'nfsa_daterange' && report.raw_data) {
+            try {
+                const rawData = typeof report.raw_data === 'string' ? JSON.parse(report.raw_data) : report.raw_data;
+                const rData = rawData.rawData || rawData;
+                const summaryTotals = rawData.summaryTotals || null;
+                const allotmentMap = rawData.allotmentMapping || null;
+                const fromDate = report.fromDate || report.from_date || '';
+                const toDate = report.toDate || report.to_date || '';
+                const processedResult = nfsaDaterangeDataProcessor.processData(rData, summaryTotals, allotmentMap);
+                insights = computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotmentMap);
+            } catch (e) {
+                console.error('Error re-evaluating daterange insights:', e);
+            }
+        } else if (!insights || !insights.metrics || !insights.needsAttention || !insights.matrix) {
+            if (report.raw_data) {
                 const restoredInsights = await reportRestorer.restoreReport(report);
                 if (restoredInsights) {
                     await db.db.run(`UPDATE reports SET insights = ? WHERE id = ?`, [JSON.stringify(restoredInsights), report.id]);
                     insights = restoredInsights; // Pass the fresh data back to frontend
                 }
             }
-
-            // On-the-fly translate insights to Hindi if it is daterange
-            if (report.scheme === 'nfsa_daterange' && insights && insights.insights && Array.isArray(insights.insights)) {
-                insights.insights = insights.insights.map(item => ({
-                    ...item,
-                    message: translateInsightMessage(item.message)
-                }));
-            }
-
-            report.insights = insights;
         }
+
+        // On-the-fly translate insights to Hindi if it is daterange
+        if (report.scheme === 'nfsa_daterange' && insights && insights.insights && Array.isArray(insights.insights)) {
+            insights.insights = insights.insights.map(item => ({
+                ...item,
+                message: translateInsightMessage(item.message)
+            }));
+        }
+
+        report.insights = insights;
 
         res.json(report);
     } catch (error) {

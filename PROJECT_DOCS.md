@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Fixed "Could not load defaulters for messenger" error across all schemes |
+| Last Code Change | 11 Aug 2026 — Fixed Defaulter Messenger blank preview text calculation across all schemes |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1470,20 +1470,13 @@ Closes: ISSUE-013
 
 ---
 
-### 2026-08-11 | Fix "Could not load defaulters for messenger" Error Across All Schemes
-
-Files: server/services/balancesReportGenerator.js, public/app.js
-Type: Bug Fix
-Closes: N/A
-
-- BUG: Clicking the "Message" button in the Balance Report section popped up an alert "Could not load defaulters for messenger."
+- BUG: Defaulters Messenger preview box remained blank/empty when opening the modal on MDM/ICDS/Welfare reports.
 - ROOT CAUSE:
-  1. `balancesReportGenerator.extractDefaulters()` returned array of shop objects `{ shopCode, shopName, balance, groupLabel }`, whereas `updateDefaultersPreview()` in `app.js` expected aggregated group objects `{ role, pendingShops, totalBalance, centerBreakdown }`. Accessing `d.role` threw a `TypeError` inside `updateDefaultersPreview()` which was caught by `openMessengerModal()`.
-  2. `groupShops()` in `balancesReportGenerator.js` called `sector.shops.forEach()`, throwing a `TypeError` on MDM/ICDS/Welfare reports where shops were stored under `sector.mdmShops`, `sector.icdsShops`, or `sector.welfareShops`.
+  1. `balancesReportGenerator.extractDefaulters()` returned array of shop objects `{ shopCode, shopName, balance, groupLabel }`, whereas `updateDefaultersPreview()` in `app.js` expected aggregated group objects `{ role, pendingShops, totalBalance, centerBreakdown }`. Accessing `d.role` threw a `TypeError` inside `updateDefaultersPreview()`.
+  2. `groupShops()` in `balancesReportGenerator.js` assumed `shop.allocation` and `shop.dispatch` were primitive numbers. For MDM/ICDS/Welfare reports, shops store `shop.balance` directly or have nested commodity objects `{ wheat: { balance: x } }`, causing `allocation - dispatch` to evaluate to `NaN`, producing 0 balances and empty preview text.
 - FIX:
-  1. Updated `groupShops()` in `balancesReportGenerator.js` to safely resolve `sector.shops || sector.mdmShops || sector.icdsShops || sector.welfareShops || []`.
-  2. Updated `extractDefaulters()` in `balancesReportGenerator.js` to aggregate pending shops into role groups containing `role`, `pendingShops`, `totalBalance`, and `centerBreakdown`.
-  3. Added fallbacks in `openMessengerModal()` and `updateDefaultersPreview()` in `public/app.js` with detailed error reporting.
+  1. Updated `groupShops()` and `extractDefaulters()` in `balancesReportGenerator.js` to handle `shop.balance` directly and unwrap nested commodity balance objects.
+  2. Aggregated `totalBalance` and `centerBreakdown` correctly so `updateDefaultersPreview()` populates the Hindi warning message, total pending shop count, total balance Qt, and center-wise breakdown in the Message Preview box.
 
 ---
 
