@@ -59,9 +59,10 @@ class BalancesReportGenerator {
         if (!processedResult || !processedResult.sectors) return [];
 
         processedResult.sectors.forEach(sector => {
+            const sectorShops = sector.shops || sector.mdmShops || sector.icdsShops || sector.welfareShops || [];
             if (options.type === 'issueCenter' || options.type === 'depot' || options.type === 'individual_depot') {
-                sector.shops.forEach(shop => {
-                    const depot = shop.issuePoint ? shop.issuePoint.trim() : sector.block;
+                sectorShops.forEach(shop => {
+                    const depot = shop.issuePoint ? shop.issuePoint.trim() : (shop.block || sector.block || 'Unknown');
                     if (options.type === 'individual_depot' && options.value && depot !== options.value) return;
                     
                     if (!groups[depot]) groups[depot] = { label: `प्रदाय केंद्र: ${depot}`, shops: [] };
@@ -73,7 +74,7 @@ class BalancesReportGenerator {
 
                 const key = `${sector.sectorName} - ${tName}`;
                 if (!groups[key]) groups[key] = { label: `सेक्टर: ${sector.sectorName} | परिवहनकर्ता: ${tName}`, shops: [] };
-                groups[key].shops.push(...(sector.shops || []));
+                groups[key].shops.push(...sectorShops);
             }
         });
 
@@ -153,17 +154,36 @@ class BalancesReportGenerator {
         let defaulters = [];
 
         groups.forEach(group => {
+            if (!group.shops || group.shops.length === 0) return;
+
+            let totalBalance = 0;
+            let pendingShopsCount = group.shops.length;
+            let centerBreakdownMap = {};
+
             group.shops.forEach(shop => {
-                const balance = (shop.allocation || 0) - (shop.dispatch || 0);
-                if (balance > 0) {
-                    defaulters.push({
-                        shopCode: shop.shopCode,
-                        shopName: shop.shopName,
-                        balance: balance,
-                        groupLabel: group.label
-                    });
+                const bal = parseFloat(((shop.allocation || 0) - (shop.dispatch || 0)).toFixed(2));
+                if (bal > 0) {
+                    totalBalance += bal;
+                    const centerName = shop.issuePoint ? shop.issuePoint.trim() : (shop.depot || shop.block || 'प्रदाय केंद्र');
+                    if (!centerBreakdownMap[centerName]) {
+                        centerBreakdownMap[centerName] = { center: centerName, pendingShops: 0, balance: 0 };
+                    }
+                    centerBreakdownMap[centerName].pendingShops += 1;
+                    centerBreakdownMap[centerName].balance += bal;
                 }
             });
+
+            if (totalBalance > 0 && pendingShopsCount > 0) {
+                defaulters.push({
+                    role: group.label,
+                    pendingShops: pendingShopsCount,
+                    totalBalance: parseFloat(totalBalance.toFixed(2)),
+                    centerBreakdown: Object.values(centerBreakdownMap).map(c => ({
+                        ...c,
+                        balance: parseFloat(c.balance.toFixed(2))
+                    }))
+                });
+            }
         });
 
         return defaulters;
