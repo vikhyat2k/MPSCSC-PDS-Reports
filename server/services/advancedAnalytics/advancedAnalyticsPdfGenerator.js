@@ -17,9 +17,11 @@ class AdvancedAnalyticsPdfGenerator {
             'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
             'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'
         ];
-        const monthName = monthNames[computed.month - 1] || `Month ${computed.month}`;
-        const monthNameHindi = monthHindi[computed.month - 1] || '';
-        const reportPeriod = `${monthNameHindi} ${computed.year} (${monthName} ${computed.year})`;
+        const reqMonth = computed.month || (computed.report ? computed.report.month : null) || 9;
+        const reqYear = computed.year || (computed.report ? computed.report.year : null) || 2026;
+        const monthName = monthNames[reqMonth - 1] || `Month ${reqMonth}`;
+        const monthNameHindi = monthHindi[reqMonth - 1] || '';
+        const reportPeriod = `${monthNameHindi} ${reqYear} (${monthName} ${reqYear})`;
 
         // Base64 helper for embedded chart images
         const toDataUri = (buf) => buf ? (typeof buf === 'string' && buf.startsWith('data:') ? buf : `data:image/png;base64,${Buffer.isBuffer(buf) ? buf.toString('base64') : buf}`) : '';
