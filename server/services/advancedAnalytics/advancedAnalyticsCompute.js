@@ -191,7 +191,8 @@ class AdvancedAnalyticsCompute {
                     allocation: 0,
                     dispatch: 0,
                     posReceipt: 0,
-                    sectors: []
+                    sectors: [],
+                    sectorsData: []   // full sector objects for per-sector breakdown
                 });
             }
             const item = transporterMap.get(t);
@@ -200,6 +201,7 @@ class AdvancedAnalyticsCompute {
             item.dispatch += s.dispatch;
             item.posReceipt += s.posReceipt;
             item.sectors.push(s.sectorName);
+            item.sectorsData.push(s);  // preserve full sector data
         });
 
         const transporters = Array.from(transporterMap.values()).map((t, idx) => {
@@ -211,6 +213,7 @@ class AdvancedAnalyticsCompute {
                 mobile: t.mobile,
                 sectorsCount: t.sectorsCount,
                 sectorsList: t.sectors.join(', '),
+                sectorsData: t.sectorsData,  // per-sector detail rows
                 allocation: t.allocation,
                 dispatch: t.dispatch,
                 posReceipt: t.posReceipt,
@@ -243,7 +246,7 @@ class AdvancedAnalyticsCompute {
                     if (s.posGapPP > 15) {
                         recAction += `\n[ध्वज: POS फीडिंग विलंब (+${s.posGapPP.toFixed(1)}%) - दुकान स्तर एंट्री सत्यापित करें]`;
                     } else {
-                        recAction += `\n[ध्वज: POS ओवर-रिसीट विसंगति (${s.posGapPP.toFixed(1)}%) - डिपो डिस्पैच एवं POS डेटा विसंगति जांचें]`;
+                        recAction += `\n[ध्वज: POS ओवर-रिसीट विसंगति (${s.posGapPP.toFixed(1)}%) - प्रदाय केंद्र डिस्पैच एवं POS डेटा विसंगति जांचें]`;
                     }
                 }
 
