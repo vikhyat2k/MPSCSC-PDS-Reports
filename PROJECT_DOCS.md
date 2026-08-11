@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Premium MNC-level PDF redesign: 9-page → 5-page board-room executive report with Big 4 visual system |
+| Last Code Change | 11 Aug 2026 — Report updates: removed multi-sector card, डिपो→प्रदाय केंद्र, org name, Piyush Arya per-sector rows, deep analytics |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1450,6 +1450,20 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Terminology + Per-Sector Transporter Breakdown + Deep Analytics
+
+Files: advancedAnalyticsPdfGenerator.js, advancedAnalyticsCompute.js
+Type: Feature + Improvement
+
+- REMOVED: '🚚 एकाधिक सेक्टर परिवहनकर्ता' finding card from Page 1 (replaced with '0% उठाव सेक्टर' card — more actionable)
+- CHANGE: 'डिपो' → 'प्रदाय केंद्र' across all pages (executive, narrative, action plan, POS definitions, management priorities)
+- CHANGE: 'मध्य प्रदेश राज्य नागरिक आपूर्ति निगम लिमिटेड' → 'मध्यप्रदेश स्टेट सिविल सप्लाइज कारपोरेशन'
+- FEATURE: Multi-sector transporter (e.g. Piyush Arya) now expanded into per-sector sub-rows on Page 4 showing individual sector lift%, POS%, POS Gap — compute.js now stores sectorsData[] with full sector objects
+- IMPROVED: Management Priorities table on Page 6 now uses actual computed data (zeroLiftSectors, sub30Sectors, posLagSectors, posOverSectors, multiSectorTransporters) with Root Cause + Action + SLA columns
+- IMPROVED: Enhancement Opportunities section now has 4 deeper strategic items with specifics (Cron SLA alerts, Trip-Log analytics, MoM Trend, POS-Pradaay Kendra cross-audit module)
 
 ---
 
