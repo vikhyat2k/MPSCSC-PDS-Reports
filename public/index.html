@@ -151,7 +151,7 @@
 
             <div class="header-search">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input class="search-input" placeholder="Search reports, schemes, transporters…" autocomplete="off">
+                <input class="search-input" id="dashboardSearchInput" oninput="handleGlobalSearch(this.value)" placeholder="Search reports, schemes, transporters…" autocomplete="off">
             </div>
 
             <div class="header-right">
@@ -2650,6 +2650,85 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+/* ── Global Search Filter ────────────────────────── */
+window.handleGlobalSearch = function(query) {
+    query = (query || '').toLowerCase().trim();
+    
+    // 1. Dashboard Section Search
+    var dashSection = document.getElementById('dashboardSection');
+    var isDash = dashSection && dashSection.style.display !== 'none';
+    if (isDash) {
+        // A. Filter Scheme Performance Cards
+        var schemeCards = document.querySelectorAll('.scheme-perf-card');
+        schemeCards.forEach(function(card) {
+            var text = card.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                card.style.display = '';
+                card.style.opacity = '1';
+            } else {
+                card.style.opacity = '0.15';
+            }
+        });
+        
+        // B. Filter Transporter Leaderboards
+        var lbRows = document.querySelectorAll('.leaderboard-row');
+        lbRows.forEach(function(row) {
+            var name = row.querySelector('.lb-name') ? row.querySelector('.lb-name').textContent.toLowerCase() : '';
+            var scheme = row.querySelector('.lb-scheme-tag') ? row.querySelector('.lb-scheme-tag').textContent.toLowerCase() : '';
+            if (!query || name.includes(query) || scheme.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+    
+    // 2. Report History Tables Search
+    var tableBodies = [
+        'reportsTableBody',
+        'daterangeReportsTableBody',
+        'mdmReportsTableBody',
+        'icdsReportsTableBody',
+        'welfareReportsTableBody',
+        'drReportsTableBody'
+    ];
+    tableBodies.forEach(function(id) {
+        var tbody = document.getElementById(id);
+        if (!tbody) return;
+        var rows = tbody.querySelectorAll('tr');
+        rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // 3. Matrix Details Tables Search
+    var matrixBodies = [
+        'matrixTableBody',
+        'drMatrixTableBody',
+        'mdmMatrixTableBody',
+        'icdsMatrixTableBody',
+        'welfareMatrixTableBody'
+    ];
+    matrixBodies.forEach(function(id) {
+        var tbody = document.getElementById(id);
+        if (!tbody) return;
+        var rows = tbody.querySelectorAll('tr');
+        rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+};
 
 /* ── DOM-Ready init ───────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function () {
