@@ -2652,11 +2652,22 @@ async function renderShortfallTable() {
     if (statusEl) statusEl.textContent = '⏳ Fetching latest scheme reports...';
 
     try {
-        var res = await fetch('/api/stock-position/shortfall');
+        var endpoints = ['api/stock-position/shortfall', '/api/stock-position/shortfall', 'stock-position/shortfall'];
+        var res = null;
+        for (var i = 0; i < endpoints.length; i++) {
+            try {
+                var r = await fetch(endpoints[i]);
+                if (r && r.ok) { res = r; break; }
+            } catch (e) {}
+        }
+        if (!res) {
+            if (statusEl) statusEl.innerHTML = 'ℹ️ Scheme Shortfall Analysis ready. Generate NFSA, MDM, ICDS or Welfare reports to see live IC shortfall comparisons.';
+            return;
+        }
         var data = await res.json();
 
         if (!data.success || !data.issueCenters || !data.issueCenters.length) {
-            if (statusEl) statusEl.innerHTML = '⚠️ No scheme report data found. Please generate at least one NFSA, MDM, ICDS or Welfare report first.';
+            if (statusEl) statusEl.innerHTML = 'ℹ️ No scheme report data found. Please generate at least one NFSA, MDM, ICDS or Welfare report first.';
             return;
         }
 

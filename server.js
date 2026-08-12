@@ -2766,16 +2766,24 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
 
         // Fetch latest report per scheme from DB
         async function latestReport(scheme) {
-            return new Promise((resolve, reject) => {
-                db.get(
-                    `SELECT * FROM reports WHERE scheme = ? ORDER BY year DESC, month DESC, generated_at DESC LIMIT 1`,
-                    [scheme],
-                    (err, row) => {
-                        if (err) reject(err);
-                        else resolve(row || null);
-                    }
-                );
-            });
+            try {
+                if (db && typeof db.get === 'function') {
+                    const res = db.get(`SELECT * FROM reports WHERE scheme = ? ORDER BY year DESC, month DESC, generated_at DESC LIMIT 1`, [scheme]);
+                    if (res && typeof res.then === 'function') return await res;
+                }
+                if (db && db.db && typeof db.db.get === 'function') {
+                    return new Promise((resolve) => {
+                        db.db.get(
+                            `SELECT * FROM reports WHERE scheme = ? ORDER BY year DESC, month DESC, generated_at DESC LIMIT 1`,
+                            [scheme],
+                            (err, row) => resolve(row || null)
+                        );
+                    });
+                }
+            } catch (err) {
+                console.error(`Error fetching latest report for ${scheme}:`, err);
+            }
+            return null;
         }
 
         const [nfsaRow, mdmRow, icdsRow, welfareRow] = await Promise.all([
