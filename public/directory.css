@@ -14,6 +14,19 @@
 /* ─── View system ─────────────────────────────────── */
 .dir-view { animation: fadeIn 0.25s ease; }
 
+/* ─── Generic card (used on dashboard org hierarchy) ── */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    transition: var(--transition);
+}
+.card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--text-main);
+}
+
 /* ─── Page header ──────────────────────────────────── */
 .dir-page-header {
     display: flex;
