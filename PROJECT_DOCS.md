@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Enabled text wrapping (white-space: normal; word-break: break-word) for Live Stock Inventory table headers and text cells |
+| Last Code Change | 12 Aug 2026 — Added comprehensive PDF, Image (JPEG/PNG), and Excel/CSV (UTF-8 Devanagari) export options across Live Stock, Shortfall, Comparison, and Scheme Analytics modules |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,28 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Comprehensive PDF, Image, and Excel Export Options Added
+
+Files: public/app.js, public/index.html
+Type: Feature / UX / Export
+Closes: ISSUE-035
+
+- FEATURE: User requested PDF, Image, and Excel export options wherever necessary across the platform.
+- IMPLEMENTED:
+  1. **`exportTableToExcel(target, filename)` Helper** — Built a universal HTML table exporter in `public/app.js` with UTF-8 Devanagari BOM (`\uFEFF`) support so Hindi text (`आठनेर`, `बैतूल`, `गेहूं`, `इश्यू सेंटर`) opens perfectly in Excel without garbled characters.
+  2. **`exportDashboard()` Extended** — Added `excel` / `csv` support alongside existing `jpeg` and `pdf` options.
+  3. **Export Button Groups Added Across All Modules**:
+     - **📦 Live Stock Position Header**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **📉 Stock Shortfall Analysis Panel**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **⚖️ Scheme Performance Comparison**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **📊 NFSA Analytics**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **📅 NFSA DateRange Analytics**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **📚 MDM Analytics**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **👶 ICDS Analytics**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+     - **🏛️ Welfare Analytics**: `🖼️ Image`, `📄 PDF`, `📊 Excel`
+
+---
 
 ### 2026-08-12 | Enabled Text Wrapping for Live Stock Inventory Table Headers
 

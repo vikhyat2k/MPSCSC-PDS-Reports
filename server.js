@@ -2754,7 +2754,7 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
 // NFSA, MDM, ICDS and Welfare reports pulled from the local DB.
 // ─────────────────────────────────────────────
 
-app.get('/api/stock-position/shortfall', async (req, res) => {
+app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (req, res) => {
     try {
         const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
