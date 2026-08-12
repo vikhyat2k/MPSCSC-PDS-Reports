@@ -104,7 +104,7 @@ class WelfareScraper {
             await this.page.waitForSelector('#loading', { visible: true, timeout: 2000 });
             await this.page.waitForSelector('#loading', { hidden: true, timeout: 30000 });
         } catch (e) {
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 1000));
         }
     }
 
@@ -121,7 +121,7 @@ class WelfareScraper {
                 { timeout }
             );
         } catch (e) { /* continue */ }
-        await new Promise(r => setTimeout(r, ));
+        await new Promise(r => setTimeout(r, 1000));
     }
 
     /**
@@ -299,13 +299,13 @@ class WelfareScraper {
         // INTERMITTENT FIX: If portal says No data found, retry once
         if (noData) {
             console.log(`   ⚠️ Portal reported No Data for ${this.currentMonth}. Retrying in 2s...`);
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 2000));
             await this.page.evaluate(() => {
                 const btn = document.querySelector('input[value="Get Report"]');
                 if (btn) btn.click();
             });
             await this._waitForLoading();
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 1000));
             
             noData = await this.page.evaluate(() => {
                 const txt = document.body.innerText;
@@ -531,7 +531,7 @@ class WelfareScraper {
             console.log('   #depotreport gone — re-clicking district...');
             await this._clickDistrict();
         }
-        await new Promise(r => setTimeout(r, ));
+        await new Promise(r => setTimeout(r, 500));
     }
 }
 

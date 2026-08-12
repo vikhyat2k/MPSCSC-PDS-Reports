@@ -53,7 +53,7 @@ class NFSADateRangeScraper {
             }
             console.log(`[DateRange] ✅ Arrived at Dispatch details b/w dates`);
 
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 1000));
 
             // Portal expects DD-MM-YYYY format
             const fmtFrom = fromDate.replace(/\//g, '-');
@@ -104,7 +104,7 @@ class NFSADateRangeScraper {
             fs.writeFileSync(path.join(this.logsDir, 'dr_ajax_response.html'), ajaxHtml);
 
             // Give the DOM a moment to fully render
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 1000));
 
             const rawHtml = await this.page.content();
             fs.writeFileSync(path.join(this.logsDir, 'dr_initial_result.html'), rawHtml);

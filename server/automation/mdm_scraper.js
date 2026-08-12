@@ -97,7 +97,7 @@ class MDMScraper {
         } catch (e) {
             // Timeout — continue anyway
         }
-        await new Promise(r => setTimeout(r, ));
+        await new Promise(r => setTimeout(r, 1000));
     }
 
     /**
@@ -218,7 +218,7 @@ class MDMScraper {
             }, String(month), String(year));
 
             // Small wait for any internal portal scripts to react
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 500));
 
             // Re-verify the values
             const actualMonth = await this.page.$eval('#month', el => el.value);
@@ -237,7 +237,7 @@ class MDMScraper {
             await this.page.waitForSelector('#loading', { hidden: true, timeout: 30000 });
         } catch (e) {
             // Spinner might have been too fast or didn't trigger
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 1000));
         }
     }
 
@@ -291,13 +291,13 @@ class MDMScraper {
         // INTERMITTENT FIX: If portal says No data found, retry once
         if (noData) {
             console.log(`   ⚠️ Portal reported No Data for ${this.currentMonth}. Retrying in 2s...`);
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 2000));
             await this.page.evaluate(() => {
                 const btn = document.querySelector('input[value="Get Report"]');
                 if (btn) btn.click();
             });
             await this._waitForLoading();
-            await new Promise(r => setTimeout(r, ));
+            await new Promise(r => setTimeout(r, 1000));
             
             noData = await this.page.evaluate((m) => {
                 const dr = document.getElementById('distreport');
@@ -476,7 +476,7 @@ class MDMScraper {
             await this._clickDistrict();
         }
         // Small wait to be safe
-        await new Promise(r => setTimeout(r, ));
+        await new Promise(r => setTimeout(r, 500));
     }
 }
 
