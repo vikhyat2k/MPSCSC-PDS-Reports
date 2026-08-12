@@ -2820,7 +2820,45 @@ async function deleteSelectedReports(scheme) {
 }
 
 /**
- * Export a dashboard section as Image or PDF
+ * Universal Table Export to Excel / CSV with UTF-8 Devanagari Hindi BOM support
+ */
+function exportTableToExcel(target, filename) {
+    let element = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!element) return;
+    let table = element.tagName === 'TABLE' ? element : element.querySelector('table');
+    if (!table) {
+        if (typeof showToast === 'function') showToast('❌ No table data found to export.', 'error');
+        return;
+    }
+
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    rows.forEach(row => {
+        const cols = row.querySelectorAll('th, td');
+        const rowData = [];
+        cols.forEach(col => {
+            let text = col.innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/\s+/g, ' ').trim();
+            text = text.replace(/"/g, '""');
+            rowData.push(`"${text}"`);
+        });
+        if (rowData.length > 0) csv.push(rowData.join(','));
+    });
+
+    const csvString = '\uFEFF' + csv.join('\n'); // UTF-8 BOM for Devanagari in Excel
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', (filename || 'Export') + '_' + new Date().toISOString().slice(0,10) + '.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof showToast === 'function') showToast('📊 Table exported to Excel/CSV successfully!', 'success');
+}
+window.exportTableToExcel = exportTableToExcel;
+
+/**
+ * Export a dashboard section as Image, PDF, or Excel
  */
 async function exportDashboard(type, elementId, filenamePrefix) {
     const element = document.getElementById(elementId);
@@ -2834,6 +2872,15 @@ async function exportDashboard(type, elementId, filenamePrefix) {
     if (btn) {
         btn.innerHTML = '⏳ Processing...';
         btn.disabled = true;
+    }
+
+    if (type === 'excel' || type === 'csv') {
+        exportTableToExcel(elementId, filenamePrefix);
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+        return;
     }
 
     try {
