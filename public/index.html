@@ -2715,17 +2715,19 @@ async function renderShortfallTable() {
                 });
             }
 
-            var availWheat = 0, availRice = 0, availFSalt = 0;
+            var availWheat = 0, availRice = 0, availFSalt = 0, availPaddy = 0;
             if (liveItem && liveItem.commodities) {
                 Object.keys(liveItem.commodities).forEach(function(key) {
                     var k = key.toLowerCase();
                     var val = liveItem.commodities[key] || 0;
                     if (k.includes('wheat') || k.includes('गेहूं')) {
                         availWheat += val;
-                    } else if (k.includes('cmr') || k.includes('rice') || k.includes('paddy') || k.includes('धान') || k.includes('चावल')) {
-                        availRice += val;
-                    } else if (k.includes('salt') || k.includes('नमक')) {
-                        availFSalt += val;
+                    } else if (k.includes('paddy') || k.includes('धान')) {
+                        availPaddy += val; // Unmilled paddy tracked separately
+                    } else if (k.includes('cmr') || k.includes('rice') || k.includes('चावल')) {
+                        availRice += val; // Custom Milled Rice (CMR Fortified + Non-Fortified)
+                    } else if (k.includes('f.salt') || k.includes('fsalt') || (k.includes('salt') && !k.includes('iodine'))) {
+                        availFSalt += val; // Fortified Salt
                     }
                 });
             }
@@ -2752,6 +2754,7 @@ async function renderShortfallTable() {
                 availFSalt: availFSalt,
                 allocFSalt: allocFSalt,
                 diffFSalt: diffFSalt,
+                availPaddy: availPaddy,
             };
         });
 
@@ -2759,6 +2762,7 @@ async function renderShortfallTable() {
         var distAvailWheat = 0, distAllocWheat = 0;
         var distAvailRice  = 0, distAllocRice  = 0;
         var distAvailFSalt = 0, distAllocFSalt = 0;
+        var distAvailPaddy = 0;
 
         enrichedICs.forEach(function(item) {
             distAvailWheat += item.availWheat;
@@ -2767,6 +2771,7 @@ async function renderShortfallTable() {
             distAllocRice  += item.allocRice;
             distAvailFSalt += item.availFSalt;
             distAllocFSalt += item.allocFSalt;
+            distAvailPaddy += item.availPaddy;
         });
 
         var distDiffWheat = distAvailWheat - distAllocWheat;
@@ -2802,7 +2807,7 @@ async function renderShortfallTable() {
                     '<th rowspan="2" style="' + thLC + 'border-radius:8px 0 0 0;">#</th>' +
                     '<th rowspan="2" style="' + thLC + '">Issue Center (इश्यू सेंटर)</th>' +
                     '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.4);text-align:center;">🌾 WHEAT (गेहूं)</th>' +
-                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.4);text-align:center;">🍚 RICE / CMR (चावल)</th>' +
+                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.4);text-align:center;">🍚 CMR RICE (कस्टम मिलिंग चावल)</th>' +
                     '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.4);text-align:center;">🧂 FORTIFIED SALT (नमक)</th>' +
                     '<th rowspan="2" style="' + thStyle + 'border-left:2px solid rgba(255,255,255,0.1);text-align:center;border-radius:0 8px 0 0;">Scheme Details</th>' +
                 '</tr>' +
@@ -2810,7 +2815,7 @@ async function renderShortfallTable() {
                     '<th style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.4);">Avail. Stock</th>' +
                     '<th style="' + thStyle + '">Total Alloc</th>' +
                     '<th style="' + thStyle + '">Net Diff</th>' +
-                    '<th style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.4);">Avail. Stock</th>' +
+                    '<th style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.4);">Avail. CMR</th>' +
                     '<th style="' + thStyle + '">Total Alloc</th>' +
                     '<th style="' + thStyle + '">Net Diff</th>' +
                     '<th style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.4);">Avail. Stock</th>' +

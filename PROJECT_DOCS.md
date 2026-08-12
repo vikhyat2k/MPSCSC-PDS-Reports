@@ -1993,6 +1993,18 @@ Closes: ISSUE-020
 
 ---
 
+### 2026-08-12 | Fix Hindi Issue Center String Normalization for Live Sheet Matching
+
+Files: public/index.html
+Type: Bug Fix
+Closes: ISSUE-021
+
+- BUG: In the Live Stock Shortfall section, `भैंसदेही` (33,785.64 Qt Wheat) and `प्रभात पट्टन` (93,730.01 Qt Wheat) showed `Available Stock: 0.00`, causing the District Wheat Net Position card to underestimate net stock by 1,27,515.65 Qt (`+4,08,407.50 Qt` instead of `+5,35,923.15 Qt`).
+- ROOT CAUSE: `normalizeIC()` only stripped basic non-alphanumeric characters, leaving anusvara (`ं` `\u0902`), halant (`्` `\u094D`), spaces, and character variants between DB block names (`भैसदेही`, `प्रभातपटटन`) and Google Sheet names (`भैंसदेही`, `प्रभात पट्टन`), causing name matching to fail for these 2 Issue Centers.
+- FIX: Created `cleanHindiIC()` in `public/index.html` to strip Devanagari diacritics, halants, spaces, and map spelling variants (`भैंसदेही` -> `भैसदेही`, `प्रभात पट्टन` -> `प्रभातपटटन`). All 9 Issue Centers now match 100%, yielding the true District Net Stock Positions.
+
+---
+
 ### 2026-08-12 | True Commodity-wise Stock Shortfall vs. Scheme Allocation Overhaul
 
 Files: server.js, public/index.html
