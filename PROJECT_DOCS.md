@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Fixed duplicate column stripping in index.html JS that previously stripped Issue Center (इश्यू सेंटर) name column |
+| Last Code Change | 12 Aug 2026 — Consolidated sidebar navigation: Removed redundant Report History & Analytics links and renamed Generate Report to 'Generate & Scheme Reports' |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,20 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Consolidated Sidebar Navigation (Generate & Scheme Reports)
+
+Files: public/index.html
+Type: UI / UX Optimization
+Closes: ISSUE-033
+
+- FEATURE: User requested to remove redundant `Report History` and `Analytics` items from sidebar navigation since they are embedded directly inside the main `Generate Report` module.
+- FIX:
+  1. Removed `#nav-reports` and `#nav-analytics` links from sidebar in `public/index.html`.
+  2. Renamed `#nav-generate` from `Generate Report` to **`Generate & Scheme Reports`** to accurately reflect its unified nature (Form + Scheme Analytics + Historical Archive).
+  3. Streamlined sidebar navigation layout into clean groups (`NAVIGATION`, `TOOLS`, `MODULES`).
+
+---
 
 ### 2026-08-12 | Fixed Issue Center Name Column Stripping Bug
 
