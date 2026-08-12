@@ -2045,6 +2045,140 @@ async function showComparisonView() {
     await renderComparisonTool();
 }
 
+async function showStockPositionView() {
+    showGenerate();
+    var sec = document.getElementById('stockPositionSection');
+    if (sec) {
+        sec.style.display = 'block';
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    var savedUrl = localStorage.getItem('betul_stock_sheet_url');
+    var input = document.getElementById('stockSheetUrlInput');
+    if (savedUrl && input && !input.value) {
+        input.value = savedUrl;
+    }
+    if (input && input.value) {
+        await fetchStockPositionSheet();
+    }
+}
+
+async function fetchStockPositionSheet() {
+    var input = document.getElementById('stockSheetUrlInput');
+    var statusEl = document.getElementById('stockPositionStatus');
+    var summaryGrid = document.getElementById('stockSummaryGrid');
+    var tableContainer = document.getElementById('stockTableContainer');
+
+    var sheetUrl = input ? input.value.trim() : '';
+    if (!sheetUrl) {
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<div class="alert alert-warning" style="padding:12px;border-radius:8px;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-weight:600;">⚠️ Please paste your Google Sheet URL or Sheet ID above to import live stock position data.</div>';
+        }
+        return;
+    }
+
+    localStorage.setItem('betul_stock_sheet_url', sheetUrl);
+
+    if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<div style="padding:12px;border-radius:8px;background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-weight:600;">🔄 Fetching live data from Google Sheet...</div>';
+    }
+
+    try {
+        var res = await fetch('api/stock-position/fetch-sheet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sheetUrl: sheetUrl })
+        });
+        var data = await res.json();
+
+        if (data.error) {
+            if (statusEl) {
+                statusEl.innerHTML = '<div class="alert alert-error" style="padding:12px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:600;">❌ ' + data.error + '</div>';
+            }
+            return;
+        }
+
+        if (statusEl) {
+            statusEl.innerHTML = '<div style="padding:10px 14px;border-radius:8px;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-weight:600;font-size:13px;display:flex;justify-content:space-between;align-items:center;">' +
+                '<span>✅ Live Stock Position Data Synced Successfully (' + data.totalRows + ' records loaded)</span>' +
+                '<span style="font-size:11px;color:var(--text-muted);font-weight:400;">Synced at ' + new Date(data.fetchedAt).toLocaleTimeString('en-IN') + '</span>' +
+            '</div>';
+        }
+
+        var headers = data.headers || [];
+        var dataRows = data.dataRows || [];
+
+        // Calculate numeric totals for summary cards
+        var numericCols = {};
+        headers.forEach(function(h, colIdx) {
+            var sum = 0;
+            var isNumeric = false;
+            dataRows.forEach(function(row) {
+                var valStr = (row[colIdx] || '').replace(/,/g, '').trim();
+                var valNum = parseFloat(valStr);
+                if (!isNaN(valNum)) {
+                    sum += valNum;
+                    isNumeric = true;
+                }
+            });
+            if (isNumeric && sum > 0) {
+                numericCols[colIdx] = { header: h, sum: sum };
+            }
+        });
+
+        // Build Summary Cards
+        var numKeys = Object.keys(numericCols);
+        summaryGrid.innerHTML = '<div class="stat-card" style="border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);padding:14px 18px;border-radius:10px;">' +
+            '<div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">Warehouse Records</div>' +
+            '<div style="font-size:22px;font-weight:800;color:#10b981;margin-top:2px;">' + data.totalRows + ' Entries</div>' +
+        '</div>' + numKeys.slice(0, 3).map(function(k) {
+            var item = numericCols[k];
+            return '<div class="stat-card" style="border:1px solid rgba(99,102,241,0.3);background:rgba(99,102,241,0.08);padding:14px 18px;border-radius:10px;">' +
+                '<div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.header + '</div>' +
+                '<div style="font-size:22px;font-weight:800;color:#6366f1;margin-top:2px;">' + fmtQt(item.sum) + '</div>' +
+            '</div>';
+        }).join('');
+
+        // Build Table
+        if (tableContainer) {
+            tableContainer.innerHTML = '<div style="background:var(--card-bg, rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:16px;">' +
+                '<h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px;">' +
+                    '<span>📊</span> Betul District Stock Position Inventory Table' +
+                '</h3>' +
+                '<table class="report-table" style="width:100%;font-size:12px;border-collapse:collapse;">' +
+                    '<thead>' +
+                        '<tr style="background:rgba(16,185,129,0.15);color:var(--text-main);">' +
+                            '<th style="padding:10px;text-align:center;width:40px;">#</th>' +
+                            headers.map(function(h, idx) {
+                                return '<th style="padding:10px;text-align:' + (numericCols[idx] ? 'right' : 'left') + ';">' + h + '</th>';
+                            }).join('') +
+                        '</tr>' +
+                    '</thead>' +
+                    '<tbody>' +
+                        dataRows.map(function(row, rIdx) {
+                            return '<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">' +
+                                '<td style="padding:8px 10px;text-align:center;font-weight:600;color:var(--text-muted);">' + (rIdx + 1) + '</td>' +
+                                headers.map(function(h, cIdx) {
+                                    var cellVal = row[cIdx] || '';
+                                    var isNum = !!numericCols[cIdx];
+                                    return '<td style="padding:8px 10px;text-align:' + (isNum ? 'right' : 'left') + ';' + (isNum ? 'font-weight:600;' : '') + '">' + cellVal + '</td>';
+                                }).join('') +
+                            '</tr>';
+                        }).join('') +
+                    '</tbody>' +
+                '</table>' +
+            '</div>';
+        }
+
+    } catch (err) {
+        console.error('Error importing Google Sheet stock position:', err);
+        if (statusEl) {
+            statusEl.innerHTML = '<div class="alert alert-error" style="padding:12px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:600;">❌ Failed to connect to server endpoint.</div>';
+        }
+    }
+}
+
 async function renderComparisonTool() {
     var grid = document.getElementById('comparisonGrid');
     var tableContainer = document.getElementById('comparisonTableContainer');
