@@ -2899,15 +2899,21 @@ async function renderShortfallTable() {
             '<div style="flex:1;min-width:180px;background:rgba(242,107,43,0.1);border:1px solid rgba(242,107,43,0.3);border-radius:8px;padding:10px 14px;">' +
                 '<div style="font-size:10px;font-weight:700;color:#f26b2b;text-transform:uppercase;">🌾 Wheat Stock Net Position</div>' +
                 '<div style="font-size:18px;font-weight:800;color:' + (distDiffWheat >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffWheat >= 0 ? '+' : '') + fmtNum(distDiffWheat) + ' Qt' : fmtNum(distAllocWheat) + ' Qt Alloc') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Avail Stock: ' + fmtNum(distAvailWheat) + ' Qt</div>' +
             '</div>' +
             '<div style="flex:1;min-width:180px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:10px 14px;">' +
-                '<div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;">🍚 Rice / CMR Net Position</div>' +
+                '<div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;">🍚 CMR Rice Net Position</div>' +
                 '<div style="font-size:18px;font-weight:800;color:' + (distDiffRice >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffRice >= 0 ? '+' : '') + fmtNum(distDiffRice) + ' Qt' : fmtNum(distAllocRice) + ' Qt Alloc') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">CMR Avail: ' + fmtNum(distAvailRice) + ' Qt | Alloc: ' + fmtNum(distAllocRice) + ' Qt</div>' +
             '</div>' +
             '<div style="flex:1;min-width:180px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:10px 14px;">' +
                 '<div style="font-size:10px;font-weight:700;color:#06b6d4;text-transform:uppercase;">🧂 F.Salt Net Position</div>' +
                 '<div style="font-size:18px;font-weight:800;color:' + (distDiffFSalt >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffFSalt >= 0 ? '+' : '') + fmtNum(distDiffFSalt) + ' Qt' : fmtNum(distAllocFSalt) + ' Qt Alloc') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">F.Salt Avail: ' + fmtNum(distAvailFSalt) + ' Qt</div>' +
             '</div>' +
+        '</div>' +
+        '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);padding:8px 12px;border-radius:6px;">' +
+            '💡 <strong>Note on Rice / CMR:</strong> CMR (Custom Milled Rice) available stock = <strong>' + fmtNum(distAvailRice) + ' Qt</strong> (CMR Fortified: 2,116.58 Qt + CMR Non-Fortified: 4,090.90 Qt). Unmilled Paddy (धान = <strong>' + fmtNum(distAvailPaddy) + ' Qt</strong>) is held in stock for milling and is tracked separately.' +
         '</div>';
 
         tableCont.innerHTML = html;
