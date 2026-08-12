@@ -2359,6 +2359,8 @@ async function fetchStockPositionSheet() {
             icData.push({ name: name, total: icTotal, commodities: commodities });
         });
 
+        window.lastStockData = { icData: icData, headers: headers };
+
         if (!districtTotal) districtTotal = icData.reduce(function(s, ic) { return s + ic.total; }, 0);
 
         // ── Commodity group totals ──
