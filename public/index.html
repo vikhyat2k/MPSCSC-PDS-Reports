@@ -2027,31 +2027,60 @@ function showDashboard() {
     loadDashboard();
 }
 function showGenerate() {
-    var dash = document.getElementById('dashboardSection');
-    var gen  = document.getElementById('generateView');
-    if (dash) dash.style.display = 'none';
-    if (gen)  gen.style.display  = 'block';
+    var dash  = document.getElementById('dashboardSection');
+    var gen   = document.getElementById('generateView');
+    var kpi   = document.getElementById('generateKpiStrip');
+    var form  = document.getElementById('generateFormCard');
+    var comp  = document.getElementById('comparisonSection');
+    var stock = document.getElementById('stockPositionSection');
+
+    if (dash)  dash.style.display  = 'none';
+    if (gen)   gen.style.display   = 'block';
+    if (kpi)   kpi.style.display   = 'grid';
+    if (form)  form.style.display  = 'block';
+    if (comp)  comp.style.display  = 'none';
+    if (stock) stock.style.display = 'none';
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (typeof switchScheme === 'function') switchScheme('nfsa');
 }
 
 async function showComparisonView() {
-    showGenerate();
-    var comp = document.getElementById('comparisonSection');
-    if (comp) {
-        comp.style.display = 'block';
-        comp.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    var dash  = document.getElementById('dashboardSection');
+    var gen   = document.getElementById('generateView');
+    var kpi   = document.getElementById('generateKpiStrip');
+    var form  = document.getElementById('generateFormCard');
+    var comp  = document.getElementById('comparisonSection');
+    var stock = document.getElementById('stockPositionSection');
+
+    if (dash)  dash.style.display  = 'none';
+    if (gen)   gen.style.display   = 'block';
+    if (kpi)   kpi.style.display   = 'none';
+    if (form)  form.style.display  = 'none';
+    if (stock) stock.style.display = 'none';
+    if (comp)  comp.style.display  = 'block';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     await renderComparisonTool();
 }
 
 async function showStockPositionView() {
-    showGenerate();
-    var sec = document.getElementById('stockPositionSection');
-    if (sec) {
-        sec.style.display = 'block';
-        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    var dash  = document.getElementById('dashboardSection');
+    var gen   = document.getElementById('generateView');
+    var kpi   = document.getElementById('generateKpiStrip');
+    var form  = document.getElementById('generateFormCard');
+    var comp  = document.getElementById('comparisonSection');
+    var stock = document.getElementById('stockPositionSection');
+
+    if (dash)  dash.style.display  = 'none';
+    if (gen)   gen.style.display   = 'block';
+    if (kpi)   kpi.style.display   = 'none';
+    if (form)  form.style.display  = 'none';
+    if (comp)  comp.style.display  = 'none';
+    if (stock) stock.style.display = 'block';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     var savedUrl = localStorage.getItem('betul_stock_sheet_url');
     var input = document.getElementById('stockSheetUrlInput');
     if (savedUrl && input && !input.value) {
