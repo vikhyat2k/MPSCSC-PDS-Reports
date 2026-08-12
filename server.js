@@ -2650,14 +2650,16 @@ function parseCSV(text) {
     return lines;
 }
 
+const DEFAULT_BETUL_STOCK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/13lEnaakk6idsNkAV--RH5cr2PAiwXQEjeNEP836tRa8/edit?gid=519497993#gid=519497993';
+
 app.post('/api/stock-position/fetch-sheet', async (req, res) => {
     try {
-        const { sheetUrl } = req.body;
+        let sheetUrl = (req.body && req.body.sheetUrl) ? req.body.sheetUrl.trim() : '';
         if (!sheetUrl) {
-            return res.status(400).json({ error: 'Sheet URL or ID is required' });
+            sheetUrl = DEFAULT_BETUL_STOCK_SHEET_URL;
         }
 
-        let sheetId = sheetUrl.trim();
+        let sheetId = sheetUrl;
         const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
         if (match && match[1]) {
             sheetId = match[1];

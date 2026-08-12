@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Isolated sub-view routing for Live Stock Position & Comparison views to hide the Generate Form card and auto-scroll directly to the top |
+| Last Code Change | 12 Aug 2026 — Purged NFSA Report History from Live Stock Position module, added hideAllReportSections() helper, and rendered dedicated Stock Distribution Chart & Inventory Risk Insights |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,22 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Purged NFSA History from Live Stock Module & Added Stock Analytics/Insights
+
+Files: public/index.html
+Type: UI / Module Isolation Polish
+Closes: ISSUE-022
+
+- BUG: When viewing **Live Stock Position**, the "📜 NFSA Report History" table still displayed underneath the stock inventory section.
+- ROOT CAUSE: `switchScheme('nfsa')` was being called during view setup, un-hiding `#nfsaReportHistorySection` automatically inside `#generateView`.
+- FIX:
+  1. Implemented `hideAllReportSections()` in `public/index.html` to suppress all non-stock report histories (`#nfsaReportHistorySection`, `#daterangeHistory`, `#mdmHistory`, `#icdsHistory`, `#welfareHistory`) and scheme analytics.
+  2. Built **Dedicated Stock Analytics & Insights Panel** inside `#stockPositionSection`:
+     - **Issue Center Stock Volume Breakdown Bar Chart** (`#stockChartCanvas`) comparing all 9 Issue Centers.
+     - **Stock Insights & Risk Alerts Container** (`#stockRiskAlertsContainer`) automatically detecting negative balances (e.g., Betul Wheat 25-26 & Bhimpur Wheat 24-25) and volume share metrics.
+
+---
 
 ### 2026-08-12 | Isolated Sub-View Switching for Live Stock Position & Comparison
 
