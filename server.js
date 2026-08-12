@@ -2663,19 +2663,116 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
         const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
         if (match && match[1]) {
             sheetId = match[1];
+        }
+
+        // STRICTLY target View_LiveRollup tab only as requested
+        const sheetParam = 'sheet=View_LiveRollup';
+
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=3&${sheetParam}`;
+        
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+            return res.status(400).json({ 
+                error: `Failed to fetch Google Sheet (${response.status} ${response.statusText}). Please verify the sheet permissions are set to "Anyone with the link can view".` 
+            });
+        }
+
+        const rawCsv = await response.text();
+        const rows = parseCSV(rawCsv);
+
+        if (rows.length === 0) {
+            return res.status(400).json({ error: 'The Google Sheet appears to be empty.' });
+        }
+
+        let headers = rows[0] || [];
+        const dataRows = rows.slice(1);
+
+        // Clean headers for View_LiveRollup
+        if (headers[0] && headers[0].includes('Live District Rollup')) {
+            headers[0] = 'IC Code';
+        }
+        if (headers[1] && headers[1].includes('Issue Center')) {
+            headers[1] = 'Issue Center (इश्यू सेंटर)';
+        }
+        for (let i = 2; i < headers.length; i++) {
+            let h = headers[i] || '';
+            h = h.replace(/\(always today - no manual entry needed\)/gi, '').replace(/\r?\n/g, ' ').trim();
+            if (h === 'IC Total') h = 'IC Total (Quintals)';
+            headers[i] = h;
+        }
+
+        // Omit IC Code (column 0) to show only ONE Issue Center column; filter out commodity columns with Total === 0
+        const totalRow = dataRows.find(r => (r[1] && r[1].includes('योग')) || (r[0] && r[0].includes('Total'))) || dataRows[dataRows.length - 1];
+        const parseVal = (v) => parseFloat((v || '').replace(/,/g, '')) || 0;
+
+        const activeColIndices = [];
+        headers.forEach((h, colIdx) => {
+            // Omit IC Code (colIdx 0)
+            if (colIdx === 0) return;
+
+            // Always keep Issue Center (1) and IC Total (last column)
+            if (colIdx === 1 || colIdx === headers.length - 1) {
+                activeColIndices.push(colIdx);
+                return;
+            }
+
+            let colTotal = 0;
+            if (totalRow) {
+                colTotal = Math.abs(parseVal(totalRow[colIdx]));
+            } else {
+                dataRows.forEach(r => { colTotal += Math.abs(parseVal(r[colIdx])); });
+            }
+
+            if (colTotal > 0.001) {
+                activeColIndices.push(colIdx);
+            }
+        });
+
+        const filteredHeaders = activeColIndices.map(i => headers[i]);
+        const filteredRows = dataRows.map(r => activeColIndices.map(i => r[i]));
+
+        res.json({
+            success: true,
+            sheetId,
+            sheetName: 'View_LiveRollup',
+            headers: filteredHeaders,
+            dataRows: filteredRows,
+            totalRows: filteredRows.length,
+            fetchedAt: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('Error fetching Google Sheet stock position:', err);
+        res.status(500).json({
+            error: `Error accessing Google Sheet: ${err.message}. Please verify the link and public view permissions.`
+        });
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STOCK SHORTFALL ANALYSIS ENDPOINT (v2)
+// Returns commodity-wise (Wheat, Rice, F.Salt) allocations per Issue Center
+// aggregated from the latest report for each scheme (NFSA, MDM, ICDS, Welfare).
+// Rice = regular rice + fortified rice combined.
+// The frontend overlays these allocations against live Google Sheet stock data
+// to calculate true shortfall/excess per commodity per IC.
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (req, res) => {
     try {
         const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+        // Helper: extract IC block name from a sector name string
+        // e.g. "बैतूल सेक्टर क्र 1" → "बैतूल"
         function sectorToIC(name) {
             return (name || '').split(' सेक्टर')[0].split(' क्र')[0].trim();
         }
 
+        // Fetch latest report per scheme from DB
         async function latestReport(scheme) {
             try {
                 if (db && typeof db.get === 'function') {
-                    const res = db.get(`SELECT * FROM reports WHERE scheme = ? ORDER BY year DESC, month DESC, generated_at DESC LIMIT 1`, [scheme]);
-                    if (res && typeof res.then === 'function') return await res;
+                    const r = db.get(`SELECT * FROM reports WHERE scheme = ? ORDER BY year DESC, month DESC, generated_at DESC LIMIT 1`, [scheme]);
+                    if (r && typeof r.then === 'function') return await r;
                 }
                 if (db && db.db && typeof db.db.get === 'function') {
                     return new Promise((resolve) => {
@@ -2699,29 +2796,64 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
             latestReport('welfare'),
         ]);
 
-        function aggregateCommodities(row) {
-            if (!row) return { commodities: {}, meta: null };
+        // ── Helper: Build commodity allocation map per IC from matrix rows ──
+        // For MDM, ICDS, Welfare which store per-sector matrix with commodity fields.
+        function aggregateMatrixCommodities(row) {
+            if (!row) return { data: {}, meta: null };
             const ins = JSON.parse(row.insights || '{}');
-            const data = {};
-            const rows = ins.matrix || [];
-            
-            rows.forEach(r => {
+            const data = {}; // ic → { wheat, rice, fSalt }
+            (ins.matrix || []).forEach(r => {
                 const ic = r.block || sectorToIC(r.name);
-                data[ic].dispatched  += (r.totalDispatched  || 0);
-                data[ic].balance     += ((r.totalAllotted || 0) - (r.totalDispatched || 0));
-            });
-            Object.keys(data).forEach(ic => {
-                data[ic].dispatchPct = data[ic].allotted > 0
-                    ? (data[ic].dispatched / data[ic].allotted * 100)
-                    : 0;
+                if (!ic) return;
+                if (!data[ic]) data[ic] = { wheat: 0, rice: 0, fSalt: 0 };
+                data[ic].wheat += (r.wheatAllotted || 0);
+                // Rice = regular rice + fortified rice combined
+                data[ic].rice  += (r.riceAllotted || 0) + (r.fortifiedRiceAllotted || 0);
+                data[ic].fSalt += (r.fsaltAllotted || 0);
             });
             const meta = { month: row.month, year: row.year, label: MONTH_NAMES[(row.month - 1) % 12] + ' ' + row.year };
             return { data, meta };
         }
 
-        const mdmResult     = aggregateMatrix(mdmRow);
-        const icdsResult    = aggregateMatrix(icdsRow);
-        const welfareResult = aggregateMatrix(welfareRow);
+        // ── NFSA: aggregate needsAttention shops by IC block ──
+        // needsAttention has per-shop commodity fields: { wheat, rice, fortifiedRice, fSalt }
+        let nfsaIC = {};
+        let nfsaMeta = null;
+        if (nfsaRow) {
+            nfsaMeta = { month: nfsaRow.month, year: nfsaRow.year, label: MONTH_NAMES[(nfsaRow.month - 1) % 12] + ' ' + nfsaRow.year };
+            const ins = JSON.parse(nfsaRow.insights || '{}');
+
+            if (ins.needsAttention && ins.needsAttention.length > 0) {
+                // Use needsAttention for commodity breakdown per block
+                ins.needsAttention.forEach(shop => {
+                    const ic = sectorToIC(shop.sectorName || shop.sector || '');
+                    if (!ic) return;
+                    if (!nfsaIC[ic]) nfsaIC[ic] = { wheat: 0, rice: 0, fSalt: 0 };
+                    const c = shop.commodities || {};
+                    nfsaIC[ic].wheat += (c.wheat || 0);
+                    // Rice = rice + fortifiedRice combined
+                    nfsaIC[ic].rice  += (c.rice || 0) + (c.fortifiedRice || 0);
+                    nfsaIC[ic].fSalt += (c.fSalt || c.fsalt || 0);
+                });
+            } else if (ins.allSectors && ins.allSectors.length > 0) {
+                // Fallback: use allSectors balance proportionally (no commodity breakdown)
+                const totalBalance  = ins.allSectors.reduce((s, sec) => s + (sec.balance || 0), 0);
+                const totalAlloc    = (ins.metrics && ins.metrics.totalAllocation) || nfsaRow.total_allocation || 0;
+                const totalDispatch = (ins.metrics && ins.metrics.totalDispatch)   || nfsaRow.total_dispatch  || 0;
+                const pendingTotal  = totalAlloc - totalDispatch;
+                ins.allSectors.forEach(sec => {
+                    const ic = sectorToIC(sec.name);
+                    if (!ic) return;
+                    if (!nfsaIC[ic]) nfsaIC[ic] = { wheat: 0, rice: 0, fSalt: 0 };
+                    const share = totalBalance > 0 ? (sec.balance || 0) / totalBalance : 0;
+                    nfsaIC[ic].wheat += pendingTotal * share;
+                });
+            }
+        }
+
+        const mdmResult     = aggregateMatrixCommodities(mdmRow);
+        const icdsResult    = aggregateMatrixCommodities(icdsRow);
+        const welfareResult = aggregateMatrixCommodities(welfareRow);
 
         // ── Build unified IC list ──
         const allICs = new Set([
@@ -2731,25 +2863,34 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
             ...Object.keys(welfareResult.data),
         ]);
 
-        const result = [];
+        const issueCenters = [];
         allICs.forEach(ic => {
-            const nfsa    = nfsaIC[ic]        || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
-            const mdm     = mdmResult.data[ic]     || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
-            const icds    = icdsResult.data[ic]    || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
-            const welfare = welfareResult.data[ic] || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
-            const totalShortfall = nfsa.balance + mdm.balance + icds.balance + welfare.balance;
-            result.push({
+            const nfsa    = nfsaIC[ic]             || { wheat: 0, rice: 0, fSalt: 0 };
+            const mdm     = mdmResult.data[ic]     || { wheat: 0, rice: 0, fSalt: 0 };
+            const icds    = icdsResult.data[ic]    || { wheat: 0, rice: 0, fSalt: 0 };
+            const welfare = welfareResult.data[ic] || { wheat: 0, rice: 0, fSalt: 0 };
+
+            // Total commodity allocation across all schemes
+            const totalAlloc = {
+                wheat: +(nfsa.wheat + mdm.wheat + icds.wheat + welfare.wheat).toFixed(2),
+                rice:  +(nfsa.rice  + mdm.rice  + icds.rice  + welfare.rice).toFixed(2),
+                fSalt: +(nfsa.fSalt + mdm.fSalt + icds.fSalt + welfare.fSalt).toFixed(2),
+            };
+
+            issueCenters.push({
                 ic,
-                nfsa:    { allotted: +nfsa.allotted.toFixed(2),    dispatched: +nfsa.dispatched.toFixed(2),    balance: +nfsa.balance.toFixed(2),    pct: +nfsa.dispatchPct.toFixed(1)    },
-                mdm:     { allotted: +mdm.allotted.toFixed(2),     dispatched: +mdm.dispatched.toFixed(2),     balance: +mdm.balance.toFixed(2),     pct: +mdm.dispatchPct.toFixed(1)     },
-                icds:    { allotted: +icds.allotted.toFixed(2),    dispatched: +icds.dispatched.toFixed(2),    balance: +icds.balance.toFixed(2),     pct: +icds.dispatchPct.toFixed(1)    },
-                welfare: { allotted: +welfare.allotted.toFixed(2), dispatched: +welfare.dispatched.toFixed(2), balance: +welfare.balance.toFixed(2),  pct: +welfare.dispatchPct.toFixed(1) },
-                totalShortfall: +totalShortfall.toFixed(2),
+                schemes: {
+                    nfsa:    { wheat: +nfsa.wheat.toFixed(2),    rice: +nfsa.rice.toFixed(2),    fSalt: +nfsa.fSalt.toFixed(2)    },
+                    mdm:     { wheat: +mdm.wheat.toFixed(2),     rice: +mdm.rice.toFixed(2),     fSalt: +mdm.fSalt.toFixed(2)     },
+                    icds:    { wheat: +icds.wheat.toFixed(2),    rice: +icds.rice.toFixed(2),    fSalt: +icds.fSalt.toFixed(2)    },
+                    welfare: { wheat: +welfare.wheat.toFixed(2), rice: +welfare.rice.toFixed(2), fSalt: +welfare.fSalt.toFixed(2) },
+                },
+                totalAlloc,
             });
         });
 
-        // Sort by totalShortfall descending
-        result.sort((a, b) => b.totalShortfall - a.totalShortfall);
+        // Sort by total wheat allocation descending (most demand = first)
+        issueCenters.sort((a, b) => b.totalAlloc.wheat - a.totalAlloc.wheat);
 
         res.json({
             success: true,
@@ -2759,7 +2900,7 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
                 icds:    icdsResult.meta,
                 welfare: welfareResult.meta,
             },
-            issueCenters: result,
+            issueCenters,
         });
     } catch (err) {
         console.error('Error computing stock shortfall:', err);
