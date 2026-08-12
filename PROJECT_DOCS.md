@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Fixed Defaulter Messenger blank preview text calculation across all schemes |
+| Last Code Change | 11 Aug 2026 — Auto-restores report analytics insights dynamically if missing from stored database records |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1467,6 +1467,18 @@ Closes: ISSUE-013
   1. Updated `welfare_scraper.js` cell mapping to `rRe = 12` (Rice Received FPS) and `wRe = 21` (Wheat Received FPS).
   2. Added a 3-attempt retry loop per depot to ensure 100% extraction stability across all 99 FPS shops.
   3. Verified live scrape against SCM portal produces **100.00% exact match**: Wheat (1,398.24 Alloted / 1,285.56 Disp / 1,285.56 Rec), Fortified Rice (349.56 Alloted / 321.39 Disp / 321.39 Rec).
+
+---
+
+### 2026-08-11 | Auto-Restore Missing Report Insights on View Details
+
+Files: server.js
+Type: Bug Fix
+Closes: N/A
+
+- BUG: Clicking "View Details" on certain historical MDM/ICDS/Welfare reports threw an alert "This report does not contain detailed analytics data. Try regenerating it."
+- ROOT CAUSE: `GET /api/reports/:id` in `server.js` only attempted to call `reportRestorer.restoreReport(report)` if `report.insights` was already truthy. If `insights` was `null` or empty in SQLite, it skipped restoration and returned `insights: null`, triggering the frontend warning alert.
+- FIX: Updated `GET /api/reports/:id` in `server.js` to automatically fall back to `reportRestorer.restoreReport(report)` whenever `insights` is missing, null, or incomplete, re-computing metrics from `raw_data`, updating the database, and returning the full analytics seamlessly to the UI.
 
 ---
 
