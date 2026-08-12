@@ -2665,15 +2665,8 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
             sheetId = match[1];
         }
 
-        // Always target View_LiveRollup with headers=3 for complete commodity column labels
-        let sheetParam = 'sheet=View_LiveRollup';
-        if (sheetUrl.includes('sheet=')) {
-            const m = sheetUrl.match(/sheet=([a-zA-Z0-9_]+)/);
-            if (m && m[1]) sheetParam = `sheet=${m[1]}`;
-        } else if (sheetUrl.includes('gid=')) {
-            const m = sheetUrl.match(/gid=([0-9]+)/);
-            if (m && m[1]) sheetParam = `gid=${m[1]}`;
-        }
+        // STRICTLY target View_LiveRollup tab only as requested
+        const sheetParam = 'sheet=View_LiveRollup';
 
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=3&${sheetParam}`;
         

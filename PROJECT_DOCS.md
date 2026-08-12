@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Purged NFSA Report History from Live Stock Position module, added hideAllReportSections() helper, and rendered dedicated Stock Distribution Chart & Inventory Risk Insights |
+| Last Code Change | 12 Aug 2026 — Configured permanent default Google Sheet URL (View_LiveRollup gid=519497993) across backend and frontend for instant one-click auto-loading |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,20 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Permanent Default Google Sheet URL Hardcoded (View_LiveRollup)
+
+Files: server.js, public/index.html
+Type: Enhancement / Workflow Automation
+Closes: ISSUE-023
+
+- REQUIREMENT: The user requested that your specific Betul District Stock Position Google Sheet URL (`https://docs.google.com/spreadsheets/d/13lEnaakk6idsNkAV--RH5cr2PAiwXQEjeNEP836tRa8/edit?gid=519497993#gid=519497993`) be set as the system default, eliminating the need to paste the link manually.
+- FIX:
+  1. Configured `DEFAULT_BETUL_STOCK_SHEET_URL` in `server.js` (lines 2650-2670) as the primary backend fallback for `/api/stock-position/fetch-sheet`.
+  2. Configured `DEFAULT_BETUL_STOCK_SHEET_URL` in `public/index.html` (lines 2100-2140).
+  3. Opening **Live Stock Position** now pre-fills the input field and automatically fetches/syncs live data from `View_LiveRollup` (`gid=519497993`) on first click.
+
+---
 
 ### 2026-08-12 | Purged NFSA History from Live Stock Module & Added Stock Analytics/Insights
 
