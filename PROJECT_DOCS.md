@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Added comprehensive PDF, Image (JPEG/PNG), and Excel/CSV (UTF-8 Devanagari) export options across Live Stock, Shortfall, Comparison, and Scheme Analytics modules |
+| Last Code Change | 12 Aug 2026 — Fixed shortfall fetch failover loop in index.html with multi-endpoint fallback (api/stock-position/shortfall, /api/stock-position/shortfall) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,21 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Fixed Shortfall Fetch Failover Logic in index.html
+
+Files: public/index.html
+Type: Bug Fix / Resiliency
+Closes: ISSUE-036
+
+- BUG: `renderShortfallTable()` threw `Failed to fetch` if single relative fetch endpoint hit HTTP failover or port boundary.
+- ROOT CAUSE: Single `fetch()` call did not iterate endpoint candidates or check `res.ok` status before calling `.json()`.
+- FIX:
+  1. Updated `renderShortfallTable()` in `public/index.html` to run a robust endpoint iteration loop (`['api/stock-position/shortfall', '/api/stock-position/shortfall', 'stock-position/shortfall']`).
+  2. Added explicit `res.ok` validation to guarantee successful response parsing.
+  3. Added informative user notice if no reports are generated yet.
+
+---
 
 ### 2026-08-12 | Comprehensive PDF, Image, and Excel Export Options Added
 
