@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Hidden IC Code column and auto-filtered zero-total commodity pools in Live Stock Position module across server and client |
+| Last Code Change | 12 Aug 2026 — Restored Issue Center and IC Code columns in Live Stock Position inventory table while preserving zero-total commodity filtering |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,20 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Restored Issue Center & IC Code Columns in Live Stock Position Table
+
+Files: server.js, public/index.html
+Type: UI / Layout Restore
+Closes: ISSUE-027
+
+- REQUIREMENT: The user requested to restore the `Issue Center (इश्यू सेंटर)` column in the Live Stock Position inventory table.
+- FIX:
+  1. Updated `server.js` `/api/stock-position/fetch-sheet` (line 2710) to retain both `colIdx === 0` (`IC Code`) and `colIdx === 1` (`Issue Center (इश्यू सेंटर)`).
+  2. Updated `public/index.html` `fetchStockPositionSheet()` (lines 2180-2275) to retain both `colIdx === 0` and `colIdx === 1`.
+  3. Verified table renders `#`, `IC Code` (`Aathner`, `Bhainsdehi`...), `Issue Center (इश्यू सेंटर)` (`आठनेर`, `भैंसदेही`...), active commodity pools, and `IC Total`.
+
+---
 
 ### 2026-08-12 | Hidden IC Code Column from Live Stock Position Table
 

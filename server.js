@@ -2701,14 +2701,17 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
             headers[i] = h;
         }
 
-        // Always keep IC Code (0), Issue Center (1), and IC Total (last column); filter out commodity columns with Total === 0
+        // Omit IC Code (column 0) to show only ONE Issue Center column; filter out commodity columns with Total === 0
         const totalRow = dataRows.find(r => (r[1] && r[1].includes('योग')) || (r[0] && r[0].includes('Total'))) || dataRows[dataRows.length - 1];
         const parseVal = (v) => parseFloat((v || '').replace(/,/g, '')) || 0;
 
         const activeColIndices = [];
         headers.forEach((h, colIdx) => {
-            // Always keep IC Code (0), Issue Center (1), and IC Total (last column)
-            if (colIdx === 0 || colIdx === 1 || colIdx === headers.length - 1) {
+            // Omit IC Code (colIdx 0)
+            if (colIdx === 0) return;
+
+            // Always keep Issue Center (1) and IC Total (last column)
+            if (colIdx === 1 || colIdx === headers.length - 1) {
                 activeColIndices.push(colIdx);
                 return;
             }
