@@ -445,7 +445,7 @@ class AdvancedAnalyticsExcelGenerator {
         const transHeaders = [
             'Sr.No\nक्र.',
             'Transporter Name\nपरिवहनकर्ता नाम',
-            'Sectors Assigned\nआवंटित सेक्टर',
+            'Sector / Block\nसेक्टर / ब्लॉक',
             'Allocation (Qt)\nकुल आवंटन',
             'Dispatch (Qt)\nकुल उठाव',
             'Lift %\nउठाव %',
@@ -466,16 +466,15 @@ class AdvancedAnalyticsExcelGenerator {
         computed.transporters.forEach((t, idx) => {
             const row = wsTrans.getRow(tRowIdx);
             
-            const countFormula = `COUNTIF('Sector Detail'!$M$4:$M$${lastSectorRow}, B${tRowIdx})`;
             const allocFormula = `SUMIF('Sector Detail'!$M$4:$M$${lastSectorRow}, B${tRowIdx}, 'Sector Detail'!$E$4:$E$${lastSectorRow})`;
             const dispFormula = `SUMIF('Sector Detail'!$M$4:$M$${lastSectorRow}, B${tRowIdx}, 'Sector Detail'!$F$4:$F$${lastSectorRow})`;
             const liftFormula = `E${tRowIdx}/D${tRowIdx}`;
             const remFormula = `D${tRowIdx}-E${tRowIdx}`;
-            const remarkFormula = `IF(C${tRowIdx}>1, "एकाधिक सेक्टर — क्षमता जांचें / Multiple sectors — verify capacity", "सामान्य / Normal")`;
+            const remarkFormula = `IF(ISNUMBER(SEARCH(",", C${tRowIdx})), "एकाधिक सेक्टर — क्षमता जांचें / Multiple sectors — verify capacity", "सामान्य / Normal")`;
 
             row.getCell(1).value = idx + 1;
             row.getCell(2).value = t.transporter;
-            row.getCell(3).value = { formula: countFormula };
+            row.getCell(3).value = t.sectorsList || '-';
             row.getCell(4).value = { formula: allocFormula };
             row.getCell(5).value = { formula: dispFormula };
             row.getCell(6).value = { formula: liftFormula };

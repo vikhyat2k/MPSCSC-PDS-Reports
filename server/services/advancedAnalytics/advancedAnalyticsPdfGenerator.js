@@ -78,11 +78,13 @@ class AdvancedAnalyticsPdfGenerator {
                 }).join('');
                 return mainRow + detailRows;
             } else {
+                const s = (t.sectorsData && t.sectorsData.length > 0) ? t.sectorsData[0] : null;
+                const sectorDisplay = s ? s.sectorName : (t.sectorsList || '-');
                 return `
                 <tr>
                     <td style="text-align:center;">${t.srNo}</td>
                     <td style="font-weight:600;">${t.transporter}</td>
-                    <td style="text-align:center;font-weight:700;">${t.sectorsCount}</td>
+                    <td style="text-align:center;font-size:8pt;font-weight:600;color:#0B192C;">${sectorDisplay}</td>
                     <td style="text-align:right;">${t.allocation.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
                     <td style="text-align:right;">${t.dispatch.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
                     <td style="text-align:center;font-weight:700;color:${liftColor};">${(t.liftPct*100).toFixed(2)}%</td>
@@ -546,14 +548,14 @@ class AdvancedAnalyticsPdfGenerator {
             <table class="rt">
                 <thead>
                     <tr>
-                        <th style="width:5%;">क्र.</th>
-                        <th style="width:25%;">परिवहनकर्ता का नाम / सेक्टर</th>
-                        <th style="width:10%;">सेक्टर / ब्लॉक</th>
-                        <th style="width:14%;">आवंटन (Qt)</th>
-                        <th style="width:14%;">उठाव (Qt)</th>
-                        <th style="width:10%;">उठाव %</th>
+                        <th style="width:4%;">क्र.</th>
+                        <th style="width:22%;">परिवहनकर्ता का नाम / सेक्टर</th>
+                        <th style="width:16%;">सेक्टर / ब्लॉक</th>
+                        <th style="width:13%;">आवंटन (Qt)</th>
+                        <th style="width:13%;">उठाव (Qt)</th>
+                        <th style="width:9%;">उठाव %</th>
                         <th style="width:12%;">लंबित (Qt)</th>
-                        <th style="width:10%;">टिप्पणी</th>
+                        <th style="width:11%;">टिप्पणी</th>
                     </tr>
                 </thead>
                 <tbody>
