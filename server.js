@@ -2663,108 +2663,14 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
         const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
         if (match && match[1]) {
             sheetId = match[1];
-        }
-
-        // STRICTLY target View_LiveRollup tab only as requested
-        const sheetParam = 'sheet=View_LiveRollup';
-
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=3&${sheetParam}`;
-        
-        const response = await fetch(csvUrl);
-        if (!response.ok) {
-            return res.status(400).json({ 
-                error: `Failed to fetch Google Sheet (${response.status} ${response.statusText}). Please verify the sheet permissions are set to "Anyone with the link can view".` 
-            });
-        }
-
-        const rawCsv = await response.text();
-        const rows = parseCSV(rawCsv);
-
-        if (rows.length === 0) {
-            return res.status(400).json({ error: 'The Google Sheet appears to be empty.' });
-        }
-
-        let headers = rows[0] || [];
-        const dataRows = rows.slice(1);
-
-        // Clean headers for View_LiveRollup
-        if (headers[0] && headers[0].includes('Live District Rollup')) {
-            headers[0] = 'IC Code';
-        }
-        if (headers[1] && headers[1].includes('Issue Center')) {
-            headers[1] = 'Issue Center (इश्यू सेंटर)';
-        }
-        for (let i = 2; i < headers.length; i++) {
-            let h = headers[i] || '';
-            h = h.replace(/\(always today - no manual entry needed\)/gi, '').replace(/\r?\n/g, ' ').trim();
-            if (h === 'IC Total') h = 'IC Total (Quintals)';
-            headers[i] = h;
-        }
-
-        // Omit IC Code (column 0) to show only ONE Issue Center column; filter out commodity columns with Total === 0
-        const totalRow = dataRows.find(r => (r[1] && r[1].includes('योग')) || (r[0] && r[0].includes('Total'))) || dataRows[dataRows.length - 1];
-        const parseVal = (v) => parseFloat((v || '').replace(/,/g, '')) || 0;
-
-        const activeColIndices = [];
-        headers.forEach((h, colIdx) => {
-            // Omit IC Code (colIdx 0)
-            if (colIdx === 0) return;
-
-            // Always keep Issue Center (1) and IC Total (last column)
-            if (colIdx === 1 || colIdx === headers.length - 1) {
-                activeColIndices.push(colIdx);
-                return;
-            }
-
-            let colTotal = 0;
-            if (totalRow) {
-                colTotal = Math.abs(parseVal(totalRow[colIdx]));
-            } else {
-                dataRows.forEach(r => { colTotal += Math.abs(parseVal(r[colIdx])); });
-            }
-
-            if (colTotal > 0.001) {
-                activeColIndices.push(colIdx);
-            }
-        });
-
-        const filteredHeaders = activeColIndices.map(i => headers[i]);
-        const filteredRows = dataRows.map(r => activeColIndices.map(i => r[i]));
-
-        res.json({
-            success: true,
-            sheetId,
-            sheetName: 'View_LiveRollup',
-            headers: filteredHeaders,
-            dataRows: filteredRows,
-            totalRows: filteredRows.length,
-            fetchedAt: new Date().toISOString()
-        });
-    } catch (err) {
-        console.error('Error fetching Google Sheet stock position:', err);
-        res.status(500).json({
-            error: `Error accessing Google Sheet: ${err.message}. Please verify the link and public view permissions.`
-        });
-    }
-});
-
-// ─────────────────────────────────────────────
-// STOCK SHORTFALL ANALYSIS ENDPOINT
-// Returns IC-wise pending balance (shortfall) from the most recent
-// NFSA, MDM, ICDS and Welfare reports pulled from the local DB.
-// ─────────────────────────────────────────────
-
 app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (req, res) => {
     try {
         const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-        // Helper: extract IC block name from a sector name string
-        // e.g. "बैतूल सेक्टर क्र 1" → "बैतूल"
         function sectorToIC(name) {
             return (name || '').split(' सेक्टर')[0].split(' क्र')[0].trim();
         }
 
-        // Fetch latest report per scheme from DB
         async function latestReport(scheme) {
             try {
                 if (db && typeof db.get === 'function') {
@@ -2793,42 +2699,14 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
             latestReport('welfare'),
         ]);
 
-        // ── NFSA: aggregate allSectors by IC block ──
-        let nfsaIC = {};
-        let nfsaMeta = null;
-        if (nfsaRow) {
-            nfsaMeta = { month: nfsaRow.month, year: nfsaRow.year, label: MONTH_NAMES[(nfsaRow.month - 1) % 12] + ' ' + nfsaRow.year };
-            const ins = JSON.parse(nfsaRow.insights || '{}');
-            (ins.allSectors || []).forEach(s => {
-                const ic = sectorToIC(s.name);
-                if (!nfsaIC[ic]) nfsaIC[ic] = { allotted: 0, dispatched: 0, balance: 0, sectors: 0, dispatchPct: 0 };
-                nfsaIC[ic].balance   += (s.balance || 0);
-                nfsaIC[ic].sectors++;
-            });
-            // Compute allotted / dispatched from totals for proportional allocation
-            const totalBalance = Object.values(nfsaIC).reduce((s, v) => s + v.balance, 0);
-            const totalDispatched = nfsaRow.total_dispatch || 0;
-            const totalAllotted   = nfsaRow.total_allocation || 0;
-            Object.keys(nfsaIC).forEach(ic => {
-                // Allotted is proportional to (balance / totalBalance) * totalAllotted
-                const share = totalBalance > 0 ? nfsaIC[ic].balance / totalBalance : 0;
-                nfsaIC[ic].allotted    = totalAllotted * share + nfsaIC[ic].balance;
-                nfsaIC[ic].dispatched  = nfsaIC[ic].allotted - nfsaIC[ic].balance;
-                nfsaIC[ic].dispatchPct = nfsaIC[ic].allotted > 0
-                    ? (nfsaIC[ic].dispatched / nfsaIC[ic].allotted * 100)
-                    : 0;
-            });
-        }
-
-        // ── MDM / ICDS / Welfare: aggregate matrix rows by block ──
-        function aggregateMatrix(row) {
-            if (!row) return { data: {}, meta: null };
+        function aggregateCommodities(row) {
+            if (!row) return { commodities: {}, meta: null };
             const ins = JSON.parse(row.insights || '{}');
             const data = {};
-            (ins.matrix || []).forEach(r => {
+            const rows = ins.matrix || [];
+            
+            rows.forEach(r => {
                 const ic = r.block || sectorToIC(r.name);
-                if (!data[ic]) data[ic] = { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
-                data[ic].allotted    += (r.totalAllotted    || 0);
                 data[ic].dispatched  += (r.totalDispatched  || 0);
                 data[ic].balance     += ((r.totalAllotted || 0) - (r.totalDispatched || 0));
             });
