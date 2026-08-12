@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Strictly enforced View_LiveRollup tab target in server.js to guarantee only the district rollup table is fetched |
+| Last Code Change | 12 Aug 2026 — Hidden IC Code column and auto-filtered zero-total commodity pools in Live Stock Position module across server and client |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,34 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Hidden IC Code Column from Live Stock Position Table
+
+Files: server.js, public/index.html
+Type: UI / Layout Polish
+Closes: ISSUE-026
+
+- REQUIREMENT: The user requested to hide the `IC Code` column from the Live Stock Position inventory table.
+- FIX:
+  1. Updated `server.js` `/api/stock-position/fetch-sheet` (line 2708) to suppress `colIdx === 0` (`IC Code`).
+  2. Updated `public/index.html` `fetchStockPositionSheet()` (lines 2180-2270) to skip `colIdx === 0` and align `Issue Center (इश्यू सेंटर)` as the primary left-aligned text column (index 0).
+  3. Verified table rendering starts cleanly with `#` and `Issue Center (इश्यू सेंटर)`.
+
+---
+
+### 2026-08-12 | Auto-Filter Zero-Total Columns in Live Stock Position Table
+
+Files: public/index.html
+Type: UI / Data Hygiene Polish
+Closes: ISSUE-025
+
+- REQUIREMENT: The user requested to automatically hide any commodity columns that have a Total (`योग / Total`) equal to `0`.
+- FIX:
+  1. Updated `fetchStockPositionSheet()` in `public/index.html` (lines 2170-2200).
+  2. Evaluated the `totalRow` value for every commodity column.
+  3. Dynamically filtered out empty zero-total columns (`CMR-Fort 2024-25`, `CMR-NonFort 2024-25`, `Jwar 2021-22`, `Gram 2018-19`), reducing table width and eliminating clutter while retaining `IC Code`, `Issue Center`, active commodity pools, and `IC Total`.
+
+---
 
 ### 2026-08-12 | Strictly Enforced View_LiveRollup Tab Target
 

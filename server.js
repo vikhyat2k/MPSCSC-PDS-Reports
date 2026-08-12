@@ -2701,13 +2701,40 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
             headers[i] = h;
         }
 
+        // Always keep IC Code (0), Issue Center (1), and IC Total (last column); filter out commodity columns with Total === 0
+        const totalRow = dataRows.find(r => (r[1] && r[1].includes('योग')) || (r[0] && r[0].includes('Total'))) || dataRows[dataRows.length - 1];
+        const parseVal = (v) => parseFloat((v || '').replace(/,/g, '')) || 0;
+
+        const activeColIndices = [];
+        headers.forEach((h, colIdx) => {
+            // Always keep IC Code (0), Issue Center (1), and IC Total (last column)
+            if (colIdx === 0 || colIdx === 1 || colIdx === headers.length - 1) {
+                activeColIndices.push(colIdx);
+                return;
+            }
+
+            let colTotal = 0;
+            if (totalRow) {
+                colTotal = Math.abs(parseVal(totalRow[colIdx]));
+            } else {
+                dataRows.forEach(r => { colTotal += Math.abs(parseVal(r[colIdx])); });
+            }
+
+            if (colTotal > 0.001) {
+                activeColIndices.push(colIdx);
+            }
+        });
+
+        const filteredHeaders = activeColIndices.map(i => headers[i]);
+        const filteredRows = dataRows.map(r => activeColIndices.map(i => r[i]));
+
         res.json({
             success: true,
             sheetId,
             sheetName: 'View_LiveRollup',
-            headers,
-            dataRows,
-            totalRows: dataRows.length,
+            headers: filteredHeaders,
+            dataRows: filteredRows,
+            totalRows: filteredRows.length,
             fetchedAt: new Date().toISOString()
         });
     } catch (err) {
