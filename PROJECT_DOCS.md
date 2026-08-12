@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Consolidated sidebar navigation: Removed redundant Report History & Analytics links and renamed Generate Report to 'Generate & Scheme Reports' |
+| Last Code Change | 12 Aug 2026 — Enabled text wrapping (white-space: normal; word-break: break-word) for Live Stock Inventory table headers and text cells |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,20 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Enabled Text Wrapping for Live Stock Inventory Table Headers
+
+Files: public/index.html
+Type: UI / Layout Optimization
+Closes: ISSUE-034
+
+- FEATURE: User requested text wrapping on table header titles (`Issue Center (इश्यू सेंटर)`, `Wheat 2024-25`, `CMR-Fort 2025-26`, `IC Total (Quintals)`).
+- FIX:
+  1. Updated table header `<th style="...">` in `fetchStockPositionSheet()` to use `white-space: normal; word-break: break-word; line-height: 1.35; vertical-align: bottom;`.
+  2. Applied responsive min/max widths (`min-width:75px; max-width:110px;` for commodity headers; `min-width:110px; max-width:140px;` for Issue Center header) to wrap multi-word titles onto 2 lines cleanly.
+  3. Kept numeric cells formatted with `white-space: nowrap;` for clean number alignment.
+
+---
 
 ### 2026-08-12 | Consolidated Sidebar Navigation (Generate & Scheme Reports)
 
