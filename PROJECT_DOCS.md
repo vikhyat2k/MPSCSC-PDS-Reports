@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 11 August 2026, 19:35 IST
+> **Last Sync:** 12 August 2026, 20:15 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 11 Aug 2026 — Auto-restores report analytics insights dynamically if missing from stored database records |
+| Last Code Change | 12 Aug 2026 — Fixed NO_DATA error formatting & response prefix so frontend renders warning box instead of system crash alert, and fixed invalid setTimeout calls in scrapers |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,26 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Fix NO_DATA Error UI Rendering & Scraper setTimeout Delays
+
+Files: server.js, public/app.js, server/automation/mdm_scraper.js, server/automation/welfare_scraper.js, server/automation/nfsa_daterange_scraper.js
+Type: Bug Fix / UI Improvement
+Closes: ISSUE-015
+
+- BUG:
+  1. When the MP SCM portal reported "No data found for this month/year", the server stripped the `NO_DATA:` prefix, causing the UI `app.js` to render a red `❌ Error` crash box instead of a friendly yellow `⚠️ No Data Published` warning box.
+  2. Multiple scrapers (`mdm_scraper.js`, `welfare_scraper.js`, `nfsa_daterange_scraper.js`) had `setTimeout(r, )` calls missing millisecond parameters, defaulting to 0ms delays.
+- ROOT CAUSE:
+  1. `server.js` error handlers replaced `err.message` with `'No data found on portal for this month/year.'` when `isNoData` was true, removing the `NO_DATA:` prefix that `app.js` checked.
+  2. `app.js` `showError(msg)` only checked `msg.includes('NO_DATA')` without fallback to checking for `'no data found on portal'`.
+  3. Copy/paste errors in scraper promise delays left `setTimeout(r, )` without arguments.
+- FIX:
+  1. Updated `server.js` to preserve the `NO_DATA:` prefix in all scheme error responses (`NO_DATA: The portal currently shows "No data found" for this month/year.`).
+  2. Updated `showError(msg)` in `public/app.js` to check for both `NO_DATA` prefix and case-insensitive `"no data found on portal"` text.
+  3. Added correct millisecond parameters (500ms, 1000ms, 2000ms) to all `setTimeout` promises across scrapers.
+
+---
 
 ### 2026-08-02 | Fix 0-Dispatch Analytics & Low Performer Duplication in Date Range Reports
 
