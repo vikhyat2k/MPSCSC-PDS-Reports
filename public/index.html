@@ -2228,42 +2228,13 @@ async function fetchStockPositionSheet() {
             '</div>';
         }
 
-        var rawHeaders = data.headers || [];
-        var rawRows = data.dataRows || [];
+        var headers = data.headers || [];
+        var dataRows = data.dataRows || [];
 
         var parseVal = function(v) { return parseFloat((v || '').replace(/,/g, '')) || 0; };
 
         // Identify Total Row
-        var totalRow = rawRows.find(function(r) { return (r[1] && r[1].includes('योग')) || (r[0] && r[0].includes('Total')); }) || rawRows[rawRows.length - 1];
-
-        // Omit IC Code (column 0) to show only ONE Issue Center column; filter out commodity columns with Total === 0
-        var activeColIndices = [];
-        rawHeaders.forEach(function(h, colIdx) {
-            // Omit IC Code column (colIdx 0)
-            if (colIdx === 0) return;
-
-            // Always keep Issue Center (1) and IC Total (last column)
-            if (colIdx === 1 || colIdx === rawHeaders.length - 1) {
-                activeColIndices.push(colIdx);
-                return;
-            }
-
-            var colTotal = 0;
-            if (totalRow) {
-                colTotal = Math.abs(parseVal(totalRow[colIdx]));
-            } else {
-                rawRows.forEach(function(r) { colTotal += Math.abs(parseVal(r[colIdx])); });
-            }
-
-            if (colTotal > 0.001) {
-                activeColIndices.push(colIdx);
-            }
-        });
-
-        var headers = activeColIndices.map(function(i) { return rawHeaders[i]; });
-        var dataRows = rawRows.map(function(r) {
-            return activeColIndices.map(function(i) { return r[i]; });
-        });
+        var totalRow = dataRows.find(function(r) { return (r[0] && (r[0].includes('योग') || r[0].includes('Total'))); }) || dataRows[dataRows.length - 1];
 
         // Build 4 High-Level Executive Summary Cards for View_LiveRollup
         var districtTotalVal = 0;
