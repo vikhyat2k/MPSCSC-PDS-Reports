@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Added IC-wise scheme shortfall analysis panel: /api/stock-position/shortfall API + table showing NFSA/MDM/ICDS/Welfare shortfall per Issue Center |
+| Last Code Change | 12 Aug 2026 — Fixed duplicate column stripping in index.html JS that previously stripped Issue Center (इश्यू सेंटर) name column |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,20 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Fixed Issue Center Name Column Stripping Bug
+
+Files: public/index.html
+Type: Bug Fix / UI
+Closes: ISSUE-032
+
+- BUG: Issue Center names (`आठनेर`, `भैंसदेही`, `बैतूल`, etc.) were missing from the Live Stock Position inventory table and charts.
+- ROOT CAUSE: `server.js` already strips raw `IC Code` (column 0) and returns `data.headers[0] = 'Issue Center (इश्यू सेंटर)'`. However, `fetchStockPositionSheet()` in `public/index.html` ran a second `colIdx === 0` omit loop on the client side, inadvertently stripping column 0 (`Issue Center (इश्यू सेंटर)`) a second time.
+- FIX:
+  1. Updated `fetchStockPositionSheet()` in `public/index.html` to consume `data.headers` and `data.dataRows` directly from the server response.
+  2. Verified that headers (`Issue Center (इश्यू सेंटर)`) and center names (`आठनेर`, `भैंसदेही`, `बैतूल`, `भीमपुर`, `मुलताई`, `आमला`, `प्रभात पट्टन`, `घोड़ाडोंगरी`, `शाहपुर`) display cleanly across all tables, charts, heatmaps, rankings, and shortfall modules.
+
+---
 
 ### 2026-08-12 | IC-wise Scheme Shortfall Analysis Panel Added to Live Stock Position
 
