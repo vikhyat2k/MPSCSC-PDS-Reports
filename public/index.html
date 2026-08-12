@@ -957,8 +957,11 @@
                             <h2 class="card-title" style="color:var(--secondary);margin:0;">⚖️ Scheme Performance Comparison</h2>
                             <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Cross-scheme benchmark of Allotment, Depot Outgoing, and Store Receipts</div>
                         </div>
-                        <div>
-                            <button onclick="renderComparisonTool()" class="btn btn-sm btn-secondary" style="padding:6px 14px;font-size:12px;font-weight:600;">🔄 Refresh Comparison</button>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <button onclick="renderComparisonTool()" class="btn btn-sm btn-secondary" style="padding:6px 12px;font-size:12px;font-weight:600;">🔄 Refresh</button>
+                            <button onclick="exportDashboard('jpeg','comparisonSection','Cross_Scheme_Comparison')" class="btn btn-sm btn-secondary export-btn" style="padding:6px 12px;font-size:12px;">🖼️ Image</button>
+                            <button onclick="exportDashboard('pdf','comparisonSection','Cross_Scheme_Comparison')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','comparisonTableContainer','Cross_Scheme_Comparison')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body" style="padding:20px;">
@@ -980,8 +983,11 @@
                             <h2 class="card-title" style="color:#10b981;margin:0;">📦 Live District Stock Position (Google Sheets Sync)</h2>
                             <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Real-time stock inventory, warehouse capacity utilization, and commodity balances</div>
                         </div>
-                        <div style="display:flex;gap:10px;align-items:center;">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                             <button onclick="fetchStockPositionSheet()" class="btn btn-sm btn-primary" style="padding:6px 14px;font-size:12px;background:#10b981;border:none;">🔄 Sync Live Data</button>
+                            <button onclick="exportDashboard('jpeg','stockPositionSection','Live_Stock_Position')" class="btn btn-sm btn-secondary export-btn" style="padding:6px 12px;font-size:12px;">🖼️ Image</button>
+                            <button onclick="exportDashboard('pdf','stockPositionSection','Live_Stock_Position')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','stockTableContainer','Betul_Stock_Inventory')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body" style="padding:20px;">
@@ -1078,7 +1084,12 @@
                                     <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
                                         <span>📉</span> Issue Center-wise Stock Shortfall vs. Scheme Allocations
                                     </h4>
-                                    <div id="shortfallMetaLabels" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+                                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                        <div id="shortfallMetaLabels" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+                                        <button onclick="exportDashboard('jpeg','shortfallTableContainer','IC_Stock_Shortfall')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️ Image</button>
+                                        <button onclick="exportDashboard('pdf','shortfallTableContainer','IC_Stock_Shortfall')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#6366f1;border:none;">📄 PDF</button>
+                                        <button onclick="exportDashboard('excel','shortfallTableContainer','IC_Stock_Shortfall')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#15803d;border:none;">📊 Excel</button>
+                                    </div>
                                 </div>
                                 <div id="shortfallStatus" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">⏳ Loading scheme-wise allocation data...</div>
                                 <div id="shortfallTableContainer" style="overflow-x:auto;font-size:12px;"></div>
@@ -1097,7 +1108,8 @@
                         </div>
                         <div class="export-btn-group">
                             <button onclick="exportDashboard('jpeg','analyticsSection','NFSA_Analytics')" class="btn btn-sm btn-secondary export-btn" style="padding:6px 12px;font-size:12px;">🖼️ Image</button>
-                            <button onclick="exportDashboard('pdf','analyticsSection','NFSA_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;">📄 PDF</button>
+                            <button onclick="exportDashboard('pdf','analyticsSection','NFSA_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','analyticsSection','NFSA_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -1338,7 +1350,8 @@
                         </div>
                         <div class="export-btn-group">
                             <button onclick="exportDashboard('jpeg','drAnalyticsSection','DR_Analytics')" class="btn btn-sm btn-secondary export-btn" style="padding:6px 12px;font-size:12px;">🖼️ Image</button>
-                            <button onclick="exportDashboard('pdf','drAnalyticsSection','DR_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;">📄 PDF</button>
+                            <button onclick="exportDashboard('pdf','drAnalyticsSection','DR_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','drAnalyticsSection','DR_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -1401,7 +1414,8 @@
                         </div>
                         <div class="export-btn-group">
                             <button onclick="exportDashboard('jpeg','mdmAnalyticsSection','MDM_Analytics')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️ Image</button>
-                            <button onclick="exportDashboard('pdf','mdmAnalyticsSection','MDM_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄 PDF</button>
+                            <button onclick="exportDashboard('pdf','mdmAnalyticsSection','MDM_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','mdmAnalyticsSection','MDM_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -1495,7 +1509,8 @@
                         </div>
                         <div class="export-btn-group">
                             <button onclick="exportDashboard('jpeg','icdsAnalyticsSection','ICDS_Analytics')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️ Image</button>
-                            <button onclick="exportDashboard('pdf','icdsAnalyticsSection','ICDS_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄 PDF</button>
+                            <button onclick="exportDashboard('pdf','icdsAnalyticsSection','ICDS_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','icdsAnalyticsSection','ICDS_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -1630,7 +1645,8 @@
                         </div>
                         <div class="export-btn-group">
                             <button onclick="exportDashboard('jpeg','welfareAnalyticsSection','Welfare_Analytics')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️ Image</button>
-                            <button onclick="exportDashboard('pdf','welfareAnalyticsSection','Welfare_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄 PDF</button>
+                            <button onclick="exportDashboard('pdf','welfareAnalyticsSection','Welfare_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#6366f1;border:none;">📄 PDF</button>
+                            <button onclick="exportDashboard('excel','welfareAnalyticsSection','Welfare_Analytics')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#15803d;border:none;">📊 Excel</button>
                         </div>
                     </div>
                     <div class="card-body">
