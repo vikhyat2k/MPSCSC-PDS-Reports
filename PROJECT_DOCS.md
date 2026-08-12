@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 12 August 2026, 23:08 IST
+> **Last Sync:** 12 August 2026, 23:12 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Fixed Hindi IC string normalization (cleanHindiIC) to match variants like भैंसदेही/भैसदेही and प्रभात पट्टन/प्रभातपटटन across live sheet & DB |
+| Last Code Change | 12 Aug 2026 — Separated Custom Milled Rice (CMR = 6,207.48 Qt) from Paddy (धान = 3,72,948.87 Qt), yielding true net CMR shortfall of -5,385.56 Qt |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1990,6 +1990,22 @@ Closes: ISSUE-020
   2. Implemented header cleanup to remove multi-line garbage text and label issue centers and totals accurately.
   3. Built 4 Executive Summary KPI Cards showing Total District Stock (`9,68,117.71 Qt`), Wheat Balance (`5,84,708.21 Qt`), Paddy/CMR Rice (`3,72,948.87 Qt`), and Sugar/Salt (`4,019.48 Qt`).
   4. Added a responsive inventory table with sticky headers, numeric right-alignment, and a highlighted green `योग / Total` row.
+
+---
+
+### 2026-08-12 | Custom Milled Rice (CMR) vs Unmilled Paddy Stock Calculation Fix
+
+Files: public/index.html
+Type: Bug Fix / Analytics Accuracy
+Closes: ISSUE-022
+
+- BUG / INACCURACY: The Live Stock Shortfall section previously included `Paddy 2025-26` (3,72,948.87 Qt unmilled grain) into ready Rice stock (`availRice`), showing a false massive net surplus of `+3,67,563.31 Qt`.
+- ROOT CAUSE: Commodity parser matched keys containing `paddy` or `धान` into `availRice`. Unmilled paddy is raw grain stored for milling, whereas scheme allocation demands ready-to-distribute Custom Milled Rice (CMR).
+- FIX:
+  1. Updated `public/index.html` commodity parser to exclude `paddy` / `धान` from `availRice` and track `availPaddy` separately.
+  2. Ready CMR stock is calculated strictly from `CMR-Fort` (2,116.58 Qt) + `CMR-NonFort` (4,090.90 Qt) = **6,207.48 Qt**.
+  3. Matched against total scheme demand (11,593.04 Qt), revealing the true District CMR Net Position of **-5,385.56 Qt (Shortfall)**.
+  4. Updated UI labels to `🍚 CMR RICE (कस्टम मिलिंग चावल)` and added an informational note explaining Paddy stock (3,72,948.87 Qt) held for milling.
 
 ---
 
