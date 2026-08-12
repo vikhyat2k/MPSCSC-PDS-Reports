@@ -985,6 +985,38 @@
                     </div>
                 </section>
 
+                <!-- Live Stock Position Section -->
+                <section id="stockPositionSection" class="card" style="display:none;margin-top:24px;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.04);">
+                    <div class="card-header" style="border-color:rgba(16,185,129,0.2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <h2 class="card-title" style="color:#10b981;margin:0;">📦 Live District Stock Position (Google Sheets Sync)</h2>
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">Real-time stock inventory, warehouse capacity utilization, and commodity balances</div>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:center;">
+                            <button onclick="fetchStockPositionSheet()" class="btn btn-sm btn-primary" style="padding:6px 14px;font-size:12px;background:#10b981;border:none;">🔄 Sync Live Data</button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding:20px;">
+                        <!-- Sheet URL Input Bar -->
+                        <div style="background:var(--card-bg, rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:16px;margin-bottom:20px;">
+                            <label style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text-main);">🔗 Google Sheet Link or Sheet ID:</label>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <input type="text" id="stockSheetUrlInput" class="form-input" style="flex:1;min-width:280px;font-size:13px;padding:10px 14px;" placeholder="Paste Google Sheet URL (e.g. https://docs.google.com/spreadsheets/d/.../edit)..." />
+                                <button onclick="fetchStockPositionSheet()" class="btn btn-primary" style="padding:10px 20px;font-size:13px;background:#10b981;border:none;white-space:nowrap;">⚡ Import Stock Data</button>
+                            </div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">📌 Note: Ensure Google Sheet access is set to <strong>"Anyone with the link can view"</strong>.</div>
+                        </div>
+
+                        <div id="stockPositionStatus" style="display:none;margin-bottom:16px;"></div>
+
+                        <!-- Stock Summary Cards -->
+                        <div id="stockSummaryGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px;"></div>
+
+                        <!-- Stock Table -->
+                        <div id="stockTableContainer" style="overflow-x:auto;"></div>
+                    </div>
+                </section>
+
                 <!-- ════ ANALYTICS SECTIONS ════ -->
                 <section id="analyticsSection" class="card" style="display:none;margin-top:24px;">
                     <div class="card-header">
