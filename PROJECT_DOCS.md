@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 12 August 2026, 20:15 IST
+> **Last Sync:** 12 August 2026, 23:00 IST
 
 ---
 
@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 10 |
+| Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Fixed shortfall fetch failover loop in index.html with multi-endpoint fallback (api/stock-position/shortfall, /api/stock-position/shortfall) |
+| Last Code Change | 12 Aug 2026 — Commodity-wise Stock Shortfall vs Allocation Overhaul (Wheat, Rice, F.Salt aggregated per scheme & matched with live inventory) |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1990,6 +1990,22 @@ Closes: ISSUE-020
   2. Implemented header cleanup to remove multi-line garbage text and label issue centers and totals accurately.
   3. Built 4 Executive Summary KPI Cards showing Total District Stock (`9,68,117.71 Qt`), Wheat Balance (`5,84,708.21 Qt`), Paddy/CMR Rice (`3,72,948.87 Qt`), and Sugar/Salt (`4,019.48 Qt`).
   4. Added a responsive inventory table with sticky headers, numeric right-alignment, and a highlighted green `योग / Total` row.
+
+---
+
+### 2026-08-12 | True Commodity-wise Stock Shortfall vs. Scheme Allocation Overhaul
+
+Files: server.js, public/index.html
+Type: Feature / Logic Overhaul
+Closes: ISSUE-020
+
+- BUG / INADEQUACY: Previous shortfall endpoint `/api/stock-position/shortfall` only summed single aggregate pending balances per IC without commodity-level breakdown, and did not calculate true stock shortfall/excess against live inventory from the Google Sheet.
+- ROOT CAUSE: Previous calculation logic used `s.balance` from `allSectors` without differentiating Wheat, Rice (Regular + Fortified), and Iodized/Fortified Salt, nor matching with live sheet stock.
+- FIX:
+  1. Updated `/api/stock-position/shortfall` in `server.js` to fetch the latest report for each scheme independently (NFSA Sep, MDM Jul, ICDS Aug, Welfare Jul).
+  2. Aggregated commodity allocations (`wheat`, `rice + fortifiedRice`, `fSalt`) per Issue Center block from NFSA `needsAttention` shop data and MDM/ICDS/Welfare `matrix` data.
+  3. Modified `public/index.html` to store live sheet stock data in `window.lastStockData`.
+  4. Updated `renderShortfallTable()` to match Issue Center live stock against combined commodity allocations, calculating true net Shortfall/Excess (`Available Stock - Total Allocation`) with green/red badges, district summary cards, and collapsible scheme breakdown sub-tables.
 
 ---
 
