@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Fixed Comparison Card flex layout (flex-direction: column) to prevent vertical button text truncation and ensure full-width responsive cards |
+| Last Code Change | 12 Aug 2026 — Added Live Google Sheets Stock Position CSV importer (/api/stock-position/fetch-sheet) and dedicated UI module with automatic link persistence |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,19 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Live Google Sheets Stock Position Importer & Dashboard View
+
+Files: server.js, public/index.html
+Type: New Feature
+Closes: ISSUE-019
+
+- FEATURE: Added a dedicated **Live Stock Position** module in the portal sidebar (`#nav-stock-position`) and backend API endpoint (`POST /api/stock-position/fetch-sheet`).
+- IMPLEMENTATION:
+  1. Backend route (`server.js` lines 2605-2695) parses Google Sheet URL / Sheet ID, fetches the live public CSV export (`gviz/tq?tqx=out:csv`), parses CSV rows & headers with quote-aware parser `parseCSV()`, and computes summary metrics.
+  2. Frontend View (`public/index.html` lines 985-1020, 2045-2180) provides a Google Sheet Link input bar (with automatic `localStorage` persistence), real-time sync status banner, summary stock cards, and responsive inventory table.
+
+---
 
 ### 2026-08-12 | Fix Comparison Card Flex Layout & Vertical Button Text Truncation
 

@@ -2663,7 +2663,17 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
             sheetId = match[1];
         }
 
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        // Always target View_LiveRollup with headers=3 for complete commodity column labels
+        let sheetParam = 'sheet=View_LiveRollup';
+        if (sheetUrl.includes('sheet=')) {
+            const m = sheetUrl.match(/sheet=([a-zA-Z0-9_]+)/);
+            if (m && m[1]) sheetParam = `sheet=${m[1]}`;
+        } else if (sheetUrl.includes('gid=')) {
+            const m = sheetUrl.match(/gid=([0-9]+)/);
+            if (m && m[1]) sheetParam = `gid=${m[1]}`;
+        }
+
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=3&${sheetParam}`;
         
         const response = await fetch(csvUrl);
         if (!response.ok) {
@@ -2679,12 +2689,27 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
             return res.status(400).json({ error: 'The Google Sheet appears to be empty.' });
         }
 
-        const headers = rows[0];
+        let headers = rows[0] || [];
         const dataRows = rows.slice(1);
+
+        // Clean headers for View_LiveRollup
+        if (headers[0] && headers[0].includes('Live District Rollup')) {
+            headers[0] = 'IC Code';
+        }
+        if (headers[1] && headers[1].includes('Issue Center')) {
+            headers[1] = 'Issue Center (इश्यू सेंटर)';
+        }
+        for (let i = 2; i < headers.length; i++) {
+            let h = headers[i] || '';
+            h = h.replace(/\(always today - no manual entry needed\)/gi, '').replace(/\r?\n/g, ' ').trim();
+            if (h === 'IC Total') h = 'IC Total (Quintals)';
+            headers[i] = h;
+        }
 
         res.json({
             success: true,
             sheetId,
+            sheetName: 'View_LiveRollup',
             headers,
             dataRows,
             totalRows: dataRows.length,
