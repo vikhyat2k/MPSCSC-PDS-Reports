@@ -1014,6 +1014,29 @@
 
                         <!-- Stock Table -->
                         <div id="stockTableContainer" style="overflow-x:auto;"></div>
+
+                        <!-- Stock Analytics & Insights Container -->
+                        <div id="stockAnalyticsSection" style="margin-top:24px;display:none;">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+                                <!-- Stock Chart Card -->
+                                <div style="background:var(--card-bg, rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:16px;">
+                                    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+                                        <span>📊</span> Issue Center Stock Volume Breakdown (Qt)
+                                    </h3>
+                                    <div style="position:relative;height:260px;width:100%;">
+                                        <canvas id="stockChartCanvas"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Stock Risk & Insights Card -->
+                                <div style="background:var(--card-bg, rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:16px;">
+                                    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+                                        <span>💡</span> Stock Insights & Buffer Alerts
+                                    </h3>
+                                    <div id="stockRiskAlertsContainer" style="display:flex;flex-direction:column;gap:10px;font-size:12px;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
