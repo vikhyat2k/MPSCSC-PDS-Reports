@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Implemented dedicated functional Comparison Tool View with live multi-scheme KPI cards grid, Chart.js comparison chart, and Scheme Performance Matrix table |
+| Last Code Change | 12 Aug 2026 — Fixed Comparison Card flex layout (flex-direction: column) to prevent vertical button text truncation and ensure full-width responsive cards |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,18 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Fix Comparison Card Flex Layout & Vertical Button Text Truncation
+
+Files: public/index.html
+Type: Bug Fix / UI Polish
+Closes: ISSUE-018
+
+- BUG: In the Comparison Tool view, the action button `Open Detailed [Scheme] Analytics` inside each scheme card was being squeezed into a narrow right-side column, causing the text to wrap vertically (e.g. `Op tail FS aly`).
+- ROOT CAUSE: The card container used `.stat-card` class, which defaulted to horizontal `flex-direction: row` layout, forcing children to sit side-by-side.
+- FIX: Updated card class to `.comparison-card` with explicit `display: flex; flex-direction: column; justify-content: space-between; width: 100%;`. The header, 2x2 metrics grid, and full-width button now stack cleanly from top to bottom.
+
+---
 
 ### 2026-08-12 | Functional Comparison Tool View & Live Data Engine
 
