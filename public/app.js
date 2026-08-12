@@ -590,9 +590,11 @@ function showError(msg) {
     const box = document.getElementById(prefix ? `${prefix}ErrorMessage` : 'errorMessage');
     const text = document.getElementById(prefix ? `${prefix}ErrorText` : 'errorText');
     
+    const isNoDataError = msg && (msg.includes('NO_DATA') || msg.toLowerCase().includes('no data found on portal'));
+
     if (box && text) {
-        if (msg && msg.includes('NO_DATA')) {
-            const cleanMsg = msg.replace('NO_DATA:', '').trim();
+        if (isNoDataError) {
+            const cleanMsg = msg.replace(/^NO_DATA:\s*/i, '').trim();
             text.innerText = cleanMsg;
             box.classList.remove('alert-error');
             box.classList.add('alert-warning');
@@ -612,8 +614,8 @@ function showError(msg) {
         box.style.display = 'flex';
         box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-        if (msg && msg.includes('NO_DATA')) {
-            alert('Notice: ' + msg.replace('NO_DATA:', '').trim());
+        if (isNoDataError) {
+            alert('Notice: ' + msg.replace(/^NO_DATA:\s*/i, '').trim());
         } else {
             alert('Error: ' + msg);
         }

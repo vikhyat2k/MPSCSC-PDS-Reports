@@ -627,7 +627,7 @@ app.post('/api/generate-report', async (req, res) => {
                 const isIntegrityFail = err.message.includes('STRICT_INTEGRITY_FAILURE');
                 
                 let errorMsg = err.message;
-                if (isNoData) errorMsg = 'No data found on portal for this month/year.';
+                if (isNoData) errorMsg = 'NO_DATA: The portal currently shows "No data found" for this month/year.';
                 if (isIntegrityFail) errorMsg = 'Data Integrity Failure: Some sectors failed to load for Regular RO. Please try again in 5 minutes after the portal session has reset.';
 
                 activeRequests.set(requestId, {
@@ -2076,7 +2076,7 @@ app.post('/api/generate-mdm-report', async (req, res) => {
                 activeRequests.set(requestId, {
                     status: 'error',
                     progress: 0,
-                    error: isNoData ? 'No data found on portal for this month/year.' : err.message
+                    error: isNoData ? 'NO_DATA: The portal currently shows "No data found" for this month/year.' : err.message
                 });
             } finally {
                 activeScrapers.delete(requestId);
@@ -2332,7 +2332,7 @@ app.post('/api/generate-icds-report', async (req, res) => {
                 activeRequests.set(requestId, {
                     status: 'error',
                     progress: 0,
-                    error: isNoData ? 'No data found on portal for this month/year.' : err.message
+                    error: isNoData ? 'NO_DATA: The portal currently shows "No data found" for this month/year.' : err.message
                 });
             } finally {
                 activeScrapers.delete(requestId);
@@ -2584,7 +2584,7 @@ app.post('/api/generate-welfare-report', async (req, res) => {
                 activeRequests.set(requestId, {
                     status: 'error',
                     progress: 0,
-                    error: isNoData ? 'No data found on portal for this month/year.' : err.message
+                    error: isNoData ? 'NO_DATA: The portal currently shows "No data found" for this month/year.' : err.message
                 });
             } finally {
                 activeScrapers.delete(requestId);
