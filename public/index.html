@@ -2051,21 +2051,21 @@ async function renderComparisonTool() {
             var statusColor = liftPct >= 85 ? '#10b981' : (liftPct >= 70 ? '#f59e0b' : '#ef4444');
             var statusLabel = liftPct >= 85 ? '🟢 Excellent' : (liftPct >= 70 ? '🟡 Good Progress' : '🔴 Deficit');
 
-            return '<div class="stat-card" style="border:1px solid ' + m.color + '40;background:' + m.bg + ';padding:18px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
-                    '<strong style="font-size:16px;color:' + m.color + ';display:flex;align-items:center;gap:6px;">' +
+            return '<div class="comparison-card" style="display:flex;flex-direction:column;justify-content:space-between;border:1px solid ' + m.color + '40;background:' + m.bg + ';padding:18px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:0;width:100%;box-sizing:border-box;">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;">' +
+                    '<strong style="font-size:15px;color:' + m.color + ';display:flex;align-items:center;gap:6px;">' +
                         '<span>' + (key === 'nfsa' ? '🌾' : (key === 'mdm' ? '🥣' : (key === 'icds' ? '👶' : '🎓'))) + '</span>' +
                         m.label + ' Scheme' +
                     '</strong>' +
-                    '<span style="font-size:11px;font-weight:700;color:' + statusColor + ';background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;border:1px solid ' + statusColor + '40;">' + statusLabel + '</span>' +
+                    '<span style="font-size:11px;font-weight:700;color:' + statusColor + ';background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:12px;border:1px solid ' + statusColor + '40;white-space:nowrap;">' + statusLabel + '</span>' +
                 '</div>' +
-                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;margin-bottom:14px;background:rgba(0,0,0,0.15);padding:12px;border-radius:8px;">' +
-                    '<div><div style="color:var(--text-muted);font-size:11px;">Allotted Volume</div><div style="font-weight:700;font-size:14px;color:var(--text-main);">' + fmtQt(s.allotted) + '</div></div>' +
-                    '<div><div style="color:var(--text-muted);font-size:11px;">Depot Dispatch</div><div style="font-weight:700;font-size:14px;color:' + m.color + ';">' + fmtQt(s.dispatched) + ' (' + liftPct + '%)</div></div>' +
-                    '<div><div style="color:var(--text-muted);font-size:11px;">Store / POS Receipt</div><div style="font-weight:700;font-size:14px;color:var(--text-main);">' + fmtQt(s.received) + ' (' + recPct + '%)</div></div>' +
-                    '<div><div style="color:var(--text-muted);font-size:11px;">POS Lag Gap</div><div style="font-weight:700;font-size:14px;color:' + (posGap > 15 ? '#ef4444' : 'var(--text-main)') + ';">' + posGap.toFixed(1) + '%</div></div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;margin-bottom:14px;background:rgba(0,0,0,0.2);padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);">' +
+                    '<div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">Allotted Volume</div><div style="font-weight:700;font-size:14px;color:var(--text-main);">' + fmtQt(s.allotted) + '</div></div>' +
+                    '<div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">Depot Dispatch</div><div style="font-weight:700;font-size:14px;color:' + m.color + ';">' + fmtQt(s.dispatched) + ' <span style="font-size:12px;">(' + liftPct + '%)</span></div></div>' +
+                    '<div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">Store / POS Receipt</div><div style="font-weight:700;font-size:14px;color:var(--text-main);">' + fmtQt(s.received) + ' <span style="font-size:12px;">(' + recPct + '%)</span></div></div>' +
+                    '<div><div style="color:var(--text-muted);font-size:11px;margin-bottom:2px;">POS Lag Gap</div><div style="font-weight:700;font-size:14px;color:' + (posGap > 15 ? '#ef4444' : 'var(--text-main)') + ';">' + posGap.toFixed(1) + '%</div></div>' +
                 '</div>' +
-                '<button onclick="navigateToScheme(\'' + key + '\')" class="btn btn-sm btn-secondary" style="width:100%;font-size:12px;padding:8px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;">' +
+                '<button onclick="navigateToScheme(\'' + key + '\')" class="btn btn-sm btn-secondary" style="width:100%;font-size:12px;padding:9px 12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:auto;box-sizing:border-box;">' +
                     '👁️ Open Detailed ' + m.label + ' Analytics' +
                 '</button>' +
             '</div>';

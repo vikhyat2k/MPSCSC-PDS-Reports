@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Fixed Transporter Performance table to display full Sector Name instead of numeric count 1 for single-sector transporters, and updated Excel generator |
+| Last Code Change | 12 Aug 2026 — Implemented dedicated functional Comparison Tool View with live multi-scheme KPI cards grid, Chart.js comparison chart, and Scheme Performance Matrix table |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,24 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Functional Comparison Tool View & Live Data Engine
+
+Files: public/index.html
+Type: Feature / UI Overhaul
+Closes: ISSUE-017
+
+- BUG: Clicking "Comparison" in the sidebar menu (`#nav-comparison`) simply routed to `showGenerate()` and attempted to scroll to `#comparisonSection`, which was hidden (`display:none`) with an empty container (`#comparisonGrid`), leaving the user stuck on the Generate Report page.
+- ROOT CAUSE: Sidebar click handler invoked `showGenerate()` instead of a dedicated view handler, `#comparisonSection` was hidden by default, and no rendering engine existed to populate cross-scheme comparison data.
+- FIX:
+  1. Updated `#nav-comparison` click handler to invoke `showComparisonView()`.
+  2. Implemented `showComparisonView()` to activate the comparison view and scroll to `#comparisonSection`.
+  3. Implemented `renderComparisonTool()` to fetch latest reports across all 4 schemes (**NFSA, MDM, ICDS, Welfare**) in parallel.
+  4. Built 4 live **Scheme Benchmark KPI Cards** showing Allotted, Dispatched %, POS Receipt %, POS Lag Gap %, Status badge, and a direct "View Analytics" button.
+  5. Integrated Chart.js **Cross-Scheme Lifting & Receipt Breakdown Bar Chart** (`#comparisonChartCanvas`).
+  6. Built **Scheme Performance Matrix Table** displaying side-by-side comparative analytics for all schemes.
+
+---
 
 ### 2026-08-12 | Fix Transporter Performance Table Sector Name Display
 
