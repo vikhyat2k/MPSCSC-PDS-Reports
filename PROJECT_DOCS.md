@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Fixed NO_DATA error formatting & response prefix so frontend renders warning box instead of system crash alert, and fixed invalid setTimeout calls in scrapers |
+| Last Code Change | 12 Aug 2026 — Fixed Transporter Performance table to display full Sector Name instead of numeric count 1 for single-sector transporters, and updated Excel generator |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,21 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Fix Transporter Performance Table Sector Name Display
+
+Files: server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server/services/advancedAnalytics/advancedAnalyticsExcelGenerator.js
+Type: Bug Fix / UI Improvement
+Closes: ISSUE-016
+
+- BUG: In the Transporter Performance Table (Section 3 of Executive PDF Report and Sheet 4 of Excel Report), single-sector transporters showed the raw numerical sector count `1` under column 3 (`सेक्टर / ब्लॉक`) instead of displaying the actual Sector Name (e.g. `बैतूल सेक्टर क्र 1`, `प्रभातपट्टन सेक्टर क्र 13`).
+- ROOT CAUSE: `advancedAnalyticsPdfGenerator.js` printed `${t.sectorsCount}` (which is `1` for single-sector transporters) and `advancedAnalyticsExcelGenerator.js` evaluated `=COUNTIF(...)` returning `1`.
+- FIX:
+  1. Updated `advancedAnalyticsPdfGenerator.js` to print `sectorDisplay` (`s.sectorName` e.g. `बैतूल सेक्टर क्र 1`) for single-sector transporters, while retaining `2 सेक्टर` and per-sector sub-rows for multi-sector transporters.
+  2. Adjusted column width of Column 3 (`सेक्टर / ब्लॉक`) from `10%` to `16%` to prevent text clipping.
+  3. Updated `advancedAnalyticsExcelGenerator.js` to output `t.sectorsList` in Column 3.
+
+---
 
 ### 2026-08-12 | Fix NO_DATA Error UI Rendering & Scraper setTimeout Delays
 
