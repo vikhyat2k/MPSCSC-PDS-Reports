@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Integrated View_LiveRollup Google Sheet tab targeting for Betul Stock Position with multi-commodity headers, executive cards, and highlighted total row |
+| Last Code Change | 12 Aug 2026 — Isolated sub-view routing for Live Stock Position & Comparison views to hide the Generate Form card and auto-scroll directly to the top |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,18 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Isolated Sub-View Switching for Live Stock Position & Comparison
+
+Files: public/index.html
+Type: Bug Fix / Navigation Polish
+Closes: ISSUE-021
+
+- BUG: Clicking "Live Stock Position" or "Comparison" in the sidebar left the "Generate New Report" form card visible at the top of the main container, forcing the user to manually scroll down to reach the stock position table.
+- ROOT CAUSE: `showStockPositionView()` and `showComparisonView()` delegated to `showGenerate()`, which issued an un-isolated `window.scrollTo({ top: 0 })` while leaving `#generateFormCard` visible.
+- FIX: Refactored `showGenerate()`, `showComparisonView()`, and `showStockPositionView()` in `public/index.html` (lines 2025-2070). When switching to **Live Stock Position** or **Comparison**, `#generateFormCard` and `#generateKpiStrip` hide cleanly, allowing `#stockPositionSection` or `#comparisonSection` to mount right at the very top of the page.
+
+---
 
 ### 2026-08-12 | View_LiveRollup Tab Integration for Betul Stock Position
 
