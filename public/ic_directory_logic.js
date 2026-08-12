@@ -1256,8 +1256,16 @@ document.addEventListener('DOMContentLoaded', function() {
     seedBranchDataIfEmpty();
     seedICDataIfEmpty();
 
-    // Render dashboard
-    renderDashboard();
+    // Activate dashboard view on initial load (hides all other views, shows dashboard)
+    showView('dashboard', document.getElementById('dir-nav-dashboard'));
+
+    // Live clock
+    function updateDirClock() {
+        const el = document.getElementById('dir-live-clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN', { hour12: false });
+    }
+    updateDirClock();
+    setInterval(updateDirClock, 1000);
 
     // Auto-sync transporters (silently)
     DirDB.fetchTransporters().then(() => renderDashboard()).catch(() => {});
