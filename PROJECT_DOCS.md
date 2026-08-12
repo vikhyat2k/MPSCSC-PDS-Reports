@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Added Live Google Sheets Stock Position CSV importer (/api/stock-position/fetch-sheet) and dedicated UI module with automatic link persistence |
+| Last Code Change | 12 Aug 2026 — Integrated View_LiveRollup Google Sheet tab targeting for Betul Stock Position with multi-commodity headers, executive cards, and highlighted total row |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,21 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | View_LiveRollup Tab Integration for Betul Stock Position
+
+Files: server.js, public/index.html
+Type: Feature Integration
+Closes: ISSUE-020
+
+- FEATURE: Targeted the specific `View_LiveRollup` tab from the user's Betul District Stock Position Google Sheet (`13lEnaakk6idsNkAV--RH5cr2PAiwXQEjeNEP836tRa8`).
+- IMPLEMENTATION:
+  1. Updated backend `/api/stock-position/fetch-sheet` route to query `gviz/tq?tqx=out:csv&headers=3&sheet=View_LiveRollup`, dynamically extracting all 16 commodity columns (Wheat 2024-25, Wheat 2025-26, Wheat 2026-27, CMR Fortified/Non-Fortified, Paddy, Jwar, Gram, Sugar, Salt, F.Salt, and IC Total).
+  2. Implemented header cleanup to remove multi-line garbage text and label issue centers and totals accurately.
+  3. Built 4 Executive Summary KPI Cards showing Total District Stock (`9,68,117.71 Qt`), Wheat Balance (`5,84,708.21 Qt`), Paddy/CMR Rice (`3,72,948.87 Qt`), and Sugar/Salt (`4,019.48 Qt`).
+  4. Added a responsive inventory table with sticky headers, numeric right-alignment, and a highlighted green `योग / Total` row.
+
+---
 
 ### 2026-08-12 | Live Google Sheets Stock Position Importer & Dashboard View
 
