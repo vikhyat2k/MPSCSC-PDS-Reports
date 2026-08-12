@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Added Advanced Stock Analytics Engine: KPI strip, donut commodity chart, stock intensity heatmap, IC ranking leaderboard, smart insights & risk alerts |
+| Last Code Change | 12 Aug 2026 — Added IC-wise scheme shortfall analysis panel: /api/stock-position/shortfall API + table showing NFSA/MDM/ICDS/Welfare shortfall per Issue Center |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,22 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | IC-wise Scheme Shortfall Analysis Panel Added to Live Stock Position
+
+Files: server.js, public/index.html
+Type: Feature / Analytics
+Closes: ISSUE-031
+
+- FEATURE: User requested shortfall of stock per Issue Center based on recent NFSA, MDM, ICDS, and Welfare scheme reports.
+- IMPLEMENTED:
+  1. **New API endpoint** — `GET /api/stock-position/shortfall` in `server.js` that reads the latest report from DB for each of the 4 schemes and aggregates sector/matrix rows to Issue Center level.
+  2. **NFSA** — aggregates `allSectors` by extracting IC block name from sector name (e.g. "बैतूल सेक्टर क्र 1" → "बैतूल").
+  3. **MDM / ICDS / Welfare** — aggregates `matrix` rows using the `block` field for IC grouping, computes `totalAllotted - totalDispatched` as shortfall.
+  4. **Frontend `renderShortfallTable()`** — Fetches `/api/stock-position/shortfall`, renders a color-coded IC × Scheme table with Allotted, Dispatched + Dispatch%, Shortfall columns, District Total row, and 5-card shortfall summary strip (NFSA / MDM / ICDS / Welfare / Total).
+  5. Auto-called from `showStockPositionView()` on every navigation to Live Stock Position module.
+
+---
 
 ### 2026-08-12 | Advanced Stock Analytics Engine Added to Live Stock Position Module
 

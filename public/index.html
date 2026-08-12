@@ -2184,6 +2184,7 @@ async function showStockPositionView() {
         input.value = localStorage.getItem('betul_stock_sheet_url') || DEFAULT_BETUL_STOCK_SHEET_URL;
     }
     await fetchStockPositionSheet();
+    renderShortfallTable(); // load scheme shortfall data in parallel
 }
 
 async function fetchStockPositionSheet() {
