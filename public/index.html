@@ -2175,11 +2175,14 @@ async function fetchStockPositionSheet() {
         // Identify Total Row
         var totalRow = rawRows.find(function(r) { return (r[1] && r[1].includes('योग')) || (r[0] && r[0].includes('Total')); }) || rawRows[rawRows.length - 1];
 
-        // Always keep IC Code (0), Issue Center (1), and IC Total (last column); filter out commodity columns with Total === 0
+        // Omit IC Code (column 0) to show only ONE Issue Center column; filter out commodity columns with Total === 0
         var activeColIndices = [];
         rawHeaders.forEach(function(h, colIdx) {
-            // Always keep IC Code (0), Issue Center (1), and IC Total (last column)
-            if (colIdx === 0 || colIdx === 1 || colIdx === rawHeaders.length - 1) {
+            // Omit IC Code column (colIdx 0)
+            if (colIdx === 0) return;
+
+            // Always keep Issue Center (1) and IC Total (last column)
+            if (colIdx === 1 || colIdx === rawHeaders.length - 1) {
                 activeColIndices.push(colIdx);
                 return;
             }
@@ -2256,21 +2259,21 @@ async function fetchStockPositionSheet() {
                         '<tr style="background:rgba(16,185,129,0.15);color:var(--text-main);">' +
                             '<th style="padding:10px;text-align:center;width:40px;">#</th>' +
                             headers.map(function(h, idx) {
-                                var isNum = idx >= 2;
+                                var isNum = idx >= 1;
                                 return '<th style="padding:10px;text-align:' + (isNum ? 'right' : 'left') + ';white-space:nowrap;">' + h + '</th>';
                             }).join('') +
                         '</tr>' +
                     '</thead>' +
                     '<tbody>' +
                         dataRows.map(function(row, rIdx) {
-                            var isTotal = (row[1] && row[1].includes('योग')) || (row[0] && row[0].includes('Total')) || rIdx === dataRows.length - 1;
+                            var isTotal = (row[0] && row[0].includes('योग')) || (row[0] && row[0].includes('Total')) || rIdx === dataRows.length - 1;
                             var rowBg = isTotal ? 'background:rgba(16,185,129,0.2);font-weight:800;border-top:2px solid #10b981;' : 'border-bottom:1px solid rgba(255,255,255,0.05);';
                             
                             return '<tr style="' + rowBg + '">' +
                                 '<td style="padding:10px;text-align:center;font-weight:700;color:var(--text-muted);">' + (isTotal ? '∑' : rIdx + 1) + '</td>' +
                                 headers.map(function(h, cIdx) {
                                     var cellVal = row[cIdx] || '0.00';
-                                    var isNum = cIdx >= 2;
+                                    var isNum = cIdx >= 1;
                                     var isTotalCol = cIdx === headers.length - 1;
                                     var cellColor = isTotalCol ? 'color:#10b981;font-weight:800;' : (isNum ? 'font-weight:600;' : 'font-weight:700;');
                                     return '<td style="padding:10px;text-align:' + (isNum ? 'right' : 'left') + ';' + cellColor + ';white-space:nowrap;">' + cellVal + '</td>';
