@@ -2099,6 +2099,8 @@ async function showComparisonView() {
     await renderComparisonTool();
 }
 
+var DEFAULT_BETUL_STOCK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/13lEnaakk6idsNkAV--RH5cr2PAiwXQEjeNEP836tRa8/edit?gid=519497993#gid=519497993';
+
 async function showStockPositionView() {
     var dash  = document.getElementById('dashboardSection');
     var gen   = document.getElementById('generateView');
@@ -2117,14 +2119,11 @@ async function showStockPositionView() {
     hideAllReportSections();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    var savedUrl = localStorage.getItem('betul_stock_sheet_url');
     var input = document.getElementById('stockSheetUrlInput');
-    if (savedUrl && input && !input.value) {
-        input.value = savedUrl;
+    if (input && !input.value) {
+        input.value = localStorage.getItem('betul_stock_sheet_url') || DEFAULT_BETUL_STOCK_SHEET_URL;
     }
-    if (input && input.value) {
-        await fetchStockPositionSheet();
-    }
+    await fetchStockPositionSheet();
 }
 
 async function fetchStockPositionSheet() {
@@ -2135,11 +2134,8 @@ async function fetchStockPositionSheet() {
 
     var sheetUrl = input ? input.value.trim() : '';
     if (!sheetUrl) {
-        if (statusEl) {
-            statusEl.style.display = 'block';
-            statusEl.innerHTML = '<div class="alert alert-warning" style="padding:12px;border-radius:8px;background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-weight:600;">⚠️ Please paste your Google Sheet URL or Sheet ID above to import live stock position data.</div>';
-        }
-        return;
+        sheetUrl = DEFAULT_BETUL_STOCK_SHEET_URL;
+        if (input) input.value = sheetUrl;
     }
 
     localStorage.setItem('betul_stock_sheet_url', sheetUrl);
