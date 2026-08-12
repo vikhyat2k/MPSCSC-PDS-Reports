@@ -2605,6 +2605,100 @@ app.get('/api/generate-welfare-status/:requestId', (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// LIVE GOOGLE SHEET STOCK POSITION ENDPOINT
+// ─────────────────────────────────────────────
+function parseCSV(text) {
+    const lines = [];
+    let currentRow = [];
+    let currentCell = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+            if (insideQuotes && nextChar === '"') {
+                currentCell += '"';
+                i++;
+            } else {
+                insideQuotes = !insideQuotes;
+            }
+        } else if (char === ',' && !insideQuotes) {
+            currentRow.push(currentCell.trim());
+            currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !insideQuotes) {
+            if (char === '\r' && nextChar === '\n') {
+                i++;
+            }
+            currentRow.push(currentCell.trim());
+            if (currentRow.some(c => c !== '')) {
+                lines.push(currentRow);
+            }
+            currentRow = [];
+            currentCell = '';
+        } else {
+            currentCell += char;
+        }
+    }
+    if (currentCell !== '' || currentRow.length > 0) {
+        currentRow.push(currentCell.trim());
+        if (currentRow.some(c => c !== '')) {
+            lines.push(currentRow);
+        }
+    }
+    return lines;
+}
+
+app.post('/api/stock-position/fetch-sheet', async (req, res) => {
+    try {
+        const { sheetUrl } = req.body;
+        if (!sheetUrl) {
+            return res.status(400).json({ error: 'Sheet URL or ID is required' });
+        }
+
+        let sheetId = sheetUrl.trim();
+        const match = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) {
+            sheetId = match[1];
+        }
+
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        
+        const response = await fetch(csvUrl);
+        if (!response.ok) {
+            return res.status(400).json({ 
+                error: `Failed to fetch Google Sheet (${response.status} ${response.statusText}). Please verify the sheet permissions are set to "Anyone with the link can view".` 
+            });
+        }
+
+        const rawCsv = await response.text();
+        const rows = parseCSV(rawCsv);
+
+        if (rows.length === 0) {
+            return res.status(400).json({ error: 'The Google Sheet appears to be empty.' });
+        }
+
+        const headers = rows[0];
+        const dataRows = rows.slice(1);
+
+        res.json({
+            success: true,
+            sheetId,
+            headers,
+            dataRows,
+            totalRows: dataRows.length,
+            fetchedAt: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('Error fetching Google Sheet stock position:', err);
+        res.status(500).json({
+            error: `Error accessing Google Sheet: ${err.message}. Please verify the link and public view permissions.`
+        });
+    }
+});
+
+// ─────────────────────────────────────────────
 // EMAIL REPORTING ENDPOINT
 // ─────────────────────────────────────────────
 
