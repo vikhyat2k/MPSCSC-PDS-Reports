@@ -2692,17 +2692,25 @@ async function renderShortfallTable() {
         var ics = data.issueCenters;
         var hasStockData = window.lastStockData && window.lastStockData.icData && window.lastStockData.icData.length > 0;
 
-        function normalizeIC(name) {
-            return (name || '').toLowerCase().split('(')[0].split('सेक्टर')[0].split('क्र')[0].replace(/[^a-z0-9\u0900-\u097F]/g, '').trim();
+        function cleanHindiIC(str) {
+            if (!str) return '';
+            return (str || '').toLowerCase()
+                .split('(')[0].split('सेक्टर')[0].split('क्र')[0]
+                .replace(/[\u0901\u0902\u0903\u093C\u094D\s\(\)\-\.]/g, '')
+                .replace(/टटन|टटन|ट्टन|पट्टन/g, 'टटन')
+                .replace(/भैसदेही|भैंसदेही/g, 'भैसदेही')
+                .replace(/प्रभात्|प्रभात/g, 'प्रभात')
+                .replace(/घोडाडोंगरी|घोड़ाडोंगरी|घोडाडोगरी/g, 'घोडाडोंगरी')
+                .trim();
         }
 
         // Match IC available stock from live sheet
         var enrichedICs = ics.map(function(icObj) {
-            var normName = normalizeIC(icObj.ic);
+            var normName = cleanHindiIC(icObj.ic);
             var liveItem = null;
             if (hasStockData) {
                 liveItem = window.lastStockData.icData.find(function(item) {
-                    var iname = normalizeIC(item.name);
+                    var iname = cleanHindiIC(item.name);
                     return iname.includes(normName) || normName.includes(iname);
                 });
             }

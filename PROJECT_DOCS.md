@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 12 August 2026, 23:00 IST
+> **Last Sync:** 12 August 2026, 23:08 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Commodity-wise Stock Shortfall vs Allocation Overhaul (Wheat, Rice, F.Salt aggregated per scheme & matched with live inventory) |
+| Last Code Change | 12 Aug 2026 — Fixed Hindi IC string normalization (cleanHindiIC) to match variants like भैंसदेही/भैसदेही and प्रभात पट्टन/प्रभातपटटन across live sheet & DB |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
