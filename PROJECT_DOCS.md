@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Configured permanent default Google Sheet URL (View_LiveRollup gid=519497993) across backend and frontend for instant one-click auto-loading |
+| Last Code Change | 12 Aug 2026 — Strictly enforced View_LiveRollup tab target in server.js to guarantee only the district rollup table is fetched |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,17 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Strictly Enforced View_LiveRollup Tab Target
+
+Files: server.js
+Type: Requirement Enforcement
+Closes: ISSUE-024
+
+- REQUIREMENT: Enforce that `/api/stock-position/fetch-sheet` strictly fetches data **only** from the `View_LiveRollup` tab (`headers=3&sheet=View_LiveRollup`), disregarding any extraneous sheet/gid parameters.
+- FIX: Hardcoded `const sheetParam = 'sheet=View_LiveRollup'` in `server.js` (line 2668). Guaranteed exact 10-row district rollup output (`9 Issue Centers + 1 Total row`).
+
+---
 
 ### 2026-08-12 | Permanent Default Google Sheet URL Hardcoded (View_LiveRollup)
 
