@@ -1016,26 +1016,74 @@
                         <div id="stockTableContainer" style="overflow-x:auto;"></div>
 
                         <!-- Stock Analytics & Insights Container -->
-                        <div id="stockAnalyticsSection" style="margin-top:24px;display:none;">
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
-                                <!-- Stock Chart Card -->
-                                <div style="background:var(--card-bg, rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:16px;">
-                                    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
-                                        <span>📊</span> Issue Center Stock Volume Breakdown (Qt)
-                                    </h3>
-                                    <div style="position:relative;height:260px;width:100%;">
+                        <div id="stockAnalyticsSection" style="margin-top:28px;display:none;">
+
+                            <!-- Section header -->
+                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;border-bottom:2px solid rgba(16,185,129,0.2);padding-bottom:14px;">
+                                <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📊</div>
+                                <div>
+                                    <h3 style="margin:0;font-size:16px;font-weight:800;color:var(--text-main);">Advanced Stock Analytics & Intelligence</h3>
+                                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Live computed from View_LiveRollup · Betul District PDS</div>
+                                </div>
+                                <div id="stockAnalyticsTimestamp" style="margin-left:auto;font-size:11px;color:var(--text-muted);font-weight:600;background:rgba(16,185,129,0.1);padding:4px 10px;border-radius:8px;border:1px solid rgba(16,185,129,0.25);white-space:nowrap;"></div>
+                            </div>
+
+                            <!-- Row 1: KPI Metrics Strip -->
+                            <div id="stockKpiStrip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+                            <!-- Row 2: Bar Chart + Donut Chart side by side -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+                                <!-- Bar Chart: IC Stock Volume Breakdown -->
+                                <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:18px;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                                        <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text-main);">📊 Issue Center Stock Volume (Qt)</h4>
+                                        <span style="font-size:10px;color:var(--text-muted);background:rgba(16,185,129,0.08);padding:3px 8px;border-radius:6px;">Total Stock</span>
+                                    </div>
+                                    <div style="position:relative;height:240px;">
                                         <canvas id="stockChartCanvas"></canvas>
                                     </div>
                                 </div>
 
-                                <!-- Stock Risk & Insights Card -->
-                                <div style="background:var(--card-bg, rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:16px;">
-                                    <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:8px;">
-                                        <span>💡</span> Stock Insights & Buffer Alerts
-                                    </h3>
-                                    <div id="stockRiskAlertsContainer" style="display:flex;flex-direction:column;gap:10px;font-size:12px;"></div>
+                                <!-- Donut Chart: Commodity Mix -->
+                                <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:18px;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                                        <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text-main);">🥧 Commodity Mix (District %)</h4>
+                                        <span style="font-size:10px;color:var(--text-muted);background:rgba(99,102,241,0.08);padding:3px 8px;border-radius:6px;">By Volume</span>
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;">
+                                        <div style="position:relative;height:200px;">
+                                            <canvas id="stockDonutCanvas"></canvas>
+                                        </div>
+                                        <div id="stockDonutLegend" style="font-size:10px;display:flex;flex-direction:column;gap:6px;min-width:110px;"></div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Row 3: Heatmap + Ranking -->
+                            <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:20px;">
+
+                                <!-- Commodity × IC Heatmap -->
+                                <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(242,107,43,0.2);border-radius:12px;padding:18px;overflow-x:auto;">
+                                    <h4 style="margin:0 0 12px;font-size:13px;font-weight:700;color:var(--text-main);">🔥 Stock Intensity Heatmap — Issue Center × Commodity</h4>
+                                    <div id="stockHeatmapContainer" style="font-size:11px;"></div>
+                                </div>
+
+                                <!-- IC Ranking Panel -->
+                                <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:18px;">
+                                    <h4 style="margin:0 0 12px;font-size:13px;font-weight:700;color:var(--text-main);">🏆 Issue Center Stock Ranking</h4>
+                                    <div id="stockRankingList" style="display:flex;flex-direction:column;gap:8px;font-size:12px;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Alerts Panel (full-width) -->
+                            <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:18px;margin-bottom:20px;">
+                                <h4 style="margin:0 0 12px;font-size:13px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+                                    <span>💡</span> Smart Insights & Risk Intelligence
+                                </h4>
+                                <div id="stockRiskAlertsContainer" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;font-size:12px;"></div>
+                            </div>
+
                         </div>
                     </div>
                 </section>
@@ -2285,33 +2333,113 @@ async function fetchStockPositionSheet() {
             '</div>';
         }
 
-        // Render Stock Analytics (Chart & Insights Alerts)
-        var analyticsSec = document.getElementById('stockAnalyticsSection');
-        var chartCanvas = document.getElementById('stockChartCanvas');
+        // ══════════════════════════════════════════════════
+        //  ADVANCED STOCK ANALYTICS ENGINE
+        // ══════════════════════════════════════════════════
+
+        var analyticsSec   = document.getElementById('stockAnalyticsSection');
+        var chartCanvas    = document.getElementById('stockChartCanvas');
+        var donutCanvas    = document.getElementById('stockDonutCanvas');
         var alertsContainer = document.getElementById('stockRiskAlertsContainer');
+        var kpiStrip       = document.getElementById('stockKpiStrip');
+        var rankingList    = document.getElementById('stockRankingList');
+        var heatmapCont    = document.getElementById('stockHeatmapContainer');
+        var donutLegend    = document.getElementById('stockDonutLegend');
+        var tsEl           = document.getElementById('stockAnalyticsTimestamp');
 
         if (analyticsSec) analyticsSec.style.display = 'block';
+        if (tsEl) tsEl.textContent = '🕐 Synced: ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
 
-        // 1. Stock Distribution Bar Chart
+        // ── Helper to safely parse numbers ──
+        function pv(v) { return parseFloat((v || '0').replace(/,/g,'')) || 0; }
+
+        // ── Build IC data array (exclude total row) ──
+        var icData = [];
+        var commodityHeaders = headers.slice(1, headers.length - 1); // skip IC name col & IC Total col
+        var districtTotal = 0;
+
+        dataRows.forEach(function(row) {
+            var name = row[0] || '';
+            var isTotal = name.includes('योग') || name.includes('Total');
+            if (isTotal) { districtTotal = pv(row[row.length - 1]); return; }
+            if (!name) return;
+            var icTotal = pv(row[row.length - 1]);
+            var commodities = {};
+            commodityHeaders.forEach(function(h, i) { commodities[h] = pv(row[i + 1]); });
+            icData.push({ name: name, total: icTotal, commodities: commodities });
+        });
+
+        if (!districtTotal) districtTotal = icData.reduce(function(s, ic) { return s + ic.total; }, 0);
+
+        // ── Commodity group totals ──
+        var commodityTotals = {};
+        commodityHeaders.forEach(function(h) {
+            commodityTotals[h] = icData.reduce(function(s, ic) { return s + (ic.commodities[h] || 0); }, 0);
+        });
+
+        // ── Group commodities for donut ──
+        var donutGroups = {
+            'Wheat (गेहूं)': 0,
+            'CMR/Paddy (चावल/धान)': 0,
+            'Jowar (ज्वार)': 0,
+            'Sugar (शक्कर)': 0,
+            'Salt (नमक)': 0
+        };
+        Object.keys(commodityTotals).forEach(function(h) {
+            var hl = h.toLowerCase();
+            var v = commodityTotals[h];
+            if (hl.includes('wheat')) donutGroups['Wheat (गेहूं)'] += v;
+            else if (hl.includes('cmr') || hl.includes('paddy') || hl.includes('rice')) donutGroups['CMR/Paddy (चावल/धान)'] += v;
+            else if (hl.includes('jwar') || hl.includes('jowar')) donutGroups['Jowar (ज्वार)'] += v;
+            else if (hl.includes('sugar')) donutGroups['Sugar (शक्कर)'] += v;
+            else if (hl.includes('salt') || hl.includes('f.salt') || hl.includes('iodine')) donutGroups['Salt (नमक)'] += v;
+        });
+
+        var donutColors = ['#10b981','#6366f1','#f59e0b','#ec4899','#06b6d4'];
+        var maxIC = icData.reduce(function(a,b){ return b.total > a.total ? b : a; }, icData[0] || {name:'',total:0});
+        var minIC = icData.filter(function(ic){ return ic.total > 0; }).reduce(function(a,b){ return b.total < a.total ? b : a; }, icData[0] || {name:'',total:0});
+        var negativeItems = [];
+        icData.forEach(function(ic) {
+            Object.keys(ic.commodities).forEach(function(h) {
+                if (ic.commodities[h] < -0.001) negativeItems.push({ center: ic.name, commodity: h, val: ic.commodities[h] });
+            });
+        });
+        var avgStock = icData.length ? districtTotal / icData.length : 0;
+        var icCount = icData.length;
+
+        // ── 1. KPI STRIP ──
+        if (kpiStrip) {
+            function kpiCard(icon, label, value, color, sub) {
+                return '<div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;">' +
+                    '<div style="font-size:18px;">' + icon + '</div>' +
+                    '<div style="font-size:20px;font-weight:800;color:' + color + ';letter-spacing:-0.5px;">' + value + '</div>' +
+                    '<div style="font-size:10px;font-weight:700;color:var(--text-main);text-transform:uppercase;letter-spacing:0.5px;">' + label + '</div>' +
+                    (sub ? '<div style="font-size:10px;color:var(--text-muted);">' + sub + '</div>' : '') +
+                '</div>';
+            }
+            kpiStrip.innerHTML =
+                kpiCard('📦', 'District Total', fmtQt(districtTotal), '#10b981', icCount + ' Issue Centers') +
+                kpiCard('📈', 'Highest Stock IC', maxIC.name || '—', '#f59e0b', fmtQt(maxIC.total)) +
+                kpiCard('📉', 'Lowest Stock IC', minIC.name || '—', '#6366f1', fmtQt(minIC.total)) +
+                kpiCard('⚖️', 'Avg Stock/IC', fmtQt(avgStock), '#06b6d4', 'Per Issue Center') +
+                kpiCard('🌾', 'Wheat Share', (donutGroups['Wheat (गेहूं)'] / districtTotal * 100).toFixed(1) + '%', '#f26b2b', fmtQt(donutGroups['Wheat (गेहूं)'])) +
+                kpiCard('⚠️', 'Negative Items', negativeItems.length > 0 ? negativeItems.length : '✓ None', negativeItems.length > 0 ? '#ef4444' : '#10b981', negativeItems.length > 0 ? 'Urgent attention needed' : 'All stocks positive');
+        }
+
+        var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+        var tickColor = isDark ? '#a0aec0' : '#475569';
+
+        // ── 2. BAR CHART: Issue Center Volume ──
         if (chartCanvas && typeof Chart !== 'undefined') {
             destroyChart('stockCenterChart');
-            var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-            var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
-            var tickColor = isDark ? '#a0aec0' : '#475569';
-
-            var centerLabels = [];
-            var centerData = [];
-
-            dataRows.forEach(function(row) {
-                var name = row[1] || row[0] || '';
-                var parseVal = function(v) { return parseFloat((v || '').replace(/,/g, '')) || 0; };
-                var isTotal = name.includes('योग') || name.includes('Total');
-                if (!isTotal && name) {
-                    centerLabels.push(name);
-                    centerData.push(parseVal(row[row.length - 1]));
-                }
+            var centerLabels = icData.map(function(ic) { return ic.name; });
+            var centerData   = icData.map(function(ic) { return ic.total; });
+            var barColors = centerData.map(function(v) {
+                if (v === maxIC.total) return '#f59e0b';
+                if (v < avgStock * 0.5) return '#ef4444';
+                return '#10b981';
             });
-
             _dashCharts['stockCenterChart'] = new Chart(chartCanvas, {
                 type: 'bar',
                 data: {
@@ -2319,59 +2447,197 @@ async function fetchStockPositionSheet() {
                     datasets: [{
                         label: 'Total Stock (Qt)',
                         data: centerData,
-                        backgroundColor: '#10b981',
-                        borderRadius: 6
+                        backgroundColor: barColors,
+                        borderRadius: 6,
+                        borderSkipped: false
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     plugins: {
-                        legend: { labels: { color: tickColor, font: { size: 11, family: 'Inter' } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) { return 'Stock: ' + fmtQt(ctx.raw); }
-                            }
-                        }
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(ctx) { return ' ' + fmtQt(ctx.raw) + ' Qt'; } } }
                     },
                     scales: {
                         x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10, weight: '600' } } },
-                        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 }, callback: function(v){ return fmtQt(v); } } }
+                        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 10 }, callback: function(v) { return fmtQt(v); } } }
                     }
                 }
             });
         }
 
-        // 2. Stock Insights & Risk Alerts
-        if (alertsContainer) {
-            var alerts = [];
-            
-            dataRows.forEach(function(row) {
-                var centerName = row[1] || row[0] || '';
-                var isTotal = centerName.includes('योग') || centerName.includes('Total');
-                if (isTotal) return;
-
-                headers.forEach(function(h, colIdx) {
-                    if (colIdx < 2 || colIdx === headers.length - 1) return;
-                    var valStr = row[colIdx] || '';
-                    var valNum = parseFloat(valStr.replace(/,/g, '')) || 0;
-                    if (valNum < 0) {
-                        alerts.push('<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);padding:8px 12px;border-radius:6px;color:#ef4444;font-weight:600;">' +
-                            '🔴 <strong>Negative Stock Alert:</strong> ' + centerName + ' — ' + h + ' (' + valStr + ' Qt)' +
-                        '</div>');
+        // ── 3. DONUT CHART: Commodity Mix ──
+        if (donutCanvas && typeof Chart !== 'undefined') {
+            destroyChart('stockDonutChart');
+            var donutLabels = Object.keys(donutGroups).filter(function(k) { return donutGroups[k] > 0.001; });
+            var donutData   = donutLabels.map(function(k) { return donutGroups[k]; });
+            _dashCharts['stockDonutChart'] = new Chart(donutCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: donutLabels,
+                    datasets: [{ data: donutData, backgroundColor: donutColors.slice(0, donutLabels.length), borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    var pct = (ctx.raw / districtTotal * 100).toFixed(1);
+                                    return ' ' + fmtQt(ctx.raw) + ' Qt (' + pct + '%)';
+                                }
+                            }
+                        }
                     }
-                });
+                }
+            });
+            if (donutLegend) {
+                donutLegend.innerHTML = donutLabels.map(function(label, i) {
+                    var pct = (donutGroups[label] / districtTotal * 100).toFixed(1);
+                    return '<div style="display:flex;align-items:center;gap:5px;">' +
+                        '<span style="width:10px;height:10px;border-radius:2px;background:' + donutColors[i] + ';flex-shrink:0;display:inline-block;"></span>' +
+                        '<span style="color:var(--text-main);font-weight:600;">' + label + '</span>' +
+                        '<span style="color:var(--text-muted);margin-left:auto;">' + pct + '%</span>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        // ── 4. IC RANKING LIST ──
+        if (rankingList) {
+            var sorted = icData.slice().sort(function(a,b) { return b.total - a.total; });
+            var medals = ['🥇','🥈','🥉'];
+            rankingList.innerHTML = sorted.map(function(ic, idx) {
+                var share = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(1) : '0.0';
+                var barW  = districtTotal > 0 ? (ic.total / maxIC.total * 100).toFixed(0) : 0;
+                var medal = medals[idx] || ('#' + (idx + 1));
+                var color = idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#cd7f32' : '#10b981';
+                return '<div style="padding:8px 10px;background:var(--card-bg,rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.06);border-radius:8px;">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+                        '<span style="font-weight:700;color:var(--text-main);">' + medal + ' ' + ic.name + '</span>' +
+                        '<span style="font-weight:800;color:' + color + ';font-size:11px;">' + fmtQt(ic.total) + '</span>' +
+                    '</div>' +
+                    '<div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">' +
+                        '<div style="height:100%;width:' + barW + '%;background:' + color + ';border-radius:2px;"></div>' +
+                    '</div>' +
+                    '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">' + share + '% of district stock</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ── 5. HEATMAP: IC × Commodity ──
+        if (heatmapCont && icData.length > 0 && commodityHeaders.length > 0) {
+            // Find max value per commodity column for normalization
+            var colMax = {};
+            commodityHeaders.forEach(function(h) {
+                colMax[h] = Math.max.apply(null, icData.map(function(ic){ return ic.commodities[h] || 0; }));
+            });
+            function heatColor(val, max) {
+                if (max <= 0) return 'rgba(255,255,255,0.04)';
+                var ratio = Math.max(0, val) / max;
+                if (val < 0) return 'rgba(239,68,68,0.5)';
+                if (ratio > 0.75) return 'rgba(16,185,129,0.65)';
+                if (ratio > 0.45) return 'rgba(16,185,129,0.30)';
+                if (ratio > 0.15) return 'rgba(245,158,11,0.30)';
+                if (ratio > 0) return 'rgba(239,68,68,0.20)';
+                return 'rgba(255,255,255,0.04)';
+            }
+            var cellStyle = 'padding:5px 6px;text-align:right;border-radius:4px;font-weight:600;';
+            var hdrStyle  = 'padding:5px 6px;text-align:center;font-size:9px;font-weight:700;color:var(--text-muted);white-space:nowrap;';
+            var rowHdrStyle = 'padding:5px 8px;font-size:10px;font-weight:700;color:var(--text-main);white-space:nowrap;text-align:left;min-width:80px;';
+            var html = '<div style="overflow-x:auto;"><table style="border-collapse:separate;border-spacing:3px;width:100%;">' +
+                '<thead><tr>' +
+                    '<th style="' + rowHdrStyle + '">Issue Center</th>' +
+                    commodityHeaders.map(function(h) {
+                        var short = h.replace('2024-25','24-25').replace('2025-26','25-26').replace('2026-27','26-27').replace('CMR-','').replace('NonFort','NF').replace('Fort','F').replace('(Iodine)','Iod');
+                        return '<th style="' + hdrStyle + '">' + short + '</th>';
+                    }).join('') +
+                '</tr></thead><tbody>';
+            icData.forEach(function(ic) {
+                html += '<tr>' +
+                    '<td style="' + rowHdrStyle + '">' + ic.name + '</td>' +
+                    commodityHeaders.map(function(h) {
+                        var val = ic.commodities[h] || 0;
+                        var bg  = heatColor(val, colMax[h]);
+                        var disp = val < -0.001 ? val.toFixed(0) : val > 0.001 ? (val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toFixed(0)) : '—';
+                        return '<td style="' + cellStyle + 'background:' + bg + ';font-size:10px;color:var(--text-main);">' + disp + '</td>';
+                    }).join('') +
+                '</tr>';
+            });
+            html += '</tbody></table></div>';
+            heatmapCont.innerHTML = html;
+        }
+
+        // ── 6. SMART INSIGHTS & RISK ALERTS ──
+        if (alertsContainer) {
+            var insights = [];
+
+            function insightCard(icon, title, body, borderColor, bgColor, textColor) {
+                return '<div style="background:' + bgColor + ';border:1px solid ' + borderColor + ';padding:12px 14px;border-radius:8px;">' +
+                    '<div style="font-weight:700;color:' + textColor + ';margin-bottom:4px;">' + icon + ' ' + title + '</div>' +
+                    '<div style="color:var(--text-main);line-height:1.5;">' + body + '</div>' +
+                '</div>';
+            }
+
+            // Negative stock alerts
+            negativeItems.forEach(function(ni) {
+                insights.push(insightCard('🔴', 'Negative Stock Alert',
+                    '<strong>' + ni.center + '</strong> — ' + ni.commodity + ': <strong style="color:#ef4444;">' + ni.val.toFixed(2) + ' Qt</strong>. Immediate replenishment or audit required.',
+                    'rgba(239,68,68,0.4)', 'rgba(239,68,68,0.1)', '#ef4444'));
             });
 
-            alerts.push('<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);padding:8px 12px;border-radius:6px;color:#10b981;font-weight:600;">' +
-                '🟢 <strong>Top Stock Volume Center:</strong> Ghodadongri (2,45,448.43 Qt) holds the highest stock volume.' +
-            '</div>');
+            // Top IC insight
+            if (maxIC && maxIC.name) {
+                var maxShare = districtTotal > 0 ? (maxIC.total / districtTotal * 100).toFixed(1) : '0';
+                insights.push(insightCard('🟢', 'Highest Buffer IC',
+                    '<strong>' + maxIC.name + '</strong> holds <strong>' + fmtQt(maxIC.total) + ' Qt</strong> (' + maxShare + '% of district). Good buffer security.',
+                    'rgba(16,185,129,0.35)', 'rgba(16,185,129,0.08)', '#10b981'));
+            }
 
-            alerts.push('<div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);padding:8px 12px;border-radius:6px;color:#6366f1;font-weight:600;">' +
-                'ℹ️ <strong>Stock Mix Breakdown:</strong> Wheat accounts for 60.4% and Paddy/CMR accounts for 38.5% of district inventory.' +
-            '</div>');
+            // Low stock ICs (below 50% of district average)
+            icData.filter(function(ic){ return ic.total > 0 && ic.total < avgStock * 0.5; }).forEach(function(ic) {
+                insights.push(insightCard('🟡', 'Low Buffer Warning',
+                    '<strong>' + ic.name + '</strong> holds only <strong>' + fmtQt(ic.total) + ' Qt</strong> — below 50% of district average (' + fmtQt(avgStock) + ' Qt). Consider restocking.',
+                    'rgba(245,158,11,0.4)', 'rgba(245,158,11,0.08)', '#f59e0b'));
+            });
 
-            alertsContainer.innerHTML = alerts.join('');
+            // Commodity dominance
+            var topCommodity = Object.keys(commodityTotals).reduce(function(a,b){ return commodityTotals[b] > commodityTotals[a] ? b : a; }, commodityHeaders[0] || '');
+            if (topCommodity && districtTotal > 0) {
+                var topPct = (commodityTotals[topCommodity] / districtTotal * 100).toFixed(1);
+                insights.push(insightCard('📦', 'Dominant Commodity',
+                    '<strong>' + topCommodity + '</strong> is the largest single commodity pool at <strong>' + fmtQt(commodityTotals[topCommodity]) + ' Qt (' + topPct + '%)</strong> of total district stock.',
+                    'rgba(99,102,241,0.35)', 'rgba(99,102,241,0.08)', '#6366f1'));
+            }
+
+            // Wheat total insight
+            var wheatTotal = donutGroups['Wheat (गेहूं)'];
+            if (wheatTotal > 0 && districtTotal > 0) {
+                var wheatPct = (wheatTotal / districtTotal * 100).toFixed(1);
+                insights.push(insightCard('🌾', 'Wheat Pool Status',
+                    'Combined Wheat (All pools) accounts for <strong>' + wheatPct + '%</strong> of total stock = <strong>' + fmtQt(wheatTotal) + ' Qt</strong>. ' +
+                    (parseFloat(wheatPct) > 60 ? 'High wheat concentration — monitor expiry timelines.' : 'Healthy commodity diversification observed.'),
+                    'rgba(242,107,43,0.35)', 'rgba(242,107,43,0.08)', '#f26b2b'));
+            }
+
+            // Distribution equity
+            var sortedTotals = icData.map(function(ic){ return ic.total; }).sort(function(a,b){ return b-a; });
+            if (sortedTotals.length >= 2) {
+                var topHalf = sortedTotals.slice(0, Math.ceil(sortedTotals.length/2)).reduce(function(s,v){ return s+v; }, 0);
+                var topHalfPct = (topHalf / districtTotal * 100).toFixed(1);
+                var equityMsg = parseFloat(topHalfPct) > 75 ?
+                    'Stock is concentrated — top half of Issue Centers hold <strong>' + topHalfPct + '%</strong>. Redistribution may be needed.' :
+                    'Stock distribution is relatively balanced — top half of ICs hold <strong>' + topHalfPct + '%</strong>.';
+                insights.push(insightCard('📊', 'Distribution Equity Index',
+                    equityMsg, 'rgba(6,182,212,0.35)', 'rgba(6,182,212,0.08)', '#06b6d4'));
+            }
+
+            if (insights.length === 0) {
+                insights.push(insightCard('✅', 'All Systems Normal', 'No alerts detected. All Issue Centers show positive stock levels with healthy commodity distribution.', 'rgba(16,185,129,0.35)', 'rgba(16,185,129,0.08)', '#10b981'));
+            }
+
+            alertsContainer.innerHTML = insights.join('');
         }
 
     } catch (err) {
@@ -2381,6 +2647,7 @@ async function fetchStockPositionSheet() {
         }
     }
 }
+
 
 async function renderComparisonTool() {
     var grid = document.getElementById('comparisonGrid');

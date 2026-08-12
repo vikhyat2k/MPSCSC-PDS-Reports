@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 10 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Restored Issue Center and IC Code columns in Live Stock Position inventory table while preserving zero-total commodity filtering |
+| Last Code Change | 12 Aug 2026 — Added Advanced Stock Analytics Engine: KPI strip, donut commodity chart, stock intensity heatmap, IC ranking leaderboard, smart insights & risk alerts |
 | Server Status | Production-ready (run npm start) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -1742,6 +1742,51 @@ Closes: ISSUE-010
   1. Show live progress during fresh generation (`🔄 Generating fresh reports & emailing...`).
   2. Display a prominent, persistent completion card (`🎉 Mail sending task completed! Report(s) delivered to...`) inside the modal without auto-hiding.
   3. Emit an animated screen-wide toast notification on completion.
+
+### 2026-08-12 | Advanced Stock Analytics Engine Added to Live Stock Position Module
+
+Files: public/index.html
+Type: Feature / Analytics
+Closes: ISSUE-030
+
+- FEATURE: User requested advanced analytics and insights based on live Google Sheet stock data.
+- IMPLEMENTED:
+  1. **KPI Metrics Strip** — District Total, Highest/Lowest IC, Avg Stock/IC, Wheat Share %, Negative Item count with color-coded cards.
+  2. **Bar Chart (Color-Coded)** — IC volume bars: Gold for top IC, Red for ICs below 50% district avg, Green for normal.
+  3. **Donut Chart** — Commodity-group mix (Wheat / CMR-Paddy / Jowar / Sugar / Salt) with percentage breakdown legend.
+  4. **Stock Intensity Heatmap** — IC × Commodity matrix with color heat (Green = high, Amber = mid, Red = low/negative).
+  5. **IC Ranking Leaderboard** — Sorted by total stock with medal emojis (🥇🥈🥉), mini progress bars and % of district.
+  6. **Smart Insights Panel** — Dynamic cards: Negative Stock Alerts, Highest Buffer IC, Low Buffer Warnings, Dominant Commodity, Wheat Pool Status, Distribution Equity Index.
+  - All data is computed live from the Google Sheet CSV; no hardcoded values.
+
+---
+
+### 2026-08-12 | Fixed Async History Table Un-Hiding Bug in Live Stock Position Module
+
+Files: public/app.js, public/index.html
+Type: Bug Fix / State Management
+Closes: ISSUE-029
+
+- BUG: "📜 NFSA Report History" table kept re-appearing under the stock position table after navigating to **Live Stock Position**.
+- ROOT CAUSE: `loadReports()` in `public/app.js` runs asynchronously when reports are fetched from `/api/reports?scheme=nfsa`. When its promise resolved 50ms later, it executed `section.style.display = 'block'`, overriding the DOM state set by `hideAllReportSections()`.
+- FIX:
+  1. Implemented `isSubViewActive()` in `public/app.js` (lines 1484-1490) to check whether `#stockPositionSection` or `#comparisonSection` is currently active.
+  2. Updated `switchScheme()`, `toggleNfsaMode()`, and `loadReports()` in `public/app.js` to strictly enforce `display: none` on all history tables whenever `isSubViewActive()` returns `true`.
+
+---
+
+### 2026-08-12 | Single Issue Center Column Enforced (Issue Center (इश्यू सेंटर))
+
+Files: server.js, public/index.html
+Type: UI / Layout Optimization
+Closes: ISSUE-028
+
+- REQUIREMENT: The user requested to display strictly **ONE** issue center column — either `IC Code` or `Issue Center (इश्यू सेंटर)`.
+- FIX:
+  1. Updated `server.js` `/api/stock-position/fetch-sheet` (line 2708) and `public/index.html` `fetchStockPositionSheet()` (line 2180) to skip `colIdx === 0` (`IC Code`) while retaining `colIdx === 1` (`Issue Center (इश्यू सेंटर)`).
+  2. Verified table renders cleanly with `#`, single `Issue Center (इश्यू सेंटर)` column, active non-zero commodity pools, and `IC Total`.
+
+---
 
 ### 2026-08-12 | Restored Issue Center & IC Code Columns in Live Stock Position Table
 

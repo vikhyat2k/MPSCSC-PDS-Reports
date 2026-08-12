@@ -2749,8 +2749,139 @@ app.post('/api/stock-position/fetch-sheet', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// EMAIL REPORTING ENDPOINT
+// STOCK SHORTFALL ANALYSIS ENDPOINT
+// Returns IC-wise pending balance (shortfall) from the most recent
+// NFSA, MDM, ICDS and Welfare reports pulled from the local DB.
 // ─────────────────────────────────────────────
+
+app.get('/api/stock-position/shortfall', async (req, res) => {
+    try {
+        const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        // Helper: extract IC block name from a sector name string
+        // e.g. "बैतूल सेक्टर क्र 1" → "बैतूल"
+        function sectorToIC(name) {
+            return (name || '').split(' सेक्टर')[0].split(' क्र')[0].trim();
+        }
+
+        // Fetch latest report per scheme from DB
+        async function latestReport(scheme) {
+            return new Promise((resolve, reject) => {
+                db.get(
+                    `SELECT * FROM reports WHERE scheme = ? ORDER BY year DESC, month DESC, generated_at DESC LIMIT 1`,
+                    [scheme],
+                    (err, row) => {
+                        if (err) reject(err);
+                        else resolve(row || null);
+                    }
+                );
+            });
+        }
+
+        const [nfsaRow, mdmRow, icdsRow, welfareRow] = await Promise.all([
+            latestReport('nfsa'),
+            latestReport('mdm'),
+            latestReport('icds'),
+            latestReport('welfare'),
+        ]);
+
+        // ── NFSA: aggregate allSectors by IC block ──
+        let nfsaIC = {};
+        let nfsaMeta = null;
+        if (nfsaRow) {
+            nfsaMeta = { month: nfsaRow.month, year: nfsaRow.year, label: MONTH_NAMES[(nfsaRow.month - 1) % 12] + ' ' + nfsaRow.year };
+            const ins = JSON.parse(nfsaRow.insights || '{}');
+            (ins.allSectors || []).forEach(s => {
+                const ic = sectorToIC(s.name);
+                if (!nfsaIC[ic]) nfsaIC[ic] = { allotted: 0, dispatched: 0, balance: 0, sectors: 0, dispatchPct: 0 };
+                nfsaIC[ic].balance   += (s.balance || 0);
+                nfsaIC[ic].sectors++;
+            });
+            // Compute allotted / dispatched from totals for proportional allocation
+            const totalBalance = Object.values(nfsaIC).reduce((s, v) => s + v.balance, 0);
+            const totalDispatched = nfsaRow.total_dispatch || 0;
+            const totalAllotted   = nfsaRow.total_allocation || 0;
+            Object.keys(nfsaIC).forEach(ic => {
+                // Allotted is proportional to (balance / totalBalance) * totalAllotted
+                const share = totalBalance > 0 ? nfsaIC[ic].balance / totalBalance : 0;
+                nfsaIC[ic].allotted    = totalAllotted * share + nfsaIC[ic].balance;
+                nfsaIC[ic].dispatched  = nfsaIC[ic].allotted - nfsaIC[ic].balance;
+                nfsaIC[ic].dispatchPct = nfsaIC[ic].allotted > 0
+                    ? (nfsaIC[ic].dispatched / nfsaIC[ic].allotted * 100)
+                    : 0;
+            });
+        }
+
+        // ── MDM / ICDS / Welfare: aggregate matrix rows by block ──
+        function aggregateMatrix(row) {
+            if (!row) return { data: {}, meta: null };
+            const ins = JSON.parse(row.insights || '{}');
+            const data = {};
+            (ins.matrix || []).forEach(r => {
+                const ic = r.block || sectorToIC(r.name);
+                if (!data[ic]) data[ic] = { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
+                data[ic].allotted    += (r.totalAllotted    || 0);
+                data[ic].dispatched  += (r.totalDispatched  || 0);
+                data[ic].balance     += ((r.totalAllotted || 0) - (r.totalDispatched || 0));
+            });
+            Object.keys(data).forEach(ic => {
+                data[ic].dispatchPct = data[ic].allotted > 0
+                    ? (data[ic].dispatched / data[ic].allotted * 100)
+                    : 0;
+            });
+            const meta = { month: row.month, year: row.year, label: MONTH_NAMES[(row.month - 1) % 12] + ' ' + row.year };
+            return { data, meta };
+        }
+
+        const mdmResult     = aggregateMatrix(mdmRow);
+        const icdsResult    = aggregateMatrix(icdsRow);
+        const welfareResult = aggregateMatrix(welfareRow);
+
+        // ── Build unified IC list ──
+        const allICs = new Set([
+            ...Object.keys(nfsaIC),
+            ...Object.keys(mdmResult.data),
+            ...Object.keys(icdsResult.data),
+            ...Object.keys(welfareResult.data),
+        ]);
+
+        const result = [];
+        allICs.forEach(ic => {
+            const nfsa    = nfsaIC[ic]        || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
+            const mdm     = mdmResult.data[ic]     || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
+            const icds    = icdsResult.data[ic]    || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
+            const welfare = welfareResult.data[ic] || { allotted: 0, dispatched: 0, balance: 0, dispatchPct: 0 };
+            const totalShortfall = nfsa.balance + mdm.balance + icds.balance + welfare.balance;
+            result.push({
+                ic,
+                nfsa:    { allotted: +nfsa.allotted.toFixed(2),    dispatched: +nfsa.dispatched.toFixed(2),    balance: +nfsa.balance.toFixed(2),    pct: +nfsa.dispatchPct.toFixed(1)    },
+                mdm:     { allotted: +mdm.allotted.toFixed(2),     dispatched: +mdm.dispatched.toFixed(2),     balance: +mdm.balance.toFixed(2),     pct: +mdm.dispatchPct.toFixed(1)     },
+                icds:    { allotted: +icds.allotted.toFixed(2),    dispatched: +icds.dispatched.toFixed(2),    balance: +icds.balance.toFixed(2),     pct: +icds.dispatchPct.toFixed(1)    },
+                welfare: { allotted: +welfare.allotted.toFixed(2), dispatched: +welfare.dispatched.toFixed(2), balance: +welfare.balance.toFixed(2),  pct: +welfare.dispatchPct.toFixed(1) },
+                totalShortfall: +totalShortfall.toFixed(2),
+            });
+        });
+
+        // Sort by totalShortfall descending
+        result.sort((a, b) => b.totalShortfall - a.totalShortfall);
+
+        res.json({
+            success: true,
+            meta: {
+                nfsa:    nfsaMeta,
+                mdm:     mdmResult.meta,
+                icds:    icdsResult.meta,
+                welfare: welfareResult.meta,
+            },
+            issueCenters: result,
+        });
+    } catch (err) {
+        console.error('Error computing stock shortfall:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 
 /**
  * Small helper: normalizes a comma/semicolon separated string of recipient

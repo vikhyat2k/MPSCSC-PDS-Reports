@@ -1484,6 +1484,14 @@ function switchScheme(scheme) {
         if (el) el.style.display = (id.startsWith(scheme)) ? 'block' : 'none';
     });
 
+function isSubViewActive() {
+    const stock = document.getElementById('stockPositionSection');
+    const comp  = document.getElementById('comparisonSection');
+    if (stock && stock.style.display !== 'none' && stock.style.display !== '') return true;
+    if (comp  && comp.style.display  !== 'none' && comp.style.display  !== '') return true;
+    return false;
+}
+
     // Toggle History Sections
     const historyMapping = {
         'nfsa': 'nfsaReportHistorySection',
@@ -1492,10 +1500,14 @@ function switchScheme(scheme) {
         'welfare': 'welfareHistory'
     };
     
+    const subActive = isSubViewActive();
+
     Object.keys(historyMapping).forEach(key => {
         const el = document.getElementById(historyMapping[key]);
         if (el) {
-            if (key === 'nfsa' && scheme === 'nfsa') {
+            if (subActive) {
+                el.style.display = 'none';
+            } else if (key === 'nfsa' && scheme === 'nfsa') {
                 el.style.display = (currentReportMode === 'monthly') ? 'block' : 'none';
             } else {
                 el.style.display = (key === scheme) ? 'block' : 'none';
@@ -1506,7 +1518,7 @@ function switchScheme(scheme) {
     // Explicitly toggle Date Range history section visibility
     const drEl = document.getElementById('daterangeHistory');
     if (drEl) {
-        drEl.style.display = (scheme === 'nfsa' && currentReportMode === 'daterange') ? 'block' : 'none';
+        drEl.style.display = (!subActive && scheme === 'nfsa' && currentReportMode === 'daterange') ? 'block' : 'none';
     }
 
     // Load data for the selected scheme
@@ -1555,9 +1567,9 @@ async function loadReports() {
         const section = document.getElementById('nfsaReportHistorySection');
         if (!tbody) return;
         
-        // Only show if we are in monthly mode AND NFSA is active
+        // Only show if we are in monthly mode AND NFSA is active AND sub-view is not active
         if (section && currentScheme === 'nfsa') {
-            section.style.display = (currentReportMode === 'monthly') ? 'block' : 'none';
+            section.style.display = (!isSubViewActive() && currentReportMode === 'monthly') ? 'block' : 'none';
         }
         const selectAll = document.getElementById('selectAll');
         if (selectAll) selectAll.checked = false;
