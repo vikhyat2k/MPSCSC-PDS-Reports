@@ -2647,6 +2647,87 @@ async function fetchStockPositionSheet() {
 }
 
 
+
+// ══════════════════════════════════════════════════
+//  SMART INSIGHTS & RISK INTELLIGENCE EXPORT
+// ══════════════════════════════════════════════════
+
+async function exportSmartInsights(type) {
+    var btn = document.getElementById(
+        type === 'jpeg' ? 'btnExportInsightsImg' :
+        type === 'pdf'  ? 'btnExportInsightsPdf' : 'btnExportInsightsCsv'
+    );
+    var origText = btn ? btn.innerHTML : null;
+    if (btn) { btn.innerHTML = '⏳...'; btn.disabled = true; }
+
+    try {
+        if (type === 'csv') {
+            // Build CSV from current insights data
+            var rows = [['Type','Title','Body']];
+            var alertsEl = document.getElementById('stockRiskAlertsContainer');
+            if (alertsEl) {
+                var cards = alertsEl.querySelectorAll('div[style]');
+                cards.forEach(function(card) {
+                    var titleEl = card.querySelector('div:first-child');
+                    var bodyEl  = card.querySelector('div:last-child');
+                    var title   = titleEl ? titleEl.innerText.replace(/\n/g,' ').replace(/"/g,'""') : '';
+                    var body    = bodyEl  ? bodyEl.innerText.replace(/\n/g,' ').replace(/"/g,'""') : '';
+                    // Classify severity
+                    var t = 'Info';
+                    if (title.includes('Negative') || title.includes('Shortfall')) t = 'CRITICAL';
+                    else if (title.includes('Low Buffer') || title.includes('Warning')) t = 'WARNING';
+                    else if (title.includes('Surplus') || title.includes('Normal') || title.includes('Highest')) t = 'OK';
+                    rows.push(['"' + t + '"', '"' + title + '"', '"' + body + '"']);
+                });
+            }
+            var csv = '\uFEFF' + rows.map(function(r){ return r.join(','); }).join('\n');
+            var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Smart_Insights_Risk_' + new Date().toISOString().slice(0,10) + '.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            if (typeof showToast === 'function') showToast('📊 Smart Insights exported to CSV!', 'success');
+        } else {
+            // Use html2canvas for Image / PDF
+            var el = document.getElementById('stockInsightsPanelExport');
+            if (!el) { alert('Insights panel not found.'); return; }
+            var canvas = await html2canvas(el, {
+                scale: 2, useCORS: true, logging: false,
+                backgroundColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#1e293b' : '#ffffff'
+            });
+            var fname = 'Smart_Insights_Risk_' + new Date().toISOString().slice(0,10);
+            if (type === 'jpeg') {
+                var link = document.createElement('a');
+                link.download = fname + '.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            } else if (type === 'pdf') {
+                var jsPDFLib = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+                if (!jsPDFLib) { alert('PDF library not loaded.'); return; }
+                var imgData = canvas.toDataURL('image/jpeg', 1.0);
+                var orient  = canvas.width > canvas.height ? 'l' : 'p';
+                var pdf     = new jsPDFLib({ orientation: orient, unit: 'mm', format: 'a4' });
+                var pw = pdf.internal.pageSize.getWidth();
+                var ph = pdf.internal.pageSize.getHeight();
+                var margin = 10, maxW = pw - margin*2, maxH = ph - margin*2;
+                var ratio = canvas.width / canvas.height;
+                var iw = maxW, ih = maxW / ratio;
+                if (ih > maxH) { ih = maxH; iw = maxH * ratio; }
+                pdf.addImage(imgData, 'JPEG', (pw - iw)/2, margin, iw, ih);
+                pdf.save(fname + '.pdf');
+                try { var url = URL.createObjectURL(pdf.output('blob')); window.open(url, '_blank'); } catch(e) {}
+            }
+        }
+    } catch(e) {
+        console.error('Export error:', e);
+        alert('Export failed: ' + e.message);
+    } finally {
+        if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+    }
+}
+
 // ══════════════════════════════════════════════════
 //  SCHEME-WISE SHORTFALL TABLE
 // ══════════════════════════════════════════════════
