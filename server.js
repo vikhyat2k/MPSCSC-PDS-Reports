@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 require('./scripts/pid-manager');
 
 // Global Error Handling to prevent silent crashes
@@ -2891,6 +2891,32 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
 
         // Sort by total wheat allocation descending (most demand = first)
         issueCenters.sort((a, b) => b.totalAlloc.wheat - a.totalAlloc.wheat);
+
+        // ── Merge चिचोली (IC 10) into भीमपुर (IC 2) ──
+        // चिचोली is operationally handled by भीमपुर Issue Center,
+        // so its allocations are consolidated into भीमपुर and removed.
+        const chiCholiIdx = issueCenters.findIndex(ic => ic.ic && ic.ic.includes('चिचोली'));
+        const bhimPurIdx  = issueCenters.findIndex(ic => ic.ic && ic.ic.includes('भीमपुर'));
+        if (chiCholiIdx !== -1 && bhimPurIdx !== -1) {
+            const chi = issueCenters[chiCholiIdx];
+            const bhi = issueCenters[bhimPurIdx];
+            // Merge each scheme's commodities
+            ['nfsa', 'mdm', 'icds', 'welfare'].forEach(schKey => {
+                if (!bhi.schemes[schKey]) bhi.schemes[schKey] = { wheat: 0, rice: 0, fSalt: 0 };
+                const cs = chi.schemes[schKey] || { wheat: 0, rice: 0, fSalt: 0 };
+                bhi.schemes[schKey].wheat  = +((bhi.schemes[schKey].wheat  || 0) + (cs.wheat  || 0)).toFixed(2);
+                bhi.schemes[schKey].rice   = +((bhi.schemes[schKey].rice   || 0) + (cs.rice   || 0)).toFixed(2);
+                bhi.schemes[schKey].fSalt  = +((bhi.schemes[schKey].fSalt  || 0) + (cs.fSalt  || 0)).toFixed(2);
+            });
+            // Recalculate totalAlloc for भीमपुर
+            bhi.totalAlloc = {
+                wheat: +(['nfsa','mdm','icds','welfare'].reduce((s, k) => s + (bhi.schemes[k] ? bhi.schemes[k].wheat : 0), 0)).toFixed(2),
+                rice:  +(['nfsa','mdm','icds','welfare'].reduce((s, k) => s + (bhi.schemes[k] ? bhi.schemes[k].rice  : 0), 0)).toFixed(2),
+                fSalt: +(['nfsa','mdm','icds','welfare'].reduce((s, k) => s + (bhi.schemes[k] ? bhi.schemes[k].fSalt : 0), 0)).toFixed(2),
+            };
+            // Remove चिचोली from the list
+            issueCenters.splice(chiCholiIdx, 1);
+        }
 
         res.json({
             success: true,
