@@ -2844,9 +2844,31 @@ async function renderShortfallTable() {
             }
 
             // Quantity Left for Dispatch (Pending Balance = Allotted - Dispatched)
-            var leftWheat = (icObj.totalLeft && icObj.totalLeft.wheat !== undefined) ? icObj.totalLeft.wheat : ((icObj.totalDemand && icObj.totalDemand.wheat !== undefined) ? icObj.totalDemand.wheat : 0);
-            var leftRice  = (icObj.totalLeft && icObj.totalLeft.rice !== undefined) ? icObj.totalLeft.rice : ((icObj.totalDemand && icObj.totalDemand.rice !== undefined) ? icObj.totalDemand.rice : 0);
-            var leftFSalt = (icObj.totalLeft && icObj.totalLeft.fSalt !== undefined) ? icObj.totalLeft.fSalt : ((icObj.totalDemand && icObj.totalDemand.fSalt !== undefined) ? icObj.totalDemand.fSalt : 0);
+            var getSchemeSum = function(field) {
+                if (!icObj.schemes) return 0;
+                var sum = 0;
+                ['nfsa', 'mdm', 'icds', 'welfare'].forEach(function(k) {
+                    if (icObj.schemes[k] && typeof icObj.schemes[k][field] === 'number') {
+                        sum += icObj.schemes[k][field];
+                    }
+                });
+                return sum;
+            };
+
+            var leftWheat = (icObj.totalLeft && icObj.totalLeft.wheat !== undefined) ? icObj.totalLeft.wheat :
+                            (icObj.totalDemand && icObj.totalDemand.wheat !== undefined) ? icObj.totalDemand.wheat :
+                            (getSchemeSum('wheat') > 0 ? getSchemeSum('wheat') :
+                            ((icObj.totalAlloc && icObj.totalAlloc.wheat !== undefined) ? icObj.totalAlloc.wheat : 0));
+
+            var leftRice  = (icObj.totalLeft && icObj.totalLeft.rice !== undefined) ? icObj.totalLeft.rice :
+                            (icObj.totalDemand && icObj.totalDemand.rice !== undefined) ? icObj.totalDemand.rice :
+                            (getSchemeSum('rice') > 0 ? getSchemeSum('rice') :
+                            ((icObj.totalAlloc && icObj.totalAlloc.rice !== undefined) ? icObj.totalAlloc.rice : 0));
+
+            var leftFSalt = (icObj.totalLeft && icObj.totalLeft.fSalt !== undefined) ? icObj.totalLeft.fSalt :
+                            (icObj.totalDemand && icObj.totalDemand.fSalt !== undefined) ? icObj.totalDemand.fSalt :
+                            (getSchemeSum('fSalt') > 0 ? getSchemeSum('fSalt') :
+                            ((icObj.totalAlloc && icObj.totalAlloc.fSalt !== undefined) ? icObj.totalAlloc.fSalt : 0));
 
             // Total Allocations (for breakdown comparison)
             var allocWheat = (icObj.totalAlloc && icObj.totalAlloc.wheat !== undefined) ? icObj.totalAlloc.wheat : leftWheat;
