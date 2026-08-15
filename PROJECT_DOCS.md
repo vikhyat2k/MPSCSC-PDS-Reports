@@ -586,6 +586,7 @@ Tracks what has been tested and confirmed working.
 | Stock Table Variable Definition (isTotalCol) | UI Verification | VERIFIED | 15 Aug 2026 | Added missing isTotalCol declaration in stock position table row mapping |
 | Quantity Left for Dispatch Live Server Activation | Runtime Verification | VERIFIED | 15 Aug 2026 | Restarted node server with active daemon and added multi-tier scheme fallback in frontend |
 | Stock Table & Header Clean Text Wrapping | UI & CSS Verification | VERIFIED | 15 Aug 2026 | Multi-line headers, table-layout auto, and high-visibility responsive cell wrapping |
+| Interactive Manual CAPTCHA for Cloud/Render | Integration & UI Verification | VERIFIED | 15 Aug 2026 | Live base64 CAPTCHA image streaming with interactive Web UI modal, auto-refresh, and async resolution |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -612,6 +613,27 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Interactive Manual CAPTCHA Provision for Render Cloud Deployment
+
+Files: server/automation/scraper_v2.js, server.js, public/index.html, public/app.js, PROJECT_DOCS.md
+Type: Feature / Cloud Automation Hardening / Resilience
+
+- REQUIREMENT: Provide an interactive manual CAPTCHA entry mechanism for `https://pds-mpscsc.onrender.com/` (Render cloud hosting) where automatic Tesseract solving fails or is slow due to IP geo-blocking and CPU throttling.
+- IMPLEMENTATION:
+  1. Updated `SCMScraper` in `server/automation/scraper_v2.js`:
+     - Added `captureCaptchaBase64()` capturing live PNG base64 stream from the government login page.
+     - Added `requestManualCaptcha()`, `submitManualCaptcha()`, and `refreshCaptchaImage()`.
+     - Detects Cloud/Render environment (`process.env.RENDER || process.env.MANUAL_CAPTCHA === 'true'`). Tries 1 fast OCR attempt; if not solved, prompts user via interactive UI modal.
+     - Preserves fast automatic Tesseract solving on Localhost with manual fallback after 12 attempts.
+  2. Added endpoints in `server.js`:
+     - `POST /api/captcha/submit`: Submits manual CAPTCHA code to active scraper session.
+     - `POST /api/captcha/refresh`: Requests fresh CAPTCHA image reload from the government portal.
+  3. Added frontend modal & polling in `public/index.html` & `public/app.js`:
+     - Rendered `#manualCaptchaModal` displaying the live CAPTCHA image, auto-focused text input, and "Refresh CAPTCHA" / "Submit & Continue" buttons.
+     - Automatically displays modal when `/api/generate-status` returns `status: 'captcha_required'`, and seamlessly closes once login succeeds.
+
+---
 
 ### 2026-08-15 | Optimize Shortfall Table Text Wrapping & Header Visibility
 
