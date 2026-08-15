@@ -5041,15 +5041,18 @@ function buildStockAdvancedReportHTML(data) {
         const cells = commodityHeaders.map((h, i) => {
             const val = ic.commodities[h] || 0;
             const cls = heatClass(val, colMax[h]);
-            const disp = val < -0.001 ? val.toFixed(1) : val > 0.001 ? (val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toFixed(0)) : '—';
+            const valMT = val / 10;
+            const disp = Math.abs(val) > 0.001 
+                ? valMT.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+                : '—';
             return `<td class="${cls}">${disp}</td>`;
         }).join('');
         return `<tr><td style="font-weight:700;">${ic.name}</td>${cells}<td style="font-weight:800;color:#0b2545;">${fmtQ(ic.total)}</td></tr>`;
     }).join('');
 
     const totalCells = commodityHeaders.map(h => {
-        const v = commodityTotals[h] || 0;
-        return `<td style="background:#fef3c7;font-weight:800;color:#92400e;">${v > 0.001 ? (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)) : '—'}</td>`;
+        const v = (commodityTotals[h] || 0) / 10;
+        return `<td style="background:#fef3c7;font-weight:800;color:#92400e;">${Math.abs(v) > 0.001 ? v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>`;
     }).join('');
 
     const donutLegendRows = Object.keys(donutGroups).filter(k => donutGroups[k] > 0.001).map((k, i) => {
@@ -5064,25 +5067,35 @@ function buildStockAdvancedReportHTML(data) {
         <div class="section-header">
             <div class="section-num">2</div>
             <div>
-                <div style="font-size:14px;font-weight:800;">Commodity Intelligence Matrix</div>
-                <div style="font-size:11px;color:#c9a227;font-weight:500;">कमोडिटी इंटेलिजेंस मैट्रिक्स — Heatmap View</div>
+                <div style="font-size:14px;font-weight:800;">Commodity Intelligence Matrix (Quantity in Metric Tons / MT)</div>
+                <div style="font-size:11px;color:#c9a227;font-weight:500;">कमोडिटी इंटेलिजेंस मैट्रिक्स (मात्रा मीट्रिक टन में) • Heatmap View</div>
             </div>
         </div>
         <div class="page-inner">
             <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
                 <div>
-                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">IC × Commodity Breakdown (Qt)</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+                        <div style="font-size:11px;font-weight:700;color:#0b2545;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+                            <span>📊</span> IC × Commodity Breakdown
+                        </div>
+                        <div style="background:#0b2545;color:#c9a227;font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;border:1px solid #c9a227;">
+                            <span>⚖️</span> All Quantities in Metric Tons (MT) [1 MT = 10 Qt]
+                        </div>
+                    </div>
+                    <div style="font-size:11px;color:#64748b;margin-bottom:10px;">
+                        <em>Note: Data from Google Sheet (in Quintals) is automatically converted to Metric Tons (MT) by dividing by 10.</em>
+                    </div>
                     <div style="overflow-x:auto;">
                         <table class="commodity-matrix">
                             <thead><tr>
                                 <th>Issue Center</th>
-                                ${shortCols.map(c => `<th>${c}</th>`).join('')}
-                                <th style="background:#c9a227;color:#0b2545;">IC Total</th>
+                                ${shortCols.map(c => `<th>${c} (MT)</th>`).join('')}
+                                <th style="background:#c9a227;color:#0b2545;">IC Total (MT)</th>
                             </tr></thead>
                             <tbody>
                                 ${matrixRows}
                                 <tr>
-                                    <td style="font-weight:800;background:#fef3c7;color:#92400e;">∑ TOTAL</td>
+                                    <td style="font-weight:800;background:#fef3c7;color:#92400e;">∑ TOTAL (MT)</td>
                                     ${totalCells}
                                     <td style="background:#fef3c7;font-weight:800;color:#059669;">${fmtQ(districtTotal)}</td>
                                 </tr>
@@ -5097,13 +5110,13 @@ function buildStockAdvancedReportHTML(data) {
                     </div>
                 </div>
                 <div>
-                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Commodity Mix</div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Commodity Mix (MT)</div>
                     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;">
                         <div class="donut-legend">${donutLegendRows}</div>
                         <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;">
                             <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Dominant Commodity</div>
                             <div style="font-size:14px;font-weight:800;color:#0b2545;">${topCommodity}</div>
-                            <div style="font-size:12px;color:#d97706;font-weight:700;margin-top:2px;">${topCommodityPct}% of district stock</div>
+                            <div style="font-size:12px;color:#d97706;font-weight:700;margin-top:2px;">${topCommodityPct}% of district stock (${fmtQ(commodityTotals[topCommodity] || 0)})</div>
                         </div>
                     </div>
                 </div>
@@ -5121,7 +5134,7 @@ function buildStockAdvancedReportHTML(data) {
     }
 
     negativeItems.forEach(ni => {
-        alertsHtml += `<div class="alert-card alert-critical"><div class="alert-title" style="color:#dc2626;">🔴 Critical: Negative Stock — ${ni.center}</div><div class="alert-body"><strong>${ni.commodity}</strong>: <strong style="color:#dc2626;">${ni.val.toFixed(2)} Qt</strong>. Immediate replenishment or stock audit is required. Verify records for data entry errors.</div></div>`;
+        alertsHtml += `<div class="alert-card alert-critical"><div class="alert-title" style="color:#dc2626;">🔴 Critical: Negative Stock — ${ni.center}</div><div class="alert-body"><strong>${ni.commodity}</strong>: <strong style="color:#dc2626;">${fmtQ(ni.val)}</strong>. Immediate replenishment or stock audit is required. Verify records for data entry errors.</div></div>`;
     });
 
     lowBufferICs.forEach(ic => {
