@@ -102,17 +102,23 @@ class SCMScraper {
   /**
    * Refreshes the CAPTCHA by reloading the page and re-entering credentials
    */
+  /**
+   * Refreshes the CAPTCHA by reloading the page and re-entering credentials
+   */
   async refreshCaptchaImage() {
     console.log('🔄 Reloading page to generate fresh CAPTCHA...');
     try {
+      const activeUser = this.username || process.env.SCM_USERNAME || 'dm_447';
+      const activePass = this.password || process.env.SCM_PASSWORD || 'dmnan@2026';
+
       await this.page.goto(this.baseURL, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await this.fillFieldReliably(
         ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
-        process.env.SCM_USERNAME || '', 'Username'
+        activeUser, 'Username'
       );
       await this.fillFieldReliably(
         ['input[name="password"]', 'input[type="password"]'],
-        process.env.SCM_PASSWORD || '', 'Password'
+        activePass, 'Password'
       );
       await new Promise(r => setTimeout(r, 1000));
       return await this.captureCaptchaBase64();
@@ -127,8 +133,13 @@ class SCMScraper {
    */
   async submitManualCaptcha(captchaCode) {
     if (!captchaCode) return false;
-    console.log(`⌨️ [Manual CAPTCHA] Typing user code: "${captchaCode}"...`);
+    console.log(`⌨️ [Manual CAPTCHA] Submitting user code: "${captchaCode}"...`);
     try {
+      const activeUser = this.username || process.env.SCM_USERNAME || 'dm_447';
+      const activePass = this.password || process.env.SCM_PASSWORD || 'dmnan@2026';
+
+      console.log(`👤 Using credentials for SCM login: "${activeUser}"`);
+
       // 1. Check & refill username/password if wiped
       const userStillFilled = await this.page.evaluate(() => {
         const el = document.querySelector('input[name="userName"], input[name="username"], input[type="text"]');
@@ -138,11 +149,11 @@ class SCMScraper {
       if (!userStillFilled) {
         await this.fillFieldReliably(
           ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
-          process.env.SCM_USERNAME || '', 'Username'
+          activeUser, 'Username'
         );
         await this.fillFieldReliably(
           ['input[name="password"]', 'input[type="password"]'],
-          process.env.SCM_PASSWORD || '', 'Password'
+          activePass, 'Password'
         );
       }
 
