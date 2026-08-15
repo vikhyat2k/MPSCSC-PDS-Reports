@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — Fixed Stock vs Allocation shortfall table text visibility & contrast across light/dark modes and image/PDF canvas exports |
+| Last Code Change | 15 Aug 2026 — Updated Stock Shortfall engine to calculate shortfall based on Quantity Left for Dispatch (Shortfall = Available Stock − Quantity Left for Dispatch) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -581,6 +581,7 @@ Tracks what has been tested and confirmed working.
 | Universal Portal Text Copyability | UI & CSS Verification | VERIFIED | 11 Aug 2026 | Enforced user-select: text !important & ::selection highlight styles across all modules |
 | Desktop Launcher & Shortcut Auto-Healing | Unit & Script Verification | VERIFIED | 15 Aug 2026 | Multi-desktop path support, auto-recovery on server start, and 1-click batch builder |
 | Stock Shortfall Table & Canvas Export Visibility | UI & Canvas Verification | VERIFIED | 15 Aug 2026 | High-contrast styling, explicit cell text colors, and theme-synchronized html2canvas backgrounds |
+| Stock Shortfall Calculation via Quantity Left for Dispatch | Logic & API Verification | VERIFIED | 15 Aug 2026 | Shortfall computed as Available Stock - Quantity Left for Dispatch across all 4 schemes |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -605,6 +606,26 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Calculate Stock Shortfall Based on Quantity Left for Dispatch (Available Stock - Quantity Left)
+
+Files: server.js, public/index.html, PROJECT_DOCS.md
+Type: Feature / Business Logic Enhancement / Formula Refinement
+
+- REQUIREMENT: Calculate the shortfall based on the **Quantity Left for Dispatch (शेष प्रदाय मात्रा)** rather than the **Total Allocation (Total Alloc)**. Compare Available Stock with Quantity Left for Dispatch: `Shortfall / Surplus = Available Stock - Quantity Left for Dispatch` (+ve surplus, -ve shortfall).
+- IMPLEMENTATION:
+  1. Updated `/api/stock-position/shortfall` in `server.js`:
+     - Computed commodity-wise (Wheat, Rice, Fortified Salt) **Quantity Left for Dispatch** (`Allotted - Dispatched`) across all 4 schemes (NFSA, MDM, ICDS, Welfare) for each Issue Center.
+     - Provided robust bilingual name normalization mapping all English/Hindi sector identifiers directly to Betul's canonical 9 Issue Centers (बैतूल, भीमपुर, शाहपुर, घोड़ाडोंगरी, मुलताई, प्रभातपट्टन, आमला, आठनेर, भैंसदेही).
+     - Returned `totalLeft` (balance to be dispatched) as well as `totalAlloc` (total monthly allocation) for scheme drilldown comparison.
+  2. Updated `renderShortfallTable()` in `public/index.html`:
+     - Changed table column headers from `Total Alloc` to `Qty Left for Disp` (`title="Quantity Left for Dispatch (शेष प्रदाय मात्रा)"`).
+     - Computed Net Difference as `Available Stock - Quantity Left for Dispatch`.
+     - Added clear badges: `✓ Surplus: +X Qt` (when available >= left to dispatch) and `⚠️ Shortfall: -X Qt` (when available < left to dispatch).
+     - Updated Scheme Breakdown collapsible rows to show both `Left to Dispatch` and `Total Allotted` for every commodity.
+     - Updated Executive KPI cards and note at the bottom to clearly show available stock, quantity left for dispatch, and net position.
+
+---
 
 ### 2026-08-15 | Fix Stock Shortfall vs Allocation Table Text Visibility & Canvas Export Contrast
 
