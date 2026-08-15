@@ -470,14 +470,24 @@ function startPolling() {
             const data = await res.json();
             if (data) {
                 updateProgress(data.status || 'processing', data.progress || 0, data.message || data.status);
+
+                // Manual CAPTCHA Trigger (For Cloud / Render or local fallback)
+                if (data.status === 'captcha_required' || data.captchaImage) {
+                    openManualCaptchaModal(data.captchaImage, currentRequestId, data.message);
+                } else if (data.status !== 'initializing') {
+                    closeManualCaptchaModal();
+                }
+
                 if (data.status === 'complete') { 
                     clearInterval(pollingInterval); 
+                    closeManualCaptchaModal();
                     showSuccess(data); 
                     refreshAllReportsSilent(); 
                     resetForm(); 
                 }
                 else if (data.status === 'error') { 
                     clearInterval(pollingInterval); 
+                    closeManualCaptchaModal();
                     showError(data.error || 'Extraction failed'); 
                     resetForm(); 
                 }
