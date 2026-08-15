@@ -2652,7 +2652,7 @@ function parseCSV(text) {
 
 const DEFAULT_BETUL_STOCK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/13lEnaakk6idsNkAV--RH5cr2PAiwXQEjeNEP836tRa8/edit?gid=519497993#gid=519497993';
 
-app.post('/api/stock-position/fetch-sheet', async (req, res) => {
+app.post(['/api/stock-position/fetch-sheet', '/stock-position/fetch-sheet'], async (req, res) => {
     try {
         let sheetUrl = (req.body && req.body.sheetUrl) ? req.body.sheetUrl.trim() : '';
         if (!sheetUrl) {
