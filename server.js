@@ -363,8 +363,8 @@ app.post('/api/generate-report', async (req, res) => {
             const startTime = Date.now();
             const roTypes = ['Regular', 'Extra', 'Portability'];
             const credentials = {
-                username: process.env.SCM_USERNAME,
-                password: process.env.SCM_PASSWORD
+                username: process.env.SCM_USERNAME || 'dm_447',
+                password: process.env.SCM_PASSWORD || 'dmnan@2026'
             };
 
             const isHeadless = req.body.headless !== undefined

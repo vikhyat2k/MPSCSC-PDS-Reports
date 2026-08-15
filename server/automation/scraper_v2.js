@@ -975,6 +975,96 @@ class SCMScraper {
   }
 
   /**
+   * Verify if login was successful on SCM Portal
+   */
+  async verifyLogin() {
+    try {
+      console.log('🧐 Verifying login status on SCM portal...');
+      await new Promise(r => setTimeout(r, 1200)); // Wait for page to settle
+
+      // Check current URL
+      const currentUrl = this.page.url().toLowerCase();
+      console.log(`🌐 Current Page URL after login attempt: ${currentUrl}`);
+
+      // If redirected to Main/Home/Dashboard/Dispatch page
+      if (
+        currentUrl.includes('home') ||
+        currentUrl.includes('main') ||
+        currentUrl.includes('dashboard') ||
+        currentUrl.includes('dispatch') ||
+        currentUrl.includes('allotment') ||
+        currentUrl.includes('welcome')
+      ) {
+        console.log('✅ URL indicates successful navigation into authenticated portal!');
+        return true;
+      }
+
+      // Check page text for logged-in indicators
+      const pageText = await this.page.evaluate(() => document.body ? document.body.innerText : '').catch(() => '');
+
+      const successIndicators = [
+        'Logout',
+        'Reports',
+        'Welcome',
+        'Login Successful',
+        'Administrator',
+        'User Name',
+        'Main Menu',
+        'Issue Point',
+        'Dispatch Abstract'
+      ];
+
+      for (const indicator of successIndicators) {
+        if (pageText.includes(indicator)) {
+          console.log(`✅ Found login success indicator in page text: "${indicator}"`);
+          return true;
+        }
+      }
+
+      // Check for logout link / reports menu elements in DOM
+      const hasAuthElement = await this.page.evaluate(() => {
+        const anchors = Array.from(document.querySelectorAll('a, button, input[type="button"]'));
+        return anchors.some(a => {
+          const t = (a.innerText || a.value || '').toLowerCase();
+          return t.includes('logout') || t.includes('report') || t.includes('dispatch') || t.includes('menu');
+        });
+      }).catch(() => false);
+
+      if (hasAuthElement) {
+        console.log('✅ Found authenticated navigation elements in DOM');
+        return true;
+      }
+
+      // Check if still on Login.jsp
+      if (currentUrl.includes('login')) {
+        // Check for error text
+        const errorAlert = await this.page.evaluate(() => {
+          const alertEl = document.querySelector('.error, .alert, font[color="red"], font[color="#FF0000"], span[style*="red"]');
+          return alertEl ? alertEl.innerText.trim() : null;
+        }).catch(() => null);
+
+        if (errorAlert) {
+          console.log(`❌ Portal returned login error message: "${errorAlert}"`);
+        } else {
+          console.log('❌ Still on Login.jsp with no authentication indicators found.');
+        }
+        return false;
+      }
+
+      // If URL changed away from login, assume success
+      console.log('✅ Page navigated away from Login page without errors');
+      return true;
+    } catch (error) {
+      if (error.message && error.message.includes('Execution context was destroyed')) {
+        console.log(`✅ Navigation detected during verification (Login Successful)`);
+        return true;
+      }
+      console.log(`⚠️ Error during login verification: ${error.message}`);
+      return false;
+    }
+  }
+
+  /**
    * Check if CAPTCHA is present on the page
    */
   async checkForCaptcha() {
