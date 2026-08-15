@@ -4680,8 +4680,786 @@ window.downloadAdvAnalytics = downloadAdvAnalytics;
 window.downloadAdvAnalyticsImage = downloadAdvAnalyticsImage;
 
 // ═══════════════════════════════════════════════════════════════
+//  LIVE STOCK POSITION — ADVANCED ANALYTICS EXECUTIVE REPORT
+//  उन्नत विश्लेषण रिपोर्ट प्रीव्यू — Live District Stock Position
+// ═══════════════════════════════════════════════════════════════
+
+function showStockAdvancedReport() {
+    const data = window.lastStockData;
+    if (!data || !data.icData || data.icData.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast('⚠️ कृपया पहले "Sync Live Data" करें। (Please sync live data first.)', 'warning', 4000);
+        } else {
+            alert('कृपया पहले "Sync Live Data" करें। Please sync live data first.');
+        }
+        return;
+    }
+
+    const modal = document.getElementById('stockAdvAnalyticsModal');
+    if (!modal) return;
+
+    const reportHtml = buildStockAdvancedReportHTML(data);
+
+    modal.innerHTML = `
+        <div id="stockAdvReportWrapper" style="background:#ffffff;border-radius:14px;width:98%;height:96%;max-width:1280px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5);">
+            <!-- Toolbar -->
+            <div style="background:#0b2545;color:#ffffff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:3px solid #c9a227;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:24px;">📊</span>
+                    <div>
+                        <div style="font-size:15px;font-weight:800;letter-spacing:0.2px;">उन्नत विश्लेषण रिपोर्ट प्रीव्यू / Advanced Analytics Executive Report</div>
+                        <div style="font-size:11px;color:#c9a227;font-weight:500;">मध्यप्रदेश स्टेट सिविल सप्लाइज कारपोरेशन लि. • जिला कार्यालय बैतूल • Live District Stock Position</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button onclick="downloadStockAdvReport('image')" style="background:#2563eb;color:#ffffff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+                        🖼️ Image Export
+                    </button>
+                    <button onclick="downloadStockAdvReport('pdf')" style="background:#4338ca;color:#ffffff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+                        📄 PDF Export
+                    </button>
+                    <button onclick="downloadStockAdvReport('excel')" style="background:#15803d;color:#ffffff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+                        📊 Excel Export
+                    </button>
+                    <button onclick="closeStockAdvancedReport()" style="background:rgba(255,255,255,0.15);color:#ffffff;border:1px solid rgba(255,255,255,0.3);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;margin-left:4px;">
+                        ❌ बंद करें
+                    </button>
+                </div>
+            </div>
+            <!-- Report Content -->
+            <div id="stockAdvReportContent" style="flex:1;overflow-y:auto;background:#f8fafc;">
+                ${reportHtml}
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    // Close on backdrop click
+    modal.onclick = function(e) {
+        if (e.target === modal) closeStockAdvancedReport();
+    };
+
+    // ESC key close
+    window._stockAdvReportEscHandler = function(e) {
+        if (e.key === 'Escape') closeStockAdvancedReport();
+    };
+    document.addEventListener('keydown', window._stockAdvReportEscHandler);
+}
+
+function closeStockAdvancedReport() {
+    const modal = document.getElementById('stockAdvAnalyticsModal');
+    if (modal) modal.style.display = 'none';
+    if (window._stockAdvReportEscHandler) {
+        document.removeEventListener('keydown', window._stockAdvReportEscHandler);
+        window._stockAdvReportEscHandler = null;
+    }
+}
+
+function buildStockAdvancedReportHTML(data) {
+    const icData = data.icData || [];
+    const headers = data.headers || [];
+    const commodityHeaders = headers.slice(1, headers.length - 1);
+
+    // ── Compute aggregates ──
+    function pv(v) { return parseFloat((v || '0').replace ? (v || '0').replace(/,/g, '') : v) || 0; }
+
+    const districtTotal = icData.reduce((s, ic) => s + ic.total, 0);
+    const avgStock = icData.length ? districtTotal / icData.length : 0;
+    const sorted = icData.slice().sort((a, b) => b.total - a.total);
+    const maxIC = sorted[0] || { name: '—', total: 0 };
+    const minIC = sorted[sorted.length - 1] || { name: '—', total: 0 };
+
+    // Commodity group totals
+    const commodityTotals = {};
+    commodityHeaders.forEach(h => {
+        commodityTotals[h] = icData.reduce((s, ic) => s + (ic.commodities[h] || 0), 0);
+    });
+
+    const donutGroups = {
+        'Wheat (गेहूं)': 0,
+        'CMR/Paddy (चावल/धान)': 0,
+        'Jowar (ज्वार)': 0,
+        'Sugar (शक्कर)': 0,
+        'Salt (नमक)': 0
+    };
+    Object.keys(commodityTotals).forEach(h => {
+        const hl = h.toLowerCase(), v = commodityTotals[h];
+        if (hl.includes('wheat')) donutGroups['Wheat (गेहूं)'] += v;
+        else if (hl.includes('cmr') || hl.includes('paddy') || hl.includes('rice')) donutGroups['CMR/Paddy (चावल/धान)'] += v;
+        else if (hl.includes('jwar') || hl.includes('jowar')) donutGroups['Jowar (ज्वार)'] += v;
+        else if (hl.includes('sugar')) donutGroups['Sugar (शक्कर)'] += v;
+        else if (hl.includes('salt') || hl.includes('f.salt') || hl.includes('iodine')) donutGroups['Salt (नमक)'] += v;
+    });
+
+    // Negative items
+    const negativeItems = [];
+    icData.forEach(ic => {
+        Object.keys(ic.commodities).forEach(h => {
+            if (ic.commodities[h] < -0.001) negativeItems.push({ center: ic.name, commodity: h, val: ic.commodities[h] });
+        });
+    });
+
+    // Low buffer ICs (<50% of avg)
+    const lowBufferICs = icData.filter(ic => ic.total > 0 && ic.total < avgStock * 0.5);
+
+    // Distribution equity
+    const sortedTotals = icData.map(ic => ic.total).sort((a, b) => b - a);
+    const topHalf = sortedTotals.slice(0, Math.ceil(sortedTotals.length / 2)).reduce((s, v) => s + v, 0);
+    const topHalfPct = districtTotal > 0 ? (topHalf / districtTotal * 100).toFixed(1) : '0.0';
+
+    // Top commodity by volume
+    const topCommodity = commodityHeaders.reduce((a, b) => (commodityTotals[b] || 0) > (commodityTotals[a] || 0) ? b : a, commodityHeaders[0] || '');
+    const topCommodityPct = districtTotal > 0 ? (commodityTotals[topCommodity] / districtTotal * 100).toFixed(1) : '0';
+
+    // Stock Health Score (0–100)
+    let healthScore = 100;
+    if (negativeItems.length > 0) healthScore -= negativeItems.length * 12;
+    if (lowBufferICs.length > 0) healthScore -= lowBufferICs.length * 8;
+    if (parseFloat(topHalfPct) > 75) healthScore -= 10;
+    healthScore = Math.max(0, Math.min(100, healthScore));
+    const healthColor = healthScore >= 80 ? '#059669' : healthScore >= 60 ? '#D97706' : '#DC2626';
+    const healthLabel = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Moderate' : 'Critical';
+
+    function fmtQ(v) {
+        if (v >= 1000) return (v / 1000).toFixed(2) + ' TQ';
+        return v.toFixed(2) + ' Qt';
+    }
+
+    const syncTime = new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const reportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    // ──────────────────────────────────────────────────
+    // SHARED STYLES
+    // ──────────────────────────────────────────────────
+    const baseCss = `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, .report-root { font-family: 'Inter', 'Noto Sans Devanagari', sans-serif; background: #f8fafc; color: #1e293b; }
+        .page { width: 100%; background: #ffffff; margin-bottom: 0; padding: 0; }
+        .page-inner { padding: 32px 36px; }
+        .section-divider { height: 6px; background: linear-gradient(90deg, #0b2545, #c9a227); margin: 0; }
+        .cover-header { background: linear-gradient(135deg, #0b2545 0%, #1e3a8a 60%, #0b2545 100%); padding: 36px; color: white; position: relative; overflow: hidden; }
+        .cover-header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: rgba(201,162,39,0.12); }
+        .cover-header::after  { content: ''; position: absolute; bottom: -30px; left: -30px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--kpi-accent, #0b2545); }
+        .kpi-value { font-size: 22px; font-weight: 800; color: var(--kpi-color, #0b2545); line-height: 1.1; margin: 6px 0 4px; }
+        .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+        .kpi-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+        .section-header { background: #0b2545; color: white; padding: 14px 20px; display: flex; align-items: center; gap: 10px; border-left: 5px solid #c9a227; }
+        .section-num { width: 28px; height: 28px; background: #c9a227; color: #0b2545; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+        .ic-bar-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+        .ic-bar-row:last-child { border-bottom: none; }
+        .ic-bar-label { font-size: 12px; font-weight: 700; color: #1e293b; min-width: 120px; flex-shrink: 0; }
+        .ic-bar-track { flex: 1; height: 22px; background: #f1f5f9; border-radius: 4px; overflow: hidden; position: relative; }
+        .ic-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 700; color: white; white-space: nowrap; transition: width 0.3s; }
+        .ic-bar-val { font-size: 11px; font-weight: 800; min-width: 80px; text-align: right; flex-shrink: 0; }
+        .commodity-matrix { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .commodity-matrix th { background: #0b2545; color: white; padding: 8px 10px; text-align: center; font-weight: 700; font-size: 10px; white-space: nowrap; }
+        .commodity-matrix th:first-child { text-align: left; min-width: 110px; }
+        .commodity-matrix td { padding: 7px 10px; text-align: right; border-bottom: 1px solid #f1f5f9; font-weight: 600; }
+        .commodity-matrix td:first-child { text-align: left; font-weight: 700; color: #1e293b; }
+        .commodity-matrix tr:last-child { background: #fef3c7; font-weight: 800; }
+        .commodity-matrix tr:last-child td { border-top: 2px solid #c9a227; }
+        .heat-hi  { background: rgba(5,150,105,0.18); color: #065f46; }
+        .heat-mid { background: rgba(217,119,6,0.15);  color: #92400e; }
+        .heat-lo  { background: rgba(220,38,38,0.12);  color: #991b1b; }
+        .heat-neg { background: rgba(220,38,38,0.35);  color: #7f1d1d; font-weight: 800; }
+        .alert-card { border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; border-left: 4px solid; }
+        .alert-critical { background: rgba(254,226,226,0.8); border-color: #dc2626; }
+        .alert-warning  { background: rgba(254,243,199,0.8); border-color: #d97706; }
+        .alert-ok       { background: rgba(209,250,229,0.8); border-color: #059669; }
+        .alert-info     { background: rgba(219,234,254,0.8); border-color: #2563eb; }
+        .alert-title { font-size: 12px; font-weight: 800; margin-bottom: 4px; }
+        .alert-body  { font-size: 11px; color: #374151; line-height: 1.55; }
+        .scorecard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+        .score-item { text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .score-val { font-size: 20px; font-weight: 800; }
+        .score-lab { font-size: 10px; color: #64748b; margin-top: 3px; font-weight: 600; }
+        .donut-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+        .donut-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+        .donut-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+        .priority-card { background: #0b2545; color: white; border-radius: 10px; padding: 18px; margin-bottom: 12px; border-left: 5px solid #c9a227; }
+        .priority-num { display: inline-flex; width: 24px; height: 24px; background: #c9a227; color: #0b2545; border-radius: 50%; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-right: 8px; }
+        .footer-bar { background: #0b2545; color: #94a3b8; padding: 12px 36px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; border-top: 3px solid #c9a227; }
+        .ranking-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; background: #f8fafc; border: 1px solid #e2e8f0; }
+    `;
+
+    // ──────────────────────────────────────────────────
+    // SECTION 0: COVER / EXECUTIVE SUMMARY
+    // ──────────────────────────────────────────────────
+    const coverSection = `
+    <div class="page">
+        <div class="cover-header">
+            <div style="position:relative;z-index:1;">
+                <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;">
+                    <div style="width:52px;height:52px;background:#c9a227;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">📦</div>
+                    <div>
+                        <div style="font-size:11px;font-weight:600;color:#c9a227;letter-spacing:1px;text-transform:uppercase;">मध्यप्रदेश स्टेट सिविल सप्लाइज कारपोरेशन लिमिटेड</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px;">Madhya Pradesh State Civil Supplies Corporation Ltd.</div>
+                        <div style="font-size:19px;font-weight:800;margin-top:8px;line-height:1.2;">Live District Stock Position Analysis</div>
+                        <div style="font-size:14px;font-weight:600;color:#c9a227;margin-top:4px;">उन्नत विश्लेषण कार्यकारी रिपोर्ट — Betul District</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                    <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 16px;">
+                        <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">Data Source</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:2px;">View_LiveRollup (Google Sheets)</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 16px;">
+                        <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">Generated On</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:2px;">${reportDate}</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 16px;">
+                        <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">Sync Time</div>
+                        <div style="font-size:12px;font-weight:700;margin-top:2px;">${syncTime}</div>
+                    </div>
+                    <div style="background:rgba(201,162,39,0.2);border:1px solid rgba(201,162,39,0.4);border-radius:8px;padding:10px 16px;">
+                        <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">District Stock Health</div>
+                        <div style="font-size:18px;font-weight:800;margin-top:2px;color:${healthColor};">${healthScore}/100 — ${healthLabel}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-inner">
+            <div style="font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;">Executive KPI Summary</div>
+            <div class="kpi-grid">
+                <div class="kpi-card" style="--kpi-accent:#10b981;--kpi-color:#059669;">
+                    <div class="kpi-label">📍 Total District Stock</div>
+                    <div class="kpi-value">${fmtQ(districtTotal)}</div>
+                    <div class="kpi-sub">All commodities combined</div>
+                </div>
+                <div class="kpi-card" style="--kpi-accent:#f59e0b;--kpi-color:#d97706;">
+                    <div class="kpi-label">🏆 Highest Buffer IC</div>
+                    <div class="kpi-value" style="font-size:16px;">${maxIC.name}</div>
+                    <div class="kpi-sub">${fmtQ(maxIC.total)} — ${districtTotal > 0 ? (maxIC.total / districtTotal * 100).toFixed(1) : 0}% share</div>
+                </div>
+                <div class="kpi-card" style="--kpi-accent:#6366f1;--kpi-color:#4f46e5;">
+                    <div class="kpi-label">📉 Lowest Buffer IC</div>
+                    <div class="kpi-value" style="font-size:16px;">${minIC.name}</div>
+                    <div class="kpi-sub">${fmtQ(minIC.total)} — ${districtTotal > 0 ? (minIC.total / districtTotal * 100).toFixed(1) : 0}% share</div>
+                </div>
+                <div class="kpi-card" style="--kpi-accent:#06b6d4;--kpi-color:#0891b2;">
+                    <div class="kpi-label">⚖️ Average Stock / IC</div>
+                    <div class="kpi-value">${fmtQ(avgStock)}</div>
+                    <div class="kpi-sub">Across ${icData.length} Issue Centers</div>
+                </div>
+                <div class="kpi-card" style="--kpi-accent:#f26b2b;--kpi-color:#ea580c;">
+                    <div class="kpi-label">🌾 Wheat Pool Share</div>
+                    <div class="kpi-value">${districtTotal > 0 ? (donutGroups['Wheat (गेहूं)'] / districtTotal * 100).toFixed(1) : '0'}%</div>
+                    <div class="kpi-sub">${fmtQ(donutGroups['Wheat (गेहूं)'])} of total</div>
+                </div>
+                <div class="kpi-card" style="--kpi-accent:${negativeItems.length > 0 ? '#dc2626' : '#059669'};--kpi-color:${negativeItems.length > 0 ? '#dc2626' : '#059669'};">
+                    <div class="kpi-label">⚠️ Negative Stock Items</div>
+                    <div class="kpi-value">${negativeItems.length > 0 ? negativeItems.length : '✓ None'}</div>
+                    <div class="kpi-sub">${negativeItems.length > 0 ? 'Urgent attention required' : 'All stocks positive'}</div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // ──────────────────────────────────────────────────
+    // SECTION 1: IC VOLUME ANALYSIS
+    // ──────────────────────────────────────────────────
+    const ic1Bars = sorted.map((ic, i) => {
+        const share = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(1) : '0';
+        const barPct = maxIC.total > 0 ? (ic.total / maxIC.total * 100).toFixed(1) : '0';
+        const barColor = ic.total === maxIC.total ? '#059669' : ic.total < avgStock * 0.5 ? '#dc2626' : '#1e3a8a';
+        const statusLabel = ic.total < avgStock * 0.5 ? 'Low' : ic.total > avgStock * 1.3 ? 'High' : 'Normal';
+        const statusColor = ic.total < avgStock * 0.5 ? '#dc2626' : ic.total > avgStock * 1.3 ? '#059669' : '#2563eb';
+        return `
+        <div class="ic-bar-row">
+            <div class="ic-bar-label">${['🥇','🥈','🥉'][i] || '#'+(i+1)} ${ic.name}</div>
+            <div class="ic-bar-track">
+                <div class="ic-bar-fill" style="width:${barPct}%;background:${barColor};">${fmtQ(ic.total)}</div>
+            </div>
+            <div class="ic-bar-val" style="color:${barColor};">${share}%</div>
+            <div style="font-size:10px;font-weight:700;color:${statusColor};min-width:48px;text-align:center;">${statusLabel}</div>
+        </div>`;
+    }).join('');
+
+    const section1 = `
+    <div class="section-divider"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-num">1</div>
+            <div>
+                <div style="font-size:14px;font-weight:800;">Issue Center Stock Volume Analysis</div>
+                <div style="font-size:11px;color:#c9a227;font-weight:500;">इश्यू सेंटर स्टॉक मात्रा विश्लेषण — ${icData.length} Issue Centers</div>
+            </div>
+        </div>
+        <div class="page-inner">
+            <div style="margin-bottom:20px;">
+                ${ic1Bars}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:8px;padding-top:16px;border-top:2px solid #f1f5f9;">
+                <div style="text-align:center;padding:10px;background:rgba(209,250,229,0.5);border-radius:8px;border:1px solid #bbf7d0;">
+                    <div style="font-size:10px;font-weight:700;color:#059669;text-transform:uppercase;">District Total</div>
+                    <div style="font-size:18px;font-weight:800;color:#059669;">${fmtQ(districtTotal)}</div>
+                </div>
+                <div style="text-align:center;padding:10px;background:rgba(254,243,199,0.5);border-radius:8px;border:1px solid #fde68a;">
+                    <div style="font-size:10px;font-weight:700;color:#d97706;text-transform:uppercase;">Avg per IC</div>
+                    <div style="font-size:18px;font-weight:800;color:#d97706;">${fmtQ(avgStock)}</div>
+                </div>
+                <div style="text-align:center;padding:10px;background:rgba(219,234,254,0.5);border-radius:8px;border:1px solid #bfdbfe;">
+                    <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;">Issue Centers</div>
+                    <div style="font-size:18px;font-weight:800;color:#2563eb;">${icData.length}</div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // ──────────────────────────────────────────────────
+    // SECTION 2: COMMODITY INTELLIGENCE MATRIX
+    // ──────────────────────────────────────────────────
+    const colMax = {};
+    commodityHeaders.forEach(h => {
+        colMax[h] = Math.max(0, ...icData.map(ic => ic.commodities[h] || 0));
+    });
+
+    function heatClass(val, max) {
+        if (val < -0.001) return 'heat-neg';
+        if (max <= 0) return '';
+        const r = val / max;
+        if (r > 0.65) return 'heat-hi';
+        if (r > 0.30) return 'heat-mid';
+        if (r > 0)    return 'heat-lo';
+        return '';
+    }
+
+    const shortCols = commodityHeaders.map(h =>
+        h.replace('2024-25','24-25').replace('2025-26','25-26').replace('2026-27','26-27')
+         .replace('CMR-','').replace('NonFort','NF').replace('Fortified','Ft').replace('(Iodine)','Iod').replace('Iodine','Iod')
+    );
+
+    const matrixRows = icData.map(ic => {
+        const cells = commodityHeaders.map((h, i) => {
+            const val = ic.commodities[h] || 0;
+            const cls = heatClass(val, colMax[h]);
+            const disp = val < -0.001 ? val.toFixed(1) : val > 0.001 ? (val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toFixed(0)) : '—';
+            return `<td class="${cls}">${disp}</td>`;
+        }).join('');
+        return `<tr><td style="font-weight:700;">${ic.name}</td>${cells}<td style="font-weight:800;color:#0b2545;">${fmtQ(ic.total)}</td></tr>`;
+    }).join('');
+
+    const totalCells = commodityHeaders.map(h => {
+        const v = commodityTotals[h] || 0;
+        return `<td style="background:#fef3c7;font-weight:800;color:#92400e;">${v > 0.001 ? (v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0)) : '—'}</td>`;
+    }).join('');
+
+    const donutLegendRows = Object.keys(donutGroups).filter(k => donutGroups[k] > 0.001).map((k, i) => {
+        const colors = ['#10b981','#6366f1','#f59e0b','#ec4899','#06b6d4'];
+        const pct = districtTotal > 0 ? (donutGroups[k] / districtTotal * 100).toFixed(1) : '0';
+        return `<div class="donut-row"><div class="donut-dot" style="background:${colors[i]};"></div><span style="flex:1;font-weight:600;">${k}</span><span style="font-weight:800;color:${colors[i]};">${pct}%</span><span style="color:#64748b;margin-left:6px;">${fmtQ(donutGroups[k])}</span></div>`;
+    }).join('');
+
+    const section2 = `
+    <div class="section-divider"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-num">2</div>
+            <div>
+                <div style="font-size:14px;font-weight:800;">Commodity Intelligence Matrix</div>
+                <div style="font-size:11px;color:#c9a227;font-weight:500;">कमोडिटी इंटेलिजेंस मैट्रिक्स — Heatmap View</div>
+            </div>
+        </div>
+        <div class="page-inner">
+            <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
+                <div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">IC × Commodity Breakdown (Qt)</div>
+                    <div style="overflow-x:auto;">
+                        <table class="commodity-matrix">
+                            <thead><tr>
+                                <th>Issue Center</th>
+                                ${shortCols.map(c => `<th>${c}</th>`).join('')}
+                                <th style="background:#c9a227;color:#0b2545;">IC Total</th>
+                            </tr></thead>
+                            <tbody>
+                                ${matrixRows}
+                                <tr>
+                                    <td style="font-weight:800;background:#fef3c7;color:#92400e;">∑ TOTAL</td>
+                                    ${totalCells}
+                                    <td style="background:#fef3c7;font-weight:800;color:#059669;">${fmtQ(districtTotal)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:12px;font-size:10px;flex-wrap:wrap;">
+                        <span style="background:rgba(5,150,105,0.18);color:#065f46;padding:3px 8px;border-radius:4px;font-weight:600;">🟢 High Stock</span>
+                        <span style="background:rgba(217,119,6,0.15);color:#92400e;padding:3px 8px;border-radius:4px;font-weight:600;">🟡 Medium Stock</span>
+                        <span style="background:rgba(220,38,38,0.12);color:#991b1b;padding:3px 8px;border-radius:4px;font-weight:600;">🔴 Low Stock</span>
+                        <span style="background:rgba(220,38,38,0.35);color:#7f1d1d;padding:3px 8px;border-radius:4px;font-weight:600;">❌ Negative</span>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Commodity Mix</div>
+                    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;">
+                        <div class="donut-legend">${donutLegendRows}</div>
+                        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0;">
+                            <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Dominant Commodity</div>
+                            <div style="font-size:14px;font-weight:800;color:#0b2545;">${topCommodity}</div>
+                            <div style="font-size:12px;color:#d97706;font-weight:700;margin-top:2px;">${topCommodityPct}% of district stock</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // ──────────────────────────────────────────────────
+    // SECTION 3: RISK INTELLIGENCE & ALERTS
+    // ──────────────────────────────────────────────────
+    let alertsHtml = '';
+
+    if (negativeItems.length === 0 && lowBufferICs.length === 0) {
+        alertsHtml += `<div class="alert-card alert-ok"><div class="alert-title" style="color:#059669;">✅ All Systems Normal</div><div class="alert-body">No negative stock detected. All Issue Centers maintain positive commodity balances.</div></div>`;
+    }
+
+    negativeItems.forEach(ni => {
+        alertsHtml += `<div class="alert-card alert-critical"><div class="alert-title" style="color:#dc2626;">🔴 Critical: Negative Stock — ${ni.center}</div><div class="alert-body"><strong>${ni.commodity}</strong>: <strong style="color:#dc2626;">${ni.val.toFixed(2)} Qt</strong>. Immediate replenishment or stock audit is required. Verify records for data entry errors.</div></div>`;
+    });
+
+    lowBufferICs.forEach(ic => {
+        const pct = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(1) : '0';
+        alertsHtml += `<div class="alert-card alert-warning"><div class="alert-title" style="color:#d97706;">🟡 Low Buffer Warning — ${ic.name}</div><div class="alert-body">Holds only <strong>${fmtQ(ic.total)}</strong> (${pct}% district share) — below 50% of district average (${fmtQ(avgStock)}). Consider restocking priority dispatch.</div></div>`;
+    });
+
+    if (parseFloat(topHalfPct) > 75) {
+        alertsHtml += `<div class="alert-card alert-warning"><div class="alert-title" style="color:#d97706;">📊 Distribution Imbalance Alert</div><div class="alert-body">Top half of Issue Centers hold <strong>${topHalfPct}%</strong> of district stock. High concentration may signal unequal distribution — consider rebalancing.</div></div>`;
+    }
+
+    if (maxIC.total && districtTotal > 0) {
+        const maxShare = (maxIC.total / districtTotal * 100).toFixed(1);
+        alertsHtml += `<div class="alert-card alert-ok"><div class="alert-title" style="color:#059669;">🟢 Strongest Buffer IC</div><div class="alert-body"><strong>${maxIC.name}</strong> holds the district's highest reserve at <strong>${fmtQ(maxIC.total)}</strong> (${maxShare}% share). This provides strong food security buffer.</div></div>`;
+    }
+
+    const wheatPct = districtTotal > 0 ? (donutGroups['Wheat (गेहूं)'] / districtTotal * 100).toFixed(1) : '0';
+    if (parseFloat(wheatPct) > 0) {
+        const wheatMsg = parseFloat(wheatPct) > 60
+            ? `High wheat concentration (${wheatPct}%) — monitor expiry timelines and plan offloading.`
+            : `Wheat constitutes ${wheatPct}% of total district stock. Commodity diversification is healthy.`;
+        alertsHtml += `<div class="alert-card alert-info"><div class="alert-title" style="color:#2563eb;">🌾 Wheat Pool Intelligence</div><div class="alert-body">${wheatMsg} Total: <strong>${fmtQ(donutGroups['Wheat (गेहूं)'])}</strong></div></div>`;
+    }
+
+    const section3 = `
+    <div class="section-divider"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-num">3</div>
+            <div>
+                <div style="font-size:14px;font-weight:800;">Risk Intelligence & Smart Alerts</div>
+                <div style="font-size:11px;color:#c9a227;font-weight:500;">जोखिम विश्लेषण एवं स्मार्ट अलर्ट</div>
+            </div>
+        </div>
+        <div class="page-inner">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>${alertsHtml}</div>
+                <div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">IC Stock Ranking</div>
+                    ${sorted.map((ic, i) => {
+                        const share = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(1) : '0';
+                        const barW = maxIC.total > 0 ? (ic.total / maxIC.total * 100).toFixed(0) : 0;
+                        const medals = ['🥇','🥈','🥉'];
+                        const colors = ['#f59e0b','#94a3b8','#cd7f32'];
+                        const c = colors[i] || '#059669';
+                        return `<div class="ranking-row">
+                            <span style="font-size:16px;">${medals[i] || '#'+(i+1)}</span>
+                            <div style="flex:1;">
+                                <div style="font-size:12px;font-weight:700;color:#1e293b;">${ic.name}</div>
+                                <div style="height:4px;background:#f1f5f9;border-radius:2px;margin-top:4px;overflow:hidden;"><div style="height:100%;width:${barW}%;background:${c};border-radius:2px;"></div></div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:11px;font-weight:800;color:${c};">${fmtQ(ic.total)}</div>
+                                <div style="font-size:10px;color:#94a3b8;">${share}%</div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // ──────────────────────────────────────────────────
+    // SECTION 4: MANAGEMENT SUMMARY & PRIORITIES
+    // ──────────────────────────────────────────────────
+    const priorities = [];
+
+    if (negativeItems.length > 0) {
+        priorities.push({
+            title: 'Immediate: Resolve Negative Stock Positions',
+            body: `${negativeItems.length} commodity-IC combination(s) show negative stock. Conduct physical verification at ${[...new Set(negativeItems.map(n => n.center))].join(', ')} and initiate emergency replenishment if confirmed.`,
+            color: '#dc2626'
+        });
+    }
+    if (lowBufferICs.length > 0) {
+        priorities.push({
+            title: 'Priority: Replenish Low-Buffer Issue Centers',
+            body: `${lowBufferICs.length} IC(s) hold below 50% of district average: ${lowBufferICs.map(ic => ic.name).join(', ')}. Recommend prioritizing dispatch from nearest warehouse in next allocation cycle.`,
+            color: '#d97706'
+        });
+    }
+    if (parseFloat(topHalfPct) > 75) {
+        priorities.push({
+            title: 'Governance: Rebalance Stock Distribution',
+            body: `Top half of ICs hold ${topHalfPct}% of district stock. Review dispatch planning to ensure equitable coverage across all Issue Centers.`,
+            color: '#2563eb'
+        });
+    }
+    if (priorities.length < 3 && parseFloat(wheatPct) > 60) {
+        priorities.push({
+            title: 'Monitor: High Wheat Concentration',
+            body: `Wheat accounts for ${wheatPct}% of total stock (${fmtQ(donutGroups['Wheat (गेहूं)'])}). Track expiry timelines and plan proactive offloading before new allocation.`,
+            color: '#f26b2b'
+        });
+    }
+    if (priorities.length === 0) {
+        priorities.push({
+            title: 'Status: Maintain Current Buffer Levels',
+            body: `District stock position is healthy. All ICs show positive stock with balanced distribution. Continue routine monitoring and timely dispatch adherence.`,
+            color: '#059669'
+        });
+    }
+
+    const priorityCards = priorities.slice(0, 3).map((p, i) => `
+        <div class="priority-card">
+            <div style="font-size:12px;font-weight:800;color:#c9a227;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+                <span class="priority-num">${i + 1}</span> ${p.title}
+            </div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.6;">${p.body}</div>
+        </div>`
+    ).join('');
+
+    const section4 = `
+    <div class="section-divider"></div>
+    <div class="page">
+        <div class="section-header">
+            <div class="section-num">4</div>
+            <div>
+                <div style="font-size:14px;font-weight:800;">Management Summary & Action Priorities</div>
+                <div style="font-size:11px;color:#c9a227;font-weight:500;">प्रबंधन सारांश एवं प्राथमिकता कार्ययोजना</div>
+            </div>
+        </div>
+        <div class="page-inner">
+            <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
+                <div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;">Top Management Priorities</div>
+                    ${priorityCards}
+                </div>
+                <div>
+                    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;">District Health Scorecard</div>
+                    <div style="background:#0b2545;border-radius:12px;padding:20px;color:white;text-align:center;border:3px solid #c9a227;">
+                        <div style="font-size:11px;color:#c9a227;font-weight:700;margin-bottom:8px;text-transform:uppercase;">Overall Health Score</div>
+                        <div style="font-size:52px;font-weight:800;color:${healthColor};line-height:1;">${healthScore}</div>
+                        <div style="font-size:13px;font-weight:700;color:${healthColor};margin-top:4px;">${healthLabel}</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">out of 100</div>
+                    </div>
+                    <div class="scorecard">
+                        <div class="score-item">
+                            <div class="score-val" style="color:${negativeItems.length > 0 ? '#dc2626' : '#059669'};">${negativeItems.length}</div>
+                            <div class="score-lab">Negative Items</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-val" style="color:${lowBufferICs.length > 0 ? '#d97706' : '#059669'};">${lowBufferICs.length}</div>
+                            <div class="score-lab">Low Buffer ICs</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-val" style="color:#2563eb;">${icData.length}</div>
+                            <div class="score-lab">Total ICs</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Distribution Equity</div>
+                        <div style="font-size:20px;font-weight:800;color:${parseFloat(topHalfPct) > 75 ? '#d97706' : '#059669'};">${topHalfPct}%</div>
+                        <div style="font-size:10px;color:#94a3b8;">top half ICs hold of total stock</div>
+                        <div style="font-size:10px;font-weight:700;color:${parseFloat(topHalfPct) > 75 ? '#d97706' : '#059669'};margin-top:4px;">${parseFloat(topHalfPct) > 75 ? '⚠️ Concentration Risk' : '✅ Equitable Distribution'}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // ──────────────────────────────────────────────────
+    // FOOTER
+    // ──────────────────────────────────────────────────
+    const footer = `
+    <div class="footer-bar">
+        <div>📊 उन्नत विश्लेषण रिपोर्ट प्रीव्यू / Advanced Analytics Executive Report — Live District Stock Position</div>
+        <div style="text-align:right;">मध्यप्रदेश स्टेट सिविल सप्लाइज कारपोरेशन लि. • Betul District PDS • ${syncTime}</div>
+    </div>`;
+
+    return `
+    <div class="report-root">
+        <style>${baseCss}</style>
+        ${coverSection}
+        ${section1}
+        ${section2}
+        ${section3}
+        ${section4}
+        ${footer}
+    </div>`;
+}
+
+async function downloadStockAdvReport(type) {
+    const data = window.lastStockData;
+    if (!data || !data.icData || data.icData.length === 0) {
+        if (typeof showToast === 'function') showToast('⚠️ No data loaded. Please sync first.', 'warning');
+        return;
+    }
+
+    if (type === 'excel') {
+        // Two-sheet CSV export
+        const icData = data.icData || [];
+        const headers = data.headers || [];
+        const commodityHeaders = headers.slice(1, headers.length - 1);
+
+        // Sheet 1: IC Summary
+        let csv1 = '\uFEFF'; // BOM
+        csv1 += ['IC Name','Total Stock (Qt)','% District Share','Status'].join(',') + '\n';
+        const districtTotal = icData.reduce((s, ic) => s + ic.total, 0);
+        const avgStock = icData.length ? districtTotal / icData.length : 0;
+        icData.slice().sort((a, b) => b.total - a.total).forEach(ic => {
+            const share = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(2) : '0';
+            const status = ic.total < avgStock * 0.5 ? 'LOW BUFFER' : ic.total > avgStock * 1.3 ? 'HIGH BUFFER' : 'NORMAL';
+            csv1 += ['"' + ic.name + '"', ic.total.toFixed(2), share + '%', '"' + status + '"'].join(',') + '\n';
+        });
+        csv1 += ['"DISTRICT TOTAL"', districtTotal.toFixed(2), '100.00%', '"—"'].join(',') + '\n';
+
+        // Sheet 2: Commodity Matrix
+        let csv2 = '\uFEFF';
+        csv2 += ['IC Name', ...commodityHeaders, 'IC Total'].join(',') + '\n';
+        icData.forEach(ic => {
+            const vals = commodityHeaders.map(h => (ic.commodities[h] || 0).toFixed(2));
+            csv2 += ['"' + ic.name + '"', ...vals, ic.total.toFixed(2)].join(',') + '\n';
+        });
+        // Totals row
+        const commTotals = commodityHeaders.map(h => icData.reduce((s, ic) => s + (ic.commodities[h] || 0), 0).toFixed(2));
+        csv2 += ['"TOTAL"', ...commTotals, districtTotal.toFixed(2)].join(',') + '\n';
+
+        const date = new Date().toISOString().slice(0, 10);
+
+        // Download Sheet 1
+        const blob1 = new Blob([csv1], { type: 'text/csv;charset=utf-8;' });
+        const a1 = document.createElement('a');
+        a1.href = URL.createObjectURL(blob1);
+        a1.download = `Stock_IC_Summary_${date}.csv`;
+        document.body.appendChild(a1);
+        a1.click();
+        document.body.removeChild(a1);
+
+        // Short delay then Sheet 2
+        await new Promise(r => setTimeout(r, 400));
+        const blob2 = new Blob([csv2], { type: 'text/csv;charset=utf-8;' });
+        const a2 = document.createElement('a');
+        a2.href = URL.createObjectURL(blob2);
+        a2.download = `Stock_Commodity_Matrix_${date}.csv`;
+        document.body.appendChild(a2);
+        a2.click();
+        document.body.removeChild(a2);
+
+        if (typeof showToast === 'function') showToast('📊 Excel export complete — 2 CSV files downloaded!', 'success', 3500);
+        return;
+    }
+
+    // Image or PDF — capture the report content div
+    const reportEl = document.getElementById('stockAdvReportContent');
+    if (!reportEl) {
+        alert('Report not visible. Please open the report preview first.');
+        return;
+    }
+
+    if (typeof html2canvas === 'undefined') {
+        alert('html2canvas library is not loaded. Cannot export image/PDF.');
+        return;
+    }
+
+    try {
+        if (typeof showToast === 'function') {
+            showToast(type === 'pdf' ? '📄 Generating PDF...' : '🖼️ Generating image...', 'info', 5000);
+        }
+
+        await new Promise(r => setTimeout(r, 350));
+
+        const canvas = await html2canvas(reportEl, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: -window.scrollY,
+            width: reportEl.scrollWidth,
+            height: reportEl.scrollHeight,
+            windowWidth: reportEl.scrollWidth,
+            windowHeight: reportEl.scrollHeight
+        });
+
+        const date = new Date().toISOString().slice(0, 10);
+
+        if (type === 'image') {
+            const link = document.createElement('a');
+            link.download = `Stock_Advanced_Analytics_${date}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.92);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            if (typeof showToast === 'function') showToast('✅ Image exported!', 'success', 3000);
+        } else if (type === 'pdf') {
+            const jsPDFLib = window.jspdf ? window.jspdf.jsPDF : (window.jsPDF || null);
+            if (!jsPDFLib) { alert('jsPDF library not loaded.'); return; }
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const pdf = new jsPDFLib({ orientation: 'p', unit: 'mm', format: 'a4' });
+            const pw = pdf.internal.pageSize.getWidth();
+            const ph = pdf.internal.pageSize.getHeight();
+            const margin = 8;
+            const maxW = pw - margin * 2;
+            const maxH = ph - margin * 2;
+            const ratio = canvas.width / canvas.height;
+
+            // Multi-page support for tall content
+            const pageHeightPx = canvas.width / maxW * maxH;
+            let srcY = 0;
+            let pageNum = 0;
+
+            while (srcY < canvas.height) {
+                if (pageNum > 0) pdf.addPage();
+
+                const sliceH = Math.min(pageHeightPx, canvas.height - srcY);
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = sliceH;
+                const ctx = sliceCanvas.getContext('2d');
+                ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+                const sliceImgData = sliceCanvas.toDataURL('image/jpeg', 1.0);
+                const sliceRenderH = sliceH / canvas.width * maxW;
+                pdf.addImage(sliceImgData, 'JPEG', margin, margin, maxW, sliceRenderH);
+
+                srcY += sliceH;
+                pageNum++;
+            }
+
+            pdf.save(`Stock_Advanced_Analytics_${date}.pdf`);
+            try { window.open(URL.createObjectURL(pdf.output('blob')), '_blank'); } catch(e) {}
+            if (typeof showToast === 'function') showToast('✅ PDF exported!', 'success', 3000);
+        }
+    } catch (err) {
+        console.error('Export error:', err);
+        alert('Export failed: ' + err.message);
+    }
+}
+
+window.showStockAdvancedReport = showStockAdvancedReport;
+window.closeStockAdvancedReport = closeStockAdvancedReport;
+window.buildStockAdvancedReportHTML = buildStockAdvancedReportHTML;
+window.downloadStockAdvReport = downloadStockAdvReport;
+
+// ═══════════════════════════════════════════════════════════════
 //  INTERACTIVE MANUAL CAPTCHA MODAL HANDLERS (FOR CLOUD / RENDER)
 // ═══════════════════════════════════════════════════════════════
+
 window.currentCaptchaRequestId = null;
 
 function openManualCaptchaModal(imageBase64, requestId, message) {
