@@ -618,7 +618,7 @@ Tracks what has been tested and confirmed working.
 
 ## 20. CHANGE LOG (DATEWISE)
 
-### 2026-08-15 | Fix SCM Login Verification and Cloud Credentials Fallback
+### 2026-08-15 | Fix SCM Login Verification, Password Re-Entry, and Pristine Cloud CAPTCHA Flow
 
 Files: server/automation/scraper_v2.js, server.js, PROJECT_DOCS.md
 Type: Bug Fix / SCM Scraper Hardening
@@ -626,12 +626,13 @@ Closes: ISSUE-018
 
 - BUG: Even after entering the correct manual CAPTCHA code, the system prompted for CAPTCHA repeatedly without progressing to report extraction.
 - ROOT CAUSES:
-  1. `SCMScraper.verifyLogin()` was referenced in `login()` and `submitManualCaptcha()` but had not been implemented on the class in `scraper_v2.js`. When invoked, it threw a `TypeError`, causing `submitManualCaptcha` to catch the error, return `false`, and immediately re-trigger another CAPTCHA request.
-  2. On cloud deployments (Render), `.env` is omitted by `.gitignore`. If environment variables are unconfigured in the Render dashboard, `process.env.SCM_USERNAME` and `password` resolved to `undefined`/`''`, leaving portal login credentials empty.
+  1. `SCMScraper.verifyLogin()` was missing from `scraper_v2.js`. Calling it threw an unhandled `TypeError` inside `submitManualCaptcha`, triggering repeated CAPTCHA retries.
+  2. In `submitManualCaptcha`, if the portal reloaded `Login.jsp` and retained the username but wiped the password, the `if (!userStillFilled)` guard was skipped, submitting the form with an EMPTY password.
+  3. `login()` previously ran `attemptAutoCaptcha(1)` on Cloud/Render before prompting the user. That failed auto-attempt submitted a bad CAPTCHA, which reset the portal session and forced a new CAPTCHA before the user even entered their code.
 - FIX:
   1. Implemented comprehensive `verifyLogin()` method checking URL transitions, logged-in page text indicators, authenticated navigation elements, and error banner detection.
-  2. Stored `this.username` and `this.password` on the scraper instance with robust defaults (`'dm_447'` / `'dmnan@2026'`) across `login()`, `submitManualCaptcha()`, and `refreshCaptchaImage()`.
-  3. Added explicit credential fallbacks in `server.js`.
+  2. Unconditionally verified and populated BOTH username (`'dm_447'`) and password (`'dmnan@2026'`) in the DOM before submitting manual CAPTCHA.
+  3. Streamlined cloud mode to present the pristine first CAPTCHA directly to the user without submitting any failing auto-guesses first.
 
 ---
 
