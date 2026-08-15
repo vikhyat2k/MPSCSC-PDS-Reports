@@ -2663,7 +2663,7 @@ async function fetchStockPositionSheet() {
     } catch (err) {
         console.error('Error importing Google Sheet stock position:', err);
         if (statusEl) {
-            statusEl.innerHTML = '<div class="alert alert-error" style="padding:12px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:600;">❌ Failed to connect to server endpoint.</div>';
+            statusEl.innerHTML = '<div class="alert alert-error" style="padding:12px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:600;">❌ ' + (err.message || 'Failed to connect to server endpoint.') + '</div>';
         }
     }
 }
