@@ -1483,6 +1483,16 @@ function displayNfsaDaterangeAnalytics(analytics) {
     }
 }
 
+// Global Sub-View Checker
+function isSubViewActive() {
+    const stock = document.getElementById('stockPositionSection');
+    const comp  = document.getElementById('comparisonSection');
+    if (stock && stock.style.display !== 'none' && stock.style.display !== '') return true;
+    if (comp  && comp.style.display  !== 'none' && comp.style.display  !== '') return true;
+    return false;
+}
+window.isSubViewActive = isSubViewActive;
+
 function switchScheme(scheme) {
     currentScheme = scheme;
     document.querySelectorAll('.scheme-tab').forEach(t => t.classList.remove('active-tab'));
@@ -1494,14 +1504,6 @@ function switchScheme(scheme) {
         const el = document.getElementById(id); 
         if (el) el.style.display = (id.startsWith(scheme)) ? 'block' : 'none';
     });
-
-function isSubViewActive() {
-    const stock = document.getElementById('stockPositionSection');
-    const comp  = document.getElementById('comparisonSection');
-    if (stock && stock.style.display !== 'none' && stock.style.display !== '') return true;
-    if (comp  && comp.style.display  !== 'none' && comp.style.display  !== '') return true;
-    return false;
-}
 
     // Toggle History Sections
     const historyMapping = {
@@ -1586,8 +1588,9 @@ async function loadReports() {
         if (selectAll) selectAll.checked = false;
         updateDeleteButtonVisibility('nfsa');
 
-        if (reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding: 40px; color: #475569;">No reports found. Generate one to see it here!</td></tr>';
+        if (!Array.isArray(reports) || reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No reports found. Generate one to see it here!</td></tr>';
+            setupHistoryExpansion('nfsa', 0);
             return;
         }
 
@@ -1602,21 +1605,21 @@ async function loadReports() {
                 <td>
                     <span class="badge-premium">${schemeLabel}</span>
                 </td>
-                <td style="font-weight: 600; color: #1e293b;">
+                <td style="font-weight: 600; color: var(--text-main, #eef2ff);">
                     ${getMonthName(r.month)} ${r.year}
                 </td>
-                <td style="font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+                <td style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-main, #eef2ff);">
                     ${parseFloat(r.total_allocation || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
                 </td>
                 <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 800;">
                     ${(parseFloat(r.dispatch_percentage) || 0).toFixed(2)}%
                 </td>
-                <td style="color: #1e293b; font-weight: 600;">
+                <td style="color: var(--text-main, #eef2ff); font-weight: 600;">
                     ${(parseFloat(r.receipt_percentage || 0)).toFixed(2)}%
                 </td>
-                <td style="font-size: 14px; color: #475569; line-height: 1.5;">
-                    <div style="font-weight: 600;">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
-                    <div style="opacity: 0.8; font-size: 12px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                <td style="font-size: 13px; color: var(--text-muted, #94a3b8); line-height: 1.4;">
+                    <div style="font-weight: 600; color: var(--text-main, #eef2ff);">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
+                    <div style="opacity: 0.8; font-size: 11px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 </td>
                 <td>
                     <div class="action-btn-group">
@@ -1643,12 +1646,11 @@ async function loadReports() {
                 </td>
             </tr>`;
         }).join('');
-        
 
         setupHistoryExpansion('nfsa', reports.length);
 
     } catch (error) {
-        console.error('Error loading reports:', error);
+        console.error('Failed to load reports:', error);
     }
 }
 
@@ -1661,23 +1663,21 @@ async function loadDaterangeReports() {
         
         if (!tbody) return;
         
-        if (reports.length === 0) {
-            if (section) {
-                section.style.display = (currentScheme === 'nfsa' && currentReportMode === 'daterange') ? 'block' : 'none';
-            }
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 40px; color: rgba(255,255,255,0.7);">No Date Range reports found. Generate one to see it here!</td></tr>';
-            return;
-        }
-
-        // Only show if we are in daterange mode AND NFSA is active
+        // Only show if we are in daterange mode AND NFSA is active AND sub-view is not active
         if (section) {
-            section.style.display = (currentScheme === 'nfsa' && currentReportMode === 'daterange') ? 'block' : 'none';
+            section.style.display = (!isSubViewActive() && currentScheme === 'nfsa' && currentReportMode === 'daterange') ? 'block' : 'none';
         }
         
         // Reset "Select All" checkbox
-        const selectAll = document.getElementById('daterangeSelectAll');
+        const selectAll = document.getElementById('nfsa_daterangeSelectAll') || document.getElementById('daterangeSelectAll');
         if (selectAll) selectAll.checked = false;
         updateDeleteButtonVisibility('nfsa_daterange');
+
+        if (!Array.isArray(reports) || reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No Date Range reports found. Generate one to see it here!</td></tr>';
+            setupHistoryExpansion('nfsa_daterange', 0);
+            return;
+        }
 
         tbody.innerHTML = reports.map(r => {
             const dateStr = formatDateToDMY(r.generated_at);
@@ -1689,15 +1689,15 @@ async function loadDaterangeReports() {
                 <td>
                     <span class="badge-premium" style="background:#4f46e5;">NFSA DR</span>
                 </td>
-                <td style="font-weight: 600; color: #1e293b;">
+                <td style="font-weight: 600; color: var(--text-main, #eef2ff);">
                     ${r.from_date && r.to_date ? `${r.from_date} - ${r.to_date}` : `${getMonthName(r.month)} ${r.year}`}
                 </td>
                 <td style="color: #4f46e5; font-weight: 800;">
                     ${(parseFloat(r.total_dispatch) || 0).toLocaleString(undefined, {minimumFractionDigits: 2})} Qt.
                 </td>
-                <td style="font-size: 14px; color: #475569; line-height: 1.5;">
-                    <div style="font-weight: 600;">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
-                    <div style="opacity: 0.8; font-size: 12px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                <td style="font-size: 13px; color: var(--text-muted, #94a3b8); line-height: 1.4;">
+                    <div style="font-weight: 600; color: var(--text-main, #eef2ff);">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
+                    <div style="opacity: 0.8; font-size: 11px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 </td>
                 <td>
                     <div class="action-btn-group">
@@ -1728,27 +1728,42 @@ async function loadMDMReports() {
         const response = await fetch('api/reports?scheme=mdm');
         const reports = await response.json();
         const tbody = document.getElementById('mdmReportsTableBody');
+        const section = document.getElementById('mdmHistory');
         if (!tbody) return;
+
+        if (section && currentScheme === 'mdm') {
+            section.style.display = !isSubViewActive() ? 'block' : 'none';
+        }
 
         const selectAll = document.getElementById('mdmSelectAll');
         if (selectAll) selectAll.checked = false;
         updateDeleteButtonVisibility('mdm');
 
-        tbody.innerHTML = reports.length === 0 ? '<tr><td colspan="10" class="text-center">No reports found.</td></tr>' : reports.map(r => `
+        if (!Array.isArray(reports) || reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No MDM reports found. Generate one to see it here!</td></tr>';
+            setupHistoryExpansion('mdm', 0);
+            return;
+        }
+
+        tbody.innerHTML = reports.map(r => `
             <tr data-id="${r.id}" class="report-row">
                 <td class="text-center"><input type="checkbox" class="mdm-report-checkbox custom-checkbox" value="${r.id}" onchange="updateDeleteButtonVisibility('mdm')"></td>
                 <td><span class="badge-premium">MDM</span></td>
-                <td style="font-weight: 600;">${getMonthName(r.month)} ${r.year}</td>
-                <td>${parseFloat(r.total_allocation || 0).toFixed(2)}</td>
-                <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 700;">${r.dispatch_percentage}%</td>
-                <td>${parseFloat(r.receipt_percentage || 0).toFixed(2)}%</td>
-                <td style="font-size: 11px; color: #475569;">${new Date(r.generated_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase().replace(',', '')}</td>
+                <td style="font-weight: 600; color: var(--text-main, #eef2ff);">${getMonthName(r.month)} ${r.year}</td>
+                <td style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-main, #eef2ff);">${parseFloat(r.total_allocation || 0).toFixed(2)}</td>
+                <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 800;">${parseFloat(r.dispatch_percentage || 0).toFixed(2)}%</td>
+                <td style="color: var(--text-main, #eef2ff); font-weight: 600;">${parseFloat(r.receipt_percentage || 0).toFixed(2)}%</td>
+                <td style="font-size: 13px; color: var(--text-muted, #94a3b8); line-height: 1.4;">
+                    <div style="font-weight: 600; color: var(--text-main, #eef2ff);">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
+                    <div style="opacity: 0.8; font-size: 11px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                </td>
                 <td>
                     <div class="action-btn-group">
                         <button class="btn-action btn-action-view" onclick="viewReport('${r.id}')" title="View Details"><span>👁️</span> View</button>
                         <a href="/reports/${r.filename}" class="btn-action btn-action-excel" download><span>📥</span> Excel</a>
                         <button class="btn-action btn-action-pdf" onclick="generatePDF('${r.id}', event)"><span>📄</span> PDF</button>
                         <button class="btn-action" onclick="openEmailModal('${r.id}', 'mdm')" title="Email Report" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;"><span>✉️</span> Email</button>
+                        <button class="btn-action btn-action-delete" onclick="deleteReport('${r.id}')" title="Remove Report"><span>🗑️</span> Delete</button>
                     </div>
                 </td>
             </tr>
@@ -1762,27 +1777,42 @@ async function loadICDSReports() {
         const response = await fetch('api/reports?scheme=icds');
         const reports = await response.json();
         const tbody = document.getElementById('icdsReportsTableBody');
+        const section = document.getElementById('icdsHistory');
         if (!tbody) return;
+
+        if (section && currentScheme === 'icds') {
+            section.style.display = !isSubViewActive() ? 'block' : 'none';
+        }
 
         const selectAll = document.getElementById('icdsSelectAll');
         if (selectAll) selectAll.checked = false;
         updateDeleteButtonVisibility('icds');
 
-        tbody.innerHTML = reports.length === 0 ? '<tr><td colspan="10" class="text-center">No reports found.</td></tr>' : reports.map(r => `
+        if (!Array.isArray(reports) || reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No ICDS reports found. Generate one to see it here!</td></tr>';
+            setupHistoryExpansion('icds', 0);
+            return;
+        }
+
+        tbody.innerHTML = reports.map(r => `
             <tr data-id="${r.id}" class="report-row">
                 <td class="text-center"><input type="checkbox" class="icds-report-checkbox custom-checkbox" value="${r.id}" onchange="updateDeleteButtonVisibility('icds')"></td>
                 <td><span class="badge-premium">ICDS</span></td>
-                <td style="font-weight: 600;">${getMonthName(r.month)} ${r.year}</td>
-                <td style="font-size: 11px;">${parseFloat(r.total_allocation || 0).toLocaleString()} Qt.</td>
-                <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 700;">${(parseFloat(r.dispatch_percentage) || 0).toFixed(2)}%</td>
-                <td style="font-size: 11px;">${(parseFloat(r.receipt_percentage || 0)).toFixed(2)}%</td>
-                <td style="font-size: 11px; color: #475569;">${new Date(r.generated_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase().replace(',', '')}</td>
+                <td style="font-weight: 600; color: var(--text-main, #eef2ff);">${getMonthName(r.month)} ${r.year}</td>
+                <td style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-main, #eef2ff);">${parseFloat(r.total_allocation || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 800;">${(parseFloat(r.dispatch_percentage) || 0).toFixed(2)}%</td>
+                <td style="color: var(--text-main, #eef2ff); font-weight: 600;">${(parseFloat(r.receipt_percentage || 0)).toFixed(2)}%</td>
+                <td style="font-size: 13px; color: var(--text-muted, #94a3b8); line-height: 1.4;">
+                    <div style="font-weight: 600; color: var(--text-main, #eef2ff);">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
+                    <div style="opacity: 0.8; font-size: 11px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                </td>
                 <td>
                     <div class="action-btn-group">
                         <button class="btn-action btn-action-view" onclick="viewReport('${r.id}')" title="View Details"><span>👁️</span> View</button>
                         <a href="/reports/${r.filename}" class="btn-action btn-action-excel" download><span>📥</span> Excel</a>
                         <button class="btn-action btn-action-pdf" onclick="generatePDF('${r.id}', event)"><span>📄</span> PDF</button>
                         <button class="btn-action" onclick="openEmailModal('${r.id}', 'icds')" title="Email Report" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;"><span>✉️</span> Email</button>
+                        <button class="btn-action btn-action-delete" onclick="deleteReport('${r.id}')" title="Remove Report"><span>🗑️</span> Delete</button>
                     </div>
                 </td>
             </tr>
@@ -1796,29 +1826,44 @@ async function loadWelfareReports() {
         const response = await fetch('api/reports?scheme=welfare');
         const reports = await response.json();
         const tbody = document.getElementById('welfareReportsTableBody');
+        const section = document.getElementById('welfareHistory');
         if (!tbody) return;
+
+        if (section && currentScheme === 'welfare') {
+            section.style.display = !isSubViewActive() ? 'block' : 'none';
+        }
 
         const selectAll = document.getElementById('welfareSelectAll');
         if (selectAll) selectAll.checked = false;
         updateDeleteButtonVisibility('welfare');
 
-        tbody.innerHTML = reports.length === 0 ? '<tr><td colspan="10" class="text-center">No reports found.</td></tr>' : reports.map(r => `
+        if (!Array.isArray(reports) || reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No Welfare reports found. Generate one to see it here!</td></tr>';
+            setupHistoryExpansion('welfare', 0);
+            return;
+        }
+
+        tbody.innerHTML = reports.map(r => `
             <tr data-id="${r.id}" class="report-row">
                 <td class="text-center">
                     <input type="checkbox" class="welfare-report-checkbox custom-checkbox" value="${r.id}" onchange="updateDeleteButtonVisibility('welfare')">
                 </td>
                 <td><span class="badge-premium">WELFARE</span></td>
-                <td style="font-weight: 600;">${getMonthName(r.month)} ${r.year}</td>
-                <td style="font-size: 11px;">${parseFloat(r.total_allocation || 0).toLocaleString()} Qt.</td>
-                <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 700;">${(parseFloat(r.dispatch_percentage) || 0).toFixed(2)}%</td>
-                <td style="font-size: 11px;">${(parseFloat(r.receipt_percentage || 0)).toFixed(2)}%</td>
-                <td style="font-size: 11px; color: #475569;">${new Date(r.generated_at).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase().replace(',', '')}</td>
+                <td style="font-weight: 600; color: var(--text-main, #eef2ff);">${getMonthName(r.month)} ${r.year}</td>
+                <td style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-main, #eef2ff);">${parseFloat(r.total_allocation || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td style="color:${getStatusColor(r.dispatch_percentage)}; font-weight: 800;">${(parseFloat(r.dispatch_percentage) || 0).toFixed(2)}%</td>
+                <td style="color: var(--text-main, #eef2ff); font-weight: 600;">${(parseFloat(r.receipt_percentage || 0)).toFixed(2)}%</td>
+                <td style="font-size: 13px; color: var(--text-muted, #94a3b8); line-height: 1.4;">
+                    <div style="font-weight: 600; color: var(--text-main, #eef2ff);">${new Date(r.generated_at).toLocaleDateString('en-GB')}</div>
+                    <div style="opacity: 0.8; font-size: 11px;">${new Date(r.generated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                </td>
                 <td>
                     <div class="action-btn-group">
                         <button class="btn-action btn-action-view" onclick="viewReport('${r.id}')" title="View Details"><span>👁️</span> View</button>
                         <a href="/reports/${r.filename}" class="btn-action btn-action-excel" download><span>📥</span> Excel</a>
                         <button class="btn-action btn-action-pdf" onclick="generatePDF('${r.id}', event)"><span>📄</span> PDF</button>
                         <button class="btn-action" onclick="openEmailModal('${r.id}', 'welfare')" title="Email Report" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;"><span>✉️</span> Email</button>
+                        <button class="btn-action btn-action-delete" onclick="deleteReport('${r.id}')" title="Remove Report"><span>🗑️</span> Delete</button>
                     </div>
                 </td>
             </tr>
