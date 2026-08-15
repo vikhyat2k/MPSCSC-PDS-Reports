@@ -2222,11 +2222,29 @@ async function fetchStockPositionSheet() {
     }
 
     try {
-        var res = await fetch('api/stock-position/fetch-sheet', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sheetUrl: sheetUrl })
-        });
+        var endpoints = ['/api/stock-position/fetch-sheet', 'api/stock-position/fetch-sheet', '/stock-position/fetch-sheet', 'stock-position/fetch-sheet'];
+        var res = null;
+        var lastErr = null;
+        for (var i = 0; i < endpoints.length; i++) {
+            try {
+                var r = await fetch(endpoints[i], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sheetUrl: sheetUrl })
+                });
+                if (r) {
+                    res = r;
+                    break;
+                }
+            } catch (e) {
+                lastErr = e;
+            }
+        }
+
+        if (!res) {
+            throw new Error(lastErr ? lastErr.message : 'Failed to reach server endpoint.');
+        }
+
         var data = await res.json();
 
         if (data.error) {
