@@ -1087,9 +1087,14 @@
                             <!-- Row 5: Scheme-wise Shortfall Analysis (full-width) -->
                             <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:18px;margin-bottom:20px;">
                                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-                                    <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
-                                        <span>📉</span> Issue Center-wise Stock Shortfall vs. Scheme Allocations
-                                    </h4>
+                                    <div>
+                                        <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:8px;">
+                                            <span>📉</span> Issue Center-wise Available Stock vs. Quantity Left for Dispatch (Shortfall / Surplus)
+                                        </h4>
+                                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                                            Shortfall Formula = Available Stock − Quantity Left for Dispatch (शेष प्रदाय मात्रा)
+                                        </div>
+                                    </div>
                                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                                         <div id="shortfallMetaLabels" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
                                         <button onclick="exportDashboard('jpeg','shortfallTableContainer','IC_Stock_Shortfall')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️ Image</button>
@@ -1097,7 +1102,7 @@
                                         <button onclick="exportDashboard('excel','shortfallTableContainer','IC_Stock_Shortfall')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;background:#15803d;border:none;">📊 Excel</button>
                                     </div>
                                 </div>
-                                <div id="shortfallStatus" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">⏳ Loading scheme-wise allocation data...</div>
+                                <div id="shortfallStatus" style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">⏳ Loading quantity left for dispatch data...</div>
                                 <div id="shortfallTableContainer" style="overflow-x:auto;font-size:12px;"></div>
                             </div>
 
