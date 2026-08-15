@@ -586,7 +586,9 @@ Tracks what has been tested and confirmed working.
 | Stock Table Variable Definition (isTotalCol) | UI Verification | VERIFIED | 15 Aug 2026 | Added missing isTotalCol declaration in stock position table row mapping |
 | Quantity Left for Dispatch Live Server Activation | Runtime Verification | VERIFIED | 15 Aug 2026 | Restarted node server with active daemon and added multi-tier scheme fallback in frontend |
 | Stock Table & Header Clean Text Wrapping | UI & CSS Verification | VERIFIED | 15 Aug 2026 | Multi-line headers, table-layout auto, and high-visibility responsive cell wrapping |
+| Stock Table & Header Clean Text Wrapping | UI & CSS Verification | VERIFIED | 15 Aug 2026 | Multi-line headers, table-layout auto, and high-visibility responsive cell wrapping |
 | Interactive Manual CAPTCHA for Cloud/Render | Integration & UI Verification | VERIFIED | 15 Aug 2026 | Live base64 CAPTCHA image streaming with interactive Web UI modal, auto-refresh, and async resolution |
+| Manual CAPTCHA Input Typing Focus & State Lock | UI Verification | VERIFIED | 15 Aug 2026 | Idempotent openManualCaptchaModal prevents 1.5s polling loop from selecting or clearing user input |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -609,10 +611,23 @@ Tracks what has been tested and confirmed working.
 | ISSUE-014 | Stock shortfall table cells, issue center names, and totals washed out / faint in exports and light backgrounds | HIGH | RESOLVED | public/index.html, public/app.js, public/theme.css | 15 Aug 2026 |
 | ISSUE-015 | Stock sheet fetch threw "Failed to connect to server endpoint" due to relative path resolution and single route definition | HIGH | RESOLVED | server.js, public/index.html | 15 Aug 2026 |
 | ISSUE-016 | Live Stock table threw "isTotalCol is not defined" ReferenceError during row rendering | MEDIUM | RESOLVED | public/index.html | 15 Aug 2026 |
+| ISSUE-017 | Manual CAPTCHA input field selected/cleared user text every 1.5s during background status polling | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Fix Input Selection & Reset in Manual CAPTCHA Modal During Polling
+
+Files: public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / UI State Locking
+Closes: ISSUE-017
+
+- BUG: While entering characters into the manual CAPTCHA modal input box, the typed text was automatically selected and deleted every 1.5 seconds.
+- ROOT CAUSE: The background progress polling loop (`startPolling` / `pollInt`) calls `openManualCaptchaModal` every 1.5s when `status === 'captcha_required'`. Each call executed `inputEl.select()`, selecting all existing text so the user's next keystroke replaced it.
+- FIX: Added idempotency check in `openManualCaptchaModal`: if the modal is already open with the same CAPTCHA image, it immediately returns and leaves the input field, user cursor, and typed characters completely untouched.
+
+---
 
 ### 2026-08-15 | Interactive Manual CAPTCHA Provision for Render Cloud Deployment
 
