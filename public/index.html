@@ -2340,6 +2340,7 @@ async function fetchStockPositionSheet() {
                                 headers.map(function(h, cIdx) {
                                     var cellVal = row[cIdx] || '0.00';
                                     var isNum = cIdx >= 1;
+                                    var isTotalCol = cIdx === headers.length - 1;
                                     var cellColor = isTotalCol ? 'color:#10b981;font-weight:800;' : (isNum ? 'font-weight:600;color:var(--text-main,#eef2ff);' : 'font-weight:700;color:var(--text-main,#eef2ff);');
                                     var wrapStyle = isNum ? 'white-space:nowrap;' : 'white-space:normal;word-break:break-word;min-width:110px;';
                                     return '<td style="padding:10px 8px;' + wrapStyle + 'text-align:' + (isNum ? 'right' : 'left') + ';' + cellColor + '">' + cellVal + '</td>';
