@@ -4822,10 +4822,10 @@ function buildStockAdvancedReportHTML(data) {
     const healthLabel = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Moderate' : 'Critical';
 
     function fmtQ(v) {
-        // Convert Quintals → Metric Tons (1 MT = 10 Qt)
-        const mt = v / 10;
-        return mt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MT';
+        // Display in Quintals (Qt) matching Google Sheet values 1:1
+        return v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Qt';
     }
+
 
 
     const syncTime = new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });

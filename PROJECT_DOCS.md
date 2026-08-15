@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — [FEATURE] उन्नत विश्लेषण रिपोर्ट प्रीव्यू: Advanced Analytics Executive Report for Live District Stock Position (showStockAdvancedReport + 4-section navy/amber report with PDF/Image/Excel export) |
+| Last Code Change | 15 Aug 2026 — Standardized Live Stock Position & Executive Report unit to Metric Tons (MT) [1 MT = 10 Qt], removed truncated 'k' notation, and added explicit conversion notes |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -634,6 +634,20 @@ Closes: ISSUE-019
   1. Moved `isSubViewActive()` definition to the outer global scope in `public/app.js` and attached it to `window.isSubViewActive`.
   2. Updated all history loading functions (`loadReports`, `loadDaterangeReports`, `loadMDMReports`, `loadICDSReports`, `loadWelfareReports`) to use theme CSS variables (`var(--text-main, #eef2ff)` and `var(--text-muted, #94a3b8)`).
   3. Ensured `toggleNfsaMode` cleanly respects `isSubViewActive()` and triggers `loadReports()` to maintain table synchronization.
+
+---
+
+### 2026-08-15 | Unit Standardization & Formatting: Metric Tons (MT) for Live Stock Position & Executive Report
+
+Files: public/app.js, public/index.html, PROJECT_DOCS.md
+Type: Improvement / Formatting
+
+- CHANGE: Standardized all stock quantity representations in the Live Stock Position module and the Advanced Analytics Executive Report to **Metric Tons (MT)** with full numeric precision (e.g. `1,700.00 MT` instead of truncated `1.7k`).
+- DETAILS:
+  1. Converted all Google Sheet Quintal values to Metric Tons (`1 MT = 10 Quintals`, dividing by 10).
+  2. Removed all ambiguous abbreviations (`'k'`, `'TQ'`) across both the Executive Preview Commodity Matrix and the live Dashboard Heatmap.
+  3. Added clear badges and table notices: *"⚖️ All Quantities in Metric Tons (MT) [1 MT = 10 Qt] • Converted from Google Sheet (Quintals)"*.
+  4. Added `(MT)` unit indicators to each column header and summary row.
 
 ---
 
