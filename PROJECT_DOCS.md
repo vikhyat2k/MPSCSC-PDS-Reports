@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — Updated Stock Shortfall engine to calculate shortfall based on Quantity Left for Dispatch (Shortfall = Available Stock − Quantity Left for Dispatch) |
+| Last Code Change | 15 Aug 2026 — Fixed isSubViewActive scoping ReferenceError and dark theme cell colors in NFSA/scheme report history tables |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -589,6 +589,7 @@ Tracks what has been tested and confirmed working.
 | Interactive Manual CAPTCHA for Cloud/Render | Integration & UI Verification | VERIFIED | 15 Aug 2026 | Live base64 CAPTCHA image streaming with interactive Web UI modal, auto-refresh, and async resolution |
 | Manual CAPTCHA Input Typing Focus & State Lock | UI Verification | VERIFIED | 15 Aug 2026 | Idempotent openManualCaptchaModal prevents 1.5s polling loop from selecting or clearing user input |
 | SCM Login Verification & Cloud Credentials Fallback | Automation Verification | VERIFIED | 15 Aug 2026 | Implemented multi-criteria verifyLogin() and robust credentials fallbacks for cloud hosting |
+| Report History Rendering & isSubViewActive Scoping | UI Verification | VERIFIED | 15 Aug 2026 | Moved isSubViewActive to outer global scope, resolved ReferenceError, and updated table cell styling to CSS theme variables |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -613,10 +614,28 @@ Tracks what has been tested and confirmed working.
 | ISSUE-016 | Live Stock table threw "isTotalCol is not defined" ReferenceError during row rendering | MEDIUM | RESOLVED | public/index.html | 15 Aug 2026 |
 | ISSUE-017 | Manual CAPTCHA input field selected/cleared user text every 1.5s during background status polling | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
 | ISSUE-018 | SCMScraper verifyLogin() method missing and empty cloud credentials caused manual CAPTCHA to loop repeatedly | CRITICAL | RESOLVED | server/automation/scraper_v2.js, server.js | 15 Aug 2026 |
+| ISSUE-019 | NFSA report history table and new reports not rendering due to isSubViewActive ReferenceError and hardcoded dark text colors | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Fix isSubViewActive Scoping Crash and Theme Color Visibility in Report History Tables
+
+Files: public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / UI State Management
+Closes: ISSUE-019
+
+- BUG: "📜 NFSA Report History" table rendered only table headers `<thead>` with an empty `<tbody>` area; neither existing historical reports nor newly generated reports were visible.
+- ROOT CAUSES:
+  1. `function isSubViewActive()` was declared inside `function switchScheme(scheme)`. When `loadReports()` called `isSubViewActive()`, JavaScript threw `ReferenceError: isSubViewActive is not defined`, aborting table population inside the `try/catch` block before `tbody.innerHTML` could be updated.
+  2. Table cell colors used hardcoded dark text values (`#1e293b`, `#475569`) which blended into the dark theme background `#0b1329`.
+- FIX:
+  1. Moved `isSubViewActive()` definition to the outer global scope in `public/app.js` and attached it to `window.isSubViewActive`.
+  2. Updated all history loading functions (`loadReports`, `loadDaterangeReports`, `loadMDMReports`, `loadICDSReports`, `loadWelfareReports`) to use theme CSS variables (`var(--text-main, #eef2ff)` and `var(--text-muted, #94a3b8)`).
+  3. Ensured `toggleNfsaMode` cleanly respects `isSubViewActive()` and triggers `loadReports()` to maintain table synchronization.
+
+---
 
 ### 2026-08-15 | Fix SCM Login Verification, Password Re-Entry, and Pristine Cloud CAPTCHA Flow
 

@@ -985,6 +985,7 @@
                         </div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                             <button onclick="fetchStockPositionSheet()" class="btn btn-sm btn-primary" style="padding:6px 14px;font-size:12px;background:#10b981;border:none;">🔄 Sync Live Data</button>
+                            <button onclick="showStockAdvancedReport()" class="btn btn-sm" id="btnStockAdvReport" style="padding:6px 14px;font-size:12px;background:linear-gradient(135deg,#0b2545,#1e3a8a);color:#c9a227;border:2px solid #c9a227;font-weight:700;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">📊 उन्नत रिपोर्ट</button>
                             <button onclick="exportDashboard('jpeg','stockPositionSection','Live_Stock_Position')" class="btn btn-sm btn-secondary export-btn" style="padding:6px 12px;font-size:12px;">🖼️ Image</button>
                             <button onclick="exportDashboard('pdf','stockPositionSection','Live_Stock_Position')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#6366f1;border:none;">📄 PDF</button>
                             <button onclick="exportDashboard('excel','stockTableContainer','Betul_Stock_Inventory')" class="btn btn-sm btn-primary export-btn" style="padding:6px 12px;font-size:12px;background:#15803d;border:none;">📊 Excel</button>
@@ -4326,5 +4327,8 @@ document.addEventListener('DOMContentLoaded', function () {
             </form>
         </div>
     </div>
+    <!-- ════ STOCK ADVANCED ANALYTICS EXECUTIVE REPORT MODAL ════ -->
+    <div id="stockAdvAnalyticsModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.88);backdrop-filter:blur(6px);z-index:999999;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;"></div>
+
 </body>
 </html>
