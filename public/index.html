@@ -1062,7 +1062,7 @@
                                 <div style="background:var(--card-bg,rgba(255,255,255,0.03));border:1px solid rgba(242,107,43,0.2);border-radius:12px;padding:18px;overflow-x:auto;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
                                         <h4 style="margin:0;font-size:13px;font-weight:700;color:var(--text-main);">🔥 Stock Intensity Heatmap — Issue Center × Commodity</h4>
-                                        <span style="font-size:11px;font-weight:700;color:#10b981;background:rgba(16,185,129,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(16,185,129,0.3);">⚖️ All Quantities in Metric Tons (MT)</span>
+                                        <span style="font-size:11px;font-weight:700;color:#10b981;background:rgba(16,185,129,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(16,185,129,0.3);">⚖️ Unit: Quintals (Qt) — 100% Parity with Google Sheet</span>
                                     </div>
                                     <div id="stockHeatmapContainer" style="font-size:11px;"></div>
                                 </div>
@@ -2576,7 +2576,7 @@ async function fetchStockPositionSheet() {
                     '<th style="' + rowHdrStyle + '">Issue Center</th>' +
                     commodityHeaders.map(function(h) {
                         var short = h.replace('2024-25','24-25').replace('2025-26','25-26').replace('2026-27','26-27').replace('CMR-','').replace('NonFort','NF').replace('Fort','F').replace('(Iodine)','Iod');
-                        return '<th style="' + hdrStyle + '">' + short + ' (MT)</th>';
+                        return '<th style="' + hdrStyle + '">' + short + ' (Qt)</th>';
                     }).join('') +
                 '</tr></thead><tbody>';
             icData.forEach(function(ic) {
@@ -2585,8 +2585,7 @@ async function fetchStockPositionSheet() {
                     commodityHeaders.map(function(h) {
                         var val = ic.commodities[h] || 0;
                         var bg  = heatColor(val, colMax[h]);
-                        var valMT = val / 10;
-                        var disp = Math.abs(val) > 0.001 ? valMT.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
+                        var disp = Math.abs(val) > 0.001 ? val.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—';
                         return '<td style="' + cellStyle + 'background:' + bg + ';font-size:10px;color:var(--text-main);">' + disp + '</td>';
                     }).join('') +
                 '</tr>';
