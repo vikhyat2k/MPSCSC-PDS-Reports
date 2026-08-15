@@ -140,21 +140,18 @@ class SCMScraper {
 
       console.log(`👤 Using credentials for SCM login: "${activeUser}"`);
 
-      // 1. Check & refill username/password if wiped
-      const userStillFilled = await this.page.evaluate(() => {
-        const el = document.querySelector('input[name="userName"], input[name="username"], input[type="text"]');
-        return !!(el && el.value && el.value.trim().length > 0);
-      }).catch(() => false);
+      // 1. Unconditionally verify and ensure BOTH username and password are fully in DOM
+      const userEntered = await this.fillFieldReliably(
+        ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
+        activeUser, 'Username'
+      );
+      const passEntered = await this.fillFieldReliably(
+        ['input[name="password"]', 'input[type="password"]'],
+        activePass, 'Password'
+      );
 
-      if (!userStillFilled) {
-        await this.fillFieldReliably(
-          ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
-          activeUser, 'Username'
-        );
-        await this.fillFieldReliably(
-          ['input[name="password"]', 'input[type="password"]'],
-          activePass, 'Password'
-        );
+      if (!userEntered || !passEntered) {
+        console.warn('⚠️ Could not verify username or password field in DOM');
       }
 
       // 2. Type CAPTCHA code
@@ -168,19 +165,43 @@ class SCMScraper {
       await captchaInput.click({ clickCount: 3 });
       await captchaInput.type(captchaCode.trim(), { delay: 70 });
 
-      // 3. Click Login / Submit button
-      const submitBtn = await this.page.$(
-        '#lobtn, input[name="lobtn"], input[value="Login"]'
-      );
+      // Force change events on captcha input
+      await this.page.evaluate((el) => {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }, captchaInput).catch(() => {});
 
-      if (!submitBtn) {
-        await this.page.keyboard.press('Enter');
-      } else {
+      // 3. Click Login / Submit button
+      const submitSelectors = [
+        '#lobtn',
+        'input[name="lobtn"]',
+        'input[value="Login"]',
+        'input[type="submit"]',
+        'input[name="btnlogin"]',
+        'input[id="btnlogin"]'
+      ];
+
+      let submitted = false;
+      for (const sel of submitSelectors) {
+        const submitBtn = await this.page.$(sel);
+        if (submitBtn) {
+          const navPromise = this.page.waitForNavigation({
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+          }).catch(() => null);
+          await submitBtn.click();
+          await navPromise;
+          submitted = true;
+          break;
+        }
+      }
+
+      if (!submitted) {
         const navPromise = this.page.waitForNavigation({
           waitUntil: 'domcontentloaded',
           timeout: 30000
         }).catch(() => null);
-        await submitBtn.click();
+        await this.page.keyboard.press('Enter');
         await navPromise;
       }
 
