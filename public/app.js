@@ -2286,15 +2286,24 @@ async function generateFreshSchemeForEmail(item, statusDiv, index, total) {
                 const pct = statusData.progress || 0;
                 const msg = statusData.message || statusData.status || 'processing';
 
+                // Manual CAPTCHA Trigger (For Cloud / Render or local fallback)
+                if (statusData.status === 'captcha_required' || statusData.captchaImage) {
+                    openManualCaptchaModal(statusData.captchaImage, requestId, statusData.message);
+                } else if (statusData.status !== 'initializing') {
+                    closeManualCaptchaModal();
+                }
+
                 if (statusDiv) {
                     statusDiv.innerHTML = `🔄 [${index}/${total}] Fresh ${item.scheme.toUpperCase()} (${pct}%): ${msg}`;
                 }
 
                 if (statusData.status === 'complete') {
                     clearInterval(pollInt);
+                    closeManualCaptchaModal();
                     resolve(statusData);
                 } else if (statusData.status === 'error') {
                     clearInterval(pollInt);
+                    closeManualCaptchaModal();
                     reject(new Error(statusData.error || `${item.scheme.toUpperCase()} extraction failed`));
                 }
             } catch (e) {
