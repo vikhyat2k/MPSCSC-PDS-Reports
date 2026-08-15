@@ -3045,6 +3045,7 @@ function toggleNfsaMode(mode) {
     const daterangeForm = document.getElementById('generateDateRangeForm');
     const btnMonthly = document.getElementById('btnNfsaMonthly');
     const btnDaterange = document.getElementById('btnNfsaDateRange');
+    const subActive = isSubViewActive();
 
     if (mode === 'monthly') {
         if (monthlyForm) monthlyForm.style.display = 'block';
@@ -3062,8 +3063,13 @@ function toggleNfsaMode(mode) {
             btnDaterange.style.color = '#1e293b';
         }
         // Toggle History
-        if (document.getElementById('nfsaReportHistorySection')) document.getElementById('nfsaReportHistorySection').style.display = 'block';
-        if (document.getElementById('daterangeHistory')) document.getElementById('daterangeHistory').style.display = 'none';
+        if (document.getElementById('nfsaReportHistorySection')) {
+            document.getElementById('nfsaReportHistorySection').style.display = (subActive || currentScheme !== 'nfsa') ? 'none' : 'block';
+        }
+        if (document.getElementById('daterangeHistory')) {
+            document.getElementById('daterangeHistory').style.display = 'none';
+        }
+        loadReports();
     } else {
         if (monthlyForm) monthlyForm.style.display = 'none';
         if (daterangeForm) daterangeForm.style.display = 'block';
@@ -3080,7 +3086,12 @@ function toggleNfsaMode(mode) {
             btnMonthly.style.color = '#1e293b';
         }
         // Toggle History
-        if (document.getElementById('nfsaReportHistorySection')) document.getElementById('nfsaReportHistorySection').style.display = 'none';
+        if (document.getElementById('nfsaReportHistorySection')) {
+            document.getElementById('nfsaReportHistorySection').style.display = 'none';
+        }
+        if (document.getElementById('daterangeHistory')) {
+            document.getElementById('daterangeHistory').style.display = (subActive || currentScheme !== 'nfsa') ? 'none' : 'block';
+        }
         
         // Load and show daterange history
         loadDaterangeReports(); 
