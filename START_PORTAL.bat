@@ -7,10 +7,20 @@ echo   PDS Lifting Intelligence Portal - Starting Server
 echo ========================================================
 echo.
 
-:: Auto-heal / ensure Desktop shortcuts exist
+:: Auto-heal / ensure Desktop shortcut exists
 if not exist "%USERPROFILE%\Desktop\Start PDS Portal.lnk" (
-    echo [*] Restoring desktop shortcuts...
+    echo [*] Restoring desktop shortcut...
     powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0create_shortcuts.ps1" >nul 2>&1
+)
+
+:: Check if portal server is already running on port 3000
+netstat -ano | findstr :3000 | findstr LISTENING >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo [INFO] PDS Portal Server is already running.
+    echo Opening Web Interface: http://localhost:3000
+    start http://localhost:3000
+    timeout /t 2 >nul
+    exit /b 0
 )
 
 :: Resolve Node.js path if not in environment PATH

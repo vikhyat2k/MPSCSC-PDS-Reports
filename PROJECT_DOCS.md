@@ -604,6 +604,19 @@ Tracks what has been tested and confirmed working.
 
 ## 20. CHANGE LOG (DATEWISE)
 
+### 2026-08-15 | Consolidate to Single Unified Desktop Shortcut ("Start PDS Portal") & Auto-Detect Active Server
+
+Files: START_PORTAL.bat, create_shortcuts.ps1, CREATE_DESKTOP_SHORTCUTS.bat, PROJECT_DOCS.md
+Type: User Request / UX Simplification
+
+- REQUIREMENT: Replace multiple desktop icons with a single clean desktop shortcut.
+- IMPLEMENTATION:
+  1. Updated `create_shortcuts.ps1` to clean up extraneous shortcuts (`Stop PDS Portal.lnk`, `Start PDS Remote Access.lnk`) and maintain solely the single primary `Start PDS Portal.lnk`.
+  2. Updated `START_PORTAL.bat` with active port-3000 detection: if the server is already running, double-clicking the shortcut directly opens `http://localhost:3000` in the user's default browser without spawning duplicate node instances.
+  3. Preserved one-click shortcut restoration and auto-healing on launch.
+
+---
+
 ### 2026-08-15 | Fix Desktop Server Start Icon Auto-Deletion & Add Multi-Path Self-Healing Shortcuts
 
 Files: START_PORTAL.bat, create_shortcuts.ps1, CREATE_DESKTOP_SHORTCUTS.bat, scripts/autoCloudSync.js, PROJECT_DOCS.md
@@ -620,7 +633,7 @@ Closes: ISSUE-013
   2. Enhanced `create_shortcuts.ps1` to detect all Desktop directories (standard user desktop, OneDrive redirected desktop, and registry paths) and deploy valid `.ico` icons across all locations with immediate Windows shell cache refresh (`SHChangeNotify`).
   3. Created `CREATE_DESKTOP_SHORTCUTS.bat` as a 1-click batch launcher for instant shortcut regeneration at any time.
   4. Added critical-file safety guards to `scripts/autoCloudSync.js` to ensure core server and launcher files are never auto-deleted or corrupted.
-  5. Verified all 3 Desktop shortcuts (`Start PDS Portal.lnk`, `Stop PDS Portal.lnk`, `Start PDS Remote Access.lnk`) are present, target valid `.bat` files (`TargetExists = True`), and function properly.
+  5. Verified single Desktop shortcut (`Start PDS Portal.lnk`) is present, targets valid `.bat` files (`TargetExists = True`), and functions properly.
 
 ---
 

@@ -51,7 +51,21 @@ if (-not (Test-Path $IcoPath)) {
 }
 
 foreach ($DesktopDir in $DesktopDirs) {
-    # 1. Start PDS Portal Shortcut
+    # 1. Clean up legacy / redundant shortcuts
+    $RedundantShortcuts = @(
+        "$DesktopDir\Stop PDS Portal.lnk",
+        "$DesktopDir\Start PDS Remote Access.lnk"
+    )
+    foreach ($oldPath in $RedundantShortcuts) {
+        if (Test-Path $oldPath) {
+            try {
+                Remove-Item -Path $oldPath -Force -ErrorAction SilentlyContinue
+                Write-Host "Removed redundant shortcut: $oldPath"
+            } catch {}
+        }
+    }
+
+    # 2. Create the Single Unified PDS Portal Shortcut
     $StartShortcut = $WshShell.CreateShortcut("$DesktopDir\Start PDS Portal.lnk")
     $StartShortcut.TargetPath = "$TargetDir\START_PORTAL.bat"
     $StartShortcut.WorkingDirectory = "$TargetDir"
@@ -62,26 +76,6 @@ foreach ($DesktopDir in $DesktopDirs) {
         $StartShortcut.IconLocation = "%SystemRoot%\System32\shell32.dll,25"
     }
     $StartShortcut.Save()
-
-    # 2. Stop PDS Portal Shortcut
-    $StopShortcut = $WshShell.CreateShortcut("$DesktopDir\Stop PDS Portal.lnk")
-    $StopShortcut.TargetPath = "$TargetDir\STOP_PORTAL.bat"
-    $StopShortcut.WorkingDirectory = "$TargetDir"
-    $StopShortcut.Description = "Stop PDS Lifting Intelligence Portal"
-    $StopShortcut.IconLocation = "%SystemRoot%\System32\shell32.dll,27"
-    $StopShortcut.Save()
-
-    # 3. Start PDS Remote Access Shortcut
-    $RemoteShortcut = $WshShell.CreateShortcut("$DesktopDir\Start PDS Remote Access.lnk")
-    $RemoteShortcut.TargetPath = "$TargetDir\START_REMOTE_ACCESS.bat"
-    $RemoteShortcut.WorkingDirectory = "$TargetDir"
-    $RemoteShortcut.Description = "Start PDS Portal Remote Access Tunnel"
-    if (Test-Path $IcoPath) {
-        $RemoteShortcut.IconLocation = "$IcoPath,0"
-    } else {
-        $RemoteShortcut.IconLocation = "%SystemRoot%\System32\shell32.dll,14"
-    }
-    $RemoteShortcut.Save()
 }
 
 # Notify Windows Explorer to refresh icon cache immediately
@@ -98,4 +92,4 @@ public class ShellNotify {
     [ShellNotify]::SHChangeNotify(0x08000000, 0x0000, [IntPtr]::Zero, [IntPtr]::Zero)
 } catch {}
 
-Write-Host "Desktop shortcuts created and verified across all desktop paths successfully!"
+Write-Host "Single Desktop shortcut 'Start PDS Portal' created and verified successfully!"
