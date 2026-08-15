@@ -1110,6 +1110,72 @@ app.get('/api/generate-status/:requestId', (req, res) => {
     res.json(status);
 });
 
+// Submit Manual CAPTCHA (used by Web UI modal on Render / Cloud)
+app.post(['/api/captcha/submit', '/captcha/submit'], async (req, res) => {
+    try {
+        const { requestId, captchaCode } = req.body;
+        if (!requestId || !captchaCode) {
+            return res.status(400).json({ error: 'requestId and captchaCode are required' });
+        }
+
+        const scraper = activeScrapers.get(requestId);
+        if (!scraper || !scraper.pendingCaptchaResolver) {
+            return res.status(404).json({ error: 'No active CAPTCHA challenge awaiting solution for this request (or request timed out).' });
+        }
+
+        console.log(`📨 [API] Received manual CAPTCHA submission for request ${requestId}: "${captchaCode}"`);
+        
+        // Update request status to processing
+        const currentReq = activeRequests.get(requestId);
+        if (currentReq) {
+            activeRequests.set(requestId, {
+                ...currentReq,
+                status: 'extracting data: Regular',
+                message: `[Regular] Verifying manual CAPTCHA code...`,
+                captchaImage: null
+            });
+        }
+
+        // Trigger scraper resolution
+        scraper.pendingCaptchaResolver.resolve(captchaCode);
+        res.json({ success: true, message: 'CAPTCHA submitted to browser' });
+    } catch (err) {
+        console.error('Error in /api/captcha/submit:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Refresh Manual CAPTCHA (reloads portal captcha and returns new image)
+app.post(['/api/captcha/refresh', '/captcha/refresh'], async (req, res) => {
+    try {
+        const { requestId } = req.body;
+        if (!requestId) {
+            return res.status(400).json({ error: 'requestId is required' });
+        }
+
+        const scraper = activeScrapers.get(requestId);
+        if (!scraper || !scraper.pendingCaptchaResolver) {
+            return res.status(404).json({ error: 'No active CAPTCHA challenge awaiting solution for this request.' });
+        }
+
+        console.log(`🔄 [API] Refreshing CAPTCHA for request ${requestId}...`);
+        const newImg = await scraper.pendingCaptchaResolver.refresh();
+        
+        const currentReq = activeRequests.get(requestId);
+        if (currentReq && newImg) {
+            activeRequests.set(requestId, {
+                ...currentReq,
+                captchaImage: newImg
+            });
+        }
+
+        res.json({ success: true, captchaImage: newImg });
+    } catch (err) {
+        console.error('Error in /api/captcha/refresh:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Get all reports (supports ?scheme=nfsa or ?scheme=mdm)
 app.get('/api/reports', async (req, res) => {
     try {
