@@ -4944,10 +4944,10 @@ function buildStockAdvancedReportHTML(data) {
                     <div class="kpi-value" style="font-size:16px;">${minIC.name}</div>
                     <div class="kpi-sub">${fmtQ(minIC.total)} — ${districtTotal > 0 ? (minIC.total / districtTotal * 100).toFixed(1) : 0}% share</div>
                 </div>
-                <div class="kpi-card" style="--kpi-accent:#06b6d4;--kpi-color:#0891b2;">
-                    <div class="kpi-label">⚖️ Average Stock / IC</div>
-                    <div class="kpi-value">${fmtQ(avgStock)}</div>
-                    <div class="kpi-sub">Across ${icData.length} Issue Centers</div>
+                <div class="kpi-card" style="--kpi-accent:${(negativeItems.length + lowBufferICs.length) > 0 ? '#dc2626' : '#059669'};--kpi-color:${(negativeItems.length + lowBufferICs.length) > 0 ? '#dc2626' : '#059669'};">
+                    <div class="kpi-label">🚨 ICs Requiring Attention</div>
+                    <div class="kpi-value">${(negativeItems.length + lowBufferICs.length) > 0 ? (negativeItems.length + lowBufferICs.length) : '✓ None'}</div>
+                    <div class="kpi-sub">${negativeItems.length} negative · ${lowBufferICs.length} low buffer</div>
                 </div>
                 <div class="kpi-card" style="--kpi-accent:#f26b2b;--kpi-color:#ea580c;">
                     <div class="kpi-label">🌾 Wheat Pool Share</div>
