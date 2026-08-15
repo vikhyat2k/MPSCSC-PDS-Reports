@@ -586,9 +586,9 @@ Tracks what has been tested and confirmed working.
 | Stock Table Variable Definition (isTotalCol) | UI Verification | VERIFIED | 15 Aug 2026 | Added missing isTotalCol declaration in stock position table row mapping |
 | Quantity Left for Dispatch Live Server Activation | Runtime Verification | VERIFIED | 15 Aug 2026 | Restarted node server with active daemon and added multi-tier scheme fallback in frontend |
 | Stock Table & Header Clean Text Wrapping | UI & CSS Verification | VERIFIED | 15 Aug 2026 | Multi-line headers, table-layout auto, and high-visibility responsive cell wrapping |
-| Stock Table & Header Clean Text Wrapping | UI & CSS Verification | VERIFIED | 15 Aug 2026 | Multi-line headers, table-layout auto, and high-visibility responsive cell wrapping |
 | Interactive Manual CAPTCHA for Cloud/Render | Integration & UI Verification | VERIFIED | 15 Aug 2026 | Live base64 CAPTCHA image streaming with interactive Web UI modal, auto-refresh, and async resolution |
 | Manual CAPTCHA Input Typing Focus & State Lock | UI Verification | VERIFIED | 15 Aug 2026 | Idempotent openManualCaptchaModal prevents 1.5s polling loop from selecting or clearing user input |
+| SCM Login Verification & Cloud Credentials Fallback | Automation Verification | VERIFIED | 15 Aug 2026 | Implemented multi-criteria verifyLogin() and robust credentials fallbacks for cloud hosting |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -612,10 +612,28 @@ Tracks what has been tested and confirmed working.
 | ISSUE-015 | Stock sheet fetch threw "Failed to connect to server endpoint" due to relative path resolution and single route definition | HIGH | RESOLVED | server.js, public/index.html | 15 Aug 2026 |
 | ISSUE-016 | Live Stock table threw "isTotalCol is not defined" ReferenceError during row rendering | MEDIUM | RESOLVED | public/index.html | 15 Aug 2026 |
 | ISSUE-017 | Manual CAPTCHA input field selected/cleared user text every 1.5s during background status polling | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
+| ISSUE-018 | SCMScraper verifyLogin() method missing and empty cloud credentials caused manual CAPTCHA to loop repeatedly | CRITICAL | RESOLVED | server/automation/scraper_v2.js, server.js | 15 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Fix SCM Login Verification and Cloud Credentials Fallback
+
+Files: server/automation/scraper_v2.js, server.js, PROJECT_DOCS.md
+Type: Bug Fix / SCM Scraper Hardening
+Closes: ISSUE-018
+
+- BUG: Even after entering the correct manual CAPTCHA code, the system prompted for CAPTCHA repeatedly without progressing to report extraction.
+- ROOT CAUSES:
+  1. `SCMScraper.verifyLogin()` was referenced in `login()` and `submitManualCaptcha()` but had not been implemented on the class in `scraper_v2.js`. When invoked, it threw a `TypeError`, causing `submitManualCaptcha` to catch the error, return `false`, and immediately re-trigger another CAPTCHA request.
+  2. On cloud deployments (Render), `.env` is omitted by `.gitignore`. If environment variables are unconfigured in the Render dashboard, `process.env.SCM_USERNAME` and `password` resolved to `undefined`/`''`, leaving portal login credentials empty.
+- FIX:
+  1. Implemented comprehensive `verifyLogin()` method checking URL transitions, logged-in page text indicators, authenticated navigation elements, and error banner detection.
+  2. Stored `this.username` and `this.password` on the scraper instance with robust defaults (`'dm_447'` / `'dmnan@2026'`) across `login()`, `submitManualCaptcha()`, and `refreshCaptchaImage()`.
+  3. Added explicit credential fallbacks in `server.js`.
+
+---
 
 ### 2026-08-15 | Fix Input Selection & Reset in Manual CAPTCHA Modal During Polling
 
