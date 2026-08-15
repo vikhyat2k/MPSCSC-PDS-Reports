@@ -764,7 +764,12 @@ class SCMScraper {
    * Handles CAPTCHA with automatic retry, cloud optimization, and UI manual fallback
    */
   async login(username, password, maxRetries = 5, onProgress = null, onCaptchaRequired = null) {
-    console.log('🔐 Attempting login...');
+    this.username = username || process.env.SCM_USERNAME || 'dm_447';
+    this.password = password || process.env.SCM_PASSWORD || 'dmnan@2026';
+    username = this.username;
+    password = this.password;
+
+    console.log(`🔐 Attempting login with user: "${username}"...`);
     if (typeof onProgress === 'function') onProgress('Navigating to SCM portal...');
 
     try {
