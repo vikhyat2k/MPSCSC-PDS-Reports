@@ -5485,7 +5485,7 @@ function openManualCaptchaModal(imageBase64, requestId, message) {
     const isAlreadyOpen = modal.style.display === 'flex';
     const isSameImage = imgEl && imgEl.getAttribute('data-raw') === imageBase64;
 
-    // If modal is already open and displaying the same captcha image, DO NOT re-focus or touch user input
+    // If modal is already open and displaying the exact same captcha image, DO NOT touch user input
     if (isAlreadyOpen && isSameImage) {
         return;
     }
@@ -5503,12 +5503,18 @@ function openManualCaptchaModal(imageBase64, requestId, message) {
     }
 
     if (statusEl) {
-        statusEl.style.display = 'none';
-        statusEl.innerHTML = '';
+        if (isAlreadyOpen && !isSameImage) {
+            statusEl.style.display = 'block';
+            statusEl.style.color = '#f59e0b';
+            statusEl.innerText = '⚠️ Previous code was not accepted. Please enter the fresh characters shown above.';
+        } else {
+            statusEl.style.display = 'none';
+            statusEl.innerHTML = '';
+        }
     }
 
-    // Only clear and focus on first open or when image changes
-    if (!isAlreadyOpen && inputEl) {
+    // Clear and focus when modal opens or when image changes
+    if (inputEl) {
         inputEl.value = '';
         setTimeout(() => {
             inputEl.focus();

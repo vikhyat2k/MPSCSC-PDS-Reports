@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — Standardized Live Stock Position & Executive Report unit to Metric Tons (MT) [1 MT = 10 Qt], removed truncated 'k' notation, and added explicit conversion notes |
+| Last Code Change | 15 Aug 2026 — Fixed Cloud Manual CAPTCHA submission loop: removed duplicate verifyLogin, optimized selector targeting (#uid, #pwd, #txtCaptcha, #lobtn) and added fallback check() submission |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -637,17 +637,35 @@ Closes: ISSUE-019
 
 ---
 
-### 2026-08-15 | Unit Standardization & Formatting: Metric Tons (MT) for Live Stock Position & Executive Report
+### 2026-08-15 | Fix Cloud Manual CAPTCHA Loop & Form Submission on Render
+
+Files: server/automation/scraper_v2.js, public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / Cloud Automation Hardening
+
+- BUG: On Render deployment (`pds-mpscsc.onrender.com`), when entering the correct manual CAPTCHA code, the modal looped repeatedly on the login screen instead of progressing to report extraction.
+- ROOT CAUSES:
+  1. `scraper_v2.js` contained a duplicate `verifyLogin()` method at the bottom of the class which overwrote the comprehensive authentication verification. The duplicate only checked static text after 1s and instantly failed if the URL still contained `login` before navigation completed.
+  2. `submitManualCaptcha` was re-typing username and password using generic selectors (`input[type="text"]`, `input[type="password"]`) which missed `#uid` and `#pwd` and triggered unnecessary DOM blur events that could reset the active CAPTCHA session.
+  3. `submitManualCaptcha` did not have direct fallback execution for `window.check()` / form submit if `#lobtn` click did not trigger immediate navigation.
+- FIXES:
+  1. Removed duplicate `verifyLogin()` definition in `scraper_v2.js`.
+  2. Optimized `submitManualCaptcha`: checks if `#uid` and `#pwd` are already present and populated in DOM before attempting to refill; uses targeted selectors (`#uid`, `#pwd`, `#txtCaptcha`, `#lobtn`).
+  3. Added fallback form trigger: executes `window.check()` or `document.forms[0].submit()` if the portal remains on `Login.jsp` after button click.
+  4. Updated `openManualCaptchaModal` in `public/app.js`: when a fresh CAPTCHA challenge arrives, it clears the old input and provides clear feedback to the user.
+
+---
+
+### 2026-08-15 | Unit Parity & Full Numeric Formatting: Quintals (Qt) for Live Stock Position & Executive Report
 
 Files: public/app.js, public/index.html, PROJECT_DOCS.md
 Type: Improvement / Formatting
 
-- CHANGE: Standardized all stock quantity representations in the Live Stock Position module and the Advanced Analytics Executive Report to **Metric Tons (MT)** with full numeric precision (e.g. `1,700.00 MT` instead of truncated `1.7k`).
+- CHANGE: Maintained 100% parity with Google Sheet source data by displaying all quantities strictly in **Quintals (Qt)** across the Live District Stock Position module and the Advanced Analytics Executive Report.
 - DETAILS:
-  1. Converted all Google Sheet Quintal values to Metric Tons (`1 MT = 10 Quintals`, dividing by 10).
-  2. Removed all ambiguous abbreviations (`'k'`, `'TQ'`) across both the Executive Preview Commodity Matrix and the live Dashboard Heatmap.
-  3. Added clear badges and table notices: *"⚖️ All Quantities in Metric Tons (MT) [1 MT = 10 Qt] • Converted from Google Sheet (Quintals)"*.
-  4. Added `(MT)` unit indicators to each column header and summary row.
+  1. Restored direct Quintal values (no conversion factors) to match Google Sheet numbers 1:1.
+  2. Removed all ambiguous abbreviations (`'k'`, `'TQ'`) — all cells render full quantities with Indian comma notation and 2 decimal places (e.g., `1,700.00 Qt`).
+  3. Added clear header badges: *"⚖️ Unit: Quintals (Qt) — 100% Parity with Google Sheet"*.
+  4. Added `(Qt)` unit indicators to each commodity column header and summary row.
 
 ---
 

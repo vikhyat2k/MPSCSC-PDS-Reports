@@ -140,32 +140,55 @@ class SCMScraper {
 
       console.log(`👤 Using credentials for SCM login: "${activeUser}"`);
 
-      // 1. Unconditionally verify and ensure BOTH username and password are fully in DOM
-      const userEntered = await this.fillFieldReliably(
-        ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
-        activeUser, 'Username'
-      );
-      const passEntered = await this.fillFieldReliably(
-        ['input[name="password"]', 'input[type="password"]'],
-        activePass, 'Password'
-      );
+      // 1. Verify username and password are in DOM; only refill if missing or wiped by portal
+      const uidSelectors = ['#uid', 'input[name="user_id"]', 'input[name="userName"]', 'input[name="username"]', 'input[type="text"]'];
+      const pwdSelectors = ['#pwd', 'input[name="password"]', 'input[name="pwd"]', 'input[type="password"]'];
 
-      if (!userEntered || !passEntered) {
-        console.warn('⚠️ Could not verify username or password field in DOM');
+      const userVal = await this.page.evaluate(() => {
+        const el = document.querySelector('#uid, input[name="user_id"], input[name="userName"], input[name="username"]');
+        return el ? el.value.trim() : '';
+      }).catch(() => '');
+
+      const passVal = await this.page.evaluate(() => {
+        const el = document.querySelector('#pwd, input[name="password"], input[name="pwd"], input[type="password"]');
+        return el ? el.value.trim() : '';
+      }).catch(() => '');
+
+      if (userVal !== activeUser) {
+        console.log('   🔄 User field not filled or modified, filling username...');
+        await this.fillFieldReliably(uidSelectors, activeUser, 'Username');
       }
 
-      // 2. Type CAPTCHA code
-      const captchaInput = await this.page.$(
-        'input[name="captcha"], #captcha, input[id*="aptcha"], input[placeholder*="aptch"]'
-      );
+      if (!passVal) {
+        console.log('   🔄 Password field empty, filling password...');
+        await this.fillFieldReliably(pwdSelectors, activePass, 'Password');
+      }
+
+      // 2. Locate and type CAPTCHA code
+      const captchaSelectors = [
+        '#txtCaptcha',
+        'input[name="captcha"]',
+        'input[name="txtCaptcha"]',
+        '#captcha',
+        'input[id*="aptcha"]',
+        'input[placeholder*="aptch"]'
+      ];
+
+      let captchaInput = null;
+      for (const sel of captchaSelectors) {
+        captchaInput = await this.page.$(sel).catch(() => null);
+        if (captchaInput) break;
+      }
+
       if (!captchaInput) {
-        throw new Error('Could not locate CAPTCHA input field');
+        throw new Error('Could not locate CAPTCHA input field on login page');
       }
 
       await captchaInput.click({ clickCount: 3 });
-      await captchaInput.type(captchaCode.trim(), { delay: 70 });
+      await this.page.keyboard.press('Backspace').catch(() => {});
+      await captchaInput.type(captchaCode.trim(), { delay: 60 });
 
-      // Force change events on captcha input
+      // Force framework events
       await this.page.evaluate((el) => {
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
@@ -183,11 +206,12 @@ class SCMScraper {
 
       let submitted = false;
       for (const sel of submitSelectors) {
-        const submitBtn = await this.page.$(sel);
+        const submitBtn = await this.page.$(sel).catch(() => null);
         if (submitBtn) {
+          console.log(`   👉 Clicking login button with selector: ${sel}`);
           const navPromise = this.page.waitForNavigation({
             waitUntil: 'domcontentloaded',
-            timeout: 30000
+            timeout: 35000
           }).catch(() => null);
           await submitBtn.click();
           await navPromise;
@@ -197,21 +221,37 @@ class SCMScraper {
       }
 
       if (!submitted) {
+        console.log('   👉 Triggering Enter key / form check()...');
         const navPromise = this.page.waitForNavigation({
           waitUntil: 'domcontentloaded',
-          timeout: 30000
+          timeout: 35000
         }).catch(() => null);
         await this.page.keyboard.press('Enter');
         await navPromise;
       }
 
+      // Also trigger check() or form submission if page has not navigated away yet
+      const stillOnLogin = this.page.url().toLowerCase().includes('login');
+      if (stillOnLogin) {
+        await this.page.evaluate(() => {
+          if (typeof window.check === 'function') {
+            window.check();
+          } else if (document.forms && document.forms[0]) {
+            document.forms[0].submit();
+          }
+        }).catch(() => {});
+        await new Promise(r => setTimeout(r, 2000));
+      }
+
       // 4. Verify login state
+      await new Promise(r => setTimeout(r, 1500));
       const isLoggedIn = await this.verifyLogin();
       if (isLoggedIn) {
         console.log('✅ Manual CAPTCHA Login Successful!');
         return true;
       } else {
-        console.log('❌ Manual CAPTCHA Login Failed (Wrong code or expired session).');
+        console.log('❌ Manual CAPTCHA Login Failed (Portal rejected code or credentials).');
+        await this.screenshot('manual_captcha_failed.png').catch(() => {});
         return false;
       }
     } catch (err) {
@@ -1108,64 +1148,7 @@ class SCMScraper {
 
 
 
-  /**
-   * Verify if login was successful
-   */
-  async verifyLogin() {
-    try {
-      console.log('🧐 Verifying login status...');
-      await new Promise(r => setTimeout(r, 1000)); // Wait for page to settle
 
-      // Check for common logged-in indicators using Puppeteer-compatible way
-      const indicators = [
-        'Logout',
-        'Reports',
-        'Welcome',
-        'Login Successful',
-        'Administrator'
-      ];
-
-      // Check page text
-      const pageText = await this.page.evaluate(() => document.body.innerText);
-      for (const indicator of indicators) {
-        if (pageText.includes(indicator)) {
-          console.log(`✅ Found login indicator in text: ${indicator}`);
-          return true;
-        }
-      }
-
-      // Check for links with specific text using XPath
-      const logoutLink = await this.page.$$("::-p-xpath(//a[contains(text(), 'Logout') or contains(text(), 'Reports')])");
-      if (logoutLink.length > 0) {
-        console.log('✅ Found Logout/Reports link via XPath');
-        return true;
-      }
-
-      // Check if still on login page (indicates failure)
-      const url = this.page.url().toLowerCase();
-      // If we are on Login.jsp but see 'Login Successful', it's a success
-      if (url.includes('login') && !pageText.includes('Login Successful')) {
-        console.log('❌ Still on login page and no success message found');
-        return false;
-      }
-
-      // If we're on a different page and no error message, assume success
-      const hasError = await this.page.$('.error, .alert-danger, .error-message');
-      if (!hasError) {
-        console.log('✅ Not on login page and no errors found, assuming success');
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      if (error.message.includes('Execution context was destroyed')) {
-        console.log(`✅ Navigation detected during verification (Login Successful)`);
-        return true;
-      }
-      console.log(`⚠️ Error during login verification: ${error.message}`);
-      return false;
-    }
-  }
 
   /**
    * Navigate to Dispatch Abstract report page
