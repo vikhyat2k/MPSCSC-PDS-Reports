@@ -2965,11 +2965,6 @@ app.get(['/api/stock-position/shortfall', '/stock-position/shortfall'], async (r
         res.status(500).json({ error: err.message });
     }
 });
-    } catch (err) {
-        console.error('Error computing stock shortfall:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
 
 
 
