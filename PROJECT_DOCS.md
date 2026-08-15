@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — Fixed Desktop Server Start Icon automatic deletion with multi-path resolution & automatic shortcut self-healing |
+| Last Code Change | 15 Aug 2026 — Fixed Stock vs Allocation shortfall table text visibility & contrast across light/dark modes and image/PDF canvas exports |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -580,6 +580,7 @@ Tracks what has been tested and confirmed working.
 | Executive Analytics PDF Binary Buffer Encoding | Unit & Integration | VERIFIED | 10 Aug 2026 | Puppeteer Uint8Array wrapped in Buffer.from for binary HTTP response |
 | Universal Portal Text Copyability | UI & CSS Verification | VERIFIED | 11 Aug 2026 | Enforced user-select: text !important & ::selection highlight styles across all modules |
 | Desktop Launcher & Shortcut Auto-Healing | Unit & Script Verification | VERIFIED | 15 Aug 2026 | Multi-desktop path support, auto-recovery on server start, and 1-click batch builder |
+| Stock Shortfall Table & Canvas Export Visibility | UI & Canvas Verification | VERIFIED | 15 Aug 2026 | High-contrast styling, explicit cell text colors, and theme-synchronized html2canvas backgrounds |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -599,10 +600,29 @@ Tracks what has been tested and confirmed working.
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
 | ISSUE-013 | Desktop Start icon deleted automatically by Windows cleanup due to missing target script | HIGH | RESOLVED | START_PORTAL.bat, create_shortcuts.ps1, CREATE_DESKTOP_SHORTCUTS.bat, scripts/autoCloudSync.js | 15 Aug 2026 |
+| ISSUE-014 | Stock shortfall table cells, issue center names, and totals washed out / faint in exports and light backgrounds | HIGH | RESOLVED | public/index.html, public/app.js, public/theme.css | 15 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Fix Stock Shortfall vs Allocation Table Text Visibility & Canvas Export Contrast
+
+Files: public/index.html, public/app.js, public/theme.css, PROJECT_DOCS.md
+Type: Bug Fix / UI Contrast & Visibility Hardening
+Closes: ISSUE-014
+
+- BUG: Issue Center names ("बैतूल", "घोड़ाडोंगरी", etc.), available stock quantities, and District Total values in the "Issue Center-wise Stock Shortfall vs. Scheme Allocations" table were washed out, extremely faint, and nearly invisible on screen and in Image/PDF exports.
+- ROOT CAUSE:
+  1. Table cell styles (`tdStyle`) in `renderShortfallTable()` had no explicit `color` declaration, relying on inherited text color. In the District Total row, `distAvailWheat`, `distAvailRice`, and `distAvailFSalt` cells lacked text colors.
+  2. `exportDashboard` and `exportSmartInsights` evaluated `document.documentElement.getAttribute('data-theme') === 'dark'` to determine background color. In dark mode (the default), `data-theme` is null/empty, which incorrectly evaluated to false and forced `#ffffff` (white background) onto `html2canvas`. This rendered white text (`#eef2ff`) on a white canvas background, producing completely washed-out exports.
+  3. `exportSectorDetailCard` had hardcoded `backgroundColor: '#ffffff'` in `html2canvas`.
+- FIX:
+  1. Updated `renderShortfallTable()` in `public/index.html` with explicit, high-contrast, theme-aware text colors (`color: var(--text-main, #0a1628)`) on all headers, issue center names (`font-weight: 800`), available stock figures, and district totals.
+  2. Fixed theme background detection in `public/app.js` (`exportDashboard`, `exportSectorDetailCard`) and `public/index.html` (`exportSmartInsights`): properly checks `data-theme === 'light' ? '#ffffff' : '#0d1526'`, guaranteeing that dark theme exports use dark background with crisp white text, and light theme exports use white background with crisp dark text.
+  3. Added `.shortfall-table` specific styling rules in `public/theme.css` with explicit contrast overrides for both Dark Mode and Light Mode.
+
+---
 
 ### 2026-08-15 | Consolidate to Single Unified Desktop Shortcut ("Start PDS Portal") & Auto-Detect Active Server
 

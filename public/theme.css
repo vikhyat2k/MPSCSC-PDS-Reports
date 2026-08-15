@@ -209,6 +209,17 @@ body {
 [data-theme="light"] .alert-warning { background: rgba(245,158,11,0.1) !important; color: #b45309 !important; }
 [data-theme="light"] select option { background: #fff; color: #0a1628; }
 
+/* ── Shortfall Table High-Contrast Visibility ───────── */
+.shortfall-table { background: var(--bg-card) !important; color: var(--text-main) !important; }
+.shortfall-table th { color: var(--text-main) !important; font-weight: 800 !important; }
+.shortfall-table td { color: var(--text-main) !important; }
+.shortfall-table tr:hover td { background: var(--table-row-hover) !important; }
+
+[data-theme="light"] .shortfall-table { background: #ffffff !important; color: #0a1628 !important; }
+[data-theme="light"] .shortfall-table th { color: #0a1628 !important; background: rgba(99,102,241,0.08) !important; }
+[data-theme="light"] .shortfall-table td { color: #0a1628 !important; border-color: rgba(15,23,42,0.08) !important; }
+[data-theme="light"] .shortfall-table tr:hover td { background: rgba(99,102,241,0.04) !important; }
+
 /* ═══════════════════════════════════════════════════════
    THEME TOGGLE BUTTON
 ═══════════════════════════════════════════════════════ */
