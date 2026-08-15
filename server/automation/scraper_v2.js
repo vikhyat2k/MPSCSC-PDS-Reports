@@ -83,6 +83,177 @@ class SCMScraper {
   }
 
   /**
+   * Capture live CAPTCHA image as Base64 data URL
+   */
+  async captureCaptchaBase64() {
+    try {
+      const captchaElement = await this.page.$(
+        '#captcha_img, img[src*="captcha"], img[src*="Captcha"], img[alt*="captcha"]'
+      );
+      if (!captchaElement) return null;
+      const rawBuffer = await captchaElement.screenshot({ type: 'png' });
+      return 'data:image/png;base64,' + rawBuffer.toString('base64');
+    } catch (err) {
+      console.error('Error capturing CAPTCHA screenshot:', err.message);
+      return null;
+    }
+  }
+
+  /**
+   * Refreshes the CAPTCHA by reloading the page and re-entering credentials
+   */
+  async refreshCaptchaImage() {
+    console.log('🔄 Reloading page to generate fresh CAPTCHA...');
+    try {
+      await this.page.goto(this.baseURL, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await this.fillFieldReliably(
+        ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
+        process.env.SCM_USERNAME || '', 'Username'
+      );
+      await this.fillFieldReliably(
+        ['input[name="password"]', 'input[type="password"]'],
+        process.env.SCM_PASSWORD || '', 'Password'
+      );
+      await new Promise(r => setTimeout(r, 1000));
+      return await this.captureCaptchaBase64();
+    } catch (err) {
+      console.error('Error refreshing captcha page:', err.message);
+      return null;
+    }
+  }
+
+  /**
+   * Submits user-provided manual CAPTCHA code into the login form
+   */
+  async submitManualCaptcha(captchaCode) {
+    if (!captchaCode) return false;
+    console.log(`⌨️ [Manual CAPTCHA] Typing user code: "${captchaCode}"...`);
+    try {
+      // 1. Check & refill username/password if wiped
+      const userStillFilled = await this.page.evaluate(() => {
+        const el = document.querySelector('input[name="userName"], input[name="username"], input[type="text"]');
+        return !!(el && el.value && el.value.trim().length > 0);
+      }).catch(() => false);
+
+      if (!userStillFilled) {
+        await this.fillFieldReliably(
+          ['input[name="userName"]', 'input[name="username"]', 'input[type="text"]'],
+          process.env.SCM_USERNAME || '', 'Username'
+        );
+        await this.fillFieldReliably(
+          ['input[name="password"]', 'input[type="password"]'],
+          process.env.SCM_PASSWORD || '', 'Password'
+        );
+      }
+
+      // 2. Type CAPTCHA code
+      const captchaInput = await this.page.$(
+        'input[name="captcha"], #captcha, input[id*="aptcha"], input[placeholder*="aptch"]'
+      );
+      if (!captchaInput) {
+        throw new Error('Could not locate CAPTCHA input field');
+      }
+
+      await captchaInput.click({ clickCount: 3 });
+      await captchaInput.type(captchaCode.trim(), { delay: 70 });
+
+      // 3. Click Login / Submit button
+      const submitBtn = await this.page.$(
+        '#lobtn, input[name="lobtn"], input[value="Login"]'
+      );
+
+      if (!submitBtn) {
+        await this.page.keyboard.press('Enter');
+      } else {
+        const navPromise = this.page.waitForNavigation({
+          waitUntil: 'domcontentloaded',
+          timeout: 30000
+        }).catch(() => null);
+        await submitBtn.click();
+        await navPromise;
+      }
+
+      // 4. Verify login state
+      const isLoggedIn = await this.verifyLogin();
+      if (isLoggedIn) {
+        console.log('✅ Manual CAPTCHA Login Successful!');
+        return true;
+      } else {
+        console.log('❌ Manual CAPTCHA Login Failed (Wrong code or expired session).');
+        return false;
+      }
+    } catch (err) {
+      console.error('Error submitting manual CAPTCHA:', err.message);
+      return false;
+    }
+  }
+
+  /**
+   * Pauses scraper execution and awaits manual CAPTCHA entry via Web UI modal
+   */
+  async requestManualCaptcha(onCaptchaRequired, maxAttempts = 3, maxWaitMs = 120000) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      console.log(`🖐️ [Manual CAPTCHA] Prompting user in Web UI (attempt ${attempt}/${maxAttempts})...`);
+      const captchaBase64 = await this.captureCaptchaBase64();
+      if (!captchaBase64) {
+        throw new Error('Could not capture CAPTCHA image for manual entry.');
+      }
+
+      if (typeof onCaptchaRequired === 'function') {
+        onCaptchaRequired({
+          image: captchaBase64,
+          attempt: attempt,
+          maxAttempts: maxAttempts
+        });
+      }
+
+      const isSuccess = await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          this.pendingCaptchaResolver = null;
+          reject(new Error('Manual CAPTCHA entry timed out (120 seconds).'));
+        }, maxWaitMs);
+
+        this.pendingCaptchaResolver = {
+          resolve: async (code) => {
+            clearTimeout(timer);
+            try {
+              const res = await this.submitManualCaptcha(code);
+              resolve(res);
+            } catch (err) {
+              reject(err);
+            }
+          },
+          refresh: async () => {
+            const newImg = await this.refreshCaptchaImage();
+            if (typeof onCaptchaRequired === 'function' && newImg) {
+              onCaptchaRequired({
+                image: newImg,
+                attempt: attempt,
+                maxAttempts: maxAttempts
+              });
+            }
+            return newImg;
+          },
+          reject: (err) => {
+            clearTimeout(timer);
+            reject(err);
+          }
+        };
+      });
+
+      if (isSuccess) {
+        return true;
+      }
+
+      console.log(`⚠️ Manual CAPTCHA attempt ${attempt} was incorrect. Refreshing for attempt ${attempt + 1}...`);
+      await this.refreshCaptchaImage();
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    return false;
+  }
+
+  /**
    * Attempt automatic CAPTCHA solving using Tesseract.js or 2Captcha
    * Returns true if successful, false otherwise
    */
