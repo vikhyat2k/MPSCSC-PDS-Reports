@@ -871,18 +871,14 @@ class SCMScraper {
         let captchaSolved = false;
 
         if (isCloudEnv) {
-          console.log('🌐 Render / Cloud Environment detected: Initiating UI Manual CAPTCHA provision...');
+          console.log('🌐 Render / Cloud Environment detected: Prompting user with live CAPTCHA modal...');
           if (typeof onProgress === 'function') {
-            onProgress('Render Cloud detected: Solving CAPTCHA...');
+            onProgress('Manual CAPTCHA Required: Please enter characters in the popup');
           }
-          // Try 1 fast auto-attempt first
-          captchaSolved = await this.attemptAutoCaptcha(1, onProgress);
-          if (!captchaSolved && typeof onCaptchaRequired === 'function') {
-            console.log('🖐️ Auto-attempt did not solve. Prompting user in Web UI for manual CAPTCHA...');
-            if (typeof onProgress === 'function') {
-              onProgress('Manual CAPTCHA Required: Please enter characters in the popup');
-            }
+          if (typeof onCaptchaRequired === 'function') {
             captchaSolved = await this.requestManualCaptcha(onCaptchaRequired);
+          } else {
+            captchaSolved = await this.attemptAutoCaptcha(1, onProgress);
           }
         } else {
           // Localhost: fast automatic Tesseract OCR
