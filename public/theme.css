@@ -209,10 +209,12 @@ body {
 [data-theme="light"] .alert-warning { background: rgba(245,158,11,0.1) !important; color: #b45309 !important; }
 [data-theme="light"] select option { background: #fff; color: #0a1628; }
 
-/* ── Shortfall Table High-Contrast Visibility ───────── */
-.shortfall-table { background: var(--bg-card) !important; color: var(--text-main) !important; }
-.shortfall-table th { color: var(--text-main) !important; font-weight: 800 !important; }
-.shortfall-table td { color: var(--text-main) !important; }
+/* ── Shortfall Table High-Contrast & Clean Wrapping ───────── */
+.shortfall-table { background: var(--bg-card) !important; color: var(--text-main) !important; table-layout: auto; }
+.shortfall-table th { color: var(--text-main) !important; font-weight: 800 !important; white-space: normal !important; word-break: break-word !important; line-height: 1.35 !important; vertical-align: middle !important; }
+.shortfall-table td { color: var(--text-main) !important; line-height: 1.35 !important; }
+.shortfall-table td.cell-ic { white-space: normal !important; word-break: break-word !important; font-weight: 800 !important; }
+.shortfall-table td.cell-num { white-space: nowrap !important; font-weight: 600 !important; font-variant-numeric: tabular-nums !important; }
 .shortfall-table tr:hover td { background: var(--table-row-hover) !important; }
 
 [data-theme="light"] .shortfall-table { background: #ffffff !important; color: #0a1628 !important; }
