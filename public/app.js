@@ -4822,9 +4822,10 @@ function buildStockAdvancedReportHTML(data) {
     const healthLabel = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Moderate' : 'Critical';
 
     function fmtQ(v) {
-        if (v >= 1000) return (v / 1000).toFixed(2) + ' TQ';
-        return v.toFixed(2) + ' Qt';
+        // Always display in Qt (Quintals) with Indian comma formatting (e.g. 2,49,620.00 Qt)
+        return v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Qt';
     }
+
 
     const syncTime = new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const reportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });

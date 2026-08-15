@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — Fixed isSubViewActive scoping ReferenceError and dark theme cell colors in NFSA/scheme report history tables |
+| Last Code Change | 15 Aug 2026 — [FEATURE] उन्नत विश्लेषण रिपोर्ट प्रीव्यू: Advanced Analytics Executive Report for Live District Stock Position (showStockAdvancedReport + 4-section navy/amber report with PDF/Image/Excel export) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -637,7 +637,31 @@ Closes: ISSUE-019
 
 ---
 
-### 2026-08-15 | Fix SCM Login Verification, Password Re-Entry, and Pristine Cloud CAPTCHA Flow
+### 2026-08-15 | FEATURE — उन्नत विश्लेषण रिपोर्ट प्रीव्यू: Advanced Analytics Executive Report for Live District Stock Position
+
+Files: public/app.js, public/index.html, PROJECT_DOCS.md
+Type: Feature
+Opens: N/A
+
+- FEATURE: Added a full MNC-grade Advanced Analytics Executive Report Preview to the Live District Stock Position module, matching the design language of the existing NFSA Advanced Analytics report (navy #0b2545, amber #c9a227).
+- WHAT WAS ADDED:
+  1. `public/index.html`: Added "📊 उन्नत रिपोर्ट" button (navy/amber gradient style) to `stockPositionSection` header toolbar. Added `#stockAdvAnalyticsModal` full-screen overlay div before `</body>`.
+  2. `public/app.js`: Added 4 new functions:
+     - `showStockAdvancedReport()` — validates `window.lastStockData`, builds modal with toolbar + report HTML, handles ESC/backdrop close.
+     - `buildStockAdvancedReportHTML(data)` — generates 4-section premium HTML report from live IC data:
+       * Cover: letterhead, metadata badges, District Health Score (0–100), 6 KPI tiles.
+       * Section 1: IC Volume horizontal bar chart with status color coding.
+       * Section 2: Commodity Intelligence Matrix (heatmap), commodity mix legend.
+       * Section 3: Risk Intelligence & Alerts (negative stock, low buffer, distribution equity) + IC Ranking.
+       * Section 4: Management Priorities (smart auto-generated) + Health Scorecard + Distribution Equity.
+     - `downloadStockAdvReport(type)` — supports `image` (html2canvas JPEG), `pdf` (jsPDF multi-page), `excel` (2-sheet CSV: IC Summary + Commodity Matrix).
+     - `closeStockAdvancedReport()` — closes modal, removes ESC listener.
+  3. All 4 functions exposed to `window` scope for HTML onclick access.
+- DATA SOURCE: Entirely client-side; uses `window.lastStockData` populated by `fetchStockPositionSheet()`. No new server endpoints required.
+- GUARD: Button is always visible; clicking before sync shows a toast notification ("Please sync live data first").
+
+---
+
 
 Files: server/automation/scraper_v2.js, server.js, PROJECT_DOCS.md
 Type: Bug Fix / SCM Scraper Hardening
