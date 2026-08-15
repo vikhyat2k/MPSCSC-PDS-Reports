@@ -4822,8 +4822,9 @@ function buildStockAdvancedReportHTML(data) {
     const healthLabel = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Moderate' : 'Critical';
 
     function fmtQ(v) {
-        // Always display in Qt (Quintals) with Indian comma formatting (e.g. 2,49,620.00 Qt)
-        return v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Qt';
+        // Convert Quintals → Metric Tons (1 MT = 10 Qt)
+        const mt = v / 10;
+        return mt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MT';
     }
 
 
