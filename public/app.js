@@ -4622,3 +4622,180 @@ window.showAdvancedAnalyticsModal = showAdvancedAnalyticsModal;
 window.closeAdvAnalyticsModal = closeAdvAnalyticsModal;
 window.downloadAdvAnalytics = downloadAdvAnalytics;
 window.downloadAdvAnalyticsImage = downloadAdvAnalyticsImage;
+
+// ═══════════════════════════════════════════════════════════════
+//  INTERACTIVE MANUAL CAPTCHA MODAL HANDLERS (FOR CLOUD / RENDER)
+// ═══════════════════════════════════════════════════════════════
+window.currentCaptchaRequestId = null;
+
+function openManualCaptchaModal(imageBase64, requestId, message) {
+    const modal = document.getElementById('manualCaptchaModal');
+    const imgEl = document.getElementById('manualCaptchaImage');
+    const inputEl = document.getElementById('manualCaptchaInput');
+    const statusEl = document.getElementById('manualCaptchaStatus');
+    const btnSubmit = document.getElementById('btnSubmitCaptcha');
+
+    if (!modal || !imageBase64) return;
+
+    window.currentCaptchaRequestId = requestId;
+    if (imgEl) imgEl.src = imageBase64;
+    modal.style.display = 'flex';
+
+    if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '🚀 Submit & Continue';
+    }
+
+    if (statusEl) {
+        statusEl.style.display = 'none';
+        statusEl.innerHTML = '';
+    }
+
+    // Auto-focus input after slight delay for animation
+    setTimeout(() => {
+        if (inputEl) {
+            inputEl.focus();
+            inputEl.select();
+        }
+    }, 150);
+}
+
+function closeManualCaptchaModal() {
+    const modal = document.getElementById('manualCaptchaModal');
+    if (modal && modal.style.display !== 'none') {
+        modal.style.display = 'none';
+        const inputEl = document.getElementById('manualCaptchaInput');
+        if (inputEl) inputEl.value = '';
+    }
+}
+
+async function submitManualCaptcha(event) {
+    if (event) event.preventDefault();
+
+    const requestId = window.currentCaptchaRequestId;
+    const inputEl = document.getElementById('manualCaptchaInput');
+    const btnSubmit = document.getElementById('btnSubmitCaptcha');
+    const statusEl = document.getElementById('manualCaptchaStatus');
+
+    const captchaCode = inputEl ? inputEl.value.trim() : '';
+    if (!captchaCode) {
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.style.color = '#ef4444';
+            statusEl.innerText = '⚠️ Please enter the CAPTCHA characters.';
+        }
+        return;
+    }
+
+    if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '⏳ Submitting to server...';
+    }
+
+    if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#6366f1';
+        statusEl.innerText = '🔄 Submitting code to browser session...';
+    }
+
+    try {
+        const endpoints = ['/api/captcha/submit', 'api/captcha/submit'];
+        let response = null;
+
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requestId, captchaCode })
+                });
+                if (res) { response = res; break; }
+            } catch (err) {}
+        }
+
+        if (!response || !response.ok) {
+            const errData = response ? await response.json().catch(() => ({})) : {};
+            throw new Error(errData.error || 'Failed to submit CAPTCHA to server.');
+        }
+
+        if (statusEl) {
+            statusEl.style.color = '#10b981';
+            statusEl.innerText = '✅ Code submitted! Verifying login with portal...';
+        }
+    } catch (err) {
+        console.error('Error submitting CAPTCHA:', err);
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.style.color = '#ef4444';
+            statusEl.innerText = `❌ ${err.message}`;
+        }
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = '🚀 Submit & Continue';
+        }
+    }
+}
+
+async function refreshManualCaptcha() {
+    const requestId = window.currentCaptchaRequestId;
+    const imgEl = document.getElementById('manualCaptchaImage');
+    const btnRef = document.getElementById('btnRefreshCaptcha');
+    const statusEl = document.getElementById('manualCaptchaStatus');
+    const inputEl = document.getElementById('manualCaptchaInput');
+
+    if (!requestId) return;
+
+    if (btnRef) {
+        btnRef.disabled = true;
+        btnRef.innerHTML = '⏳ Refreshing...';
+    }
+
+    try {
+        const endpoints = ['/api/captcha/refresh', 'api/captcha/refresh'];
+        let response = null;
+
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requestId })
+                });
+                if (res) { response = res; break; }
+            } catch (err) {}
+        }
+
+        if (response && response.ok) {
+            const data = await response.json();
+            if (data.captchaImage && imgEl) {
+                imgEl.src = data.captchaImage;
+                if (inputEl) {
+                    inputEl.value = '';
+                    inputEl.focus();
+                }
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.color = '#10b981';
+                    statusEl.innerText = '✅ Fresh CAPTCHA loaded.';
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Error refreshing CAPTCHA:', err);
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.style.color = '#ef4444';
+            statusEl.innerText = '❌ Failed to refresh CAPTCHA.';
+        }
+    } finally {
+        if (btnRef) {
+            btnRef.disabled = false;
+            btnRef.innerHTML = '<span>🔄</span> Refresh CAPTCHA';
+        }
+    }
+}
+
+window.openManualCaptchaModal = openManualCaptchaModal;
+window.closeManualCaptchaModal = closeManualCaptchaModal;
+window.submitManualCaptcha = submitManualCaptcha;
+window.refreshManualCaptcha = refreshManualCaptcha;
