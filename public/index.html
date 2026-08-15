@@ -2796,7 +2796,7 @@ async function renderShortfallTable() {
                 .trim();
         }
 
-        // Match IC available stock from live sheet
+        // Match IC available stock from live sheet and compare against Quantity Left for Dispatch
         var enrichedICs = ics.map(function(icObj) {
             var normName = cleanHindiIC(icObj.ic);
             var liveItem = null;
@@ -2824,26 +2824,37 @@ async function renderShortfallTable() {
                 });
             }
 
-            var allocWheat = (icObj.totalAlloc && icObj.totalAlloc.wheat !== undefined) ? icObj.totalAlloc.wheat : ((icObj.nfsa ? icObj.nfsa.balance : 0));
-            var allocRice  = (icObj.totalAlloc && icObj.totalAlloc.rice !== undefined) ? icObj.totalAlloc.rice : 0;
-            var allocFSalt = (icObj.totalAlloc && icObj.totalAlloc.fSalt !== undefined) ? icObj.totalAlloc.fSalt : 0;
+            // Quantity Left for Dispatch (Pending Balance = Allotted - Dispatched)
+            var leftWheat = (icObj.totalLeft && icObj.totalLeft.wheat !== undefined) ? icObj.totalLeft.wheat : ((icObj.totalDemand && icObj.totalDemand.wheat !== undefined) ? icObj.totalDemand.wheat : 0);
+            var leftRice  = (icObj.totalLeft && icObj.totalLeft.rice !== undefined) ? icObj.totalLeft.rice : ((icObj.totalDemand && icObj.totalDemand.rice !== undefined) ? icObj.totalDemand.rice : 0);
+            var leftFSalt = (icObj.totalLeft && icObj.totalLeft.fSalt !== undefined) ? icObj.totalLeft.fSalt : ((icObj.totalDemand && icObj.totalDemand.fSalt !== undefined) ? icObj.totalDemand.fSalt : 0);
 
-            var diffWheat = availWheat - allocWheat;
-            var diffRice  = availRice - allocRice;
-            var diffFSalt = availFSalt - allocFSalt;
+            // Total Allocations (for breakdown comparison)
+            var allocWheat = (icObj.totalAlloc && icObj.totalAlloc.wheat !== undefined) ? icObj.totalAlloc.wheat : leftWheat;
+            var allocRice  = (icObj.totalAlloc && icObj.totalAlloc.rice !== undefined) ? icObj.totalAlloc.rice : leftRice;
+            var allocFSalt = (icObj.totalAlloc && icObj.totalAlloc.fSalt !== undefined) ? icObj.totalAlloc.fSalt : leftFSalt;
+
+            // Shortfall = Available Stock - Quantity Left for Dispatch
+            var diffWheat = availWheat - leftWheat;
+            var diffRice  = availRice - leftRice;
+            var diffFSalt = availFSalt - leftFSalt;
 
             return {
                 ic: icObj.ic,
                 schemes: icObj.schemes || {},
+                totalLeft: icObj.totalLeft || { wheat: leftWheat, rice: leftRice, fSalt: leftFSalt },
                 totalAlloc: icObj.totalAlloc || { wheat: allocWheat, rice: allocRice, fSalt: allocFSalt },
                 hasLive: !!liveItem,
                 availWheat: availWheat,
+                leftWheat: leftWheat,
                 allocWheat: allocWheat,
                 diffWheat: diffWheat,
                 availRice: availRice,
+                leftRice: leftRice,
                 allocRice: allocRice,
                 diffRice: diffRice,
                 availFSalt: availFSalt,
+                leftFSalt: leftFSalt,
                 allocFSalt: allocFSalt,
                 diffFSalt: diffFSalt,
                 availPaddy: availPaddy,
@@ -2851,32 +2862,36 @@ async function renderShortfallTable() {
         });
 
         // Totals across district
-        var distAvailWheat = 0, distAllocWheat = 0;
-        var distAvailRice  = 0, distAllocRice  = 0;
-        var distAvailFSalt = 0, distAllocFSalt = 0;
+        var distAvailWheat = 0, distLeftWheat = 0, distAllocWheat = 0;
+        var distAvailRice  = 0, distLeftRice  = 0, distAllocRice  = 0;
+        var distAvailFSalt = 0, distLeftFSalt = 0, distAllocFSalt = 0;
         var distAvailPaddy = 0;
 
         enrichedICs.forEach(function(item) {
             distAvailWheat += item.availWheat;
+            distLeftWheat  += item.leftWheat;
             distAllocWheat += item.allocWheat;
             distAvailRice  += item.availRice;
+            distLeftRice   += item.leftRice;
             distAllocRice  += item.allocRice;
             distAvailFSalt += item.availFSalt;
+            distLeftFSalt  += item.leftFSalt;
             distAllocFSalt += item.allocFSalt;
             distAvailPaddy += item.availPaddy;
         });
 
-        var distDiffWheat = distAvailWheat - distAllocWheat;
-        var distDiffRice  = distAvailRice - distAllocRice;
-        var distDiffFSalt = distAvailFSalt - distAllocFSalt;
+        // Shortfall = Available Stock - Quantity Left for Dispatch
+        var distDiffWheat = distAvailWheat - distLeftWheat;
+        var distDiffRice  = distAvailRice - distLeftRice;
+        var distDiffFSalt = distAvailFSalt - distLeftFSalt;
 
         function fmtNum(v) { return v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
         function diffBadge(diff, hasLive) {
             if (!hasLive) return '<span style="color:var(--text-muted);font-size:11px;">(Sheet Not Loaded)</span>';
             if (diff >= 0) {
-                return '<span style="font-weight:800;color:#10b981;background:rgba(16,185,129,0.12);padding:2px 6px;border-radius:4px;font-size:11px;">✓ Surplus: +' + fmtNum(diff) + ' Qt</span>';
+                return '<span style="font-weight:800;color:#10b981;background:rgba(16,185,129,0.12);padding:3px 7px;border-radius:5px;font-size:11px;white-space:nowrap;">✓ Surplus: +' + fmtNum(diff) + ' Qt</span>';
             } else {
-                return '<span style="font-weight:800;color:#ef4444;background:rgba(239,68,68,0.12);padding:2px 6px;border-radius:4px;font-size:11px;">⚠️ Shortfall: ' + fmtNum(diff) + ' Qt</span>';
+                return '<span style="font-weight:800;color:#ef4444;background:rgba(239,68,68,0.12);padding:3px 7px;border-radius:5px;font-size:11px;white-space:nowrap;">⚠️ Shortfall: ' + fmtNum(diff) + ' Qt</span>';
             }
         }
 
@@ -2889,11 +2904,11 @@ async function renderShortfallTable() {
 
         if (!hasStockData) {
             html += '<div style="padding:10px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;color:#f59e0b;font-size:12px;font-weight:600;margin-bottom:12px;">' +
-                '💡 Live stock position sheet is not fetched yet. Allocation totals are shown below. Click "Fetch Live Data" above to calculate net Shortfall / Excess.' +
+                '💡 Live stock position sheet is not fetched yet. Remaining demand totals (Quantity Left for Dispatch) are shown below. Click "Sync Live Data" above to calculate net Shortfall / Surplus against warehouse stock.' +
             '</div>';
         }
 
-        html += '<table class="shortfall-table" style="width:100%;border-collapse:collapse;min-width:1000px;font-size:12px;background:var(--bg-card,#0d1526);color:var(--text-main,#eef2ff);">' +
+        html += '<table class="shortfall-table" style="width:100%;border-collapse:collapse;min-width:1050px;font-size:12px;background:var(--bg-card,#0d1526);color:var(--text-main,#eef2ff);">' +
             '<thead>' +
                 '<tr>' +
                     '<th rowspan="2" style="' + thLC + 'border-radius:8px 0 0 0;width:35px;">#</th>' +
@@ -2905,14 +2920,14 @@ async function renderShortfallTable() {
                 '</tr>' +
                 '<tr>' +
                     '<th style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.5);">Avail. Stock</th>' +
-                    '<th style="' + thStyle + '">Total Alloc</th>' +
-                    '<th style="' + thStyle + '">Net Diff</th>' +
+                    '<th style="' + thStyle + '" title="Quantity Left for Dispatch (शेष प्रदाय मात्रा)">Qty Left for Disp</th>' +
+                    '<th style="' + thStyle + '" title="Surplus (+) or Shortfall (-) = Avail. Stock - Qty Left for Disp">Net Diff</th>' +
                     '<th style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.5);">Avail. CMR</th>' +
-                    '<th style="' + thStyle + '">Total Alloc</th>' +
-                    '<th style="' + thStyle + '">Net Diff</th>' +
+                    '<th style="' + thStyle + '" title="Quantity Left for Dispatch (शेष प्रदाय मात्रा)">Qty Left for Disp</th>' +
+                    '<th style="' + thStyle + '" title="Surplus (+) or Shortfall (-) = Avail. CMR - Qty Left for Disp">Net Diff</th>' +
                     '<th style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.5);">Avail. Stock</th>' +
-                    '<th style="' + thStyle + '">Total Alloc</th>' +
-                    '<th style="' + thStyle + '">Net Diff</th>' +
+                    '<th style="' + thStyle + '" title="Quantity Left for Dispatch (शेष प्रदाय मात्रा)">Qty Left for Disp</th>' +
+                    '<th style="' + thStyle + '" title="Surplus (+) or Shortfall (-) = Avail. Stock - Qty Left for Disp">Net Diff</th>' +
                 '</tr>' +
             '</thead>' +
             '<tbody>';
@@ -2927,17 +2942,17 @@ async function renderShortfallTable() {
 
                 // Wheat
                 '<td style="' + tdStyle + 'border-left:2px solid rgba(242,107,43,0.25);color:var(--text-main,#eef2ff);font-weight:600;">' + (row.hasLive ? fmtNum(row.availWheat) : '—') + '</td>' +
-                '<td style="' + tdStyle + 'font-weight:800;color:#f97316;">' + fmtNum(row.allocWheat) + '</td>' +
+                '<td style="' + tdStyle + 'font-weight:800;color:#f97316;">' + fmtNum(row.leftWheat) + '</td>' +
                 '<td style="' + tdStyle + '">' + diffBadge(row.diffWheat, row.hasLive) + '</td>' +
 
                 // Rice
                 '<td style="' + tdStyle + 'border-left:2px solid rgba(99,102,241,0.25);color:var(--text-main,#eef2ff);font-weight:600;">' + (row.hasLive ? fmtNum(row.availRice) : '—') + '</td>' +
-                '<td style="' + tdStyle + 'font-weight:800;color:#818cf8;">' + fmtNum(row.allocRice) + '</td>' +
+                '<td style="' + tdStyle + 'font-weight:800;color:#818cf8;">' + fmtNum(row.leftRice) + '</td>' +
                 '<td style="' + tdStyle + '">' + diffBadge(row.diffRice, row.hasLive) + '</td>' +
 
                 // F.Salt
                 '<td style="' + tdStyle + 'border-left:2px solid rgba(6,182,212,0.25);color:var(--text-main,#eef2ff);font-weight:600;">' + (row.hasLive ? fmtNum(row.availFSalt) : '—') + '</td>' +
-                '<td style="' + tdStyle + 'font-weight:800;color:#06b6d4;">' + fmtNum(row.allocFSalt) + '</td>' +
+                '<td style="' + tdStyle + 'font-weight:800;color:#06b6d4;">' + fmtNum(row.leftFSalt) + '</td>' +
                 '<td style="' + tdStyle + '">' + diffBadge(row.diffFSalt, row.hasLive) + '</td>' +
 
                 // Action / Breakdown
@@ -2949,18 +2964,18 @@ async function renderShortfallTable() {
             // Collapsible sub-row for scheme breakdown
             html += '<tr id="' + detailId + '" style="display:none;background:rgba(0,0,0,0.25);">' +
                 '<td colspan="12" style="padding:12px 16px;">' +
-                    '<div style="font-size:11px;font-weight:800;color:var(--text-secondary,#8ea3c2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Scheme-wise Allocation Breakdown for ' + row.ic + ' (Quintals):</div>' +
+                    '<div style="font-size:11px;font-weight:800;color:var(--text-secondary,#8ea3c2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Scheme-wise Quantity Left for Dispatch (शेष प्रदाय) for ' + row.ic + ' (Quintals):</div>' +
                     '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
                         ['nfsa','mdm','icds','welfare'].map(function(schKey) {
                             var schName = schKey.toUpperCase();
                             var schMeta = data.meta[schKey];
-                            var schObj = (row.schemes && row.schemes[schKey]) ? row.schemes[schKey] : { wheat: 0, rice: 0, fSalt: 0 };
+                            var schObj = (row.schemes && row.schemes[schKey]) ? row.schemes[schKey] : { wheat: 0, rice: 0, fSalt: 0, allocWheat: 0, allocRice: 0, allocFSalt: 0 };
                             var schColor = schKey==='nfsa' ? '#f97316' : schKey==='mdm' ? '#10b981' : schKey==='icds' ? '#818cf8' : '#ec4899';
-                            return '<div style="flex:1;min-width:180px;background:rgba(255,255,255,0.03);border:1px solid ' + schColor + '44;border-radius:8px;padding:10px 14px;">' +
+                            return '<div style="flex:1;min-width:200px;background:rgba(255,255,255,0.03);border:1px solid ' + schColor + '44;border-radius:8px;padding:10px 14px;">' +
                                 '<div style="font-size:12px;font-weight:800;color:' + schColor + ';">' + schName + ' ' + (schMeta ? '(' + schMeta.label + ')' : '') + '</div>' +
-                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);margin-top:6px;">🌾 Wheat: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.wheat || 0) + '</strong></div>' +
-                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);">🍚 Rice: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.rice || 0) + '</strong></div>' +
-                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);">🧂 F.Salt: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.fSalt || 0) + '</strong></div>' +
+                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);margin-top:6px;">🌾 Wheat Left: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.wheat || 0) + '</strong> <span style="font-size:10px;color:var(--text-muted);">(Alloc: ' + fmtNum(schObj.allocWheat || schObj.wheat || 0) + ')</span></div>' +
+                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);">🍚 Rice Left: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.rice || 0) + '</strong> <span style="font-size:10px;color:var(--text-muted);">(Alloc: ' + fmtNum(schObj.allocRice || schObj.rice || 0) + ')</span></div>' +
+                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);">🧂 F.Salt Left: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.fSalt || 0) + '</strong> <span style="font-size:10px;color:var(--text-muted);">(Alloc: ' + fmtNum(schObj.allocFSalt || schObj.fSalt || 0) + ')</span></div>' +
                             '</div>';
                         }).join('') +
                     '</div>' +
@@ -2973,13 +2988,13 @@ async function renderShortfallTable() {
             '<td style="' + tdLC + 'font-weight:900;font-size:14px;color:var(--text-main,#eef2ff);">∑</td>' +
             '<td style="' + tdLC + 'color:#818cf8;font-weight:900;font-size:13px;">District Total (कुल जिला)</td>' +
             '<td style="' + tdStyle + 'font-weight:800;color:var(--text-main,#eef2ff);border-left:2px solid rgba(242,107,43,0.3);">' + (hasStockData ? fmtNum(distAvailWheat) : '—') + '</td>' +
-            '<td style="' + tdStyle + 'font-weight:800;color:#f97316;">' + fmtNum(distAllocWheat) + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:#f97316;" title="Total District Wheat Quantity Left for Dispatch">' + fmtNum(distLeftWheat) + '</td>' +
             '<td style="' + tdStyle + '">' + diffBadge(distDiffWheat, hasStockData) + '</td>' +
             '<td style="' + tdStyle + 'font-weight:800;color:var(--text-main,#eef2ff);border-left:2px solid rgba(99,102,241,0.3);">' + (hasStockData ? fmtNum(distAvailRice) : '—') + '</td>' +
-            '<td style="' + tdStyle + 'font-weight:800;color:#818cf8;">' + fmtNum(distAllocRice) + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:#818cf8;" title="Total District CMR Rice Quantity Left for Dispatch">' + fmtNum(distLeftRice) + '</td>' +
             '<td style="' + tdStyle + '">' + diffBadge(distDiffRice, hasStockData) + '</td>' +
             '<td style="' + tdStyle + 'font-weight:800;color:var(--text-main,#eef2ff);border-left:2px solid rgba(6,182,212,0.3);">' + (hasStockData ? fmtNum(distAvailFSalt) : '—') + '</td>' +
-            '<td style="' + tdStyle + 'font-weight:800;color:#06b6d4;">' + fmtNum(distAllocFSalt) + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:#06b6d4;" title="Total District Fortified Salt Quantity Left for Dispatch">' + fmtNum(distLeftFSalt) + '</td>' +
             '<td style="' + tdStyle + '">' + diffBadge(distDiffFSalt, hasStockData) + '</td>' +
             '<td style="' + tdStyle + '"></td>' +
         '</tr>';
@@ -2988,24 +3003,24 @@ async function renderShortfallTable() {
 
         // Summary shortfall alert strip below table
         html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">' +
-            '<div style="flex:1;min-width:180px;background:rgba(242,107,43,0.1);border:1px solid rgba(242,107,43,0.3);border-radius:8px;padding:10px 14px;">' +
-                '<div style="font-size:10px;font-weight:700;color:#f26b2b;text-transform:uppercase;">🌾 Wheat Stock Net Position</div>' +
-                '<div style="font-size:18px;font-weight:800;color:' + (distDiffWheat >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffWheat >= 0 ? '+' : '') + fmtNum(distDiffWheat) + ' Qt' : fmtNum(distAllocWheat) + ' Qt Alloc') + '</div>' +
-                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Avail Stock: ' + fmtNum(distAvailWheat) + ' Qt</div>' +
+            '<div style="flex:1;min-width:200px;background:rgba(242,107,43,0.1);border:1px solid rgba(242,107,43,0.3);border-radius:8px;padding:10px 14px;">' +
+                '<div style="font-size:10px;font-weight:700;color:#f26b2b;text-transform:uppercase;">🌾 WHEAT STOCK POSITION (Surplus / Shortfall)</div>' +
+                '<div style="font-size:18px;font-weight:800;color:' + (distDiffWheat >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffWheat >= 0 ? '+' : '') + fmtNum(distDiffWheat) + ' Qt' : fmtNum(distLeftWheat) + ' Qt Left') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Avail Stock: <strong>' + fmtNum(distAvailWheat) + ' Qt</strong> | Left to Disp: <strong>' + fmtNum(distLeftWheat) + ' Qt</strong> <span style="opacity:0.8;">(Alloc: ' + fmtNum(distAllocWheat) + ' Qt)</span></div>' +
             '</div>' +
-            '<div style="flex:1;min-width:180px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:10px 14px;">' +
-                '<div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;">🍚 CMR Rice Net Position</div>' +
-                '<div style="font-size:18px;font-weight:800;color:' + (distDiffRice >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffRice >= 0 ? '+' : '') + fmtNum(distDiffRice) + ' Qt' : fmtNum(distAllocRice) + ' Qt Alloc') + '</div>' +
-                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">CMR Avail: ' + fmtNum(distAvailRice) + ' Qt | Alloc: ' + fmtNum(distAllocRice) + ' Qt</div>' +
+            '<div style="flex:1;min-width:200px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:10px 14px;">' +
+                '<div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;">🍚 CMR RICE POSITION (Surplus / Shortfall)</div>' +
+                '<div style="font-size:18px;font-weight:800;color:' + (distDiffRice >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffRice >= 0 ? '+' : '') + fmtNum(distDiffRice) + ' Qt' : fmtNum(distLeftRice) + ' Qt Left') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">CMR Avail: <strong>' + fmtNum(distAvailRice) + ' Qt</strong> | Left to Disp: <strong>' + fmtNum(distLeftRice) + ' Qt</strong> <span style="opacity:0.8;">(Alloc: ' + fmtNum(distAllocRice) + ' Qt)</span></div>' +
             '</div>' +
-            '<div style="flex:1;min-width:180px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:10px 14px;">' +
-                '<div style="font-size:10px;font-weight:700;color:#06b6d4;text-transform:uppercase;">🧂 F.Salt Net Position</div>' +
-                '<div style="font-size:18px;font-weight:800;color:' + (distDiffFSalt >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffFSalt >= 0 ? '+' : '') + fmtNum(distDiffFSalt) + ' Qt' : fmtNum(distAllocFSalt) + ' Qt Alloc') + '</div>' +
-                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">F.Salt Avail: ' + fmtNum(distAvailFSalt) + ' Qt</div>' +
+            '<div style="flex:1;min-width:200px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:10px 14px;">' +
+                '<div style="font-size:10px;font-weight:700;color:#06b6d4;text-transform:uppercase;">🧂 F.SALT STOCK POSITION (Surplus / Shortfall)</div>' +
+                '<div style="font-size:18px;font-weight:800;color:' + (distDiffFSalt >= 0 ? '#10b981' : '#ef4444') + ';">' + (hasStockData ? (distDiffFSalt >= 0 ? '+' : '') + fmtNum(distDiffFSalt) + ' Qt' : fmtNum(distLeftFSalt) + ' Qt Left') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">F.Salt Avail: <strong>' + fmtNum(distAvailFSalt) + ' Qt</strong> | Left to Disp: <strong>' + fmtNum(distLeftFSalt) + ' Qt</strong> <span style="opacity:0.8;">(Alloc: ' + fmtNum(distAllocFSalt) + ' Qt)</span></div>' +
             '</div>' +
         '</div>' +
         '<div style="margin-top:10px;font-size:11px;color:var(--text-muted);background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);padding:8px 12px;border-radius:6px;">' +
-            '💡 <strong>Note on Rice / CMR:</strong> CMR (Custom Milled Rice) available stock = <strong>' + fmtNum(distAvailRice) + ' Qt</strong> (CMR Fortified: 2,116.58 Qt + CMR Non-Fortified: 4,090.90 Qt). Unmilled Paddy (धान = <strong>' + fmtNum(distAvailPaddy) + ' Qt</strong>) is held in stock for milling and is tracked separately.' +
+            '💡 <strong>Shortfall Calculation Formula:</strong> <strong>Shortfall / Surplus = Available Stock − Quantity Left for Dispatch (शेष प्रदाय मात्रा)</strong>. A positive (+) value indicates surplus warehouse stock beyond pending dispatch; a negative (−) value indicates the exact stock shortfall required to complete lifting. CMR available = <strong>' + fmtNum(distAvailRice) + ' Qt</strong>. Unmilled Paddy (धान = <strong>' + fmtNum(distAvailPaddy) + ' Qt</strong>) is held for milling and tracked separately.' +
         '</div>';
 
         tableCont.innerHTML = html;
