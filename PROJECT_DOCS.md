@@ -585,6 +585,7 @@ Tracks what has been tested and confirmed working.
 | Stock Position Fetch-Sheet Endpoint Resilience | Integration Verification | VERIFIED | 15 Aug 2026 | Multi-route path support and resilient fallback loop in fetchStockPositionSheet |
 | Stock Table Variable Definition (isTotalCol) | UI Verification | VERIFIED | 15 Aug 2026 | Added missing isTotalCol declaration in stock position table row mapping |
 | Quantity Left for Dispatch Live Server Activation | Runtime Verification | VERIFIED | 15 Aug 2026 | Restarted node server with active daemon and added multi-tier scheme fallback in frontend |
+| Stock Table & Header Clean Text Wrapping | UI & CSS Verification | VERIFIED | 15 Aug 2026 | Multi-line headers, table-layout auto, and high-visibility responsive cell wrapping |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -611,6 +612,22 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Optimize Shortfall Table Text Wrapping & Header Visibility
+
+Files: public/index.html, public/theme.css, PROJECT_DOCS.md
+Type: UI / UX Enhancement / Text Wrapping & Layout Optimization
+
+- REQUIREMENT: Wrap table header text and optimize cell visibility to eliminate wide horizontal blowout and improve readability.
+- IMPLEMENTATION:
+  1. Updated table headers in `renderShortfallTable()` in `public/index.html`:
+     - Allowed `white-space: normal; line-height: 1.3; vertical-align: middle;` across all table header cells.
+     - Structured multi-line subheaders (`Avail.<br>Stock`, `Qty Left<br>for Disp`, `Net Diff (Surplus/Shortfall)`).
+     - Structured bilingual commodity headers (`🌾 WHEAT (गेहूं)`, `🍚 CMR RICE (कस्टम मिलिंग चावल)`, `🧂 FORTIFIED SALT (नमक)`, `Issue Center (इश्यू सेंटर)`).
+  2. Updated `public/theme.css` with `.shortfall-table` wrapping rules (`td.cell-ic`, `td.cell-num`, `table-layout: auto`) ensuring clear visual hierarchy in both dark and light modes.
+  3. Optimized badge pill formatting for surplus (`✓ +X Qt`) and shortfall (`⚠️ Shortfall: -X Qt`) with subtle borders and clear contrast.
+
+---
 
 ### 2026-08-15 | Activate Live Quantity Left for Dispatch & Resilient Scheme Summation Fallback
 
