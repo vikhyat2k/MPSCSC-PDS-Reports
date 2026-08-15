@@ -4637,8 +4637,19 @@ function openManualCaptchaModal(imageBase64, requestId, message) {
 
     if (!modal || !imageBase64) return;
 
+    const isAlreadyOpen = modal.style.display === 'flex';
+    const isSameImage = imgEl && imgEl.getAttribute('data-raw') === imageBase64;
+
+    // If modal is already open and displaying the same captcha image, DO NOT re-focus or touch user input
+    if (isAlreadyOpen && isSameImage) {
+        return;
+    }
+
     window.currentCaptchaRequestId = requestId;
-    if (imgEl) imgEl.src = imageBase64;
+    if (imgEl) {
+        imgEl.src = imageBase64;
+        imgEl.setAttribute('data-raw', imageBase64);
+    }
     modal.style.display = 'flex';
 
     if (btnSubmit) {
@@ -4651,13 +4662,13 @@ function openManualCaptchaModal(imageBase64, requestId, message) {
         statusEl.innerHTML = '';
     }
 
-    // Auto-focus input after slight delay for animation
-    setTimeout(() => {
-        if (inputEl) {
+    // Only clear and focus on first open or when image changes
+    if (!isAlreadyOpen && inputEl) {
+        inputEl.value = '';
+        setTimeout(() => {
             inputEl.focus();
-            inputEl.select();
-        }
-    }, 150);
+        }, 150);
+    }
 }
 
 function closeManualCaptchaModal() {
