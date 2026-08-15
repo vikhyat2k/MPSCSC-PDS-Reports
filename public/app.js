@@ -1024,11 +1024,11 @@ async function exportSectorCard(btn, count, secName, transporterName, type) {
     const originalDisplay = btnContainer.style.display;
     btnContainer.style.display = 'none';
 
-    try {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         const canvas = await html2canvas(card, {
             scale: 2,
             useCORS: true,
-            backgroundColor: '#ffffff'
+            backgroundColor: isLight ? '#ffffff' : '#0d1526'
         });
         
         const safeSec = (secName || 'Sector').replace(/[^a-zA-Z0-9\u0900-\u097F]/g, '_');

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-GB">
 <head>
     <meta charset="UTF-8">
@@ -2875,10 +2875,10 @@ async function renderShortfallTable() {
             }
         }
 
-        var thStyle = 'padding:8px 10px;text-align:right;font-size:10px;font-weight:700;color:var(--text-muted);white-space:nowrap;background:rgba(99,102,241,0.10);';
-        var thLC    = 'padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--text-muted);white-space:nowrap;background:rgba(99,102,241,0.10);';
-        var tdStyle = 'padding:7px 10px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.04);';
-        var tdLC    = 'padding:7px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);font-weight:700;color:var(--text-main);white-space:nowrap;';
+        var thStyle = 'padding:10px 12px;text-align:right;font-size:11px;font-weight:800;color:var(--text-main,#0a1628);white-space:nowrap;background:rgba(99,102,241,0.12);';
+        var thLC    = 'padding:10px 12px;text-align:left;font-size:11px;font-weight:800;color:var(--text-main,#0a1628);white-space:nowrap;background:rgba(99,102,241,0.12);';
+        var tdStyle = 'padding:9px 12px;text-align:right;border-bottom:1px solid var(--table-border,rgba(255,255,255,0.06));color:var(--text-main,#0a1628);font-size:12px;font-weight:600;';
+        var tdLC    = 'padding:9px 12px;text-align:left;border-bottom:1px solid var(--table-border,rgba(255,255,255,0.06));font-weight:700;color:var(--text-main,#0a1628);white-space:nowrap;font-size:12px;';
 
         var html = '';
 
@@ -2888,24 +2888,24 @@ async function renderShortfallTable() {
             '</div>';
         }
 
-        html += '<table style="width:100%;border-collapse:collapse;min-width:1000px;font-size:12px;">' +
+        html += '<table class="shortfall-table" style="width:100%;border-collapse:collapse;min-width:1000px;font-size:12px;background:var(--bg-card,#0d1526);color:var(--text-main,#eef2ff);">' +
             '<thead>' +
                 '<tr>' +
-                    '<th rowspan="2" style="' + thLC + 'border-radius:8px 0 0 0;">#</th>' +
-                    '<th rowspan="2" style="' + thLC + '">Issue Center (इश्यू सेंटर)</th>' +
-                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.4);text-align:center;">🌾 WHEAT (गेहूं)</th>' +
-                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.4);text-align:center;">🍚 CMR RICE (कस्टम मिलिंग चावल)</th>' +
-                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.4);text-align:center;">🧂 FORTIFIED SALT (नमक)</th>' +
-                    '<th rowspan="2" style="' + thStyle + 'border-left:2px solid rgba(255,255,255,0.1);text-align:center;border-radius:0 8px 0 0;">Scheme Details</th>' +
+                    '<th rowspan="2" style="' + thLC + 'border-radius:8px 0 0 0;width:35px;">#</th>' +
+                    '<th rowspan="2" style="' + thLC + 'min-width:140px;">Issue Center (इश्यू सेंटर)</th>' +
+                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.5);text-align:center;color:#f97316;font-size:12px;">🌾 WHEAT (गेहूं)</th>' +
+                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.5);text-align:center;color:#818cf8;font-size:12px;">🍚 CMR RICE (कस्टम मिलिंग चावल)</th>' +
+                    '<th colspan="3" style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.5);text-align:center;color:#06b6d4;font-size:12px;">🧂 FORTIFIED SALT (नमक)</th>' +
+                    '<th rowspan="2" style="' + thStyle + 'border-left:2px solid var(--border,rgba(255,255,255,0.1));text-align:center;border-radius:0 8px 0 0;">Scheme Details</th>' +
                 '</tr>' +
                 '<tr>' +
-                    '<th style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.4);">Avail. Stock</th>' +
+                    '<th style="' + thStyle + 'border-left:2px solid rgba(242,107,43,0.5);">Avail. Stock</th>' +
                     '<th style="' + thStyle + '">Total Alloc</th>' +
                     '<th style="' + thStyle + '">Net Diff</th>' +
-                    '<th style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.4);">Avail. CMR</th>' +
+                    '<th style="' + thStyle + 'border-left:2px solid rgba(99,102,241,0.5);">Avail. CMR</th>' +
                     '<th style="' + thStyle + '">Total Alloc</th>' +
                     '<th style="' + thStyle + '">Net Diff</th>' +
-                    '<th style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.4);">Avail. Stock</th>' +
+                    '<th style="' + thStyle + 'border-left:2px solid rgba(6,182,212,0.5);">Avail. Stock</th>' +
                     '<th style="' + thStyle + '">Total Alloc</th>' +
                     '<th style="' + thStyle + '">Net Diff</th>' +
                 '</tr>' +
@@ -2917,45 +2917,45 @@ async function renderShortfallTable() {
             var detailId = 'shortfall_detail_' + idx;
 
             html += '<tr style="' + rowBg + '">' +
-                '<td style="' + tdLC + 'color:var(--text-muted);width:30px;">' + (idx + 1) + '</td>' +
-                '<td style="' + tdLC + '">' + row.ic + '</td>' +
+                '<td style="' + tdLC + 'color:var(--text-secondary,#8ea3c2);font-weight:700;width:35px;">' + (idx + 1) + '</td>' +
+                '<td style="' + tdLC + 'font-weight:800;font-size:13px;color:var(--text-main,#eef2ff);">' + row.ic + '</td>' +
 
                 // Wheat
-                '<td style="' + tdStyle + 'border-left:2px solid rgba(242,107,43,0.2);">' + (row.hasLive ? fmtNum(row.availWheat) : '—') + '</td>' +
-                '<td style="' + tdStyle + 'font-weight:700;color:#f26b2b;">' + fmtNum(row.allocWheat) + '</td>' +
+                '<td style="' + tdStyle + 'border-left:2px solid rgba(242,107,43,0.25);color:var(--text-main,#eef2ff);font-weight:600;">' + (row.hasLive ? fmtNum(row.availWheat) : '—') + '</td>' +
+                '<td style="' + tdStyle + 'font-weight:800;color:#f97316;">' + fmtNum(row.allocWheat) + '</td>' +
                 '<td style="' + tdStyle + '">' + diffBadge(row.diffWheat, row.hasLive) + '</td>' +
 
                 // Rice
-                '<td style="' + tdStyle + 'border-left:2px solid rgba(99,102,241,0.2);">' + (row.hasLive ? fmtNum(row.availRice) : '—') + '</td>' +
-                '<td style="' + tdStyle + 'font-weight:700;color:#6366f1;">' + fmtNum(row.allocRice) + '</td>' +
+                '<td style="' + tdStyle + 'border-left:2px solid rgba(99,102,241,0.25);color:var(--text-main,#eef2ff);font-weight:600;">' + (row.hasLive ? fmtNum(row.availRice) : '—') + '</td>' +
+                '<td style="' + tdStyle + 'font-weight:800;color:#818cf8;">' + fmtNum(row.allocRice) + '</td>' +
                 '<td style="' + tdStyle + '">' + diffBadge(row.diffRice, row.hasLive) + '</td>' +
 
                 // F.Salt
-                '<td style="' + tdStyle + 'border-left:2px solid rgba(6,182,212,0.2);">' + (row.hasLive ? fmtNum(row.availFSalt) : '—') + '</td>' +
-                '<td style="' + tdStyle + 'font-weight:700;color:#06b6d4;">' + fmtNum(row.allocFSalt) + '</td>' +
+                '<td style="' + tdStyle + 'border-left:2px solid rgba(6,182,212,0.25);color:var(--text-main,#eef2ff);font-weight:600;">' + (row.hasLive ? fmtNum(row.availFSalt) : '—') + '</td>' +
+                '<td style="' + tdStyle + 'font-weight:800;color:#06b6d4;">' + fmtNum(row.allocFSalt) + '</td>' +
                 '<td style="' + tdStyle + '">' + diffBadge(row.diffFSalt, row.hasLive) + '</td>' +
 
                 // Action / Breakdown
                 '<td style="' + tdStyle + 'text-align:center;">' +
-                    '<button onclick="var el=document.getElementById(\'' + detailId + '\'); el.style.display = el.style.display===\'none\'?\'table-row\':\'none\';" class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:10px;">📋 Scheme Breakdown</button>' +
+                    '<button onclick="var el=document.getElementById(\'' + detailId + '\'); el.style.display = el.style.display===\'none\'?\'table-row\':\'none\';" class="btn btn-sm btn-secondary" style="padding:3px 10px;font-size:11px;font-weight:700;">📋 Scheme Breakdown</button>' +
                 '</td>' +
             '</tr>';
 
             // Collapsible sub-row for scheme breakdown
             html += '<tr id="' + detailId + '" style="display:none;background:rgba(0,0,0,0.25);">' +
-                '<td colspan="12" style="padding:10px 16px;">' +
-                    '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;">Scheme-wise Allocation Breakdown for ' + row.ic + ' (Quintals):</div>' +
+                '<td colspan="12" style="padding:12px 16px;">' +
+                    '<div style="font-size:11px;font-weight:800;color:var(--text-secondary,#8ea3c2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Scheme-wise Allocation Breakdown for ' + row.ic + ' (Quintals):</div>' +
                     '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
                         ['nfsa','mdm','icds','welfare'].map(function(schKey) {
                             var schName = schKey.toUpperCase();
                             var schMeta = data.meta[schKey];
                             var schObj = (row.schemes && row.schemes[schKey]) ? row.schemes[schKey] : { wheat: 0, rice: 0, fSalt: 0 };
-                            var schColor = schKey==='nfsa' ? '#f26b2b' : schKey==='mdm' ? '#10b981' : schKey==='icds' ? '#6366f1' : '#ec4899';
-                            return '<div style="flex:1;min-width:180px;background:rgba(255,255,255,0.03);border:1px solid ' + schColor + '44;border-radius:6px;padding:8px 12px;">' +
-                                '<div style="font-size:11px;font-weight:800;color:' + schColor + ';">' + schName + ' ' + (schMeta ? '(' + schMeta.label + ')' : '') + '</div>' +
-                                '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">🌾 Wheat: <strong style="color:var(--text-main);">' + fmtNum(schObj.wheat || 0) + '</strong></div>' +
-                                '<div style="font-size:11px;color:var(--text-muted);">🍚 Rice: <strong style="color:var(--text-main);">' + fmtNum(schObj.rice || 0) + '</strong></div>' +
-                                '<div style="font-size:11px;color:var(--text-muted);">🧂 F.Salt: <strong style="color:var(--text-main);">' + fmtNum(schObj.fSalt || 0) + '</strong></div>' +
+                            var schColor = schKey==='nfsa' ? '#f97316' : schKey==='mdm' ? '#10b981' : schKey==='icds' ? '#818cf8' : '#ec4899';
+                            return '<div style="flex:1;min-width:180px;background:rgba(255,255,255,0.03);border:1px solid ' + schColor + '44;border-radius:8px;padding:10px 14px;">' +
+                                '<div style="font-size:12px;font-weight:800;color:' + schColor + ';">' + schName + ' ' + (schMeta ? '(' + schMeta.label + ')' : '') + '</div>' +
+                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);margin-top:6px;">🌾 Wheat: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.wheat || 0) + '</strong></div>' +
+                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);">🍚 Rice: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.rice || 0) + '</strong></div>' +
+                                '<div style="font-size:11px;color:var(--text-secondary,#8ea3c2);">🧂 F.Salt: <strong style="color:var(--text-main,#eef2ff);">' + fmtNum(schObj.fSalt || 0) + '</strong></div>' +
                             '</div>';
                         }).join('') +
                     '</div>' +
@@ -2964,17 +2964,17 @@ async function renderShortfallTable() {
         });
 
         // District Total row
-        html += '<tr style="background:rgba(99,102,241,0.12);font-weight:800;border-top:2px solid rgba(99,102,241,0.3);">' +
-            '<td style="' + tdLC + '">∑</td>' +
-            '<td style="' + tdLC + 'color:#6366f1;">District Total (कुल जिला)</td>' +
-            '<td style="' + tdStyle + '">' + (hasStockData ? fmtNum(distAvailWheat) : '—') + '</td>' +
-            '<td style="' + tdStyle + 'color:#f26b2b;">' + fmtNum(distAllocWheat) + '</td>' +
+        html += '<tr style="background:rgba(99,102,241,0.16);font-weight:800;border-top:2px solid rgba(99,102,241,0.4);">' +
+            '<td style="' + tdLC + 'font-weight:900;font-size:14px;color:var(--text-main,#eef2ff);">∑</td>' +
+            '<td style="' + tdLC + 'color:#818cf8;font-weight:900;font-size:13px;">District Total (कुल जिला)</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:var(--text-main,#eef2ff);border-left:2px solid rgba(242,107,43,0.3);">' + (hasStockData ? fmtNum(distAvailWheat) : '—') + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:#f97316;">' + fmtNum(distAllocWheat) + '</td>' +
             '<td style="' + tdStyle + '">' + diffBadge(distDiffWheat, hasStockData) + '</td>' +
-            '<td style="' + tdStyle + '">' + (hasStockData ? fmtNum(distAvailRice) : '—') + '</td>' +
-            '<td style="' + tdStyle + 'color:#6366f1;">' + fmtNum(distAllocRice) + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:var(--text-main,#eef2ff);border-left:2px solid rgba(99,102,241,0.3);">' + (hasStockData ? fmtNum(distAvailRice) : '—') + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:#818cf8;">' + fmtNum(distAllocRice) + '</td>' +
             '<td style="' + tdStyle + '">' + diffBadge(distDiffRice, hasStockData) + '</td>' +
-            '<td style="' + tdStyle + '">' + (hasStockData ? fmtNum(distAvailFSalt) : '—') + '</td>' +
-            '<td style="' + tdStyle + 'color:#06b6d4;">' + fmtNum(distAllocFSalt) + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:var(--text-main,#eef2ff);border-left:2px solid rgba(6,182,212,0.3);">' + (hasStockData ? fmtNum(distAvailFSalt) : '—') + '</td>' +
+            '<td style="' + tdStyle + 'font-weight:800;color:#06b6d4;">' + fmtNum(distAllocFSalt) + '</td>' +
             '<td style="' + tdStyle + '">' + diffBadge(distDiffFSalt, hasStockData) + '</td>' +
             '<td style="' + tdStyle + '"></td>' +
         '</tr>';
