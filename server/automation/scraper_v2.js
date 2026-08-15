@@ -748,7 +748,11 @@ class SCMScraper {
    * Login to SCM Portal
    * Handles CAPTCHA with automatic retry and manual fallback
    */
-  async login(username, password, maxRetries = 5, onProgress = null) {
+  /**
+   * Login to SCM Portal
+   * Handles CAPTCHA with automatic retry, cloud optimization, and UI manual fallback
+   */
+  async login(username, password, maxRetries = 5, onProgress = null, onCaptchaRequired = null) {
     console.log('🔐 Attempting login...');
     if (typeof onProgress === 'function') onProgress('Navigating to SCM portal...');
 
@@ -823,44 +827,55 @@ class SCMScraper {
       const hasCaptcha = await this.checkForCaptcha();
 
       if (hasCaptcha) {
-        console.log('⚠️ CAPTCHA detected');
+        console.log('⚠️ CAPTCHA detected on login page');
         await this.screenshot('06_captcha_detected.png');
 
-        // Try automatic CAPTCHA solving first
-        let captchaSolved = await this.attemptAutoCaptcha(this.isHeadless ? 12 : 20, onProgress);
+        const isCloudEnv = !!(process.env.RENDER || process.env.MANUAL_CAPTCHA === 'true');
+        let captchaSolved = false;
+
+        if (isCloudEnv) {
+          console.log('🌐 Render / Cloud Environment detected: Initiating UI Manual CAPTCHA provision...');
+          if (typeof onProgress === 'function') {
+            onProgress('Render Cloud detected: Solving CAPTCHA...');
+          }
+          // Try 1 fast auto-attempt first
+          captchaSolved = await this.attemptAutoCaptcha(1, onProgress);
+          if (!captchaSolved && typeof onCaptchaRequired === 'function') {
+            console.log('🖐️ Auto-attempt did not solve. Prompting user in Web UI for manual CAPTCHA...');
+            if (typeof onProgress === 'function') {
+              onProgress('Manual CAPTCHA Required: Please enter characters in the popup');
+            }
+            captchaSolved = await this.requestManualCaptcha(onCaptchaRequired);
+          }
+        } else {
+          // Localhost: fast automatic Tesseract OCR
+          captchaSolved = await this.attemptAutoCaptcha(this.isHeadless ? 12 : 20, onProgress);
+          if (!captchaSolved && typeof onCaptchaRequired === 'function') {
+            console.log('🔄 Auto-CAPTCHA exhausted: Falling back to Web UI Manual CAPTCHA prompt...');
+            if (typeof onProgress === 'function') {
+              onProgress('Auto-CAPTCHA exhausted: Please enter characters in the popup');
+            }
+            captchaSolved = await this.requestManualCaptcha(onCaptchaRequired);
+          }
+        }
 
         if (!captchaSolved && maxRetries > 0) {
-          if (this.isHeadless) {
-            console.log('🤖 Headless mode: Cannot do manual CAPTCHA. Throwing error immediately...');
-            throw new Error('CAPTCHA could not be solved automatically in headless mode.');
+          if (!this.isHeadless) {
+            console.log('🔄 Enabling headed interactive manual mode in Chrome...');
+            try {
+              await this.page.waitForNavigation({
+                waitUntil: 'domcontentloaded',
+                timeout: 120000
+              });
+              captchaSolved = await this.verifyLogin();
+            } catch (err) {
+              console.log('⏱️ Timeout waiting for manual browser submission');
+            }
           }
-          console.log('🔄 Automatic CAPTCHA failed, enabling manual mode...');
-          console.log('');
-          console.log('================================================');
-          console.log('🖐️  MANUAL CAPTCHA REQUIRED');
-          console.log('================================================');
-          console.log('Please look at the Chrome browser window that opened.');
-          console.log('1. Type the CAPTCHA code in the input field');
-          console.log('2. Click the Submit/Login button');
-          console.log('');
-          console.log('⏳ Waiting up to 120 seconds for you to complete this...');
-          console.log('================================================');
-          console.log('');
+        }
 
-          // Wait for user to solve CAPTCHA and submit
-          // Instead of auto-clicking submit, wait for navigation
-          try {
-            await this.page.waitForNavigation({
-              waitUntil: 'domcontentloaded',
-              timeout: 120000  // 2 minutes
-            });
-            console.log('✅ Navigation detected - CAPTCHA solved and submitted!');
-            await this.screenshot('07_after_manual_captcha.png');
-          } catch (error) {
-            console.log('⏱️ Timeout waiting for manual CAPTCHA submission');
-            await this.screenshot('07_captcha_timeout.png');
-            throw new Error('Manual CAPTCHA not completed within time limit');
-          }
+        if (!captchaSolved) {
+          throw new Error('CAPTCHA verification failed or timed out. Please try generating again.');
         }
       } else {
         // No CAPTCHA - submit login form automatically
