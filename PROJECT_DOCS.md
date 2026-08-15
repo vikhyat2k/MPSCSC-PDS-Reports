@@ -582,6 +582,7 @@ Tracks what has been tested and confirmed working.
 | Desktop Launcher & Shortcut Auto-Healing | Unit & Script Verification | VERIFIED | 15 Aug 2026 | Multi-desktop path support, auto-recovery on server start, and 1-click batch builder |
 | Stock Shortfall Table & Canvas Export Visibility | UI & Canvas Verification | VERIFIED | 15 Aug 2026 | High-contrast styling, explicit cell text colors, and theme-synchronized html2canvas backgrounds |
 | Stock Shortfall Calculation via Quantity Left for Dispatch | Logic & API Verification | VERIFIED | 15 Aug 2026 | Shortfall computed as Available Stock - Quantity Left for Dispatch across all 4 schemes |
+| Stock Position Fetch-Sheet Endpoint Resilience | Integration Verification | VERIFIED | 15 Aug 2026 | Multi-route path support and resilient fallback loop in fetchStockPositionSheet |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -602,10 +603,27 @@ Tracks what has been tested and confirmed working.
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
 | ISSUE-013 | Desktop Start icon deleted automatically by Windows cleanup due to missing target script | HIGH | RESOLVED | START_PORTAL.bat, create_shortcuts.ps1, CREATE_DESKTOP_SHORTCUTS.bat, scripts/autoCloudSync.js | 15 Aug 2026 |
 | ISSUE-014 | Stock shortfall table cells, issue center names, and totals washed out / faint in exports and light backgrounds | HIGH | RESOLVED | public/index.html, public/app.js, public/theme.css | 15 Aug 2026 |
+| ISSUE-015 | Stock sheet fetch threw "Failed to connect to server endpoint" due to relative path resolution and single route definition | HIGH | RESOLVED | server.js, public/index.html | 15 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Fix "Failed to connect to server endpoint" in Live Stock Position Sync
+
+Files: server.js, public/index.html, PROJECT_DOCS.md
+Type: Bug Fix / Network & Route Resilience
+Closes: ISSUE-015
+
+- BUG: "Failed to connect to server endpoint" error appeared when clicking "Sync Live Data" in the Live District Stock Position tab.
+- ROOT CAUSE:
+  1. `fetchStockPositionSheet()` called a single relative URL `'api/stock-position/fetch-sheet'`, which fails when the portal is loaded under different root/subpath routes.
+  2. `server.js` was listening solely on single path string `app.post('/api/stock-position/fetch-sheet')` without array route aliasing.
+- FIX:
+  1. Updated `server.js` to register `app.post(['/api/stock-position/fetch-sheet', '/stock-position/fetch-sheet'], ...)`.
+  2. Enhanced `fetchStockPositionSheet()` in `public/index.html` with a multi-endpoint fallback iteration loop (`['/api/stock-position/fetch-sheet', 'api/stock-position/fetch-sheet', '/stock-position/fetch-sheet', 'stock-position/fetch-sheet']`) with granular error reporting.
+
+---
 
 ### 2026-08-15 | Calculate Stock Shortfall Based on Quantity Left for Dispatch (Available Stock - Quantity Left)
 
