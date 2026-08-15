@@ -4277,5 +4277,54 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
     </div>
+
+    <!-- Interactive Manual CAPTCHA Modal (For Render / Cloud Deployments) -->
+    <div id="manualCaptchaModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+        <div style="background:var(--bg-surface, #0f172a);border:1px solid rgba(99,102,241,0.3);width:92%;max-width:480px;border-radius:18px;padding:28px;box-shadow:0 20px 50px rgba(0,0,0,0.4);position:relative;color:var(--text-main, #eef2ff);animation:scaleIn 0.25s ease-out;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:38px;height:38px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;">
+                        🔐
+                    </div>
+                    <div>
+                        <h3 style="margin:0;font-size:17px;font-weight:800;color:var(--text-main, #eef2ff);">Govt SCM Portal Login</h3>
+                        <div style="font-size:11px;color:var(--text-muted, #94a3b8);margin-top:2px;">Manual CAPTCHA Verification</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);padding:12px 14px;border-radius:10px;margin-bottom:18px;font-size:12px;line-height:1.4;color:var(--text-main, #eef2ff);">
+                ⚡ <strong>Cloud Environment Active</strong>: Please enter the characters shown in the image below to authorize report extraction on the SCM portal.
+            </div>
+
+            <!-- CAPTCHA Image Container -->
+            <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px;">
+                <div style="position:relative;background:#ffffff;border:2px solid #6366f1;border-radius:10px;padding:8px 16px;min-height:60px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,0.15);margin-bottom:8px;">
+                    <img id="manualCaptchaImage" src="" alt="CAPTCHA Image" style="max-height:55px;object-fit:contain;display:block;" />
+                </div>
+                <button type="button" onclick="refreshManualCaptcha()" id="btnRefreshCaptcha" class="btn btn-sm btn-secondary" style="font-size:11px;padding:4px 12px;display:flex;align-items:center;gap:6px;font-weight:700;">
+                    <span>🔄</span> Refresh CAPTCHA
+                </button>
+            </div>
+
+            <!-- Input & Form -->
+            <form onsubmit="submitManualCaptcha(event)" style="margin:0;">
+                <div style="margin-bottom:16px;">
+                    <label for="manualCaptchaInput" style="display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:var(--text-muted, #94a3b8);text-transform:uppercase;letter-spacing:0.5px;">
+                        Enter CAPTCHA Code:
+                    </label>
+                    <input type="text" id="manualCaptchaInput" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Enter code" style="width:100%;padding:12px 16px;font-size:20px;font-weight:800;letter-spacing:3px;text-align:center;border-radius:10px;border:2px solid rgba(99,102,241,0.4);background:var(--bg-elevated, #1e293b);color:var(--text-main, #ffffff);outline:none;box-sizing:border-box;" />
+                </div>
+
+                <div id="manualCaptchaStatus" style="display:none;margin-bottom:14px;font-size:12px;font-weight:600;text-align:center;"></div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" id="btnSubmitCaptcha" class="btn" style="flex:1;padding:12px;font-size:14px;font-weight:800;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(16,185,129,0.3);">
+                        🚀 Submit & Continue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
