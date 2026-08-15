@@ -7,6 +7,12 @@ echo   PDS Lifting Intelligence Portal - Starting Server
 echo ========================================================
 echo.
 
+:: Auto-heal / ensure Desktop shortcuts exist
+if not exist "%USERPROFILE%\Desktop\Start PDS Portal.lnk" (
+    echo [*] Restoring desktop shortcuts...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0create_shortcuts.ps1" >nul 2>&1
+)
+
 :: Resolve Node.js path if not in environment PATH
 where node >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (

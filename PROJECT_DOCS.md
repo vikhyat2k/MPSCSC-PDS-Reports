@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 12 August 2026, 23:12 IST
+> **Last Sync:** 15 August 2026, 14:18 IST
 
 ---
 
@@ -27,8 +27,8 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 12 Aug 2026 — Separated Custom Milled Rice (CMR = 6,207.48 Qt) from Paddy (धान = 3,72,948.87 Qt), yielding true net CMR shortfall of -5,385.56 Qt |
-| Server Status | Production-ready (run npm start) |
+| Last Code Change | 15 Aug 2026 — Fixed Desktop Server Start Icon automatic deletion with multi-path resolution & automatic shortcut self-healing |
+| Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
 ---
@@ -579,6 +579,7 @@ Tracks what has been tested and confirmed working.
 | Scraper Headless CAPTCHA Loop & Real-Time Status | Unit & Integration | VERIFIED | 10 Aug 2026 | Headless CAPTCHA capped to 8 attempts (~1.5m max) with live status updates |
 | Executive Analytics PDF Binary Buffer Encoding | Unit & Integration | VERIFIED | 10 Aug 2026 | Puppeteer Uint8Array wrapped in Buffer.from for binary HTTP response |
 | Universal Portal Text Copyability | UI & CSS Verification | VERIFIED | 11 Aug 2026 | Enforced user-select: text !important & ::selection highlight styles across all modules |
+| Desktop Launcher & Shortcut Auto-Healing | Unit & Script Verification | VERIFIED | 15 Aug 2026 | Multi-desktop path support, auto-recovery on server start, and 1-click batch builder |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -597,6 +598,29 @@ Tracks what has been tested and confirmed working.
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
 | ISSUE-012 | Partial NFSA report saved when Extra category fails | HIGH | RESOLVED | server.js, reportValidator.js, dataProcessor.js | 28 Jul 2026 |
+| ISSUE-013 | Desktop Start icon deleted automatically by Windows cleanup due to missing target script | HIGH | RESOLVED | START_PORTAL.bat, create_shortcuts.ps1, CREATE_DESKTOP_SHORTCUTS.bat, scripts/autoCloudSync.js | 15 Aug 2026 |
+
+---
+
+## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Fix Desktop Server Start Icon Auto-Deletion & Add Multi-Path Self-Healing Shortcuts
+
+Files: START_PORTAL.bat, create_shortcuts.ps1, CREATE_DESKTOP_SHORTCUTS.bat, scripts/autoCloudSync.js, PROJECT_DOCS.md
+Type: Bug Fix / Desktop Environment Hardening
+Closes: ISSUE-013
+
+- BUG: "Start PDS Portal" icon was automatically disappearing / being deleted from the user's Windows Desktop.
+- ROOT CAUSE:
+  1. `START_PORTAL.bat` had been removed from the repository root in an earlier sync, turning `Start PDS Portal.lnk` into a broken shortcut with an invalid target path (`F:\AI Projects\Anti Gravity\PDS lifting Report\START_PORTAL.bat`). Windows Background System Maintenance / OneDrive Sync detects broken shortcuts on the Desktop and silently purges them automatically.
+  2. `create_shortcuts.ps1` previously targeted only a single resolved Desktop path (`[System.Environment]::GetFolderPath("Desktop")`), which may not cover OneDrive-synced desktop folder paths (`User Shell Folders`).
+  3. `scripts/autoCloudSync.js` previously staged all modifications indiscriminately with `git add .`, which could inadvertently commit deletions if critical files were missing.
+- FIX:
+  1. Restored and hardened `START_PORTAL.bat` with auto-healing logic: on launch, it automatically verifies if the Desktop shortcut exists and regenerates it if missing.
+  2. Enhanced `create_shortcuts.ps1` to detect all Desktop directories (standard user desktop, OneDrive redirected desktop, and registry paths) and deploy valid `.ico` icons across all locations with immediate Windows shell cache refresh (`SHChangeNotify`).
+  3. Created `CREATE_DESKTOP_SHORTCUTS.bat` as a 1-click batch launcher for instant shortcut regeneration at any time.
+  4. Added critical-file safety guards to `scripts/autoCloudSync.js` to ensure core server and launcher files are never auto-deleted or corrupted.
+  5. Verified all 3 Desktop shortcuts (`Start PDS Portal.lnk`, `Stop PDS Portal.lnk`, `Start PDS Remote Access.lnk`) are present, target valid `.bat` files (`TargetExists = True`), and function properly.
 
 ---
 

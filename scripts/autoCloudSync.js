@@ -68,6 +68,17 @@ class AutoCloudSync {
 
     syncToCloud(triggerFile) {
         if (this.isSyncing) return;
+
+        // Safety verification: do not sync or commit if critical files are missing or empty
+        const criticalFiles = ['server.js', 'public/index.html', 'START_PORTAL.bat'];
+        for (const f of criticalFiles) {
+            const fPath = path.join(this.rootDir, f);
+            if (!fs.existsSync(fPath) || fs.statSync(fPath).size === 0) {
+                console.warn(`⚠️ [Auto Cloud Sync] Aborting sync: '${f}' is missing or empty.`);
+                return;
+            }
+        }
+
         this.isSyncing = true;
 
         const timeStr = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
