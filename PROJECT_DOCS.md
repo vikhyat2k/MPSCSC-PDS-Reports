@@ -584,6 +584,7 @@ Tracks what has been tested and confirmed working.
 | Stock Shortfall Calculation via Quantity Left for Dispatch | Logic & API Verification | VERIFIED | 15 Aug 2026 | Shortfall computed as Available Stock - Quantity Left for Dispatch across all 4 schemes |
 | Stock Position Fetch-Sheet Endpoint Resilience | Integration Verification | VERIFIED | 15 Aug 2026 | Multi-route path support and resilient fallback loop in fetchStockPositionSheet |
 | Stock Table Variable Definition (isTotalCol) | UI Verification | VERIFIED | 15 Aug 2026 | Added missing isTotalCol declaration in stock position table row mapping |
+| Quantity Left for Dispatch Live Server Activation | Runtime Verification | VERIFIED | 15 Aug 2026 | Restarted node server with active daemon and added multi-tier scheme fallback in frontend |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -610,6 +611,18 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-15 | Activate Live Quantity Left for Dispatch & Resilient Scheme Summation Fallback
+
+Files: server.js, public/index.html, PROJECT_DOCS.md
+Type: Improvement / Server Reload & Frontend Fallback Hardening
+
+- ISSUE: `Qty Left for Disp` previously showed `0.00` because the previously running background node process in memory was still serving the pre-update endpoint format without `totalLeft`.
+- FIX:
+  1. Restarted the Node.js server process to activate the latest `/api/stock-position/shortfall` endpoint returning exact `totalLeft`, `totalAlloc`, and scheme breakdowns.
+  2. Hardened `renderShortfallTable()` in `public/index.html` with a multi-tier fallback helper (`getSchemeSum`) that dynamically computes quantity left across all 4 schemes (`nfsa`, `mdm`, `icds`, `welfare`) if `totalLeft` is ever missing, guaranteeing `Qty Left for Disp` never unexpectedly defaults to 0.
+
+---
 
 ### 2026-08-15 | Fix "isTotalCol is not defined" ReferenceError in Live Stock Table Rendering
 
