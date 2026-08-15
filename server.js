@@ -427,9 +427,25 @@ app.post('/api/generate-report', async (req, res) => {
                     isBrowserInitialized = true;
 
                     updateGlobalProgress('Regular', 5, 'Logging in...');
-                    const loginSuccess = await scraper.login(credentials.username, credentials.password, 5, (msg) => {
-                        updateGlobalProgress('Regular', 5, msg);
-                    });
+                    const loginSuccess = await scraper.login(
+                        credentials.username,
+                        credentials.password,
+                        5,
+                        (msg) => {
+                            updateGlobalProgress('Regular', 5, msg);
+                        },
+                        (captchaInfo) => {
+                            console.log(`🖐️ [Server] CAPTCHA required for request ${requestId} (attempt ${captchaInfo.attempt}/${captchaInfo.maxAttempts})`);
+                            activeRequests.set(requestId, {
+                                ...activeRequests.get(requestId),
+                                status: 'captcha_required',
+                                message: `Manual CAPTCHA Required: Please enter the characters shown in the popup (attempt ${captchaInfo.attempt}/${captchaInfo.maxAttempts})`,
+                                captchaImage: captchaInfo.image,
+                                captchaAttempt: captchaInfo.attempt,
+                                captchaMaxAttempts: captchaInfo.maxAttempts
+                            });
+                        }
+                    );
 
                     if (!loginSuccess) {
                         throw new Error('Login failed. Check credentials or CAPTCHA.');
