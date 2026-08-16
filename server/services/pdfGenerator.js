@@ -83,17 +83,18 @@ class PDFGenerator {
                 }
                 /* Column widths — total must = 100% */
                 col.c1  { width: 3%;  }   /* क्रमांक */
-                col.c2  { width: 8%;  }   /* प्रदाय केंद्र का नाम */
-                col.c3  { width: 8%;  }   /* विकासखंड */
+                col.c2  { width: 7%;  }   /* प्रदाय केंद्र का नाम */
+                col.c3  { width: 7%;  }   /* विकासखंड */
                 col.c4  { width: 5%;  }   /* कुल दुकान */
-                col.c5  { width: 14%; }   /* सेक्टर नाम */
-                col.c6  { width: 8%;  }   /* मासिक आवंटन */
-                col.c7  { width: 8%;  }   /* आवंटन उठाव */
+                col.c5  { width: 13%; }   /* सेक्टर नाम */
+                col.c6  { width: 7.5%;}   /* मासिक आवंटन */
+                col.c7  { width: 7.5%;}   /* आवंटन उठाव */
                 col.c8  { width: 6%;  }   /* उठाव % */
-                col.c9  { width: 7%;  }   /* POS % */
-                col.c10 { width: 7%;  }   /* शेष */
-                col.c11 { width: 15%; }   /* परिवहनकर्ता */
-                col.c12 { width: 11%; }   /* मोबाइल */
+                col.c9  { width: 7.5%;}   /* प्रेषित एव प्राप्त % */
+                col.c10 { width: 6.5%;}   /* POS % */
+                col.c11 { width: 6.5%;}   /* शेष */
+                col.c12 { width: 13.5%;}  /* परिवहनकर्ता */
+                col.c13 { width: 10%; }   /* मोबाइल */
                 tr:nth-child(even) td { background-color: #f9f9f9; }
                 tr.total-row td { font-weight: bold; background-color: #fff3cd; }
                 tr { page-break-inside: avoid; }
@@ -107,7 +108,7 @@ class PDFGenerator {
                 <colgroup>
                     <col class="c1"><col class="c2"><col class="c3"><col class="c4">
                     <col class="c5"><col class="c6"><col class="c7"><col class="c8">
-                    <col class="c9"><col class="c10"><col class="c11"><col class="c12">
+                    <col class="c9"><col class="c10"><col class="c11"><col class="c12"><col class="c13">
                 </colgroup>
                 <thead>
                     <tr>
@@ -119,6 +120,7 @@ class PDFGenerator {
                         <th>मासिक आवंटन NFSA (Qt.)</th>
                         <th>आवंटन उठाव NFSA (Qt.)</th>
                         <th>उठाव का प्रति&shy;शत</th>
+                        <th>प्रेषित एव प्राप्त मात्रा का प्रति&shy;शत</th>
                         <th>POS मशीन में प्राप्ति (%)</th>
                         <th>आवंटन उठाव शेष (Qt.)</th>
                         <th>परिवहन&shy;कर्ता का नाम</th>
@@ -134,6 +136,11 @@ class PDFGenerator {
                 const shopCount = sector.totalShops || (sector.shops ? sector.shops.length : 0);
                 totalShops += shopCount;
                 const bal = (sector.allocation || 0) - (sector.dispatch || 0);
+                const dispatchPct = sector.dispatchPercentage || 0;
+                const receiptPct = sector.receiptPercentage || 0;
+                const diffPct = sector.dispatchReceiptDiffPercentage !== undefined 
+                    ? sector.dispatchReceiptDiffPercentage 
+                    : (dispatchPct - receiptPct);
                 htmlContent += `
                     <tr>
                         <td>${i + 1}</td>
@@ -143,8 +150,9 @@ class PDFGenerator {
                         <td>${sector.sectorName || ''}</td>
                         <td>${(sector.allocation || 0).toFixed(2)}</td>
                         <td>${(sector.dispatch || 0).toFixed(2)}</td>
-                        <td>${(sector.dispatchPercentage || 0).toFixed(2)}%</td>
-                        <td>${(sector.receiptPercentage || 0).toFixed(2)}%</td>
+                        <td>${dispatchPct.toFixed(2)}%</td>
+                        <td>${diffPct.toFixed(2)}%</td>
+                        <td>${receiptPct.toFixed(2)}%</td>
                         <td>${bal.toFixed(2)}</td>
                         <td>${sector.transporter || ''}</td>
                         <td>${sector.mobileNumber || ''}</td>
@@ -154,10 +162,14 @@ class PDFGenerator {
 
             const totals = processedData.totals || {};
             const tBal = (totals.totalAllocation || 0) - (totals.totalDispatch || 0);
-            // receiptPercentage is not pre-computed in totals — calculate it here
-            const totalReceiptPct = (totals.totalAllocation || 0) > 0
-                ? ((totals.totalPOSReceipt || 0) / totals.totalAllocation * 100).toFixed(2)
-                : (totals.dispatchPercentage || 0).toFixed(2);
+            const totalDispatchPct = totals.dispatchPercentage || 0;
+            const totalReceiptPct = totals.receiptPercentage !== undefined 
+                ? totals.receiptPercentage 
+                : ((totals.totalAllocation || 0) > 0 ? ((totals.totalPOSReceipt || 0) / totals.totalAllocation * 100) : 0);
+            const totalDiffPct = totals.dispatchReceiptDiffPercentage !== undefined
+                ? totals.dispatchReceiptDiffPercentage
+                : (parseFloat(totalDispatchPct) - parseFloat(totalReceiptPct));
+
             htmlContent += `
                 <tr class="total-row">
                     <td colspan="3">योग</td>
@@ -165,8 +177,9 @@ class PDFGenerator {
                     <td></td>
                     <td>${(totals.totalAllocation || 0).toFixed(2)}</td>
                     <td>${(totals.totalDispatch || 0).toFixed(2)}</td>
-                    <td>${(totals.dispatchPercentage || 0).toFixed(2)}%</td>
-                    <td>${totalReceiptPct}%</td>
+                    <td>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</td>
+                    <td>${(parseFloat(totalDiffPct) || 0).toFixed(2)}%</td>
+                    <td>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</td>
                     <td>${tBal.toFixed(2)}</td>
                     <td colspan="2"></td>
                 </tr>
