@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 19:55 IST
+> **Last Sync:** 16 August 2026, 20:05 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Corrected ReportValidator unit labels to Quintals (Qt) and fortified SCM scraper summary grandTotals extraction with issue-point row fallback |
+| Last Code Change | 16 Aug 2026 — Defined sectorsConfig in server.js to resolve ReferenceError in NFSA Date Range report generation and analytics computation |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -591,6 +591,7 @@ Tracks what has been tested and confirmed working.
 | SCM Login Verification & Cloud Credentials Fallback | Automation Verification | VERIFIED | 15 Aug 2026 | Implemented multi-criteria verifyLogin() and robust credentials fallbacks for cloud hosting |
 | Report History Rendering & isSubViewActive Scoping | UI Verification | VERIFIED | 15 Aug 2026 | Moved isSubViewActive to outer global scope, resolved ReferenceError, and updated table cell styling to CSS theme variables |
 | Report Validator Unit Parity (Qt) & Summary Fallback | Validation & Scraper Verification | VERIFIED | 16 Aug 2026 | Replaced MT with Qt in validation error messages and added table row fallback for grand totals |
+| NFSA Date Range Analytics sectorsConfig Integration | Runtime & Analytics Verification | VERIFIED | 16 Aug 2026 | Loaded config/sectors.json in server.js and verified 22-sector base pool computation |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -617,10 +618,26 @@ Tracks what has been tested and confirmed working.
 | ISSUE-018 | SCMScraper verifyLogin() method missing and empty cloud credentials caused manual CAPTCHA to loop repeatedly | CRITICAL | RESOLVED | server/automation/scraper_v2.js, server.js | 15 Aug 2026 |
 | ISSUE-019 | NFSA report history table and new reports not rendering due to isSubViewActive ReferenceError and hardcoded dark text colors | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
 | ISSUE-020 | Report validator displayed error units as MT instead of Quintals (Qt) and summary grand totals could be missed | MEDIUM | RESOLVED | server/services/reportValidator.js, server/automation/scraper_v2.js | 16 Aug 2026 |
+| ISSUE-021 | Date Range report generation crashed with ReferenceError: sectorsConfig is not defined | HIGH | RESOLVED | server.js, Technical Audit/server.js | 16 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Fix ReferenceError: sectorsConfig is not defined in NFSA Date Range Analytics
+
+Files: server.js, Technical Audit/server.js, PROJECT_DOCS.md
+Type: Bug Fix / Runtime Analytics
+Closes: ISSUE-021
+
+- BUG: Clicking "Generate Date Range Report" (NFSA Dispatch b/w Dates) failed with `Error: sectorsConfig is not defined`.
+- ROOT CAUSE:
+  `computeNFSADaterangeAnalytics()` in `server.js` referenced `sectorsConfig` to seed the base pool with all 22 configured district sectors, but `sectorsConfig` was not loaded at module initialization at the top of `server.js`.
+- FIX:
+  1. Loaded `config/sectors.json` at the top of `server.js` (and `Technical Audit/server.js`) inside a safe `fs.existsSync` try/catch block.
+  2. Verified base pool seeding and error-free analytics computation across all 22 sectors.
+
+---
 
 ### 2026-08-16 | Correct Report Validator Unit Labels to Quintals (Qt) and Fortify Scraper Summary Grand Totals Extraction
 

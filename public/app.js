@@ -678,15 +678,30 @@ function renderInsightsList(id, insights, topTransporters = [], bottomTransporte
     
     let displayInsights = [...(insights || [])];
 
+    const isDateRange = (id === 'drInsightsList') || 
+                        (topTransporters && topTransporters.length > 0 && topTransporters[0].dispatchQty !== undefined) ||
+                        (bottomTransporters && bottomTransporters.length > 0 && bottomTransporters[0].dispatchQty !== undefined);
+
     if (topTransporters && topTransporters.length > 0) {
-        displayInsights.push({
-            icon: '🏆', 
-            severity: 'success', 
-            message: `🏆 शीर्ष प्रदर्शनकर्ता (Dispatch % के अनुसार): ${topTransporters.map(t => {
-                const pct = t.dispatchPct || t.avgDispatch || t.dispatchPercentage || 0;
-                return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${pct}%)`;
-            }).join(', ')}`
-        });
+        if (isDateRange) {
+            displayInsights.push({
+                icon: '🏆', 
+                severity: 'success', 
+                message: `🏆 शीर्ष परिवहनकर्ता (दिनांक अनुसार कुल उठाव मात्रा): ${topTransporters.map(t => {
+                    const qty = t.dispatchQty !== undefined ? parseFloat(t.dispatchQty).toFixed(2) : parseFloat(t.dispatchPercentage || 0).toFixed(2);
+                    return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${qty} Qt)`;
+                }).join(', ')}`
+            });
+        } else {
+            displayInsights.push({
+                icon: '🏆', 
+                severity: 'success', 
+                message: `🏆 शीर्ष प्रदर्शनकर्ता (Dispatch % के अनुसार): ${topTransporters.map(t => {
+                    const pct = t.dispatchPct || t.avgDispatch || t.dispatchPercentage || 0;
+                    return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${pct}%)`;
+                }).join(', ')}`
+            });
+        }
     }
 
     if (bottomTransporters && bottomTransporters.length > 0) {
@@ -694,14 +709,25 @@ function renderInsightsList(id, insights, topTransporters = [], bottomTransporte
         const bottomNames = bottomTransporters.map(t => (t.name || t.sectorName || '').trim()).sort().join('|');
 
         if (!topNames || topNames !== bottomNames) {
-            displayInsights.push({
-                icon: '⚠️', 
-                severity: 'warning', 
-                message: `⚠️ कम प्रदर्शनकर्ता (Dispatch % के अनुसार): ${bottomTransporters.map(t => {
-                    const pct = t.dispatchPct || t.avgDispatch || t.dispatchPercentage || 0;
-                    return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${pct}%)`;
-                }).join(', ')}`
-            });
+            if (isDateRange) {
+                displayInsights.push({
+                    icon: '⚠️', 
+                    severity: 'warning', 
+                    message: `⚠️ न्यूनतम / शून्य उठाव परिवहनकर्ता (कुल उठाव मात्रा): ${bottomTransporters.map(t => {
+                        const qty = t.dispatchQty !== undefined ? parseFloat(t.dispatchQty).toFixed(2) : parseFloat(t.dispatchPercentage || 0).toFixed(2);
+                        return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${qty} Qt)`;
+                    }).join(', ')}`
+                });
+            } else {
+                displayInsights.push({
+                    icon: '⚠️', 
+                    severity: 'warning', 
+                    message: `⚠️ कम प्रदर्शनकर्ता (Dispatch % के अनुसार): ${bottomTransporters.map(t => {
+                        const pct = t.dispatchPct || t.avgDispatch || t.dispatchPercentage || 0;
+                        return `${escapeHtml(t.name || t.sectorName || 'N/A')} (${pct}%)`;
+                    }).join(', ')}`
+                });
+            }
         }
     }
 
