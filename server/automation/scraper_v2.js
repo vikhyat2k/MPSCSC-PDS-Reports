@@ -1566,7 +1566,7 @@ class SCMScraper {
         for (let i = headerIndex + 1; i < allRows.length; i++) {
           const row = allRows[i];
           const cells = Array.from(row.querySelectorAll('td, th'));
-          if (cells.length < 25) continue; // Relaxed from 30 to 25 to handle UI column variations
+          if (cells.length < 20) continue; // Handle potential colspans on total rows
 
           const getVal = (colIdx) => {
             const val = cells[colIdx]?.innerText?.replace(/,/g, '').trim() || '0';
@@ -1575,9 +1575,11 @@ class SCMScraper {
 
           const firstCellText = (cells[0]?.innerText || '').trim().toLowerCase();
           const secondCellText = (cells[1]?.innerText || '').trim().toLowerCase();
-          const isTotalRow = firstCellText.includes('total') || secondCellText.includes('total') ||
-            firstCellText.includes('yog') || secondCellText.includes('yog') ||
-            firstCellText.includes('grand') || secondCellText.includes('grand');
+          const thirdCellText = (cells[2]?.innerText || '').trim().toLowerCase();
+          const isTotalRow = firstCellText.includes('total') || secondCellText.includes('total') || thirdCellText.includes('total') ||
+            firstCellText.includes('yog') || secondCellText.includes('yog') || thirdCellText.includes('yog') ||
+            firstCellText.includes('grand') || secondCellText.includes('grand') ||
+            firstCellText.includes('कुल') || secondCellText.includes('कुल');
 
           if (isTotalRow) {
             // Extract grand totals for verification (Indices based on screenshot)
@@ -1625,6 +1627,54 @@ class SCMScraper {
 
           if (rowData.issuePoint && rowData.issuePoint !== '') {
             data.push(rowData);
+          }
+        }
+
+        // Fallback: If grandTotals was not populated from a Total row, compute by summing all issue point rows
+        const grandTotalAllotedSum = Object.values(grandTotals.alloted).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+        if (grandTotalAllotedSum === 0 && data.length > 0) {
+          console.log('⚠️ Grand total row not found or empty, calculating grand totals from issue point rows...');
+          grandTotals = {
+            alloted: { wheat: 0, rice: 0, sugar: 0, salt: 0, fSalt: 0, maize: 0, fortifiedRice: 0 },
+            dispatched: { wheat: 0, rice: 0, sugar: 0, salt: 0, fSalt: 0, maize: 0, fortifiedRice: 0 },
+            received: { wheat: 0, rice: 0, sugar: 0, salt: 0, fSalt: 0, maize: 0, fortifiedRice: 0 }
+          };
+
+          for (let i = headerIndex + 1; i < allRows.length; i++) {
+            const row = allRows[i];
+            const cells = Array.from(row.querySelectorAll('td, th'));
+            if (cells.length < 25) continue;
+            const firstCellText = (cells[0]?.innerText || '').trim().toLowerCase();
+            if (isNaN(parseInt(firstCellText))) continue; // Only process valid numeric issue point rows
+
+            const getVal = (colIdx) => {
+              const val = cells[colIdx]?.innerText?.replace(/,/g, '').trim() || '0';
+              return (parseFloat(val) || 0) / 100;
+            };
+
+            grandTotals.alloted.wheat += getVal(2);
+            grandTotals.alloted.rice += getVal(3);
+            grandTotals.alloted.sugar += getVal(4);
+            grandTotals.alloted.salt += getVal(5);
+            grandTotals.alloted.fSalt += getVal(6);
+            grandTotals.alloted.maize += getVal(7);
+            grandTotals.alloted.fortifiedRice += getVal(8);
+
+            grandTotals.dispatched.wheat += getVal(16);
+            grandTotals.dispatched.rice += getVal(17);
+            grandTotals.dispatched.sugar += getVal(18);
+            grandTotals.dispatched.salt += getVal(19);
+            grandTotals.dispatched.fSalt += getVal(20);
+            grandTotals.dispatched.maize += getVal(21);
+            grandTotals.dispatched.fortifiedRice += getVal(22);
+
+            grandTotals.received.wheat += getVal(23);
+            grandTotals.received.rice += getVal(24);
+            grandTotals.received.sugar += getVal(25);
+            grandTotals.received.salt += getVal(26);
+            grandTotals.received.fSalt += getVal(27);
+            grandTotals.received.maize += getVal(28);
+            grandTotals.received.fortifiedRice += getVal(29);
           }
         }
 
