@@ -4783,10 +4783,34 @@ function closeStockAdvancedReport() {
 }
 
 /**
+ * Compute dynamic top-half concentration metric (top N of M issue centers).
+ * Top N is defined by convention as Math.ceil(totalICs / 2).
+ *
+ * @param {Array<Object>} icData - Array of IC records with totals
+ * @returns {Object} { topN: number, totalICs: number, topSharePct: string, topHalfPct: string }
+ */
+function computeTopConcentration(icData) {
+    const list = Array.isArray(icData) ? icData : [];
+    const totalICs = list.length;
+    const topN = Math.ceil(totalICs / 2);
+    const districtTotal = list.reduce((s, ic) => s + (parseFloat(ic.total) || 0), 0);
+    const sortedTotals = list.map(ic => parseFloat(ic.total) || 0).sort((a, b) => b - a);
+    const topHalf = sortedTotals.slice(0, topN).reduce((s, v) => s + v, 0);
+    const topSharePct = districtTotal > 0 ? (topHalf / districtTotal * 100).toFixed(1) : '0.0';
+
+    return {
+        topN,
+        totalICs,
+        topSharePct,
+        topHalfPct: topSharePct
+    };
+}
+
+/**
  * Auditable District Health Score (0-100) & IC Buffer Classification logic.
  *
  * @param {Array<Object>} icData - Issue center records with totals and commodities
- * @returns {Object} { score, label, color, districtTotal, avgStock, topHalfPct, negativeItems, lowBufferICs, components, thresholds }
+ * @returns {Object} { score, label, color, districtTotal, avgStock, totalICs, topN, topHalfPct, topSharePct, negativeItems, lowBufferICs, components, thresholds }
  */
 function computeDistrictHealthScore(icData) {
     const list = Array.isArray(icData) ? icData : [];
@@ -4814,10 +4838,8 @@ function computeDistrictHealthScore(icData) {
         return tot > 0 && tot < lowBufferThreshold;
     });
 
-    // 3. Distribution equity (% held by top 50% ICs)
-    const sortedTotals = list.map(ic => parseFloat(ic.total) || 0).sort((a, b) => b - a);
-    const topHalf = sortedTotals.slice(0, Math.ceil(sortedTotals.length / 2)).reduce((s, v) => s + v, 0);
-    const topHalfPct = districtTotal > 0 ? (topHalf / districtTotal * 100).toFixed(1) : '0.0';
+    // 3. Distribution equity (% held by top N = Math.ceil(totalICs / 2) ICs)
+    const { topN, totalICs, topHalfPct, topSharePct } = computeTopConcentration(list);
 
     // Base score and deductions
     const baseScore = 100;
@@ -4859,7 +4881,7 @@ function computeDistrictHealthScore(icData) {
         },
         {
             name: 'Distribution Concentration Deduction',
-            description: 'Deduction if top 50% ICs hold > 75% of total district stock',
+            description: `Deduction if top ${topN} of ${totalICs} ICs hold > 75% of total district stock`,
             value: parseFloat(topHalfPct),
             weight: equityWeight,
             contribution: equityContribution
@@ -4887,7 +4909,10 @@ function computeDistrictHealthScore(icData) {
         color,
         districtTotal,
         avgStock,
+        totalICs,
+        topN,
         topHalfPct,
+        topSharePct,
         negativeItems,
         lowBufferICs,
         components,
