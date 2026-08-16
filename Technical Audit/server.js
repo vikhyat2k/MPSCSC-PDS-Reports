@@ -47,6 +47,16 @@ const NFSADaterangeExcelGenerator = require('./server/services/nfsaDaterangeExce
 const NFSADaterangePdfGenerator = require('./server/services/nfsaDaterangePdfGenerator');
 const { exec } = require('child_process');
 
+let sectorsConfig = [];
+try {
+    const configPath = path.join(__dirname, 'config/sectors.json');
+    if (fs.existsSync(configPath)) {
+        sectorsConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+} catch (e) {
+    console.error('Could not load sectors.json in Technical Audit/server.js', e);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 const SERVER_VERSION = '3.5-HEAL';

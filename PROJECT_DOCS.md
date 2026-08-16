@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 15 August 2026, 14:18 IST
+> **Last Sync:** 16 August 2026, 19:55 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 15 Aug 2026 — Fixed Cloud Manual CAPTCHA submission loop: removed duplicate verifyLogin, optimized selector targeting (#uid, #pwd, #txtCaptcha, #lobtn) and added fallback check() submission |
+| Last Code Change | 16 Aug 2026 — Corrected ReportValidator unit labels to Quintals (Qt) and fortified SCM scraper summary grandTotals extraction with issue-point row fallback |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -590,6 +590,7 @@ Tracks what has been tested and confirmed working.
 | Manual CAPTCHA Input Typing Focus & State Lock | UI Verification | VERIFIED | 15 Aug 2026 | Idempotent openManualCaptchaModal prevents 1.5s polling loop from selecting or clearing user input |
 | SCM Login Verification & Cloud Credentials Fallback | Automation Verification | VERIFIED | 15 Aug 2026 | Implemented multi-criteria verifyLogin() and robust credentials fallbacks for cloud hosting |
 | Report History Rendering & isSubViewActive Scoping | UI Verification | VERIFIED | 15 Aug 2026 | Moved isSubViewActive to outer global scope, resolved ReferenceError, and updated table cell styling to CSS theme variables |
+| Report Validator Unit Parity (Qt) & Summary Fallback | Validation & Scraper Verification | VERIFIED | 16 Aug 2026 | Replaced MT with Qt in validation error messages and added table row fallback for grand totals |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -615,10 +616,29 @@ Tracks what has been tested and confirmed working.
 | ISSUE-017 | Manual CAPTCHA input field selected/cleared user text every 1.5s during background status polling | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
 | ISSUE-018 | SCMScraper verifyLogin() method missing and empty cloud credentials caused manual CAPTCHA to loop repeatedly | CRITICAL | RESOLVED | server/automation/scraper_v2.js, server.js | 15 Aug 2026 |
 | ISSUE-019 | NFSA report history table and new reports not rendering due to isSubViewActive ReferenceError and hardcoded dark text colors | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
+| ISSUE-020 | Report validator displayed error units as MT instead of Quintals (Qt) and summary grand totals could be missed | MEDIUM | RESOLVED | server/services/reportValidator.js, server/automation/scraper_v2.js | 16 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Correct Report Validator Unit Labels to Quintals (Qt) and Fortify Scraper Summary Grand Totals Extraction
+
+Files: server/services/reportValidator.js, server/automation/scraper_v2.js, PROJECT_DOCS.md
+Type: Bug Fix / Data Validation & Extraction Parity
+Closes: ISSUE-020
+
+- BUG: Report validation threw errors displaying quantities labeled as `MT` (e.g. `Detailed shop allocation sum (120465.98 MT) does not match SCM portal summary total (66143.13 MT). Discrepancy: 54322.85 MT.`) instead of the true unit `Quintals (Qt)`. Furthermore, summary totals for secondary categories (such as `Extra`) could be missed if the total row had varying markup or cell spans.
+- ROOT CAUSES:
+  1. `reportValidator.js` hardcoded the unit string `MT` in its reconciliation error messages and comments, whereas all quantities throughout the scraper, database, and UI are in **Quintals (Qt)** (scraped values are in Kg and divided by 100).
+  2. `scraper_v2.js` extracted summary grand totals strictly from a row matching specific English strings (`total`, `yog`, `grand`) with `cells.length >= 25`. If the total row had cell spans (`colspan`), Hindi text (`कुल योग`), or unexpected formatting, `grandTotals` defaulted to 0 for that category, causing a false summary total deficit.
+- FIXES:
+  1. Updated all validation error messages and comments in `server/services/reportValidator.js` to strictly use **`Qt` (Quintals)**.
+  2. Enhanced `extractSummaryData()` in `server/automation/scraper_v2.js`:
+     - Relaxed row cell threshold to `>= 20` and broadened keyword matching (including Hindi `कुल`).
+     - Added robust fallback: if `grandTotals.alloted` is 0 but individual issue point data rows exist, automatically aggregate column sums across all issue point rows to ensure accurate grand totals.
+
+---
 
 ### 2026-08-15 | Fix isSubViewActive Scoping Crash and Theme Color Visibility in Report History Tables
 
