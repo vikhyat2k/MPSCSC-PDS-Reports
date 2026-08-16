@@ -157,6 +157,7 @@ class DataProcessor {
         const sectors = Object.values(sectorsMap).map(s => {
             s.dispatchPercentage = s.allocation > 0 ? (s.dispatch / s.allocation) * 100 : 0;
             s.receiptPercentage = s.allocation > 0 ? (s.posReceipt / s.allocation) * 100 : 0;
+            s.dispatchReceiptDiffPercentage = s.dispatchPercentage - s.receiptPercentage;
             return s;
         });
 
@@ -167,13 +168,17 @@ class DataProcessor {
             return parseInt(a.serialNo) - parseInt(b.serialNo);
         });
 
+        const totalReceiptPercentage = totalAllocation > 0 ? Number(((totalPOSReceipt / totalAllocation) * 100).toFixed(2)) : 0;
+        const totalDiffPercentage = Number((dispatchPercentage - totalReceiptPercentage).toFixed(2));
+
         return {
             totals: {
                 totalAllocation: Number(totalAllocation.toFixed(2)),
                 totalDispatch: Number(totalDispatch.toFixed(2)),
                 totalPOSReceipt: Number(totalPOSReceipt.toFixed(2)),
                 dispatchPercentage: Number(dispatchPercentage.toFixed(2)),
-                receiptPercentage: totalAllocation > 0 ? Number(((totalPOSReceipt / totalAllocation) * 100).toFixed(2)) : 0
+                receiptPercentage: totalReceiptPercentage,
+                dispatchReceiptDiffPercentage: totalDiffPercentage
             },
             verification: combinedVerificationTotals || {},
             processedCategories: processedCategories || [],
