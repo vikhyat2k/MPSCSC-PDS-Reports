@@ -75,35 +75,35 @@ class ReportValidator {
             // Perform reconciliation check if summary totals are populated (>0)
             if (summaryAlloc > 0) {
                 const allocDiff = Math.abs(shopAlloc - summaryAlloc);
-                // Allocation tolerance: 50.0 MT across 500+ shops (catches missing categories / missing depots)
+                // Allocation tolerance: 50.0 Qt across 500+ shops (catches missing categories / missing depots)
                 const allocTolerance = options.allocTolerance || options.tolerance || 50.0;
                 if (allocDiff > allocTolerance) {
-                    throw new Error(`Validation failed for ${schemeName}: Detailed shop allocation sum (${shopAlloc.toFixed(2)} MT) does not match SCM portal summary total (${summaryAlloc.toFixed(2)} MT). Discrepancy: ${allocDiff.toFixed(2)} MT.`);
+                    throw new Error(`Validation failed for ${schemeName}: Detailed shop allocation sum (${shopAlloc.toFixed(2)} Qt) does not match SCM portal summary total (${summaryAlloc.toFixed(2)} Qt). Discrepancy: ${allocDiff.toFixed(2)} Qt.`);
                 }
             }
 
             if (summaryDisp > 0) {
                 if (schemeName === 'nfsa' || schemeName === 'nfsa_daterange') {
-                    // For NFSA, Portability dispatches (~200–2,000 MT across district) appear in detailed shop rows
+                    // For NFSA, Portability dispatches (~200–2,000 Qt across district) appear in detailed shop rows
                     // but are excluded from the SCM portal summary table top-level row.
-                    // Therefore, shopDisp can exceed summaryDisp by the Portability volume (up to 2,500 MT),
-                    // but must NOT be lower than summaryDisp by more than 50 MT (which would indicate missing shop data).
+                    // Therefore, shopDisp can exceed summaryDisp by the Portability volume (up to 2,500 Qt),
+                    // but must NOT be lower than summaryDisp by more than 50 Qt (which would indicate missing shop data).
                     const dispDeficit = summaryDisp - shopDisp;
                     const dispSurplus = shopDisp - summaryDisp;
 
                     if (dispDeficit > 50.0) {
-                        throw new Error(`Validation failed for ${schemeName}: Detailed shop dispatch sum (${shopDisp.toFixed(2)} MT) is significantly lower than SCM portal summary total (${summaryDisp.toFixed(2)} MT). Deficit: ${dispDeficit.toFixed(2)} MT.`);
+                        throw new Error(`Validation failed for ${schemeName}: Detailed shop dispatch sum (${shopDisp.toFixed(2)} Qt) is significantly lower than SCM portal summary total (${summaryDisp.toFixed(2)} Qt). Deficit: ${dispDeficit.toFixed(2)} Qt.`);
                     }
 
                     const maxPortabilitySurplus = options.maxPortabilitySurplus || 2500.0;
                     if (dispSurplus > maxPortabilitySurplus) {
-                        throw new Error(`Validation failed for ${schemeName}: Detailed shop dispatch sum (${shopDisp.toFixed(2)} MT) exceeds SCM portal summary total (${summaryDisp.toFixed(2)} MT) beyond expected Portability limits. Discrepancy: ${dispSurplus.toFixed(2)} MT.`);
+                        throw new Error(`Validation failed for ${schemeName}: Detailed shop dispatch sum (${shopDisp.toFixed(2)} Qt) exceeds SCM portal summary total (${summaryDisp.toFixed(2)} Qt) beyond expected Portability limits. Discrepancy: ${dispSurplus.toFixed(2)} Qt.`);
                     }
                 } else {
                     const dispDiff = Math.abs(shopDisp - summaryDisp);
                     const dispTolerance = options.dispTolerance || options.tolerance || 50.0;
                     if (dispDiff > dispTolerance) {
-                        throw new Error(`Validation failed for ${schemeName}: Detailed shop dispatch sum (${shopDisp.toFixed(2)} MT) does not match SCM portal summary total (${summaryDisp.toFixed(2)} MT). Discrepancy: ${dispDiff.toFixed(2)} MT.`);
+                        throw new Error(`Validation failed for ${schemeName}: Detailed shop dispatch sum (${shopDisp.toFixed(2)} Qt) does not match SCM portal summary total (${summaryDisp.toFixed(2)} Qt). Discrepancy: ${dispDiff.toFixed(2)} Qt.`);
                     }
                 }
             }
