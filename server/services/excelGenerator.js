@@ -21,7 +21,7 @@ class ExcelGenerator {
         worksheet.addRow([
             'क्रमांक', 'प्रदाय केंद्र का नाम', 'विकासखंड', 'कुल उचित मूल्य की दुकान', 
             'सेक्टर का नाम व सेक्टर क्रमांक', 'मासिक आवंटन NFSA (Qt.)', 'आवंटन उठाव NFSA (Qt.)', 
-            'उठाव का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'आवंटन उठाव शेष (Qt.)', 
+            'उठाव का प्रतिशत', 'प्रेषित एव प्राप्त मात्रा का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'आवंटन उठाव शेष (Qt.)', 
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
 
@@ -31,6 +31,11 @@ class ExcelGenerator {
                 const shopCount = sector.totalShops || (sector.shops ? sector.shops.length : 0);
                 totalShops += shopCount;
                 const bal = (sector.allocation || 0) - (sector.dispatch || 0);
+                const dispatchPct = sector.dispatchPercentage || 0;
+                const receiptPct = sector.receiptPercentage || 0;
+                const diffPct = sector.dispatchReceiptDiffPercentage !== undefined
+                    ? sector.dispatchReceiptDiffPercentage
+                    : (dispatchPct - receiptPct);
                 worksheet.addRow([
                     i + 1,
                     'बैतूल',
@@ -39,8 +44,9 @@ class ExcelGenerator {
                     sector.sectorName,
                     parseFloat((sector.allocation || 0).toFixed(2)),
                     parseFloat((sector.dispatch || 0).toFixed(2)),
-                    (sector.dispatchPercentage || 0).toFixed(2) + '%',
-                    (sector.receiptPercentage || 0).toFixed(2) + '%',
+                    (dispatchPct || 0).toFixed(2) + '%',
+                    (diffPct || 0).toFixed(2) + '%',
+                    (receiptPct || 0).toFixed(2) + '%',
                     parseFloat(bal.toFixed(2)),
                     sector.transporter || '',
                     sector.mobileNumber || ''
@@ -50,12 +56,21 @@ class ExcelGenerator {
             worksheet.addRow([]);
             const totals = processedResult.totals || {};
             const tBal = (totals.totalAllocation || 0) - (totals.totalDispatch || 0);
+            const totalDispatchPct = totals.dispatchPercentage || 0;
+            const totalReceiptPct = totals.receiptPercentage !== undefined
+                ? totals.receiptPercentage
+                : ((totals.totalAllocation || 0) > 0 ? ((totals.totalPOSReceipt || 0) / totals.totalAllocation * 100) : 0);
+            const totalDiffPct = totals.dispatchReceiptDiffPercentage !== undefined
+                ? totals.dispatchReceiptDiffPercentage
+                : (parseFloat(totalDispatchPct) - parseFloat(totalReceiptPct));
+
             worksheet.addRow([
                 '', 'योग', '', totalShops, '',
                 parseFloat((totals.totalAllocation || 0).toFixed(2)),
                 parseFloat((totals.totalDispatch || 0).toFixed(2)),
-                (totals.dispatchPercentage || 0).toFixed(2) + '%',
-                (totals.receiptPercentage || 0).toFixed(2) + '%',
+                (parseFloat(totalDispatchPct) || 0).toFixed(2) + '%',
+                (parseFloat(totalDiffPct) || 0).toFixed(2) + '%',
+                (parseFloat(totalReceiptPct) || 0).toFixed(2) + '%',
                 parseFloat(tBal.toFixed(2)),
                 '', ''
             ]);
