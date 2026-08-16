@@ -21,7 +21,7 @@ class ExcelGenerator {
         worksheet.addRow([
             'क्रमांक', 'प्रदाय केंद्र का नाम', 'विकासखंड', 'कुल उचित मूल्य की दुकान', 
             'सेक्टर का नाम व सेक्टर क्रमांक', 'मासिक आवंटन NFSA (Qt.)', 'आवंटन उठाव NFSA (Qt.)', 
-            'उठाव का प्रतिशत', 'प्रेषित एव प्राप्त मात्रा का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'आवंटन उठाव शेष (Qt.)', 
+            'उठाव का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत', 'आवंटन उठाव शेष (Qt.)', 
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
 
@@ -45,8 +45,8 @@ class ExcelGenerator {
                     parseFloat((sector.allocation || 0).toFixed(2)),
                     parseFloat((sector.dispatch || 0).toFixed(2)),
                     (dispatchPct || 0).toFixed(2) + '%',
-                    (diffPct || 0).toFixed(2) + '%',
                     (receiptPct || 0).toFixed(2) + '%',
+                    (diffPct || 0).toFixed(2) + '%',
                     parseFloat(bal.toFixed(2)),
                     sector.transporter || '',
                     sector.mobileNumber || ''
@@ -69,8 +69,8 @@ class ExcelGenerator {
                 parseFloat((totals.totalAllocation || 0).toFixed(2)),
                 parseFloat((totals.totalDispatch || 0).toFixed(2)),
                 (parseFloat(totalDispatchPct) || 0).toFixed(2) + '%',
-                (parseFloat(totalDiffPct) || 0).toFixed(2) + '%',
                 (parseFloat(totalReceiptPct) || 0).toFixed(2) + '%',
+                (parseFloat(totalDiffPct) || 0).toFixed(2) + '%',
                 parseFloat(tBal.toFixed(2)),
                 '', ''
             ]);

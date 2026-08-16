@@ -2,10 +2,12 @@
 const assert = require('assert');
 const DataProcessor = require('../server/services/dataProcessor');
 const ExcelGenerator = require('../server/services/excelGenerator');
+const PDFGenerator = require('../server/services/pdfGenerator');
 const fs = require('fs');
 const path = require('path');
+const { PDFParse } = require('pdf-parse');
 
-console.log('🧪 Testing NFSA "प्रेषित एव प्राप्त मात्रा का प्रतिशत" column...\n');
+console.log('🧪 Testing NFSA "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column position and header...\n');
 
 // Mock rawData matching row 1 of user's PDF
 const mockShops = [
@@ -42,14 +44,32 @@ const expectedDiff = (processed.totals.dispatchPercentage - processed.totals.rec
 assert.strictEqual(processed.totals.dispatchReceiptDiffPercentage.toFixed(2), expectedDiff);
 console.log('✅ DataProcessor calculation verified successfully!\n');
 
-// Test Excel Generator
-const excelGen = new ExcelGenerator();
-excelGen.generateReport(processed, 9, 2026).then(res => {
-    assert(fs.existsSync(res.filepath));
-    console.log('✅ Excel generated with 13 columns at:', res.filename);
-    try { fs.unlinkSync(res.filepath); } catch (e) {}
+async function testOutputs() {
+    // Test Excel Generator
+    const excelGen = new ExcelGenerator();
+    const resExcel = await excelGen.generateReport(processed, 9, 2026);
+    assert(fs.existsSync(resExcel.filepath));
+    console.log('✅ Excel generated with 13 columns at:', resExcel.filename);
+    try { fs.unlinkSync(resExcel.filepath); } catch (e) {}
+
+    // Test PDF Generator
+    const pdfGen = new PDFGenerator();
+    const resPdf = await pdfGen.generateReport(processed, 9, 2026);
+    assert(fs.existsSync(resPdf.filepath));
+    console.log('✅ PDF generated at:', resPdf.filename);
+
+    const parser = new PDFParse(new Uint8Array(fs.readFileSync(resPdf.filepath)));
+    const pdfText = await parser.getText();
+    console.log('PDF Preview:');
+    console.log(pdfText.text.slice(0, 500));
+
+    assert(pdfText.text.includes('अंतर'));
+    try { fs.unlinkSync(resPdf.filepath); } catch (e) {}
+
     console.log('🎉 All NFSA diff column tests passed successfully!');
-}).catch(err => {
-    console.error('Excel generation error:', err);
+}
+
+testOutputs().catch(err => {
+    console.error('Test error:', err);
     process.exit(1);
 });
