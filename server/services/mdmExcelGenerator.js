@@ -66,8 +66,8 @@ class MDMExcelGenerator {
                 sector.block || '',
                 shopCount,
                 sector.sectorName || '',
-                parseFloat(wA.toFixed(2)), parseFloat(wD.toFixed(2)), pct(wD, wA), parseFloat(wR.toFixed(2)), pct(wR, wD),
-                parseFloat(rA.toFixed(2)), parseFloat(rD.toFixed(2)), pct(rD, rA), parseFloat(rR.toFixed(2)), pct(rR, rD),
+                parseFloat(wA.toFixed(2)), parseFloat(wD.toFixed(2)), pct(wD, wA), parseFloat(wR.toFixed(2)), pct(wR, wA),
+                parseFloat(rA.toFixed(2)), parseFloat(rD.toFixed(2)), pct(rD, rA), parseFloat(rR.toFixed(2)), pct(rR, rA),
                 sector.transporter || '',
                 sector.mobileNumber || ''
             ]);
@@ -78,8 +78,8 @@ class MDMExcelGenerator {
         const pct = (a, b) => b > 0 ? parseFloat(((a / b) * 100).toFixed(2)) + '%' : '0.00%';
         worksheet.addRow([
             '', 'योग', '', totalShops, '',
-            parseFloat(totWA.toFixed(2)), parseFloat(totWD.toFixed(2)), pct(totWD, totWA), parseFloat(totWR.toFixed(2)), pct(totWR, totWD),
-            parseFloat(totRA.toFixed(2)), parseFloat(totRD.toFixed(2)), pct(totRD, totRA), parseFloat(totRR.toFixed(2)), pct(totRR, totRD),
+            parseFloat(totWA.toFixed(2)), parseFloat(totWD.toFixed(2)), pct(totWD, totWA), parseFloat(totWR.toFixed(2)), pct(totWR, totWA),
+            parseFloat(totRA.toFixed(2)), parseFloat(totRD.toFixed(2)), pct(totRD, totRA), parseFloat(totRR.toFixed(2)), pct(totRR, totRA),
             '', ''
         ]);
 
