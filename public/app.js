@@ -5315,12 +5315,42 @@ function buildStockAdvancedReportHTML(data) {
         alertsHtml += `<div class="alert-card alert-ok"><div class="alert-title" style="color:#059669;">🟢 Strongest Buffer IC</div><div class="alert-body"><strong>${maxIC.name}</strong> holds the district's highest reserve at <strong>${fmtQ(maxIC.total)}</strong> (${maxShare}% share). This provides strong food security buffer.</div></div>`;
     }
 
-    const wheatPct = districtTotal > 0 ? (donutGroups['Wheat (गेहूं)'] / districtTotal * 100).toFixed(1) : '0';
-    if (parseFloat(wheatPct) > 0) {
-        const wheatMsg = parseFloat(wheatPct) > 60
-            ? `High wheat concentration (${wheatPct}%) — monitor expiry timelines and plan offloading.`
-            : `Wheat constitutes ${wheatPct}% of total district stock. Commodity diversification is healthy.`;
-        alertsHtml += `<div class="alert-card alert-info"><div class="alert-title" style="color:#2563eb;">🌾 Wheat Pool Intelligence</div><div class="alert-body">${wheatMsg} Total: <strong>${fmtQ(donutGroups['Wheat (गेहूं)'])}</strong></div></div>`;
+    // Wheat Pool Intelligence (Aged vs Fresh Breakdown)
+    function getWheatHeaderYear(h) {
+        const rangeMatch = h.match(/(?:20)?(\d{2})[-/](?:20)?(\d{2})/);
+        if (rangeMatch) {
+            const startYear = parseInt(rangeMatch[1], 10);
+            return startYear < 100 ? (2000 + startYear) : startYear;
+        }
+        const singleYearMatch = h.match(/\b(20\d{2})\b/);
+        if (singleYearMatch) {
+            return parseInt(singleYearMatch[1], 10);
+        }
+        return 0;
+    }
+
+    const wheatCols = commodityHeaders.filter(h => h.toLowerCase().includes('wheat'));
+    wheatCols.sort((a, b) => getWheatHeaderYear(b) - getWheatHeaderYear(a));
+
+    const totalWheatQt = donutGroups['Wheat (गेहूं)'] || 0;
+    const freshWheatHeader = wheatCols[0] || '';
+    const freshWheatQt = freshWheatHeader ? (commodityTotals[freshWheatHeader] || 0) : 0;
+    const agedWheatCols = wheatCols.slice(1);
+    const agedWheatQt = agedWheatCols.reduce((sum, h) => sum + (commodityTotals[h] || 0), 0);
+
+    const totalWheatPct = districtTotal > 0 ? (totalWheatQt / districtTotal * 100).toFixed(1) : '0.0';
+    const agedPctOfDistrict = districtTotal > 0 ? (agedWheatQt / districtTotal * 100).toFixed(1) : '0.0';
+    const agedPctOfWheatPool = totalWheatQt > 0 ? (agedWheatQt / totalWheatQt * 100).toFixed(1) : '0.0';
+    const freshYearLabel = freshWheatHeader.match(/(?:20)?\d{2}[-/](?:20)?\d{2}|\b20\d{2}\b/)?.[0] || 'current-season';
+
+    if (parseFloat(totalWheatPct) > 0) {
+        let wheatMsg = '';
+        if (agedWheatQt > 0.001) {
+            wheatMsg = `Wheat pool is ${totalWheatPct}% of district stock (${fmtQ(totalWheatQt)}), but only ${fmtQ(agedWheatQt)} — ${agedPctOfWheatPool}% of the pool, ${agedPctOfDistrict}% of district total — is aged pre-${freshYearLabel} procurement. Prioritize this portion for offloading; the remaining ${fmtQ(freshWheatQt)} is current-season stock.`;
+        } else {
+            wheatMsg = `Wheat constitutes ${totalWheatPct}% of total district stock (${fmtQ(totalWheatQt)}), all of which is fresh current-season (${freshYearLabel}) stock with no aged procurement backlog.`;
+        }
+        alertsHtml += `<div class="alert-card alert-info"><div class="alert-title" style="color:#2563eb;">🌾 Wheat Pool Intelligence</div><div class="alert-body">${wheatMsg}</div></div>`;
     }
 
     const section3 = `
@@ -5387,10 +5417,16 @@ function buildStockAdvancedReportHTML(data) {
             color: '#2563eb'
         });
     }
-    if (priorities.length < 3 && parseFloat(wheatPct) > 60) {
+    if (priorities.length < 3 && agedWheatQt > 0.001) {
+        priorities.push({
+            title: 'Priority: Expedite Offloading of Aged Wheat',
+            body: `Aged pre-${freshYearLabel} wheat stock stands at ${fmtQ(agedWheatQt)} (${agedPctOfWheatPool}% of wheat pool, ${agedPctOfDistrict}% of district stock). Prioritize offloading and FIFO dispatch to avoid shelf-life degradation.`,
+            color: '#f26b2b'
+        });
+    } else if (priorities.length < 3 && parseFloat(totalWheatPct) > 60) {
         priorities.push({
             title: 'Monitor: High Wheat Concentration',
-            body: `Wheat accounts for ${wheatPct}% of total stock (${fmtQ(donutGroups['Wheat (गेहूं)'])}). Track expiry timelines and plan proactive offloading before new allocation.`,
+            body: `Wheat accounts for ${totalWheatPct}% of total stock (${fmtQ(totalWheatQt)}). Track expiry timelines and plan proactive offloading before new allocation.`,
             color: '#f26b2b'
         });
     }
