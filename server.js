@@ -2271,8 +2271,8 @@ function computeICDSAnalytics(processedResult) {
         totalAllotted: s.totalAllotted, totalDispatched: s.totalDispatched, totalReceived: s.totalReceived,
         totalDispatchPct: s.totalAllotted > 0
             ? cap(parseFloat(((s.totalDispatched / s.totalAllotted) * 100).toFixed(2))) : 0,
-        totalReceiptPct: s.totalDispatched > 0
-            ? cap(parseFloat(((s.totalReceived / s.totalDispatched) * 100).toFixed(2))) : 0
+        totalReceiptPct: s.totalAllotted > 0
+            ? cap(parseFloat(((s.totalReceived / s.totalAllotted) * 100).toFixed(2))) : 0
     }));
 
 
@@ -2289,22 +2289,22 @@ function computeICDSAnalytics(processedResult) {
             wheatDispatched: totals.wheatDispatched,
             wheatReceived: totals.wheatReceived || 0,
             wheatDispatchPct: cap(totals.wheatDispatchPct),
-            wheatReceiptPct: totals.wheatDispatched > 0 ? cap(parseFloat((((totals.wheatReceived || 0) / totals.wheatDispatched) * 100).toFixed(2))) : 0,
+            wheatReceiptPct: totals.wheatAllotted > 0 ? cap(parseFloat((((totals.wheatReceived || 0) / totals.wheatAllotted) * 100).toFixed(2))) : 0,
             riceAllotted: totals.riceAllotted,
             riceDispatched: totals.riceDispatched,
             riceReceived: totals.riceReceived || 0,
             riceDispatchPct: cap(totals.riceDispatchPct),
-            riceReceiptPct: totals.riceDispatched > 0 ? cap(parseFloat((((totals.riceReceived || 0) / totals.riceDispatched) * 100).toFixed(2))) : 0,
+            riceReceiptPct: totals.riceAllotted > 0 ? cap(parseFloat((((totals.riceReceived || 0) / totals.riceAllotted) * 100).toFixed(2))) : 0,
             fsaltAllotted: totals.fsaltAllotted,
             fsaltDispatched: totals.fsaltDispatched,
             fsaltReceived: totals.fsaltReceived || 0,
             fsaltDispatchPct: cap(totals.fsaltDispatchPct),
-            fsaltReceiptPct: totals.fsaltDispatched > 0 ? cap(parseFloat((((totals.fsaltReceived || 0) / totals.fsaltDispatched) * 100).toFixed(2))) : 0,
+            fsaltReceiptPct: totals.fsaltAllotted > 0 ? cap(parseFloat((((totals.fsaltReceived || 0) / totals.fsaltAllotted) * 100).toFixed(2))) : 0,
             totalAllotted: totals.totalAllotted,
             totalDispatched: totals.totalDispatched,
             totalReceived: totals.totalReceived || 0,
             totalDispatchPct: cap(totals.totalDispatchPct),
-            totalReceiptPct: totals.totalDispatched > 0 ? cap(parseFloat((((totals.totalReceived || 0) / totals.totalDispatched) * 100).toFixed(2))) : 0,
+            totalReceiptPct: totals.totalAllotted > 0 ? cap(parseFloat((((totals.totalReceived || 0) / totals.totalAllotted) * 100).toFixed(2))) : 0,
             totalShops: totals.totalIcdsShops,
             totalShopsLeft: totals.totalShopsLeft || 0,
             activeSectors: activeSectors.length
@@ -2522,7 +2522,7 @@ function computeWelfareAnalytics(processedResult) {
         riceDispatchPct: cap(s.riceDispatchPct), riceReceiptPct: cap(s.riceReceiptPct),
         totalAllotted: s.totalAllotted, totalDispatched: s.totalDispatched, totalReceived: s.totalReceived,
         totalDispatchPct: s.totalAllotted > 0 ? cap(parseFloat(((s.totalDispatched / s.totalAllotted) * 100).toFixed(2))) : 0,
-        totalReceiptPct: s.totalDispatched > 0 ? cap(parseFloat(((s.totalReceived / s.totalDispatched) * 100).toFixed(2))) : 0
+        totalReceiptPct: s.totalAllotted > 0 ? cap(parseFloat(((s.totalReceived / s.totalAllotted) * 100).toFixed(2))) : 0
     }));
 
     const insights = [];
@@ -2537,17 +2537,17 @@ function computeWelfareAnalytics(processedResult) {
             wheatDispatched: totals.wheatDispatched,
             wheatReceived: totals.wheatReceived || 0,
             wheatDispatchPct: cap(totals.wheatDispatchPct),
-            wheatReceiptPct: totals.wheatDispatched > 0 ? cap(parseFloat((((totals.wheatReceived || 0) / totals.wheatDispatched) * 100).toFixed(2))) : 0,
+            wheatReceiptPct: totals.wheatAllotted > 0 ? cap(parseFloat((((totals.wheatReceived || 0) / totals.wheatAllotted) * 100).toFixed(2))) : 0,
             riceAllotted: totals.riceAllotted,
             riceDispatched: totals.riceDispatched,
             riceReceived: totals.riceReceived || 0,
             riceDispatchPct: cap(totals.riceDispatchPct),
-            riceReceiptPct: totals.riceDispatched > 0 ? cap(parseFloat((((totals.riceReceived || 0) / totals.riceDispatched) * 100).toFixed(2))) : 0,
+            riceReceiptPct: totals.riceAllotted > 0 ? cap(parseFloat((((totals.riceReceived || 0) / totals.riceAllotted) * 100).toFixed(2))) : 0,
             totalAllotted: totals.totalAllotted,
             totalDispatched: totals.totalDispatched,
             totalReceived: totals.totalReceived || 0,
             totalDispatchPct: cap(totals.totalDispatchPct),
-            totalReceiptPct: totals.totalDispatched > 0 ? cap(parseFloat((((totals.totalReceived || 0) / totals.totalDispatched) * 100).toFixed(2))) : 0,
+            totalReceiptPct: totals.totalAllotted > 0 ? cap(parseFloat((((totals.totalReceived || 0) / totals.totalAllotted) * 100).toFixed(2))) : 0,
             totalShops: totals.totalWelfareShops,
             totalShopsLeft: totals.totalShopsLeft || 0,
             activeSectors: activeSectors.length
