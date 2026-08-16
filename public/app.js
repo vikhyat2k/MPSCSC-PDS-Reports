@@ -5332,7 +5332,7 @@ function buildStockAdvancedReportHTML(data) {
     });
 
     if (parseFloat(topHalfPct) > 75) {
-        alertsHtml += `<div class="alert-card alert-warning"><div class="alert-title" style="color:#d97706;">📊 Distribution Imbalance Alert</div><div class="alert-body">Top half of Issue Centers hold <strong>${topHalfPct}%</strong> of district stock. High concentration may signal unequal distribution — consider rebalancing.</div></div>`;
+        alertsHtml += `<div class="alert-card alert-warning"><div class="alert-title" style="color:#d97706;">📊 Distribution Imbalance Alert</div><div class="alert-body">Top ${topN} of ${totalICs} Issue Centers hold <strong>${topHalfPct}%</strong> of district stock. High concentration may signal unequal distribution — consider rebalancing.</div></div>`;
     }
 
     if (maxIC.total && districtTotal > 0) {
@@ -5438,7 +5438,7 @@ function buildStockAdvancedReportHTML(data) {
     if (parseFloat(topHalfPct) > 75) {
         priorities.push({
             title: 'Governance: Rebalance Stock Distribution',
-            body: `Top half of ICs hold ${topHalfPct}% of district stock. Review dispatch planning to ensure equitable coverage across all Issue Centers.`,
+            body: `Top ${topN} of ${totalICs} Issue Centers hold ${topHalfPct}% of district stock. Review dispatch planning to ensure equitable coverage across all Issue Centers.`,
             color: '#2563eb'
         });
     }
