@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 20:10 IST
+> **Last Sync:** 16 August 2026, 20:35 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Corrected Date Range AI Insights cards to display absolute Quantity Lifted (Qt) instead of misleading Dispatch % against allotment |
+| Last Code Change | 16 Aug 2026 — Refactored District Health Score & IC Buffer classification into auditable computeDistrictHealthScore() with breakdown modal and documentation in Section 11 |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -396,6 +396,36 @@ avgDispatch% = (dispatchSum / allottedSum) x 100
 NOTE: Uses `s.dispatch` (depot outgoing). NOT `s.posReceipt`.
 posReceipt is what FPS shops received — can exceed allocation, producing impossible >100% values.
 
+### District Health Score Calculation (Live Stock Position)
+
+```
+baseScore            = 100
+negativeDeduction    = COUNT(negativeItems where stock < -0.001 Qt) x 12
+lowBufferDeduction   = COUNT(lowBufferICs where 0 < ic.total < 0.5 x avgStock) x 8
+equityDeduction      = IF (topHalfICStock% > 75%) THEN 10 ELSE 0
+
+rawScore             = baseScore - negativeDeduction - lowBufferDeduction - equityDeduction
+districtHealthScore  = CLAMP(rawScore, 0, 100)
+
+healthLabel = IF (districtHealthScore >= 80) THEN "Excellent" (Green #059669)
+              ELSE IF (districtHealthScore >= 60) THEN "Moderate" (Amber #D97706)
+              ELSE "Critical" (Red #DC2626)
+```
+
+NOTE: Implemented in `computeDistrictHealthScore(icData)` in `public/app.js`. `avgStock` is the district average buffer per Issue Center (`districtTotal / totalICs`). Penalizes data integrity issues (negative stock) most heavily (-12 pts/occurrence), followed by buffer starvation (-8 pts/IC) and spatial concentration risk (-10 pts flat).
+
+### Issue Center Buffer Classification (Live Stock Position)
+
+```
+avgStock = districtTotal / COUNT(icData)
+
+Low Buffer     = ic.total < 0.5 x avgStock   (<50% of avg)   -> Status: "Low"    (Red #dc2626)
+Normal Buffer  = 0.5 x avgStock <= ic.total <= 1.3 x avgStock -> Status: "Normal" (Blue #2563eb)
+High Buffer    = ic.total > 1.3 x avgStock   (>130% of avg)  -> Status: "High"   (Green #059669)
+```
+
+NOTE: Used in Section 1 IC Volume Analysis bar chart and Section 4 Management Scorecard to classify issue center inventory risk.
+
 ### allTransporters List (District Intelligence Source)
 
 Seeded from `config/sectors.json` so transporters with 0 dispatch still appear.
@@ -593,6 +623,7 @@ Tracks what has been tested and confirmed working.
 | Report Validator Unit Parity (Qt) & Summary Fallback | Validation & Scraper Verification | VERIFIED | 16 Aug 2026 | Replaced MT with Qt in validation error messages and added table row fallback for grand totals |
 | NFSA Date Range Analytics sectorsConfig Integration | Runtime & Analytics Verification | VERIFIED | 16 Aug 2026 | Loaded config/sectors.json in server.js and verified 22-sector base pool computation |
 | Date Range Transporter Insights Quantity Display (Qt) | UI & Analytics Verification | VERIFIED | 16 Aug 2026 | Formatted Date Range insights to display absolute lifted quantity in Qt instead of percentage |
+| District Health Score Auditability & IC Classification | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Refactored computeDistrictHealthScore, added audit modal, and documented formulas in Section 11 |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -625,6 +656,21 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Refactor District Health Score into Auditable Function with Calculation Breakdown
+
+Files: public/app.js, PROJECT_DOCS.md, tests/test-health-score.js
+Type: Improvement / Analytics Auditability
+
+- SUMMARY: Refactored the District Health Score calculation in the Live District Stock Position module from inline script code into an isolated, auditable function `computeDistrictHealthScore(icData)` returning numeric score, status label, color, component contributions, and IC buffer classification thresholds.
+- UI AUDITABILITY:
+  Added an interactive expandable `ⓘ How this is calculated` modal/breakdown next to the District Stock Health tile on the cover of the Advanced Analytics Executive Report, showing component weights, values, and impact.
+- DOCUMENTATION:
+  Added new subsections in `PROJECT_DOCS.md` Section 11 (Analytics Logic) detailing the formula, deduction weights, status bands, and High/Normal/Low IC buffer thresholds.
+- PARITY CONFIRMED:
+  Maintains 100% mathematical and status parity with existing View_LiveRollup data (`58 / Critical` baseline).
+
+---
 
 ### 2026-08-16 | Correct Date Range AI Insights Cards to Display Quantity Lifted (Qt) Instead of Percentage
 
