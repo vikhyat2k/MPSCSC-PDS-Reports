@@ -4953,6 +4953,8 @@ function buildStockAdvancedReportHTML(data) {
     const negativeItems = healthInfo.negativeItems;
     const lowBufferICs = healthInfo.lowBufferICs;
     const topHalfPct = healthInfo.topHalfPct;
+    const topN = healthInfo.topN;
+    const totalICs = healthInfo.totalICs;
 
     // Commodity group totals
     const commodityTotals = {};
@@ -5513,7 +5515,7 @@ function buildStockAdvancedReportHTML(data) {
                     <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
                         <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:8px;">Distribution Equity</div>
                         <div style="font-size:20px;font-weight:800;color:${parseFloat(topHalfPct) > 75 ? '#d97706' : '#059669'};">${topHalfPct}%</div>
-                        <div style="font-size:10px;color:#94a3b8;">top half ICs hold of total stock</div>
+                        <div style="font-size:10px;color:#94a3b8;">Top ${topN} of ${totalICs} ICs hold of total stock</div>
                         <div style="font-size:10px;font-weight:700;color:${parseFloat(topHalfPct) > 75 ? '#d97706' : '#059669'};margin-top:4px;">${parseFloat(topHalfPct) > 75 ? '⚠️ Concentration Risk' : '✅ Equitable Distribution'}</div>
                     </div>
                 </div>
@@ -5696,6 +5698,7 @@ window.closeStockAdvancedReport = closeStockAdvancedReport;
 window.buildStockAdvancedReportHTML = buildStockAdvancedReportHTML;
 window.downloadStockAdvReport = downloadStockAdvReport;
 window.computeDistrictHealthScore = computeDistrictHealthScore;
+window.computeTopConcentration = computeTopConcentration;
 window.toggleHealthScoreAudit = toggleHealthScoreAudit;
 
 // ═══════════════════════════════════════════════════════════════
