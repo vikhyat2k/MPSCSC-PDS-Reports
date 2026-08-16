@@ -5634,6 +5634,8 @@ window.showStockAdvancedReport = showStockAdvancedReport;
 window.closeStockAdvancedReport = closeStockAdvancedReport;
 window.buildStockAdvancedReportHTML = buildStockAdvancedReportHTML;
 window.downloadStockAdvReport = downloadStockAdvReport;
+window.computeDistrictHealthScore = computeDistrictHealthScore;
+window.toggleHealthScoreAudit = toggleHealthScoreAudit;
 
 // ═══════════════════════════════════════════════════════════════
 //  INTERACTIVE MANUAL CAPTCHA MODAL HANDLERS (FOR CLOUD / RENDER)
