@@ -212,11 +212,11 @@ class ICDSDataProcessor {
             s.dispatchPercentage = s.allotted > 0 ? (s.dispatched / s.allotted) * 100 : 0;
             s.receiptPercentage = s.allotted > 0 ? (s.received / s.allotted) * 100 : 0;
             s.wheatDispatchPct = s.wheatAllotted > 0 ? (s.wheatDispatched / s.wheatAllotted) * 100 : 0;
-            s.wheatReceiptPct = s.wheatDispatched > 0 ? (s.wheatReceived / s.wheatDispatched) * 100 : 0;
+            s.wheatReceiptPct = s.wheatAllotted > 0 ? (s.wheatReceived / s.wheatAllotted) * 100 : 0;
             s.riceDispatchPct = s.riceAllotted > 0 ? (s.riceDispatched / s.riceAllotted) * 100 : 0;
-            s.riceReceiptPct = s.riceDispatched > 0 ? (s.riceReceived / s.riceDispatched) * 100 : 0;
+            s.riceReceiptPct = s.riceAllotted > 0 ? (s.riceReceived / s.riceAllotted) * 100 : 0;
             s.fsaltDispatchPct = s.fsaltAllotted > 0 ? (s.fsaltDispatched / s.fsaltAllotted) * 100 : 0;
-            s.fsaltReceiptPct = s.fsaltDispatched > 0 ? (s.fsaltReceived / s.fsaltDispatched) * 100 : 0;
+            s.fsaltReceiptPct = s.fsaltAllotted > 0 ? (s.fsaltReceived / s.fsaltAllotted) * 100 : 0;
             s.totalAllotted = s.allotted;
             s.totalDispatched = s.dispatched;
             s.totalReceived = s.received;
@@ -271,14 +271,17 @@ class ICDSDataProcessor {
                 wheatDispatched: Number(totalWheatDispatched.toFixed(2)),
                 wheatReceived: Number(totalWheatReceived.toFixed(2)),
                 wheatDispatchPct: totalWheatAllotted > 0 ? (totalWheatDispatched / totalWheatAllotted) * 100 : 0,
+                wheatReceiptPct: totalWheatAllotted > 0 ? (totalWheatReceived / totalWheatAllotted) * 100 : 0,
                 riceAllotted: Number(totalRiceAllotted.toFixed(2)),
                 riceDispatched: Number(totalRiceDispatched.toFixed(2)),
                 riceReceived: Number(totalRiceReceived.toFixed(2)),
                 riceDispatchPct: totalRiceAllotted > 0 ? (totalRiceDispatched / totalRiceAllotted) * 100 : 0,
+                riceReceiptPct: totalRiceAllotted > 0 ? (totalRiceReceived / totalRiceAllotted) * 100 : 0,
                 fsaltAllotted: Number(totalSaltAllotted.toFixed(2)),
                 fsaltDispatched: Number(totalSaltDispatched.toFixed(2)),
                 fsaltReceived: Number(totalSaltReceived.toFixed(2)),
                 fsaltDispatchPct: totalSaltAllotted > 0 ? Number((totalSaltDispatched / totalSaltAllotted * 100).toFixed(2)) : 0,
+                fsaltReceiptPct: totalSaltAllotted > 0 ? Number((totalSaltReceived / totalSaltAllotted * 100).toFixed(2)) : 0,
                 totalReceiptPct: totalAllotted > 0 ? Number((totalReceived / totalAllotted * 100).toFixed(2)) : 0,
                 totalShopsLeft: totalShopsLeft,
                 totalIcdsShops: totalIcdsShops,
