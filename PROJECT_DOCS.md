@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 21:40 IST
+> **Last Sync:** 16 August 2026, 21:50 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Refactored Section 3 Wheat Pool Intelligence alert to isolate aged procurement backlog from fresh stock as shelf-life expiry risk |
+| Last Code Change | 16 Aug 2026 — Refactored Executive Report concentration metrics to explicit dynamic "Top N of M Issue Centers hold X%" phrasing via shared computeTopConcentration() helper |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -444,6 +444,20 @@ agedPctOfDistrict%  = (agedWheatQt / districtTotal) x 100
 
 NOTE: Used in Section 3 Risk Intelligence & Section 4 Management Priorities of the Advanced Analytics Executive Report. Specifically isolates aged wheat (pre-current-season) as the true shelf-life / offloading priority figure rather than treating the entire multi-year wheat pool as an expiry risk. The cover KPI tile ("Wheat Pool Share") remains the combined pool share `totalWheat%`.
 
+### Distribution Equity & Concentration Metric (Live Stock Position)
+
+```
+totalICs     = COUNT(icData)
+topN         = CEIL(totalICs / 2)
+sortedTotals = SORT(icData.map(ic => ic.total), DESCENDING)
+topShareQt   = SUM(sortedTotals.slice(0, topN))
+topShare%    = (topShareQt / districtTotal) x 100
+
+Alert Trigger = IF (topShare% > 75%) THEN Warning ("Top N of M Issue Centers hold X%...")
+```
+
+NOTE: Implemented in `computeTopConcentration(icData)` and consumed by `computeDistrictHealthScore(icData)` and `buildStockAdvancedReportHTML(data)`. Avoids ambiguous "top half" phrasing by explicitly formatting as `"Top ${topN} of ${totalICs} Issue Centers hold ${topSharePct}% of district stock"` across Section 3 Smart Alerts, Section 4 Management Priorities, and Section 4 Scorecard sidebar.
+
 ### allTransporters List (District Intelligence Source)
 
 Seeded from `config/sectors.json` so transporters with 0 dispatch still appear.
@@ -643,6 +657,7 @@ Tracks what has been tested and confirmed working.
 | Date Range Transporter Insights Quantity Display (Qt) | UI & Analytics Verification | VERIFIED | 16 Aug 2026 | Formatted Date Range insights to display absolute lifted quantity in Qt instead of percentage |
 | District Health Score Auditability & IC Classification | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Refactored computeDistrictHealthScore, added audit modal, and documented formulas in Section 11 |
 | Wheat Pool Intelligence Aged Stock Isolation | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Separated aged vs fresh wheat, computed aged pool/district shares, and updated Section 3 alert copy |
+| Dynamic Issue Center Concentration Phrasing | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Replaced ambiguous "top half" with dynamic "Top N of M ICs" in Section 3 Alert, Section 4 Priority, and Scorecard |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -675,6 +690,22 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Replace Ambiguous "Top Half" Phrasing with Dynamic "Top N of M Issue Centers" in Executive Report
+
+Files: public/app.js, PROJECT_DOCS.md, tests/test-top-concentration.js
+Type: Improvement / UI Analytics Precision
+
+- SUMMARY: Replaced ambiguous "Top half of Issue Centers hold X%" wording in the Advanced Analytics Executive Report with dynamic, exact "Top N of M Issue Centers hold X%" phrasing.
+- ROOT CAUSE & REFACTOR:
+  Previously, Section 3's "Distribution Imbalance Alert", Section 4's "Governance: Rebalance Stock Distribution", and Section 4's Scorecard sidebar used static "Top half of Issue Centers" phrasing. Created a single shared helper `computeTopConcentration(icData)` returning `{ topN, totalICs, topSharePct, topHalfPct }` where `topN = Math.ceil(totalICs / 2)`.
+- UI & DATA PARITY:
+  - Section 3 Alert: `"Top ${topN} of ${totalICs} Issue Centers hold ${topHalfPct}% of district stock. High concentration may signal unequal distribution — consider rebalancing."` (e.g. `"Top 5 of 9 Issue Centers hold 86.3% of district stock"`).
+  - Section 4 Priority: `"Top ${topN} of ${totalICs} Issue Centers hold ${topHalfPct}% of district stock. Review dispatch planning to ensure equitable coverage across all Issue Centers."`
+  - Section 4 Scorecard Sidebar: `"Top ${topN} of ${totalICs} ICs hold of total stock"`.
+  - Documented logic in `PROJECT_DOCS.md` Section 11.
+
+---
 
 ### 2026-08-16 | Refactor Wheat Pool Intelligence Alert to Specifically Cite Aged Wheat as Expiry Risk
 
