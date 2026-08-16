@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 20:35 IST
+> **Last Sync:** 16 August 2026, 21:40 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Refactored District Health Score & IC Buffer classification into auditable computeDistrictHealthScore() with breakdown modal and documentation in Section 11 |
+| Last Code Change | 16 Aug 2026 — Refactored Section 3 Wheat Pool Intelligence alert to isolate aged procurement backlog from fresh stock as shelf-life expiry risk |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -426,6 +426,24 @@ High Buffer    = ic.total > 1.3 x avgStock   (>130% of avg)  -> Status: "High"  
 
 NOTE: Used in Section 1 IC Volume Analysis bar chart and Section 4 Management Scorecard to classify issue center inventory risk.
 
+### Wheat Pool Intelligence — Aged vs Fresh Breakdown (Live Stock Position)
+
+```
+wheatColumns        = FILTER(commodityHeaders by "wheat" in name, SORT by seasonYear DESC)
+freshWheatColumn    = FIRST(wheatColumns)                       [most recent procurement season]
+agedWheatColumns    = REST(wheatColumns)                        [all older procurement seasons]
+
+freshWheatQt        = SUM(commodityTotals[freshWheatColumn])
+agedWheatQt         = SUM(commodityTotals[h] for h in agedWheatColumns)
+totalWheatQt        = freshWheatQt + agedWheatQt
+
+totalWheat%         = (totalWheatQt / districtTotal) x 100
+agedPctOfWheatPool% = (agedWheatQt / totalWheatQt) x 100
+agedPctOfDistrict%  = (agedWheatQt / districtTotal) x 100
+```
+
+NOTE: Used in Section 3 Risk Intelligence & Section 4 Management Priorities of the Advanced Analytics Executive Report. Specifically isolates aged wheat (pre-current-season) as the true shelf-life / offloading priority figure rather than treating the entire multi-year wheat pool as an expiry risk. The cover KPI tile ("Wheat Pool Share") remains the combined pool share `totalWheat%`.
+
 ### allTransporters List (District Intelligence Source)
 
 Seeded from `config/sectors.json` so transporters with 0 dispatch still appear.
@@ -624,6 +642,7 @@ Tracks what has been tested and confirmed working.
 | NFSA Date Range Analytics sectorsConfig Integration | Runtime & Analytics Verification | VERIFIED | 16 Aug 2026 | Loaded config/sectors.json in server.js and verified 22-sector base pool computation |
 | Date Range Transporter Insights Quantity Display (Qt) | UI & Analytics Verification | VERIFIED | 16 Aug 2026 | Formatted Date Range insights to display absolute lifted quantity in Qt instead of percentage |
 | District Health Score Auditability & IC Classification | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Refactored computeDistrictHealthScore, added audit modal, and documented formulas in Section 11 |
+| Wheat Pool Intelligence Aged Stock Isolation | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Separated aged vs fresh wheat, computed aged pool/district shares, and updated Section 3 alert copy |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -656,6 +675,23 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Refactor Wheat Pool Intelligence Alert to Specifically Cite Aged Wheat as Expiry Risk
+
+Files: public/app.js, PROJECT_DOCS.md, tests/test-wheat-pool-intelligence.js
+Type: Improvement / Risk Intelligence Precision
+
+- BUG / ROOT CAUSE:
+  Section 3 (Risk Intelligence & Smart Alerts) previously stated "High wheat concentration (61.4%) — monitor expiry timelines and plan offloading. Total: 6,10,954.03 Qt." This conflated fresh current-season (2026-27) wheat with aged procurement (2024-25 + 2025-26), misleadingly characterizing the entire wheat reserve as an expiry concern when only the aged portion is vulnerable.
+- FIX:
+  1. Dynamically identify and sort wheat-year columns in descending order, categorizing the most recent season as "fresh" and all prior seasons as "aged".
+  2. Compute `agedWheatQt`, `freshWheatQt`, `agedPctOfDistrict`, and `agedPctOfWheatPool`.
+  3. Rewrote the Section 3 alert card to lead with the aged backlog, its pool/district percentages, and offloading recommendation, followed by the current-season remainder.
+  4. Updated Section 4 Management Priorities to recommend expedited offloading for aged wheat.
+  5. Maintained the Cover KPI tile ("Wheat Pool Share: 61.4%") untouched to continue showing total combined wheat reserve volume.
+  6. Documented formulas and logic in `PROJECT_DOCS.md` Section 11.
+
+---
 
 ### 2026-08-16 | Refactor District Health Score into Auditable Function with Calculation Breakdown
 
