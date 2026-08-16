@@ -170,9 +170,9 @@ class WelfareDataProcessor {
             s.dispatchPercentage = s.allotted > 0 ? (s.dispatched / s.allotted) * 100 : 0;
             s.receiptPercentage = s.allotted > 0 ? (s.received / s.allotted) * 100 : 0;
             s.wheatDispatchPct = s.wheatAllotted > 0 ? (s.wheatDispatched / s.wheatAllotted) * 100 : 0;
-            s.wheatReceiptPct = s.wheatDispatched > 0 ? (s.wheatReceived / s.wheatDispatched) * 100 : 0;
+            s.wheatReceiptPct = s.wheatAllotted > 0 ? (s.wheatReceived / s.wheatAllotted) * 100 : 0;
             s.riceDispatchPct = s.riceAllotted > 0 ? (s.riceDispatched / s.riceAllotted) * 100 : 0;
-            s.riceReceiptPct = s.riceDispatched > 0 ? (s.riceReceived / s.riceDispatched) * 100 : 0;
+            s.riceReceiptPct = s.riceAllotted > 0 ? (s.riceReceived / s.riceAllotted) * 100 : 0;
             s.totalAllotted = s.allotted;
             s.totalDispatched = s.dispatched;
             s.totalReceived = s.received;
@@ -224,10 +224,12 @@ class WelfareDataProcessor {
                 wheatDispatched: Number(totalWheatDispatched.toFixed(2)),
                 wheatReceived: Number(totalWheatReceived.toFixed(2)),
                 wheatDispatchPct: totalWheatAllotted > 0 ? Number((totalWheatDispatched / totalWheatAllotted * 100).toFixed(2)) : 0,
+                wheatReceiptPct: totalWheatAllotted > 0 ? Number((totalWheatReceived / totalWheatAllotted * 100).toFixed(2)) : 0,
                 riceAllotted: Number(totalRiceAllotted.toFixed(2)),
                 riceDispatched: Number(totalRiceDispatched.toFixed(2)),
                 riceReceived: Number(totalRiceReceived.toFixed(2)),
                 riceDispatchPct: totalRiceAllotted > 0 ? Number((totalRiceDispatched / totalRiceAllotted * 100).toFixed(2)) : 0,
+                riceReceiptPct: totalRiceAllotted > 0 ? Number((totalRiceReceived / totalRiceAllotted * 100).toFixed(2)) : 0,
                 totalReceiptPct: totalAllotted > 0 ? Number((totalReceived / totalAllotted * 100).toFixed(2)) : 0,
                 totalShopsLeft: totalShopsLeft,
                 totalWelfareShops: totalWelfareShops
