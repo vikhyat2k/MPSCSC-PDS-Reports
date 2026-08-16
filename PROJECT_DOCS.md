@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 20:05 IST
+> **Last Sync:** 16 August 2026, 20:10 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Defined sectorsConfig in server.js to resolve ReferenceError in NFSA Date Range report generation and analytics computation |
+| Last Code Change | 16 Aug 2026 — Corrected Date Range AI Insights cards to display absolute Quantity Lifted (Qt) instead of misleading Dispatch % against allotment |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -592,6 +592,7 @@ Tracks what has been tested and confirmed working.
 | Report History Rendering & isSubViewActive Scoping | UI Verification | VERIFIED | 15 Aug 2026 | Moved isSubViewActive to outer global scope, resolved ReferenceError, and updated table cell styling to CSS theme variables |
 | Report Validator Unit Parity (Qt) & Summary Fallback | Validation & Scraper Verification | VERIFIED | 16 Aug 2026 | Replaced MT with Qt in validation error messages and added table row fallback for grand totals |
 | NFSA Date Range Analytics sectorsConfig Integration | Runtime & Analytics Verification | VERIFIED | 16 Aug 2026 | Loaded config/sectors.json in server.js and verified 22-sector base pool computation |
+| Date Range Transporter Insights Quantity Display (Qt) | UI & Analytics Verification | VERIFIED | 16 Aug 2026 | Formatted Date Range insights to display absolute lifted quantity in Qt instead of percentage |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -619,10 +620,27 @@ Tracks what has been tested and confirmed working.
 | ISSUE-019 | NFSA report history table and new reports not rendering due to isSubViewActive ReferenceError and hardcoded dark text colors | HIGH | RESOLVED | public/app.js | 15 Aug 2026 |
 | ISSUE-020 | Report validator displayed error units as MT instead of Quintals (Qt) and summary grand totals could be missed | MEDIUM | RESOLVED | server/services/reportValidator.js, server/automation/scraper_v2.js | 16 Aug 2026 |
 | ISSUE-021 | Date Range report generation crashed with ReferenceError: sectorsConfig is not defined | HIGH | RESOLVED | server.js, Technical Audit/server.js | 16 Aug 2026 |
+| ISSUE-022 | Date Range AI insights card displayed transporter liftings as Dispatch % with % sign instead of Quantity Lifted in Quintals (Qt) | MEDIUM | RESOLVED | public/app.js | 16 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Correct Date Range AI Insights Cards to Display Quantity Lifted (Qt) Instead of Percentage
+
+Files: public/app.js, PROJECT_DOCS.md
+Type: Improvement / UI Analytics Parity
+Closes: ISSUE-022
+
+- BUG: On Date Range reports (NFSA Dispatch b/w Dates), the AI Insights section displayed transporter performance formatted as a percentage (e.g. `🏆 शीर्ष प्रदर्शनकर्ता (Dispatch % के अनुसार): श्री सुभाष राठौर (324.20%)`), which was misleading because date-range liftings represent absolute dispatched volume in Quintals (Qt), not a percentage against monthly allotment.
+- ROOT CAUSE:
+  `renderInsightsList()` in `public/app.js` defaulted to formatting all transporter performance values with a `%` symbol and labeled the insight card `(Dispatch % के अनुसार)`, ignoring whether the active view was a Date Range report with `dispatchQty`.
+- FIX:
+  Updated `renderInsightsList()` in `public/app.js` with `isDateRange` detection (`id === 'drInsightsList'` or `t.dispatchQty !== undefined`). For Date Range reports, it now displays:
+  - Top Transporters: `🏆 शीर्ष परिवहनकर्ता (दिनांक अनुसार कुल उठाव मात्रा): <Name> (<Quantity> Qt)`
+  - Bottom Transporters: `⚠️ न्यूनतम / शून्य उठाव परिवहनकर्ता (कुल उठाव मात्रा): <Name> (<Quantity> Qt)`
+
+---
 
 ### 2026-08-16 | Fix ReferenceError: sectorsConfig is not defined in NFSA Date Range Analytics
 

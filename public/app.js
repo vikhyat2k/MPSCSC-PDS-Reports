@@ -4782,12 +4782,136 @@ function closeStockAdvancedReport() {
     }
 }
 
+/**
+ * Auditable District Health Score (0-100) & IC Buffer Classification logic.
+ *
+ * @param {Array<Object>} icData - Issue center records with totals and commodities
+ * @returns {Object} { score, label, color, districtTotal, avgStock, topHalfPct, negativeItems, lowBufferICs, components, thresholds }
+ */
+function computeDistrictHealthScore(icData) {
+    const list = Array.isArray(icData) ? icData : [];
+    const districtTotal = list.reduce((s, ic) => s + (parseFloat(ic.total) || 0), 0);
+    const avgStock = list.length ? districtTotal / list.length : 0;
+
+    // 1. Negative stock items (< -0.001 Qt)
+    const negativeItems = [];
+    list.forEach(ic => {
+        if (ic && ic.commodities && typeof ic.commodities === 'object') {
+            Object.keys(ic.commodities).forEach(h => {
+                const val = parseFloat(ic.commodities[h]) || 0;
+                if (val < -0.001) {
+                    negativeItems.push({ center: ic.name || 'Unknown IC', commodity: h, val: val });
+                }
+            });
+        }
+    });
+
+    // 2. Low buffer ICs (< 50% of avg)
+    const lowBufferThreshold = avgStock * 0.5;
+    const highBufferThreshold = avgStock * 1.3;
+    const lowBufferICs = list.filter(ic => {
+        const tot = parseFloat(ic.total) || 0;
+        return tot > 0 && tot < lowBufferThreshold;
+    });
+
+    // 3. Distribution equity (% held by top 50% ICs)
+    const sortedTotals = list.map(ic => parseFloat(ic.total) || 0).sort((a, b) => b - a);
+    const topHalf = sortedTotals.slice(0, Math.ceil(sortedTotals.length / 2)).reduce((s, v) => s + v, 0);
+    const topHalfPct = districtTotal > 0 ? (topHalf / districtTotal * 100).toFixed(1) : '0.0';
+
+    // Base score and deductions
+    const baseScore = 100;
+    const negWeight = -12;
+    const lowBufferWeight = -8;
+    const equityWeight = -10;
+
+    const negContribution = negativeItems.length * negWeight;
+    const lowBufferContribution = lowBufferICs.length * lowBufferWeight;
+    const equityContribution = parseFloat(topHalfPct) > 75 ? equityWeight : 0;
+
+    const rawScore = baseScore + negContribution + lowBufferContribution + equityContribution;
+    const score = Math.max(0, Math.min(100, rawScore));
+
+    const color = score >= 80 ? '#059669' : score >= 60 ? '#D97706' : '#DC2626';
+    const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Moderate' : 'Critical';
+
+    const components = [
+        {
+            name: 'Base Score',
+            description: 'Starting baseline health score for district stock',
+            value: baseScore,
+            weight: 1,
+            contribution: baseScore
+        },
+        {
+            name: 'Negative Stock Deduction',
+            description: 'Deduction for commodity balances < -0.001 Qt',
+            value: negativeItems.length,
+            weight: negWeight,
+            contribution: negContribution
+        },
+        {
+            name: 'Low Buffer IC Deduction',
+            description: 'Deduction for ICs with stock < 50% of district average',
+            value: lowBufferICs.length,
+            weight: lowBufferWeight,
+            contribution: lowBufferContribution
+        },
+        {
+            name: 'Distribution Concentration Deduction',
+            description: 'Deduction if top 50% ICs hold > 75% of total district stock',
+            value: parseFloat(topHalfPct),
+            weight: equityWeight,
+            contribution: equityContribution
+        }
+    ];
+
+    const thresholds = {
+        icClassification: {
+            lowThreshold: lowBufferThreshold,
+            highThreshold: highBufferThreshold,
+            low: `< 50% of avg stock (< ${lowBufferThreshold.toFixed(2)} Qt)`,
+            normal: `50% – 130% of avg stock (${lowBufferThreshold.toFixed(2)} to ${highBufferThreshold.toFixed(2)} Qt)`,
+            high: `> 130% of avg stock (> ${highBufferThreshold.toFixed(2)} Qt)`
+        },
+        healthScoreBands: {
+            excellent: '>= 80 (Green #059669)',
+            moderate: '60 – 79 (Amber #D97706)',
+            critical: '< 60 (Red #DC2626)'
+        }
+    };
+
+    return {
+        score,
+        label,
+        color,
+        districtTotal,
+        avgStock,
+        topHalfPct,
+        negativeItems,
+        lowBufferICs,
+        components,
+        thresholds
+    };
+}
+
+function toggleHealthScoreAudit(event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const el = document.getElementById('healthScoreAuditDetails');
+    if (el) {
+        el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+    }
+}
+
 function buildStockAdvancedReportHTML(data) {
     const icData = data.icData || [];
     const headers = data.headers || [];
     const commodityHeaders = headers.slice(1, headers.length - 1);
 
-    // ── Compute aggregates ──
+    // ── Compute aggregates & auditable health score ──
     function pv(v) { return parseFloat((v || '0').replace ? (v || '0').replace(/,/g, '') : v) || 0; }
 
     const districtTotal = icData.reduce((s, ic) => s + ic.total, 0);
@@ -4795,6 +4919,15 @@ function buildStockAdvancedReportHTML(data) {
     const sorted = icData.slice().sort((a, b) => b.total - a.total);
     const maxIC = sorted[0] || { name: '—', total: 0 };
     const minIC = sorted[sorted.length - 1] || { name: '—', total: 0 };
+
+    // Auditable Health Score & Component Breakdown
+    const healthInfo = computeDistrictHealthScore(icData);
+    const healthScore = healthInfo.score;
+    const healthColor = healthInfo.color;
+    const healthLabel = healthInfo.label;
+    const negativeItems = healthInfo.negativeItems;
+    const lowBufferICs = healthInfo.lowBufferICs;
+    const topHalfPct = healthInfo.topHalfPct;
 
     // Commodity group totals
     const commodityTotals = {};
@@ -4818,41 +4951,14 @@ function buildStockAdvancedReportHTML(data) {
         else if (hl.includes('salt') || hl.includes('f.salt') || hl.includes('iodine')) donutGroups['Salt (नमक)'] += v;
     });
 
-    // Negative items
-    const negativeItems = [];
-    icData.forEach(ic => {
-        Object.keys(ic.commodities).forEach(h => {
-            if (ic.commodities[h] < -0.001) negativeItems.push({ center: ic.name, commodity: h, val: ic.commodities[h] });
-        });
-    });
-
-    // Low buffer ICs (<50% of avg)
-    const lowBufferICs = icData.filter(ic => ic.total > 0 && ic.total < avgStock * 0.5);
-
-    // Distribution equity
-    const sortedTotals = icData.map(ic => ic.total).sort((a, b) => b - a);
-    const topHalf = sortedTotals.slice(0, Math.ceil(sortedTotals.length / 2)).reduce((s, v) => s + v, 0);
-    const topHalfPct = districtTotal > 0 ? (topHalf / districtTotal * 100).toFixed(1) : '0.0';
-
     // Top commodity by volume
     const topCommodity = commodityHeaders.reduce((a, b) => (commodityTotals[b] || 0) > (commodityTotals[a] || 0) ? b : a, commodityHeaders[0] || '');
     const topCommodityPct = districtTotal > 0 ? (commodityTotals[topCommodity] / districtTotal * 100).toFixed(1) : '0';
-
-    // Stock Health Score (0–100)
-    let healthScore = 100;
-    if (negativeItems.length > 0) healthScore -= negativeItems.length * 12;
-    if (lowBufferICs.length > 0) healthScore -= lowBufferICs.length * 8;
-    if (parseFloat(topHalfPct) > 75) healthScore -= 10;
-    healthScore = Math.max(0, Math.min(100, healthScore));
-    const healthColor = healthScore >= 80 ? '#059669' : healthScore >= 60 ? '#D97706' : '#DC2626';
-    const healthLabel = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Moderate' : 'Critical';
 
     function fmtQ(v) {
         // Display in Quintals (Qt) matching Google Sheet values 1:1
         return v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Qt';
     }
-
-
 
     const syncTime = new Date().toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const reportDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -4931,7 +5037,7 @@ function buildStockAdvancedReportHTML(data) {
                         <div style="font-size:14px;font-weight:600;color:#c9a227;margin-top:4px;">उन्नत विश्लेषण कार्यकारी रिपोर्ट — Betul District</div>
                     </div>
                 </div>
-                <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
                     <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 16px;">
                         <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">Data Source</div>
                         <div style="font-size:12px;font-weight:700;margin-top:2px;">View_LiveRollup (Google Sheets)</div>
@@ -4944,9 +5050,45 @@ function buildStockAdvancedReportHTML(data) {
                         <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">Sync Time</div>
                         <div style="font-size:12px;font-weight:700;margin-top:2px;">${syncTime}</div>
                     </div>
-                    <div style="background:rgba(201,162,39,0.2);border:1px solid rgba(201,162,39,0.4);border-radius:8px;padding:10px 16px;">
-                        <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">District Stock Health</div>
-                        <div style="font-size:18px;font-weight:800;margin-top:2px;color:${healthColor};">${healthScore}/100 — ${healthLabel}</div>
+                    <div style="background:rgba(201,162,39,0.2);border:1px solid rgba(201,162,39,0.4);border-radius:8px;padding:10px 16px;min-width:260px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                            <div style="font-size:10px;color:#c9a227;font-weight:700;text-transform:uppercase;">District Stock Health</div>
+                            <button type="button" onclick="toggleHealthScoreAudit(event)" style="background:rgba(201,162,39,0.25);border:1px solid rgba(201,162,39,0.5);color:#fef08a;font-size:10px;cursor:pointer;padding:2px 6px;border-radius:4px;font-weight:600;display:inline-flex;align-items:center;gap:3px;" title="View calculation methodology & components">
+                                ⓘ How this is calculated
+                            </button>
+                        </div>
+                        <div style="font-size:18px;font-weight:800;margin-top:4px;color:${healthColor};">${healthScore}/100 — ${healthLabel}</div>
+                        <div id="healthScoreAuditDetails" style="display:none;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(201,162,39,0.4);font-size:10px;color:rgba(255,255,255,0.95);">
+                            <div style="font-weight:700;color:#c9a227;margin-bottom:6px;font-size:11px;">📊 Health Score Calculation Audit:</div>
+                            <table style="width:100%;border-collapse:collapse;font-size:10px;color:white;margin-bottom:6px;">
+                                <thead>
+                                    <tr style="border-bottom:1px solid rgba(201,162,39,0.5);color:#fde68a;font-size:9px;text-transform:uppercase;">
+                                        <th style="text-align:left;padding:2px 0;">Component</th>
+                                        <th style="text-align:center;padding:2px 4px;">Qty / Val</th>
+                                        <th style="text-align:center;padding:2px 4px;">Weight</th>
+                                        <th style="text-align:right;padding:2px 0;">Impact</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${healthInfo.components.map(c => `
+                                        <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                                            <td style="padding:4px 0;color:#f1f5f9;font-weight:500;">${c.name}</td>
+                                            <td style="padding:4px 4px;text-align:center;color:#cbd5e1;">${c.name.includes('Base') ? '100 pts' : c.name.includes('Concentration') ? `${c.value}%` : `${c.value} item(s)`}</td>
+                                            <td style="padding:4px 4px;text-align:center;color:#cbd5e1;">${c.name.includes('Base') ? '—' : `${c.weight} pts`}</td>
+                                            <td style="padding:4px 0;text-align:right;font-weight:700;color:${c.contribution < 0 ? '#fca5a5' : '#86efac'};">${c.contribution > 0 ? '+' : ''}${c.contribution}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr style="font-weight:800;border-top:1px solid #c9a227;">
+                                        <td colspan="3" style="padding:5px 0;color:#c9a227;">Final Health Score (Clamped 0–100)</td>
+                                        <td style="padding:5px 0;text-align:right;color:${healthColor};font-size:11px;">${healthScore}/100</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4;background:rgba(0,0,0,0.2);padding:6px 8px;border-radius:4px;">
+                                <div>• <strong>Status Bands:</strong> Excellent (≥80), Moderate (60–79), Critical (&lt;60)</div>
+                                <div>• <strong>IC Buffers:</strong> Low (&lt;50% avg), Normal (50–130% avg), High (&gt;130% avg)</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
