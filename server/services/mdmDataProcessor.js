@@ -196,9 +196,9 @@ class MDMDataProcessor {
             s.dispatchPercentage = s.allotted > 0 ? (s.dispatched / s.allotted) * 100 : 0;
             s.receiptPercentage = s.allotted > 0 ? (s.received / s.allotted) * 100 : 0;
             s.wheatDispatchPct = s.wheatAllotted > 0 ? (s.wheatDispatched / s.wheatAllotted) * 100 : 0;
-            s.wheatReceiptPct = s.wheatDispatched > 0 ? (s.wheatReceived / s.wheatDispatched) * 100 : 0;
+            s.wheatReceiptPct = s.wheatAllotted > 0 ? (s.wheatReceived / s.wheatAllotted) * 100 : 0;
             s.fortifiedRiceDispatchPct = s.fortifiedRiceAllotted > 0 ? (s.fortifiedRiceDispatched / s.fortifiedRiceAllotted) * 100 : 0;
-            s.fortifiedRiceReceiptPct = s.fortifiedRiceDispatched > 0 ? (s.fortifiedRiceReceived / s.fortifiedRiceDispatched) * 100 : 0;
+            s.fortifiedRiceReceiptPct = s.fortifiedRiceAllotted > 0 ? (s.fortifiedRiceReceived / s.fortifiedRiceAllotted) * 100 : 0;
             s.totalAllotted = s.allotted;
             s.totalDispatched = s.dispatched;
             s.totalReceived = s.received;
