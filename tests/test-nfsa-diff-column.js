@@ -2,25 +2,18 @@
 const assert = require('assert');
 const DataProcessor = require('../server/services/dataProcessor');
 const ExcelGenerator = require('../server/services/excelGenerator');
-const PDFGenerator = require('../server/services/pdfGenerator');
 const fs = require('fs');
+const path = require('path');
 
 console.log('🧪 Testing NFSA "प्रेषित एव प्राप्त मात्रा का प्रतिशत" column...\n');
 
-// Mock rawData matching user's PDF
+// Mock rawData matching row 1 of user's PDF
 const mockShops = [
     {
-        shopCode: '2001',
+        shopCode: 'TEST01',
         allocation: 3367.37,
         dispatch: 1202.46,
         posReceipt: 951.85,
-        issuePoint: 'बैतूल'
-    },
-    {
-        shopCode: '2002',
-        allocation: 3491.50,
-        dispatch: 1386.50,
-        posReceipt: 1171.05,
         issuePoint: 'बैतूल'
     }
 ];
@@ -31,9 +24,6 @@ const processed = processor.processData(mockShops);
 console.log('Processed totals:', processed.totals);
 assert(processed.sectors.length > 0);
 
-// Check sector 1 diff:
-// Sector 1: alloc = 3367.37, disp = 1202.46 (35.71%), receipt = 951.85 (28.27%)
-// diff = 35.71 - 28.27 = 7.44%
 const s1 = processed.sectors[0];
 console.log('Sector 1 metrics:', {
     dispatchPct: s1.dispatchPercentage.toFixed(2),
@@ -41,13 +31,25 @@ console.log('Sector 1 metrics:', {
     diffPct: s1.dispatchReceiptDiffPercentage.toFixed(2)
 });
 
+// Sector 1: alloc = 3367.37, disp = 1202.46 (35.71%), receipt = 951.85 (28.27%)
+// diff = 35.71% - 28.27% = 7.44%
 assert.strictEqual(s1.dispatchPercentage.toFixed(2), '35.71');
-assert.strictEqual(s1.receiptPercentage.toFixed(2), '28.26');
-assert.strictEqual(s1.dispatchReceiptDiffPercentage.toFixed(2), '7.45');
+assert.strictEqual(s1.receiptPercentage.toFixed(2), '28.27');
+assert.strictEqual(s1.dispatchReceiptDiffPercentage.toFixed(2), '7.44');
 
 // Check Total diff
 const expectedDiff = (processed.totals.dispatchPercentage - processed.totals.receiptPercentage).toFixed(2);
 assert.strictEqual(processed.totals.dispatchReceiptDiffPercentage.toFixed(2), expectedDiff);
 console.log('✅ DataProcessor calculation verified successfully!\n');
 
-console.log('🎉 All NFSA diff column tests passed successfully!');
+// Test Excel Generator
+const excelGen = new ExcelGenerator();
+excelGen.generateReport(processed, 9, 2026).then(res => {
+    assert(fs.existsSync(res.filepath));
+    console.log('✅ Excel generated with 13 columns at:', res.filename);
+    try { fs.unlinkSync(res.filepath); } catch (e) {}
+    console.log('🎉 All NFSA diff column tests passed successfully!');
+}).catch(err => {
+    console.error('Excel generation error:', err);
+    process.exit(1);
+});

@@ -90,8 +90,8 @@ class PDFGenerator {
                 col.c6  { width: 7.5%;}   /* मासिक आवंटन */
                 col.c7  { width: 7.5%;}   /* आवंटन उठाव */
                 col.c8  { width: 6%;  }   /* उठाव % */
-                col.c9  { width: 7.5%;}   /* प्रेषित एव प्राप्त % */
-                col.c10 { width: 6.5%;}   /* POS % */
+                col.c9  { width: 6.5%;}   /* POS % */
+                col.c10 { width: 7.5%;}   /* प्रेषित एव प्राप्त अंतर % */
                 col.c11 { width: 6.5%;}   /* शेष */
                 col.c12 { width: 13.5%;}  /* परिवहनकर्ता */
                 col.c13 { width: 10%; }   /* मोबाइल */
@@ -120,8 +120,8 @@ class PDFGenerator {
                         <th>मासिक आवंटन NFSA (Qt.)</th>
                         <th>आवंटन उठाव NFSA (Qt.)</th>
                         <th>उठाव का प्रति&shy;शत</th>
-                        <th>प्रेषित एव प्राप्त मात्रा का प्रति&shy;शत</th>
                         <th>POS मशीन में प्राप्ति (%)</th>
+                        <th>प्रेषित एव प्राप्त मात्रा का अंतर प्रति&shy;शत</th>
                         <th>आवंटन उठाव शेष (Qt.)</th>
                         <th>परिवहन&shy;कर्ता का नाम</th>
                         <th>मोबाइल नंबर</th>
@@ -151,8 +151,8 @@ class PDFGenerator {
                         <td>${(sector.allocation || 0).toFixed(2)}</td>
                         <td>${(sector.dispatch || 0).toFixed(2)}</td>
                         <td>${dispatchPct.toFixed(2)}%</td>
-                        <td>${diffPct.toFixed(2)}%</td>
                         <td>${receiptPct.toFixed(2)}%</td>
+                        <td>${diffPct.toFixed(2)}%</td>
                         <td>${bal.toFixed(2)}</td>
                         <td>${sector.transporter || ''}</td>
                         <td>${sector.mobileNumber || ''}</td>
@@ -178,8 +178,8 @@ class PDFGenerator {
                     <td>${(totals.totalAllocation || 0).toFixed(2)}</td>
                     <td>${(totals.totalDispatch || 0).toFixed(2)}</td>
                     <td>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</td>
-                    <td>${(parseFloat(totalDiffPct) || 0).toFixed(2)}%</td>
                     <td>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</td>
+                    <td>${(parseFloat(totalDiffPct) || 0).toFixed(2)}%</td>
                     <td>${tBal.toFixed(2)}</td>
                     <td colspan="2"></td>
                 </tr>

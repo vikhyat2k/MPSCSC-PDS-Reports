@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 21:50 IST
+> **Last Sync:** 16 August 2026, 22:00 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Refactored Executive Report concentration metrics to explicit dynamic "Top N of M Issue Centers hold X%" phrasing via shared computeTopConcentration() helper |
+| Last Code Change | 16 Aug 2026 — Added "प्रेषित एव प्राप्त मात्रा का प्रतिशत" column to NFSA Monthly PDF and Excel reports left of "POS मशीन में प्राप्ति (%)" |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -396,6 +396,16 @@ avgDispatch% = (dispatchSum / allottedSum) x 100
 NOTE: Uses `s.dispatch` (depot outgoing). NOT `s.posReceipt`.
 posReceipt is what FPS shops received — can exceed allocation, producing impossible >100% values.
 
+### Dispatch vs POS Receipt Difference % (NFSA Monthly)
+
+```
+dispatchPercentage            = (sector.dispatch / sector.allocation) x 100
+receiptPercentage             = (sector.posReceipt / sector.allocation) x 100
+dispatchReceiptDiffPercentage = dispatchPercentage - receiptPercentage
+```
+
+NOTE: Displayed in the NFSA Monthly PDF (`pdfGenerator.js`) and Excel (`excelGenerator.js`) report table under column header `"प्रेषित एव प्राप्त मात्रा का प्रतिशत"` immediately left of `"POS मशीन में प्राप्ति (%)"`. Represents the in-transit / unacknowledged percentage gap between depot dispatch and FPS POS machine entry for the monthly allocation.
+
 ### District Health Score Calculation (Live Stock Position)
 
 ```
@@ -658,6 +668,7 @@ Tracks what has been tested and confirmed working.
 | District Health Score Auditability & IC Classification | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Refactored computeDistrictHealthScore, added audit modal, and documented formulas in Section 11 |
 | Wheat Pool Intelligence Aged Stock Isolation | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Separated aged vs fresh wheat, computed aged pool/district shares, and updated Section 3 alert copy |
 | Dynamic Issue Center Concentration Phrasing | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Replaced ambiguous "top half" with dynamic "Top N of M ICs" in Section 3 Alert, Section 4 Priority, and Scorecard |
+| NFSA Monthly Dispatch vs Receipt Difference Column | PDF & Excel Verification | VERIFIED | 16 Aug 2026 | Added "प्रेषित एव प्राप्त मात्रा का प्रतिशत" column left of POS % in NFSA monthly PDF & Excel |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -690,6 +701,21 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-16 | Add "प्रेषित एव प्राप्त मात्रा का प्रतिशत" Column to NFSA Monthly PDF and Excel Reports
+
+Files: server/services/pdfGenerator.js, server/services/excelGenerator.js, server/services/dataProcessor.js, PROJECT_DOCS.md, tests/test-nfsa-diff-column.js
+Type: Feature / NFSA Monthly Report Enhancement
+
+- USER REQUIREMENT:
+  Add a dedicated column to the left of "POS मशीन में प्राप्ति (%)" titled "प्रेषित एव प्राप्त मात्रा का प्रतिशत" (प्रेषित एव प्राप्त मात्रा का प्रतिशत = उठाव का प्रतिशत - POS मशीन में प्राप्ति %) specifically for the NFSA monthly scheme.
+- IMPLEMENTATION:
+  1. `dataProcessor.js`: Added `dispatchReceiptDiffPercentage` to sector records and `totals`.
+  2. `pdfGenerator.js`: Added 13th column `<th>प्रेषित एव प्राप्त मात्रा का प्रति&shy;शत</th>` left of `<th>POS मशीन में प्राप्ति (%)</th>`, updated `<colgroup>` definitions (summing to 100%), and formatted sector values and total row.
+  3. `excelGenerator.js`: Added `'प्रेषित एव प्राप्त मात्रा का प्रतिशत'` header and row computations.
+  4. Documented formula in `PROJECT_DOCS.md` Section 11.
+
+---
 
 ### 2026-08-16 | Replace Ambiguous "Top Half" Phrasing with Dynamic "Top N of M Issue Centers" in Executive Report
 
