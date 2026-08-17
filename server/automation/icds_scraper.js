@@ -338,46 +338,7 @@ class ICDSScraper {
     }
 
     async _getDepotList() {
-        try {
-            const dynamicDepots = await this.page.evaluate(() => {
-                const container = document.getElementById('depotreport') || document.querySelector('#detailsED table');
-                if (!container) return [];
-                const links = container.querySelectorAll('a');
-                const list = [];
-                const seen = new Set();
-                links.forEach((a) => {
-                    const text = a.innerText.trim();
-                    const onclick = a.getAttribute('onclick') || '';
-                    if (text && (onclick.includes('getreportfps') || onclick.includes('getreportdepot'))) {
-                        const match = onclick.match(/['"](\d+)['"]\s*,\s*['"]([^'"]+)['"]/);
-                        const depotId = match ? match[1] : '';
-                        const depotName = match ? match[2] : text;
-                        if (depotId === '233100404' || text.includes('233100404')) return; // Exclude empty Aamla entry
-                        const key = `${depotId}_${text}`;
-                        if (!seen.has(key)) {
-                            seen.add(key);
-                            list.push({
-                                slNo: list.length + 1,
-                                name: text,
-                                depotName: depotName,
-                                depotId: depotId,
-                                onclick: onclick || `getreportfps('${depotId}','${depotName}')`
-                            });
-                        }
-                    }
-                });
-                return list;
-            });
-
-            if (dynamicDepots && dynamicDepots.length > 0) {
-                console.log(`📍 [ICDS] Dynamically extracted ${dynamicDepots.length} depots from #depotreport table:`, dynamicDepots.map(d => d.name).join(', '));
-                return dynamicDepots;
-            }
-        } catch (e) {
-            console.warn('⚠️ Dynamic depot extraction failed, using hardcoded fallback list:', e.message);
-        }
-
-        console.log('   Using fallback 9 active ICDS ISSUE_POINTS list (excluding 233100404)...');
+        console.log('   Using hardcoded ICDS ISSUE_POINTS (9 active issue points)...');
         const ISSUE_POINTS = [
             { id: '2331007',   name: 'AMLA' },
             { id: '2331003',   name: 'Athner' },
@@ -403,84 +364,100 @@ class ICDSScraper {
         console.log(`   Extracting shops for depot: ${depot.depotName || depot.name} (SL ${depot.slNo})...`);
         let extractedShops = [];
         for (let attempt = 1; attempt <= 3; attempt++) {
-            // Clear any existing fpsreport to prevent extracting stale data
-            await this.page.evaluate(() => {
-                const container = document.getElementById('detailsEDfps');
-                if (container) container.innerHTML = '';
-            });
-
-            await this.page.evaluate((onclickStr) => {
-                try { eval(onclickStr); return true; } catch (e) { return false; }
-            }, depot.onclick);
-
-            await this._waitForLoading();
-
-            await this.page.waitForFunction(() => {
-                const t = document.getElementById('fpsreport');
-                return t && t.querySelectorAll('tr').length > 5;
-            }, { timeout: 35000 }).catch(() => {});
-
-            const shopsResult = await this.page.evaluate((depotNameStr) => {
-                const table = document.getElementById('fpsreport');
-                if (!table) return { shops: [], tableFound: false };
-
-                const rows = table.querySelectorAll('tr');
-                const result = [];
-                let firstDataCols = 0;
-                let sampleRow = null;
-
-                for (let i = 0; i < rows.length; i++) {
-                    const cells = rows[i].querySelectorAll('td');
-                    if (firstDataCols === 0 && cells.length > 5) firstDataCols = cells.length;
-                    if (cells.length < 5) continue;
-
-                    const shopCode = (cells[1] ? cells[1].innerText : '').trim();
-                    if (!/^\d{5,}$/.test(shopCode)) continue;
-
-                    const parseKg = (td) => {
-                        if (!td) return 0;
-                        const v = parseFloat((td.innerText || '0').replace(/,/g, '').trim());
-                        return isNaN(v) ? 0 : v / 100; // Kg → Quintal
-                    };
-
-                    const parseNum = (td) => {
-                        if (!td) return 0;
-                        const v = parseInt((td.innerText || '0').replace(/,/g, '').trim(), 10);
-                        return isNaN(v) ? 0 : v;
-                    };
-
-                    if (result.length === 0) {
-                        sampleRow = Array.from(cells).map((c, idx) => `[${idx}]=${c.innerText.trim().substring(0, 20)}`);
+            const shopsResult = await this.page.evaluate(({ m, y, distCode, distName, depotId, depotName }) => {
+                return new Promise((resolve) => {
+                    let container = document.getElementById('detailsEDfps');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'detailsEDfps';
+                        document.body.appendChild(container);
                     }
 
-                    // Column mapping for ICDS #fpsreport:
-                    // [0]=SL, [1]=FPS/AWC, [2]=Centres, [3]=Beneficiaries
-                    // Wheat:  [4]=Required, [5]=CB, [6]=Allotted, [7]=RO, [8]=Dispatch, [9]=ReceivedFPS, [10]=Issued
-                    // FSalt:  [11]=Required, [12]=CB, [13]=Allotted, [14]=RO, [15]=Dispatch, [16]=ReceivedFPS, [17]=Issued
-                    // Rice:   [18]=Required, [19]=CB, [20]=Allotted, [21]=RO, [22]=Dispatch, [23]=ReceivedFPS, [24]=Issued
-                    const colCount = cells.length;
-                    const hasRiceBlock = colCount >= 24;
+                    if (typeof $ === 'undefined') {
+                        resolve({ shops: [], error: 'jQuery not available' });
+                        return;
+                    }
 
-                    result.push({
-                        shopCode,
-                        shopName: `ICDS AWC ${shopCode}`,
-                        issuePoint: depotNameStr,
-                        columnCount: colCount,
-                        awcCount: parseNum(cells[2]),
-                        inmatesCount: parseNum(cells[3]),
-                        wheatAllotted: parseKg(cells[6]),
-                        wheatDispatched: parseKg(cells[8]),
-                        wheatReceived: parseKg(cells[9]),
-                        fsaltAllotted: parseKg(cells[13]),
-                        fsaltDispatched: parseKg(cells[15]),
-                        fsaltReceived: parseKg(cells[16]),
-                        riceAllotted: hasRiceBlock ? parseKg(cells[20]) : 0,
-                        riceDispatched: hasRiceBlock ? parseKg(cells[22]) : 0,
-                        riceReceived: hasRiceBlock ? parseKg(cells[23]) : 0
+                    const postData = 'month=' + m + '&year=' + y + 
+                        '&dist_code=' + distCode + '&depot_id=' + depotId + 
+                        '&dist_name=' + encodeURIComponent(distName) + '&depot_name=' + encodeURIComponent(depotName);
+
+                    $.ajax({
+                        type: 'post',
+                        url: 'ICDS_allotment_fps.jsp',
+                        data: postData,
+                        cache: false,
+                        timeout: 30000,
+                        success: function(html) {
+                            container.innerHTML = html;
+                            const table = document.getElementById('fpsreport') || container.querySelector('table');
+                            if (!table) return resolve({ shops: [], htmlLen: html ? html.length : 0 });
+
+                            const rows = table.querySelectorAll('tr');
+                            const result = [];
+                            let firstDataCols = 0;
+                            let sampleRow = null;
+
+                            const parseKg = (td) => {
+                                if (!td) return 0;
+                                const v = parseFloat((td.innerText || '0').replace(/,/g, '').trim());
+                                return isNaN(v) ? 0 : v / 100; // Kg → Quintal
+                            };
+
+                            const parseNum = (td) => {
+                                if (!td) return 0;
+                                const v = parseInt((td.innerText || '0').replace(/,/g, '').trim(), 10);
+                                return isNaN(v) ? 0 : v;
+                            };
+
+                            for (let i = 0; i < rows.length; i++) {
+                                const cells = rows[i].querySelectorAll('td');
+                                if (firstDataCols === 0 && cells.length > 5) firstDataCols = cells.length;
+                                if (cells.length < 5) continue;
+
+                                const shopCode = (cells[1] ? cells[1].innerText : '').trim();
+                                if (!/^\d{5,}$/.test(shopCode)) continue;
+
+                                if (result.length === 0) {
+                                    sampleRow = Array.from(cells).map((c, idx) => `[${idx}]=${c.innerText.trim().substring(0, 20)}`);
+                                }
+
+                                const colCount = cells.length;
+                                const hasRiceBlock = colCount >= 24;
+
+                                result.push({
+                                    shopCode,
+                                    shopName: `ICDS AWC ${shopCode}`,
+                                    issuePoint: depotName,
+                                    columnCount: colCount,
+                                    awcCount: parseNum(cells[2]),
+                                    inmatesCount: parseNum(cells[3]),
+                                    wheatAllotted: parseKg(cells[6]),
+                                    wheatDispatched: parseKg(cells[8]),
+                                    wheatReceived: parseKg(cells[9]),
+                                    fsaltAllotted: parseKg(cells[13]),
+                                    fsaltDispatched: parseKg(cells[15]),
+                                    fsaltReceived: parseKg(cells[16]),
+                                    riceAllotted: hasRiceBlock ? parseKg(cells[20]) : 0,
+                                    riceDispatched: hasRiceBlock ? parseKg(cells[22]) : 0,
+                                    riceReceived: hasRiceBlock ? parseKg(cells[23]) : 0
+                                });
+                            }
+                            resolve({ shops: result, tableFound: true, totalRows: rows.length, firstDataCols, sampleRow });
+                        },
+                        error: function(xhr, status, err) {
+                            resolve({ shops: [], error: status + ': ' + err });
+                        }
                     });
-                }
-                return { shops: result, tableFound: true, totalRows: rows.length, firstDataCols, sampleRow };
-            }, depot.depotName || depot.name);
+                });
+            }, {
+                m: this.currentMonth,
+                y: this.currentYear || 2026,
+                distCode: '447',
+                distName: this.DISTRICT_NAME,
+                depotId: depot.depotId,
+                depotName: depot.depotName || depot.name
+            });
 
             extractedShops = Array.isArray(shopsResult) ? shopsResult : (shopsResult.shops || []);
             if (extractedShops.length > 0) break;
