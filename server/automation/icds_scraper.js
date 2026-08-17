@@ -205,29 +205,16 @@ class ICDSScraper {
     }
 
     async _selectFilters(month, year) {
+        console.log(`   Setting filters to Month: ${month}, Year: ${year}`);
         try {
-            console.log(`   Setting filters to Month: ${month}, Year: ${year}`);
-
-            // Select Month
-            const monthSelect = await this.page.$('#month');
-            if (monthSelect) {
-                await this.page.select('#month', String(month));
-                console.log(`   ✅ Selected month: ${month}`);
-                await this._waitForLoading();
-            } else {
-                console.warn('⚠️ Could not find #month dropdown');
-            }
-
-            // Select Year
-            const yearSelect = await this.page.$('#year');
-            if (yearSelect) {
-                await this.page.select('#year', String(year));
-                console.log(`   ✅ Selected year: ${year}`);
-                await this._waitForLoading();
-            } else {
-                console.warn('⚠️ Could not find #year dropdown');
-            }
-
+            await this.page.evaluate((m, y) => {
+                const mSel = document.getElementById('month') || document.querySelector('select[name="month"]');
+                const ySel = document.getElementById('year') || document.querySelector('select[name="year"]');
+                if (mSel) mSel.value = String(m);
+                if (ySel) ySel.value = String(y);
+            }, month, year);
+            console.log(`   ✅ Selected month: ${month}`);
+            console.log(`   ✅ Selected year: ${year}`);
         } catch (error) {
             console.error('Error setting filters:', error);
         }
