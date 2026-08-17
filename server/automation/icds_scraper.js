@@ -183,7 +183,7 @@ class ICDSScraper {
                 console.log(`   ✅ Extracted ${shops.length} shops from ${depot.name}`);
 
                 if (i < validDepots.length - 1) {
-                    await this._goBackToDepotList();
+                    await new Promise(r => setTimeout(r, 200));
                 }
             }
 
