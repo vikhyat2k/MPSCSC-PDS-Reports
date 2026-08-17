@@ -107,6 +107,7 @@ class ICDSScraper {
      */
     async extractData(month, year, onProgress = null) {
         this.currentMonth = month;
+        this.currentYear = year;
         console.log(`\n📊 [ICDS] Starting extraction for ${month}/${year}...\n`);
 
         try {
