@@ -244,15 +244,23 @@ class ICDSScraper {
 
         await this._waitForLoading();
 
-        // Wait up to 60s for district table or "No data found"
-        await this.page.waitForFunction(() => {
-            const dr = document.getElementById('distreport') || document.querySelector('#detailsED table');
-            if (dr && (dr.innerText.includes('Betul') || dr.innerText.includes('No data found'))) return true;
+        // Wait for specific district table or "No data found" for the CHOSEN month
+        await this.page.waitForFunction((m) => {
+            const dr = document.getElementById('distreport');
+            if (!dr) return false;
+            const text = dr.innerText;
+            const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const targetMonthName = monthNames[parseInt(m)];
+            
+            if (text.includes(targetMonthName)) {
+                if (text.includes('Betul') || text.includes('No data found')) return true;
+            }
             return false;
-        }, { timeout: 60000 }).catch(() => console.log('⚠️ Timed out waiting for #distreport'));
+        }, { timeout: 30000 }, String(this.currentMonth)).catch(() => console.log('⚠️ Timed out waiting for Results table for ' + this.currentMonth));
 
         let noData = await this.page.evaluate(() => {
-            const txt = document.body.innerText;
+            const dr = document.getElementById('distreport');
+            const txt = dr ? dr.innerText : document.body.innerText;
             return txt.includes('No data found');
         });
 
@@ -265,10 +273,11 @@ class ICDSScraper {
                 if (btn) btn.click();
             });
             await this._waitForLoading();
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 1000));
             
             noData = await this.page.evaluate(() => {
-                const txt = document.body.innerText;
+                const dr = document.getElementById('distreport');
+                const txt = dr ? dr.innerText : document.body.innerText;
                 return txt.includes('No data found');
             });
         }
