@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 16 August 2026, 22:10 IST
+> **Last Sync:** 17 August 2026, 08:58 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 16 Aug 2026 — Moved NFSA difference column to the right of "POS मशीन में प्राप्ति (%)" and renamed header to "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" |
+| Last Code Change | 17 Aug 2026 — Added verified commodity abbreviation legend to Commodity Intelligence Matrix in Executive Report |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -358,12 +358,14 @@ npm run dev                # development (auto-restart)
 | GET | /api/reports/:id/advanced-analytics/excel | Download Advanced Analytics 5-Sheet Excel |
 | GET | /api/reports/:id/advanced-analytics/pdf | Download Advanced Analytics 9-Page Executive PDF |
 | GET | /api/reports/:id/advanced-analytics/html | Interactive HTML Report Preview |
+| POST | /api/stock-position/snapshot | Upsert daily stock snapshot (IST date keyed) |
+| GET | /api/stock-position/snapshot-history | Get recent stock snapshots (ordered by date DESC) |
 
 ---
 
 ## 10. DATABASE SCHEMA
 
-File: `database.sqlite`
+File: `database.sqlite` / `server/database/db.js`
 
 ```sql
 CREATE TABLE reports (
@@ -378,6 +380,16 @@ CREATE TABLE reports (
   filepath    TEXT,        -- Excel file path
   pdf_path    TEXT,        -- PDF file path
   created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE stock_snapshots (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  snapshot_date     TEXT NOT NULL UNIQUE, -- YYYY-MM-DD, IST calendar day (UTC+5:30)
+  synced_at         TEXT NOT NULL,        -- Full ISO timestamp of actual sync
+  health_score      INTEGER NOT NULL,     -- District Health Score (0-100)
+  health_label      TEXT,                 -- Excellent | Moderate | Critical
+  district_total_qt REAL,                 -- Total district stock in Quintals (Qt)
+  ic_data           TEXT                  -- JSON array of {icName, icTotal, sharePct, status}
 );
 ```
 
@@ -406,6 +418,15 @@ dispatchReceiptDiffPercentage = dispatchPercentage - receiptPercentage
 
 NOTE: Displayed in the NFSA Monthly PDF (`pdfGenerator.js`) and Excel (`excelGenerator.js`) report table under column header `"प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत"` immediately right of `"POS मशीन में प्राप्ति (%)"`. Represents the in-transit / unacknowledged percentage gap between depot dispatch and FPS POS machine entry for the monthly allocation.
 
+### Commodity Schemes (ICDS, MDM, Welfare) Receipt % Standard
+
+```
+उठाव % (Dispatch %) = (Dispatched Quantity / Allotted Quantity) x 100
+प्राप्ति % (Receipt %)  = (Received Quantity / Allotted Quantity) x 100
+```
+
+NOTE: Across all commodity schemes (ICDS, MDM, Welfare), `प्राप्ति %` is uniformly computed against **मासिक आवंटन (Allotted Quantity)** across PDF reports, Excel exports, data processors, analytics matrices, and restorer services.
+
 ### District Health Score Calculation (Live Stock Position)
 
 ```
@@ -424,7 +445,7 @@ healthLabel = IF (districtHealthScore >= 80) THEN "Excellent" (Green #059669)
 
 NOTE: Implemented in `computeDistrictHealthScore(icData)` in `public/app.js`. `avgStock` is the district average buffer per Issue Center (`districtTotal / totalICs`). Penalizes data integrity issues (negative stock) most heavily (-12 pts/occurrence), followed by buffer starvation (-8 pts/IC) and spatial concentration risk (-10 pts flat).
 
-### Issue Center Buffer Classification (Live Stock Position)
+### IC Status Classification — Executive Report
 
 ```
 avgStock = districtTotal / COUNT(icData)
@@ -432,9 +453,41 @@ avgStock = districtTotal / COUNT(icData)
 Low Buffer     = ic.total < 0.5 x avgStock   (<50% of avg)   -> Status: "Low"    (Red #dc2626)
 Normal Buffer  = 0.5 x avgStock <= ic.total <= 1.3 x avgStock -> Status: "Normal" (Blue #2563eb)
 High Buffer    = ic.total > 1.3 x avgStock   (>130% of avg)  -> Status: "High"   (Green #059669)
+
+Bar Fill Color = IF (ic.total == maxIC.total) THEN Green (#059669)
+                 ELSE IF (ic.total < 0.5 x avgStock) THEN Red (#dc2626)
+                 ELSE Navy (#1e3a8a)
 ```
 
-NOTE: Used in Section 1 IC Volume Analysis bar chart and Section 4 Management Scorecard to classify issue center inventory risk.
+NOTE: Implemented in `buildStockAdvancedReportHTML()` and `computeDistrictHealthScore()` in `public/app.js`. Used in Section 1 IC Volume Analysis bar chart and Section 4 Management Scorecard to classify issue center inventory buffer risk. NOTE: This rule differs from the Live Stock Position dashboard bar chart rule below (which uses a Gold/Green/Red 3-state system without a 130% High threshold); tracked for future reconciliation under Task T11.
+
+### IC Status Classification — Live Stock Position Bar Chart
+
+```
+avgStock = districtTotal / COUNT(icData)
+maxStock = MAX(ic.total for all ICs)
+
+Top IC (Rank 1)  = ic.total == maxStock       -> Bar Color: Gold/Amber (#f59e0b)
+Low Buffer       = ic.total < 0.5 x avgStock  -> Bar Color: Red (#ef4444)
+Standard Buffer  = All other ICs (>=50% avg)  -> Bar Color: Emerald/Green (#10b981)
+```
+
+NOTE: Implemented in `fetchStockPositionSheet()` in `public/index.html` rendering to `#stockChartCanvas`. Applies a 3-color scheme (Gold leader, Red shortage, Green standard). NOTE: This rule differs from the Executive Report's 3-tier High/Normal/Low classification above (which categorizes buffers via 50% and 130% statistical bounds with Blue Normal and Green High labels); tracked for future reconciliation under Task T11.
+
+### Priority 1 Replenishment Target Calculation (Live Stock Position)
+
+```
+LOW_BUFFER_THRESHOLD_PCT = 0.5 (50% of district average buffer)
+districtAvgPerIC         = districtTotal / COUNT(icData)
+thresholdQt              = districtAvgPerIC x LOW_BUFFER_THRESHOLD_PCT
+
+FOR EACH ic IN lowBufferICs (where 0 < ic.total < thresholdQt):
+    neededQt[ic]         = thresholdQt - ic.total                 [unrounded full precision]
+
+totalNeededQt            = SUM(neededQt[ic] for all lowBufferICs) [sum unrounded, then format]
+```
+
+NOTE: Implemented in `buildStockAdvancedReportHTML()` in `public/app.js` for Section 4 Priority 1 card ("Replenish Low-Buffer Issue Centers"). NOTE: This threshold is relative-to-district-average (statistical buffer balancing), not demand-based (consumption/allotment shortfall), and is expected to be superseded once the live scheme shortfall/allocation engine is integrated into IC-status classification (tracked in Task T12).
 
 ### Wheat Pool Intelligence — Aged vs Fresh Breakdown (Live Stock Position)
 
@@ -602,6 +655,8 @@ Tasks that are identified but not yet implemented.
 | T8 | Test FPS Shop Directory with live data | Low | — | 17 Jul 2026 |
 | T9 | Verify email notification flow end-to-end | Low | — | 17 Jul 2026 |
 | T10 | Expand Advanced Analytics Report to MDM/ICDS/Welfare schemes (v2) | Medium | — | 04 Aug 2026 |
+| T11 | Reconcile Executive Report's High/Normal/Low IC classification with Live Stock Position bar chart's Gold/Red/Green rule (two schemes currently applied to the same underlying data) | Medium | — | 17 Aug 2026 |
+| T12 | Switch Priority-1 replenishment target from 50%-of-average (relative) to shortfall/allocation-based (demand) once available | Medium | — | 17 Aug 2026 |
 
 ---
 
@@ -618,6 +673,7 @@ Items being actively monitored for regression or future breakage.
 | reportRestorer.js non-NFSA guard | MEDIUM | If restorer logic is refactored, ensure the scheme guard remains | Developer |
 | database.sqlite path | LOW | If server moved to different OS/path, db path in db.js must be updated | Developer |
 | Concurrency limit (max 3) | LOW | If hardware is upgraded, limit may be safely increased | Developer |
+| stock_snapshots write failures | MEDIUM | stock_snapshots write failures must stay non-blocking; report rendering must never depend on snapshot write succeeding | Developer |
 
 ---
 
@@ -669,6 +725,11 @@ Tracks what has been tested and confirmed working.
 | Wheat Pool Intelligence Aged Stock Isolation | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Separated aged vs fresh wheat, computed aged pool/district shares, and updated Section 3 alert copy |
 | Dynamic Issue Center Concentration Phrasing | Analytics & UI Verification | VERIFIED | 16 Aug 2026 | Replaced ambiguous "top half" with dynamic "Top N of M ICs" in Section 3 Alert, Section 4 Priority, and Scorecard |
 | NFSA Monthly Dispatch vs Receipt Difference Column | PDF & Excel Verification | VERIFIED | 16 Aug 2026 | Added "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column right of POS % in NFSA monthly PDF & Excel |
+| Uniform Allocation-Based Receipt % across Commodity Schemes | All-Scheme Verification | VERIFIED | 17 Aug 2026 | Standardized ICDS, MDM, Welfare PDF, Excel, and analytics matrices to calculate receipt % against Allotment |
+| IC Classification Logic Audit & UI Self-Documenting Keys | UI & Logic Verification | VERIFIED | 17 Aug 2026 | Audited Executive Report and base bar chart classification rules; added self-documenting legend keys to Section 1 header & stockChartCanvas card |
+| Priority 1 Replenishment Calculation & Formatting | Analytics & UI Verification | VERIFIED | 17 Aug 2026 | Added unrounded per-IC replenishment calculation, total sum, and Indian numeral formatting in Section 4 |
+| Stock Snapshots Database & Health Score Trend Arrow | Unit & Integration | VERIFIED | 17 Aug 2026 | Added stock_snapshots table, IST date conversion, upsert handler, history endpoint, and cover trend arrow |
+| Commodity Abbreviation Legend in Executive Report | UI & Export Verification | VERIFIED | 17 Aug 2026 | Added static commodity abbreviation legend beneath Section 2 heatmap with terms verified against View_LiveRollup source headers |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -701,6 +762,112 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-17 | Add Commodity Abbreviation Legend to Section 2 Heatmap
+
+Files: public/app.js, PROJECT_DOCS.md
+Type: UI / Documentation & Analytics Polish
+
+- USER REQUIREMENT:
+  Add a static commodity-abbreviation glossary legend directly beneath the stock-level color legend in Section 2 (Commodity Intelligence Matrix) of the Executive Report (`buildStockAdvancedReportHTML()`).
+- SOURCE VERIFICATION:
+  - Inspected raw CSV header row from live Google Sheet (`View_LiveRollup` tab via `gviz/tq` endpoint):
+    - Column 5/6: `CMR-Fort` → `CMR Fortified Rice`
+    - Column 7/8: `CMR-NonFort` → `CMR Non-Fortified Rice`
+    - Column 10/11/12: `Jwar` → `Jowar (Sorghum)`
+    - Column 15: `Salt (Iodine)` → `Salt (Iodine)`
+    - Column 16: `F.Salt` → `Fortified Salt`
+- IMPLEMENTATION:
+  1. Preserved all column headers, cell widths, and table formatting byte-for-byte in Section 2.
+  2. Added a high-contrast static glossary line (`#475569` text on `#f1f5f9` background with `#e2e8f0` border, `10px` font size) directly beneath the stock-level color badges:
+     `Abbreviations: Fort = CMR Fortified Rice · NF = CMR Non-Fortified Rice · Jwar = Jowar (Sorghum) · Salt (Iod) = Salt (Iodine) · F.Salt = Fortified Salt`
+  3. Confirmed proper rendering in on-screen modal, `html2canvas` image export, and `jsPDF` multi-page PDF generation without visual truncation.
+
+---
+
+### 2026-08-17 | Add Server-Side Stock Snapshots & Prior-Day Health Score Trend Arrow
+
+Files: server/database/db.js, server.js, public/app.js, PROJECT_DOCS.md, tests/test-stock-snapshots.js
+Type: Feature / Data Persistence & Analytics Polish
+
+- USER REQUIREMENT:
+  Add a server-side snapshot table (`stock_snapshots`) in SQLite and persist daily health score snapshots by IST date (`YYYY-MM-DD`, UTC+5:30) to show a trend delta arrow (vs. the most recent prior day) on the Executive Report cover.
+- IMPLEMENTATION:
+  1. Database (`server/database/db.js`):
+     - Created `stock_snapshots` table with `snapshot_date TEXT NOT NULL UNIQUE`, `synced_at`, `health_score`, `health_label`, `district_total_qt`, and `ic_data` JSON.
+     - Implemented `saveStockSnapshot` (upsert via `INSERT ... ON CONFLICT(snapshot_date) DO UPDATE`) and `getStockSnapshotHistory(limit)`.
+  2. Backend Endpoints (`server.js`):
+     - Registered `POST /api/stock-position/snapshot` (with alias `/stock-position/snapshot`).
+     - Registered `GET /api/stock-position/snapshot-history?limit=2` (with alias `/stock-position/snapshot-history`).
+     - Added `getISTDateString()` to guarantee exact UTC+5:30 IST calendar date attribution regardless of host server timezone (localhost / Render).
+  3. Client-Side (`public/app.js`):
+     - `showStockAdvancedReport()` fetches `/api/stock-position/snapshot-history?limit=2` before rendering.
+     - `buildStockAdvancedReportHTML()` fires non-blocking async POST to `/api/stock-position/snapshot` (do not await, do not surface errors to user).
+     - Computes trend delta against the most recent prior day and renders trend badge (`▲ +X`, `▼ -X`, `— 0`) next to the cover Health Score. If fewer than 2 snapshots exist (e.g. first-ever run), renders cleanly without extra badge.
+  4. Watchlist & Safety:
+     - Documented in Section 17 that stock snapshot write failures must remain non-blocking.
+  5. Automated Testing:
+     - Added `tests/test-stock-snapshots.js` validating IST offset math, SQLite upsert operations, history querying, and trend badge calculations.
+
+---
+
+### 2026-08-17 | Add Quantity-Needed-to-Threshold to Priority 1 Card in Executive Report
+
+Files: public/app.js, PROJECT_DOCS.md, tests/test-priority-replenishment.js
+Type: Feature / UI Analytics Polish
+
+- USER REQUIREMENT:
+  Add quantity-needed-to-threshold to the Priority 1 card ("Replenish Low-Buffer Issue Centers") in Section 4 of the Advanced Analytics Executive Report.
+- AUDIT & REFACTOR:
+  1. Source of Truth: Confirmed Priority 1's Low Buffer IC list was already consuming `healthInfo.lowBufferICs` from `computeDistrictHealthScore(icData)` (single source of truth).
+  2. Named Constant: Extracted `LOW_BUFFER_THRESHOLD_PCT = 0.5` (and `HIGH_BUFFER_THRESHOLD_PCT = 1.3`) into top-level constants referenced across Section 1 bar charts, Section 3 classification, and Section 4 Priority 1 replenishment calculations.
+  3. Calculation: For each Low Buffer IC, computed exact unrounded `neededQt = (avgStock * LOW_BUFFER_THRESHOLD_PCT) - ic.total`.
+  4. Summation: Computed `totalNeededQt` as the sum of unrounded per-IC values before rounding once for display via `fmtQ()` to avoid paise-equivalent rounding discrepancies.
+  5. Formatting: Rendered each IC with `+X,XXX.XX Qt` and appended `"Total replenishment needed: Y,YYY.YY Qt."` while preserving the existing warehouse descriptive copy.
+  6. Automated Test: Added `tests/test-priority-replenishment.js` validating exact arithmetic and formatting.
+
+---
+
+### 2026-08-17 | Audit IC Classification Logic in Executive Report vs Base Bar Chart & Add UI Keys
+
+Files: public/app.js, public/index.html, PROJECT_DOCS.md
+Type: Audit / Documentation & UI Polish
+
+- USER REQUIREMENT:
+  Audit and document the IC status-classification logic across (A) Executive Report Section 1 bar chart and (B) base Live Stock Position `#stockChartCanvas` bar chart without changing runtime behavior. Add self-documenting one-line legend keys to both charts and record discrepancy in Section 11 and Section 16.
+- AUDIT FINDINGS:
+  1. Executive Report (`buildStockAdvancedReportHTML()` in `public/app.js`):
+     - Low: `ic.total < 0.5 * avgStock` (<50% avg) -> Red (`#dc2626`)
+     - Normal: `0.5 * avgStock <= ic.total <= 1.3 * avgStock` (50%–130% avg) -> Blue (`#2563eb`)
+     - High: `ic.total > 1.3 * avgStock` (>130% avg) -> Green (`#059669`)
+     - Bar track color: Top IC is Green (`#059669`), Low (<50%) is Red (`#dc2626`), other is Navy (`#1e3a8a`).
+  2. Base Live Stock Position Bar Chart (`fetchStockPositionSheet()` in `public/index.html`):
+     - Gold/Amber (`#f59e0b`): Single top IC (`v === maxIC.total`).
+     - Red (`#ef4444`): Critical shortage (`v < avgStock * 0.5`).
+     - Green (`#10b981`): Standard buffer (`v >= avgStock * 0.5` and `v !== maxIC.total`).
+     - Confirmed: Matches the 12 Aug changelog description exactly; has not diverged.
+  3. Discrepancy Identified: Executive Report applies a 3-tier statistical buffer categorization (Low / Normal / High with 50% & 130% bounds and Blue/Green labels), whereas the base bar chart uses a Leader/Shortage/Standard 3-color rule (Gold / Red / Green with only a 50% bound).
+- IMPLEMENTATION:
+  1. `public/app.js`: Added one-line self-documenting key to Section 1 header (`● High: >130% avg`, `● Normal: 50%–130% avg`, `● Low: <50% avg`).
+  2. `public/index.html`: Added one-line self-documenting key above `#stockChartCanvas` (`■ Gold: Top IC`, `■ Green: Standard (≥50% avg)`, `■ Red: Low Buffer (<50% avg)`).
+  3. `PROJECT_DOCS.md`: Documented both rules under Section 11 with explicit notes highlighting the variance; logged task T11 in Section 16 for future reconciliation.
+
+---
+
+### 2026-08-17 | Standardize "प्राप्ति %" Calculation Base to Allotment across ICDS, MDM, and Welfare Schemes
+
+Files: server/services/icdsPdfGenerator.js, server/services/icdsExcelGenerator.js, server/services/icdsDataProcessor.js, server/services/mdmExcelGenerator.js, server/services/mdmDataProcessor.js, server/services/welfareExcelGenerator.js, server/services/welfareDataProcessor.js, server.js, server/services/reportRestorer.js, PROJECT_DOCS.md, tests/test-all-schemes-receipt-pct.js
+Type: Improvement / Cross-Scheme Standardization
+
+- USER REQUIREMENT:
+  Standardize `प्राप्ति %` calculation to be computed against **मासिक आवंटन (Allotment)** across ICDS, MDM, and Welfare schemes so all reports follow the same consistent formula: `(Received / Allotted) * 100`.
+- AUDIT & REFACTOR:
+  1. `ICDS`: Updated `icdsPdfGenerator.js`, `icdsExcelGenerator.js`, `icdsDataProcessor.js`, `server.js` (`computeICDSAnalytics`), and `reportRestorer.js` from `(Received / Dispatched)` to `(Received / Allotted) * 100`. Total wheat receipt % now reflects $532.50 / 1753.63 = 30.36\% \approx 30.4\%$ instead of $84.1\%$.
+  2. `MDM`: Updated `mdmExcelGenerator.js` and `mdmDataProcessor.js` to calculate receipt % against allotment, bringing Excel into 100% alignment with `mdmPdfGenerator.js` and server analytics.
+  3. `Welfare`: Updated `welfareExcelGenerator.js`, `welfareDataProcessor.js`, `server.js` (`computeWelfareAnalytics`), and `reportRestorer.js` to calculate receipt % against allotment, matching `welfarePdfGenerator.js`.
+  4. Created automated unit test `tests/test-all-schemes-receipt-pct.js` validating all 3 schemes.
+
+---
 
 ### 2026-08-16 | Relocate and Rename NFSA Difference Column to "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत"
 

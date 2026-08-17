@@ -4710,7 +4710,7 @@ window.downloadAdvAnalyticsImage = downloadAdvAnalyticsImage;
 //  उन्नत विश्लेषण रिपोर्ट प्रीव्यू — Live District Stock Position
 // ═══════════════════════════════════════════════════════════════
 
-function showStockAdvancedReport() {
+async function showStockAdvancedReport() {
     const data = window.lastStockData;
     if (!data || !data.icData || data.icData.length === 0) {
         if (typeof showToast === 'function') {
@@ -4724,7 +4724,27 @@ function showStockAdvancedReport() {
     const modal = document.getElementById('stockAdvAnalyticsModal');
     if (!modal) return;
 
-    const reportHtml = buildStockAdvancedReportHTML(data);
+    // Fetch snapshot history (limit 2) with resilient endpoint fallback
+    let historySnapshots = [];
+    try {
+        const endpoints = ['/api/stock-position/snapshot-history?limit=2', 'api/stock-position/snapshot-history?limit=2', '/stock-position/snapshot-history?limit=2', 'stock-position/snapshot-history?limit=2'];
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep);
+                if (res && res.ok) {
+                    const json = await res.json();
+                    if (json && json.snapshots && Array.isArray(json.snapshots)) {
+                        historySnapshots = json.snapshots;
+                        break;
+                    }
+                }
+            } catch (e) {}
+        }
+    } catch (err) {
+        console.warn('Could not load snapshot history:', err);
+    }
+
+    const reportHtml = buildStockAdvancedReportHTML(data, historySnapshots);
 
     modal.innerHTML = `
         <div id="stockAdvReportWrapper" style="background:#ffffff;border-radius:14px;width:98%;height:96%;max-width:1280px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5);">
@@ -4806,6 +4826,9 @@ function computeTopConcentration(icData) {
     };
 }
 
+const LOW_BUFFER_THRESHOLD_PCT = 0.5;
+const HIGH_BUFFER_THRESHOLD_PCT = 1.3;
+
 /**
  * Auditable District Health Score (0-100) & IC Buffer Classification logic.
  *
@@ -4831,8 +4854,8 @@ function computeDistrictHealthScore(icData) {
     });
 
     // 2. Low buffer ICs (< 50% of avg)
-    const lowBufferThreshold = avgStock * 0.5;
-    const highBufferThreshold = avgStock * 1.3;
+    const lowBufferThreshold = avgStock * LOW_BUFFER_THRESHOLD_PCT;
+    const highBufferThreshold = avgStock * HIGH_BUFFER_THRESHOLD_PCT;
     const lowBufferICs = list.filter(ic => {
         const tot = parseFloat(ic.total) || 0;
         return tot > 0 && tot < lowBufferThreshold;
@@ -4931,7 +4954,18 @@ function toggleHealthScoreAudit(event) {
     }
 }
 
-function buildStockAdvancedReportHTML(data) {
+// Helper for exact IST date calculation (UTC+5:30)
+function getISTDateString(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const istOffsetMs = (5 * 60 + 30) * 60 * 1000;
+    const istTime = new Date(d.getTime() + istOffsetMs);
+    const year = istTime.getUTCFullYear();
+    const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(istTime.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function buildStockAdvancedReportHTML(data, historySnapshots = []) {
     const icData = data.icData || [];
     const headers = data.headers || [];
     const commodityHeaders = headers.slice(1, headers.length - 1);
@@ -4955,6 +4989,68 @@ function buildStockAdvancedReportHTML(data) {
     const topHalfPct = healthInfo.topHalfPct;
     const topN = healthInfo.topN;
     const totalICs = healthInfo.totalICs;
+
+    // Fire-and-forget async snapshot save (do not await, do not surface errors)
+    try {
+        const classifiedICs = sorted.map(ic => {
+            const share = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(1) : '0';
+            const status = ic.total < avgStock * LOW_BUFFER_THRESHOLD_PCT ? 'Low' : ic.total > avgStock * HIGH_BUFFER_THRESHOLD_PCT ? 'High' : 'Normal';
+            return {
+                icName: ic.name,
+                icTotal: ic.total,
+                sharePct: parseFloat(share) || 0,
+                status: status
+            };
+        });
+
+        const snapshotPayload = {
+            score: healthScore,
+            label: healthLabel,
+            districtTotalQt: districtTotal,
+            icData: classifiedICs,
+            syncedAt: new Date().toISOString(),
+            snapshotDate: getISTDateString()
+        };
+
+        const postEndpoints = ['/api/stock-position/snapshot', 'api/stock-position/snapshot', '/stock-position/snapshot', 'stock-position/snapshot'];
+        (async () => {
+            for (const ep of postEndpoints) {
+                try {
+                    const r = await fetch(ep, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(snapshotPayload)
+                    });
+                    if (r && r.ok) break;
+                } catch (e) {}
+            }
+        })().catch(() => {});
+    } catch (e) {}
+
+    // ── Trend calculation vs most recent prior day (limit=2 history) ──
+    const todayIST = getISTDateString();
+    let priorSnapshot = null;
+    if (Array.isArray(historySnapshots) && historySnapshots.length > 0) {
+        if (historySnapshots[0].snapshotDate !== todayIST) {
+            priorSnapshot = historySnapshots[0];
+        } else if (historySnapshots.length >= 2) {
+            priorSnapshot = historySnapshots[1];
+        }
+    }
+
+    let trendBadgeHtml = '';
+    if (priorSnapshot && priorSnapshot.healthScore !== undefined && priorSnapshot.healthScore !== null) {
+        const priorScore = parseInt(priorSnapshot.healthScore, 10);
+        if (!isNaN(priorScore)) {
+            const delta = healthScore - priorScore;
+            const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '—';
+            const deltaSign = delta > 0 ? `+${delta}` : `${delta}`;
+            const badgeColor = delta > 0 ? '#86efac' : delta < 0 ? '#fca5a5' : '#cbd5e1';
+            const badgeBg = delta > 0 ? 'rgba(34,197,94,0.25)' : delta < 0 ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.12)';
+            const badgeBorder = delta > 0 ? 'rgba(34,197,94,0.45)' : delta < 0 ? 'rgba(239,68,68,0.45)' : 'rgba(255,255,255,0.25)';
+            trendBadgeHtml = `<span style="font-size:11px;font-weight:700;color:${badgeColor};background:${badgeBg};border:1px solid ${badgeBorder};padding:2px 7px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;" title="Trend vs prior snapshot (${priorSnapshot.snapshotDate}: ${priorScore}/100)">${arrow} ${deltaSign}</span>`;
+        }
+    }
 
     // Commodity group totals
     const commodityTotals = {};
@@ -5084,7 +5180,10 @@ function buildStockAdvancedReportHTML(data) {
                                 ⓘ How this is calculated
                             </button>
                         </div>
-                        <div style="font-size:18px;font-weight:800;margin-top:4px;color:${healthColor};">${healthScore}/100 — ${healthLabel}</div>
+                        <div style="font-size:18px;font-weight:800;margin-top:4px;color:${healthColor};display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                            <span>${healthScore}/100 — ${healthLabel}</span>
+                            ${trendBadgeHtml}
+                        </div>
                         <div id="healthScoreAuditDetails" style="display:none;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(201,162,39,0.4);font-size:10px;color:rgba(255,255,255,0.95);">
                             <div style="font-weight:700;color:#c9a227;margin-bottom:6px;font-size:11px;">📊 Health Score Calculation Audit:</div>
                             <table style="width:100%;border-collapse:collapse;font-size:10px;color:white;margin-bottom:6px;">
@@ -5164,9 +5263,9 @@ function buildStockAdvancedReportHTML(data) {
     const ic1Bars = sorted.map((ic, i) => {
         const share = districtTotal > 0 ? (ic.total / districtTotal * 100).toFixed(1) : '0';
         const barPct = maxIC.total > 0 ? (ic.total / maxIC.total * 100).toFixed(1) : '0';
-        const barColor = ic.total === maxIC.total ? '#059669' : ic.total < avgStock * 0.5 ? '#dc2626' : '#1e3a8a';
-        const statusLabel = ic.total < avgStock * 0.5 ? 'Low' : ic.total > avgStock * 1.3 ? 'High' : 'Normal';
-        const statusColor = ic.total < avgStock * 0.5 ? '#dc2626' : ic.total > avgStock * 1.3 ? '#059669' : '#2563eb';
+        const barColor = ic.total === maxIC.total ? '#059669' : ic.total < avgStock * LOW_BUFFER_THRESHOLD_PCT ? '#dc2626' : '#1e3a8a';
+        const statusLabel = ic.total < avgStock * LOW_BUFFER_THRESHOLD_PCT ? 'Low' : ic.total > avgStock * HIGH_BUFFER_THRESHOLD_PCT ? 'High' : 'Normal';
+        const statusColor = ic.total < avgStock * LOW_BUFFER_THRESHOLD_PCT ? '#dc2626' : ic.total > avgStock * HIGH_BUFFER_THRESHOLD_PCT ? '#059669' : '#2563eb';
         return `
         <div class="ic-bar-row">
             <div class="ic-bar-label">${['🥇','🥈','🥉'][i] || '#'+(i+1)} ${ic.name}</div>
@@ -5181,11 +5280,18 @@ function buildStockAdvancedReportHTML(data) {
     const section1 = `
     <div class="section-divider"></div>
     <div class="page">
-        <div class="section-header">
-            <div class="section-num">1</div>
-            <div>
-                <div style="font-size:14px;font-weight:800;">Issue Center Stock Volume Analysis</div>
-                <div style="font-size:11px;color:#c9a227;font-weight:500;">इश्यू सेंटर स्टॉक मात्रा विश्लेषण — ${icData.length} Issue Centers</div>
+        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div class="section-num">1</div>
+                <div>
+                    <div style="font-size:14px;font-weight:800;">Issue Center Stock Volume Analysis</div>
+                    <div style="font-size:11px;color:#c9a227;font-weight:500;">इश्यू सेंटर स्टॉक मात्रा विश्लेषण — ${icData.length} Issue Centers</div>
+                </div>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.9);display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);">
+                <span><strong style="color:#86efac;">● High:</strong> &gt;130% avg</span>
+                <span><strong style="color:#93c5fd;">● Normal:</strong> 50%–130% avg</span>
+                <span><strong style="color:#fca5a5;">● Low:</strong> &lt;50% avg</span>
             </div>
         </div>
         <div class="page-inner">
@@ -5298,6 +5404,9 @@ function buildStockAdvancedReportHTML(data) {
                         <span style="background:rgba(217,119,6,0.15);color:#92400e;padding:3px 8px;border-radius:4px;font-weight:600;">🟡 Medium Stock</span>
                         <span style="background:rgba(220,38,38,0.12);color:#991b1b;padding:3px 8px;border-radius:4px;font-weight:600;">🔴 Low Stock</span>
                         <span style="background:rgba(220,38,38,0.35);color:#7f1d1d;padding:3px 8px;border-radius:4px;font-weight:600;">❌ Negative</span>
+                    </div>
+                    <div style="margin-top:8px;font-size:10px;color:#475569;background:#f1f5f9;border:1px solid #e2e8f0;padding:6px 10px;border-radius:4px;line-height:1.4;">
+                        <strong>Abbreviations:</strong> Fort = CMR Fortified Rice · NF = CMR Non-Fortified Rice · Jwar = Jowar (Sorghum) · Salt (Iod) = Salt (Iodine) · F.Salt = Fortified Salt
                     </div>
                 </div>
                 <div>
@@ -5431,9 +5540,22 @@ function buildStockAdvancedReportHTML(data) {
         });
     }
     if (lowBufferICs.length > 0) {
+        const lowBufferTargetQt = avgStock * LOW_BUFFER_THRESHOLD_PCT;
+        const icReplenishmentDetails = lowBufferICs.map(ic => {
+            const icTot = parseFloat(ic.total) || 0;
+            const neededQt = Math.max(0, lowBufferTargetQt - icTot);
+            return {
+                name: ic.name,
+                neededQt: neededQt,
+                formatted: `${ic.name}: +${fmtQ(neededQt)}`
+            };
+        });
+        const totalNeededQt = icReplenishmentDetails.reduce((sum, item) => sum + item.neededQt, 0);
+        const icListFormatted = icReplenishmentDetails.map(item => item.formatted).join(' · ');
+
         priorities.push({
             title: 'Priority: Replenish Low-Buffer Issue Centers',
-            body: `${lowBufferICs.length} IC(s) hold below 50% of district average: ${lowBufferICs.map(ic => ic.name).join(', ')}. Recommend prioritizing dispatch from nearest warehouse in next allocation cycle.`,
+            body: `${lowBufferICs.length} IC(s) hold below 50% of district average: ${icListFormatted}. Total replenishment needed: ${fmtQ(totalNeededQt)}. Recommend prioritizing dispatch from nearest warehouse in next allocation cycle.`,
             color: '#d97706'
         });
     }
@@ -5700,6 +5822,8 @@ window.downloadStockAdvReport = downloadStockAdvReport;
 window.computeDistrictHealthScore = computeDistrictHealthScore;
 window.computeTopConcentration = computeTopConcentration;
 window.toggleHealthScoreAudit = toggleHealthScoreAudit;
+window.LOW_BUFFER_THRESHOLD_PCT = LOW_BUFFER_THRESHOLD_PCT;
+window.HIGH_BUFFER_THRESHOLD_PCT = HIGH_BUFFER_THRESHOLD_PCT;
 
 // ═══════════════════════════════════════════════════════════════
 //  INTERACTIVE MANUAL CAPTCHA MODAL HANDLERS (FOR CLOUD / RENDER)

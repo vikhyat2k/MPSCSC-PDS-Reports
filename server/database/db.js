@@ -153,6 +153,19 @@ class DatabaseManager {
       )
     `);
 
+    // Stock snapshots table (for District Health Score daily trend tracking)
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS stock_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        snapshot_date TEXT NOT NULL UNIQUE,
+        synced_at TEXT NOT NULL,
+        health_score INTEGER NOT NULL,
+        health_label TEXT,
+        district_total_qt REAL,
+        ic_data TEXT
+      )
+    `);
+
     // Migration: add scheme and insights columns if they don't exist
     try {
       await this.run(`ALTER TABLE reports ADD COLUMN scheme TEXT DEFAULT 'nfsa'`);
@@ -454,6 +467,43 @@ class DatabaseManager {
    */
   async deleteDirRecord(id) {
     return await this.run('DELETE FROM directory WHERE id = ?', [id]);
+  }
+
+  /**
+   * Save or update a stock snapshot by snapshot_date (upsert)
+   */
+  async saveStockSnapshot(data) {
+    const syncedAt = data.syncedAt || new Date().toISOString();
+    const snapshotDate = data.snapshotDate;
+    const healthScore = parseInt(data.healthScore ?? data.score, 10) || 0;
+    const healthLabel = data.healthLabel || data.label || '';
+    const districtTotalQt = parseFloat(data.districtTotalQt ?? data.districtTotal) || 0;
+    const icData = typeof data.icData === 'string' ? data.icData : JSON.stringify(data.icData || []);
+
+    return await this.run(`
+      INSERT INTO stock_snapshots (
+        snapshot_date, synced_at, health_score, health_label, district_total_qt, ic_data
+      ) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(snapshot_date) DO UPDATE SET
+        synced_at = excluded.synced_at,
+        health_score = excluded.health_score,
+        health_label = excluded.health_label,
+        district_total_qt = excluded.district_total_qt,
+        ic_data = excluded.ic_data
+    `, [snapshotDate, syncedAt, healthScore, healthLabel, districtTotalQt, icData]);
+  }
+
+  /**
+   * Get recent stock snapshots ordered by snapshot_date DESC
+   */
+  async getStockSnapshotHistory(limit = 2) {
+    const lim = Math.max(1, parseInt(limit, 10) || 2);
+    const rows = await this.all(`
+      SELECT * FROM stock_snapshots
+      ORDER BY snapshot_date DESC
+      LIMIT ?
+    `, [lim]);
+    return rows || [];
   }
 
   /**

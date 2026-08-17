@@ -2840,6 +2840,80 @@ app.post(['/api/stock-position/fetch-sheet', '/stock-position/fetch-sheet'], asy
     }
 });
 
+// Helper for exact IST date calculation (UTC+5:30)
+function getISTDateString(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const istOffsetMs = (5 * 60 + 30) * 60 * 1000;
+    const istTime = new Date(d.getTime() + istOffsetMs);
+    const year = istTime.getUTCFullYear();
+    const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(istTime.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STOCK SNAPSHOT ENDPOINTS (District Health Score Daily Trend Tracking)
+// ─────────────────────────────────────────────────────────────────────────────
+
+app.post(['/api/stock-position/snapshot', '/stock-position/snapshot'], async (req, res) => {
+    try {
+        const { score, label, districtTotalQt, districtTotal, icData } = req.body || {};
+        if (score === undefined || score === null) {
+            return res.status(400).json({ error: 'score is required' });
+        }
+
+        const now = new Date();
+        const syncedAt = req.body.syncedAt || now.toISOString();
+        const snapshotDate = req.body.snapshotDate || getISTDateString(now);
+
+        await db.saveStockSnapshot({
+            snapshotDate,
+            syncedAt,
+            healthScore: score,
+            healthLabel: label,
+            districtTotalQt: districtTotalQt ?? districtTotal ?? 0,
+            icData: icData || []
+        });
+
+        res.json({
+            success: true,
+            snapshotDate,
+            syncedAt,
+            healthScore: score,
+            healthLabel: label
+        });
+    } catch (err) {
+        console.error('Error saving stock snapshot:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get(['/api/stock-position/snapshot-history', '/stock-position/snapshot-history'], async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit, 10) || 2;
+        const rows = await db.getStockSnapshotHistory(limit);
+
+        const formatted = rows.map(r => ({
+            id: r.id,
+            snapshotDate: r.snapshot_date,
+            syncedAt: r.synced_at,
+            healthScore: r.health_score,
+            healthLabel: r.health_label,
+            districtTotalQt: r.district_total_qt,
+            icData: typeof r.ic_data === 'string' ? (() => { try { return JSON.parse(r.ic_data); } catch(e) { return []; } })() : r.ic_data
+        }));
+
+        res.json({
+            success: true,
+            count: formatted.length,
+            snapshots: formatted
+        });
+    } catch (err) {
+        console.error('Error fetching stock snapshot history:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // STOCK SHORTFALL ANALYSIS ENDPOINT (v2)
 // Returns commodity-wise (Wheat, Rice, F.Salt) allocations per Issue Center
