@@ -396,6 +396,7 @@ class SCMScraper {
 
         // 3. Preprocess with Jimp v1: upscale 3x, manual grayscale + threshold binarize
         console.log('   🖼️ Preprocessing CAPTCHA image with Jimp...');
+        const Jimp = getJimp();
         const jimpImg = await Jimp.read(Buffer.from(rawBuffer));
         const w = jimpImg.width;
         const h = jimpImg.height;
@@ -452,6 +453,7 @@ class SCMScraper {
           if (!this.ocrWorker) {
             try {
               console.log('   ⚙️ Initializing local Tesseract worker...');
+              const Tesseract = getTesseract();
               this.ocrWorker = await Tesseract.createWorker('eng', 1, {
                 langPath: path.join(__dirname, '../tessdata'),
                 cachePath: path.join(__dirname, '../tessdata'),
@@ -669,6 +671,7 @@ class SCMScraper {
       this.isHeadless = headless;
 
       console.log(`🚀 Launching browser (Headless: ${headless})...`);
+      const puppeteer = getPuppeteer();
       this.browser = await puppeteer.launch({
         headless: headless ? 'new' : false,
         args: [
