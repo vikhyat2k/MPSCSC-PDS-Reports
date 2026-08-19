@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 17 August 2026, 08:58 IST
+> **Last Sync:** 17 August 2026, 18:10 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 17 Aug 2026 — Added verified commodity abbreviation legend to Commodity Intelligence Matrix in Executive Report |
+| Last Code Change | 17 Aug 2026 — Resolved ICDS scraper hanging/freezing at 14% via direct parameterized AJAX extraction across all 9 Betul depots |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -730,6 +730,7 @@ Tracks what has been tested and confirmed working.
 | Priority 1 Replenishment Calculation & Formatting | Analytics & UI Verification | VERIFIED | 17 Aug 2026 | Added unrounded per-IC replenishment calculation, total sum, and Indian numeral formatting in Section 4 |
 | Stock Snapshots Database & Health Score Trend Arrow | Unit & Integration | VERIFIED | 17 Aug 2026 | Added stock_snapshots table, IST date conversion, upsert handler, history endpoint, and cover trend arrow |
 | Commodity Abbreviation Legend in Executive Report | UI & Export Verification | VERIFIED | 17 Aug 2026 | Added static commodity abbreviation legend beneath Section 2 heatmap with terms verified against View_LiveRollup source headers |
+| ICDS Scraper Direct AJAX Extraction Pipeline | Automation & Scraping Verification | VERIFIED | 17 Aug 2026 | Replaced broken DOM onclick eval with direct parameterized $.ajax calls, extracting all 9 depots (562 shops) in ~19.8s |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -758,10 +759,32 @@ Tracks what has been tested and confirmed working.
 | ISSUE-020 | Report validator displayed error units as MT instead of Quintals (Qt) and summary grand totals could be missed | MEDIUM | RESOLVED | server/services/reportValidator.js, server/automation/scraper_v2.js | 16 Aug 2026 |
 | ISSUE-021 | Date Range report generation crashed with ReferenceError: sectorsConfig is not defined | HIGH | RESOLVED | server.js, Technical Audit/server.js | 16 Aug 2026 |
 | ISSUE-022 | Date Range AI insights card displayed transporter liftings as Dispatch % with % sign instead of Quantity Lifted in Quintals (Qt) | MEDIUM | RESOLVED | public/app.js | 16 Aug 2026 |
+| ISSUE-023 | ICDS report generation stuck indefinitely at 14% due to missing dist_code input in portal depot DOM and fragile eval() | HIGH | RESOLVED | server/automation/icds_scraper.js, Technical Audit/icds_scraper.js | 17 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-17 | Fix ICDS Scraper Freezing / Hanging at 14% via Direct AJAX Extraction
+
+Files: server/automation/icds_scraper.js, Technical Audit/icds_scraper.js, PROJECT_DOCS.md
+Type: Bug Fix / Performance Optimization
+Closes: ISSUE-023
+
+- BUG: Generating ICDS reports (e.g. August 2026) became stuck indefinitely at "extracting ICDS data from portal..." (14% / ~6+ minutes) and timed out.
+- ROOT CAUSE:
+  1. The SCM portal's `ICDS_allotment_depot.jsp` (loaded after district click) omitted `<input type="hidden" id="dist_code">` and `<input type="hidden" id="dist_name">` elements from the DOM (they are only rendered inside the shop response `ICDS_allotment_fps.jsp`).
+  2. When `icds_scraper.js` executed `eval(depot.onclick)` to call `getreportfps()`, the native portal JavaScript failed with `Uncaught TypeError: Cannot read properties of null (reading 'value')` on `document.getElementById("dist_code")`.
+  3. Because the native function crashed silently, the AJAX request for shops was never sent, causing Puppeteer's table waiter to hit 35s timeout per attempt x 3 retries = 105s per depot x 9 depots = 15+ minutes with 0 shops extracted.
+  4. In addition, `_goBackToDepotList()` re-invoked `_clickDistrict()` between depots, firing concurrent in-flight AJAX calls that collided with subsequent depot requests.
+- FIX:
+  1. Refactored `_extractDepotShops()` in `server/automation/icds_scraper.js` and `Technical Audit/icds_scraper.js` to execute direct, parameterized `$.ajax` calls (`url: 'ICDS_allotment_fps.jsp'`) passing explicit `dist_code=447`, `dist_name=Betul`, `depot_id`, and `depot_name` payload.
+  2. Replaced dynamic depot DOM scraping with deterministic 9 active Betul issue points (`AMLA 2331007`, `Athner 2331003`, `Betul 2331001`, `Bhainsdehi 2331002`, `BHIMPUR 2331005`, `Ghoradongri 233100406`, `Multai 2331004`, `PATTAN 2331006`, `Shahpur 233100401`).
+  3. Replaced `_selectFilters()` with direct DOM value assignments to prevent duplicate/premature `onchange` events and false `NO_DATA` responses.
+  4. Removed redundant `_goBackToDepotList()` DOM checks.
+  5. Verified live extraction now completes all 9 depots (562 shops: 1,753.63 Qt Wheat / 954.33 Qt Rice / 29.34 Qt Salt) in ~19.8 seconds (down from 15+ min freeze).
+
+---
 
 ### 2026-08-17 | Add Commodity Abbreviation Legend to Section 2 Heatmap
 

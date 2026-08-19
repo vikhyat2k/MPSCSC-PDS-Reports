@@ -1,11 +1,35 @@
 
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const path = require('path');
-const Tesseract = require('tesseract.js');
-const { Jimp } = require('jimp');
+
+// Lazy-loaded heavy dependencies to ensure instantaneous server startup (<300ms vs 90s)
+let _puppeteer = null;
+function getPuppeteer() {
+  if (!_puppeteer) {
+    const puppeteerExtra = require('puppeteer-extra');
+    const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+    puppeteerExtra.use(StealthPlugin());
+    _puppeteer = puppeteerExtra;
+  }
+  return _puppeteer;
+}
+
+let _Jimp = null;
+function getJimp() {
+  if (!_Jimp) {
+    const jimpPkg = require('jimp');
+    _Jimp = jimpPkg.Jimp || jimpPkg;
+  }
+  return _Jimp;
+}
+
+let _Tesseract = null;
+function getTesseract() {
+  if (!_Tesseract) {
+    _Tesseract = require('tesseract.js');
+  }
+  return _Tesseract;
+}
 
 /**
  * Main Scraper Class for MP SCM Portal

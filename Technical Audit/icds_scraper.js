@@ -17,6 +17,7 @@ class ICDSScraper {
         this.ICDS_URL = 'https://scm.mp.gov.in/ICDS_allotment.jsp';
         this.DISTRICT_NAME = 'Betul';
         this.SKIP_DEPOT_SL = []; // No depots to skip by default
+        this.SKIP_DEPOT_IDS = ['233100404']; // Exclude Aamla (233100404) - zero data entry point on portal
 
         this.logsDir = path.join(__dirname, '../../logs');
         if (!fs.existsSync(this.logsDir)) {
@@ -40,6 +41,12 @@ class ICDSScraper {
             defaultViewport: { width: 1280, height: 900 }
         });
         this.page = await this.browser.newPage();
+    
+        // Auto-dismiss any javascript alerts to prevent Puppeteer from hanging
+        this.page.on('dialog', async dialog => {
+            console.log('⚠️ Handled alert dialog:', dialog.message());
+            await dialog.accept().catch(() => {});
+        });
         this.page.setDefaultTimeout(30000);
 
         // Block unnecessary resources to speed up scraping
@@ -92,13 +99,15 @@ class ICDSScraper {
         } catch (e) {
             // Timeout — continue anyway
         }
-        await this.page.waitForTimeout(300);
+        await new Promise(r => setTimeout(r, 500));
     }
 
     /**
      * Main extraction entry point.
      */
     async extractData(month, year, onProgress = null) {
+        this.currentMonth = month;
+        this.currentYear = year;
         console.log(`\n📊 [ICDS] Starting extraction for ${month}/${year}...\n`);
 
         try {
@@ -121,7 +130,7 @@ class ICDSScraper {
             // 3. Click "Get Report"
             await this._clickGetReport();
 
-            // 4. Find and click Betul district
+            // 4. Find and click Betul district (page content changes in-place, no navigation)
             await this._clickDistrict();
 
             // 5. Save state after clicking district
@@ -136,8 +145,13 @@ class ICDSScraper {
                 throw new Error('No depots found after clicking district. Check icds_district_debug.html for table structure.');
             }
 
-            const validDepots = depots.filter(d => !this.SKIP_DEPOT_SL.includes(d.slNo));
-            console.log(`   Processing ${validDepots.length} depots.`);
+            const validDepots = depots.filter(d => {
+                if (this.SKIP_DEPOT_SL.includes(d.slNo)) return false;
+                if (this.SKIP_DEPOT_IDS.includes(String(d.depotId))) return false;
+                if (d.name && d.name.includes('233100404')) return false;
+                return true;
+            });
+            console.log(`   Processing ${validDepots.length} valid depots (excluded Aamla 233100404).`);
 
             const rawData = [];
             const summaryTotals = {
@@ -169,7 +183,7 @@ class ICDSScraper {
                 console.log(`   ✅ Extracted ${shops.length} shops from ${depot.name}`);
 
                 if (i < validDepots.length - 1) {
-                    await this._goBackToDepotList();
+                    await new Promise(r => setTimeout(r, 200));
                 }
             }
 
@@ -191,29 +205,16 @@ class ICDSScraper {
     }
 
     async _selectFilters(month, year) {
+        console.log(`   Setting filters to Month: ${month}, Year: ${year}`);
         try {
-            console.log(`   Setting filters to Month: ${month}, Year: ${year}`);
-
-            // Select Month
-            const monthSelect = await this.page.$('#month');
-            if (monthSelect) {
-                await this.page.select('#month', String(month));
-                console.log(`   ✅ Selected month: ${month}`);
-                await this._waitForLoading();
-            } else {
-                console.warn('⚠️ Could not find #month dropdown');
-            }
-
-            // Select Year
-            const yearSelect = await this.page.$('#year');
-            if (yearSelect) {
-                await this.page.select('#year', String(year));
-                console.log(`   ✅ Selected year: ${year}`);
-                await this._waitForLoading();
-            } else {
-                console.warn('⚠️ Could not find #year dropdown');
-            }
-
+            await this.page.evaluate((m, y) => {
+                const mSel = document.getElementById('month') || document.querySelector('select[name="month"]');
+                const ySel = document.getElementById('year') || document.querySelector('select[name="year"]');
+                if (mSel) mSel.value = String(m);
+                if (ySel) ySel.value = String(y);
+            }, month, year);
+            console.log(`   ✅ Selected month: ${month}`);
+            console.log(`   ✅ Selected year: ${year}`);
         } catch (error) {
             console.error('Error setting filters:', error);
         }
@@ -224,7 +225,7 @@ class ICDSScraper {
             await this.page.waitForSelector('#loading', { visible: true, timeout: 2000 });
             await this.page.waitForSelector('#loading', { hidden: true, timeout: 30000 });
         } catch (e) {
-            await this.page.waitForTimeout(500);
+            await new Promise(r => setTimeout(r, 500));
         }
     }
 
@@ -243,31 +244,40 @@ class ICDSScraper {
 
         await this._waitForLoading();
 
-        // Wait up to 60s for district table or "No data found"
-        await this.page.waitForFunction(() => {
+        // Wait for specific district table or "No data found" for the CHOSEN month
+        await this.page.waitForFunction((m) => {
             const dr = document.getElementById('distreport');
-            if (dr && (dr.innerText.includes('Betul') || dr.innerText.includes('No data found'))) return true;
+            if (!dr) return false;
+            const text = dr.innerText;
+            const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const targetMonthName = monthNames[parseInt(m)];
+            
+            if (text.includes(targetMonthName)) {
+                if (text.includes('Betul') || text.includes('No data found')) return true;
+            }
             return false;
-        }, { timeout: 60000 }).catch(() => console.log('⚠️ Timed out waiting for #distreport'));
+        }, { timeout: 30000 }, String(this.currentMonth)).catch(() => console.log('⚠️ Timed out waiting for Results table for ' + this.currentMonth));
 
         let noData = await this.page.evaluate(() => {
-            const txt = document.body.innerText;
+            const dr = document.getElementById('distreport');
+            const txt = dr ? dr.innerText : document.body.innerText;
             return txt.includes('No data found');
         });
 
         // INTERMITTENT FIX: If portal says No data found, retry once
         if (noData) {
             console.log(`   ⚠️ Portal reported No Data for ${this.currentMonth}. Retrying in 2s...`);
-            await this.page.waitForTimeout(2000);
+            await new Promise(r => setTimeout(r, 2000));
             await this.page.evaluate(() => {
                 const btn = document.querySelector('input[value="Get Report"]');
                 if (btn) btn.click();
             });
             await this._waitForLoading();
-            await this.page.waitForTimeout(1000);
+            await new Promise(r => setTimeout(r, 1000));
             
             noData = await this.page.evaluate(() => {
-                const txt = document.body.innerText;
+                const dr = document.getElementById('distreport');
+                const txt = dr ? dr.innerText : document.body.innerText;
                 return txt.includes('No data found');
             });
         }
@@ -282,60 +292,57 @@ class ICDSScraper {
     async _clickDistrict() {
         console.log(`   Clicking District: ${this.DISTRICT_NAME}...`);
 
-        // Use partial, case-insensitive match so slight variations in spacing/case don't fail
         const clicked = await this.page.evaluate((districtName) => {
             const target = districtName.trim().toLowerCase();
-            // Try #distreport first, then broader search for any district links
-            const selectors = ['#distreport a', '#detailsED a', 'a'];
-            for (const sel of selectors) {
-                const links = document.querySelectorAll(sel);
-                for (const link of links) {
-                    const text = link.innerText.trim().toLowerCase();
-                    if (text === target || text.includes(target)) {
-                        const onclick = link.getAttribute('onclick') || '';
-                        // Only click real district links (with onclick or href)
-                        if (onclick || link.href !== 'javascript:void(0)') {
-                            link.click();
-                            return `clicked: ${link.innerText.trim()}`;
-                        }
+            const links = document.querySelectorAll('#distreport a, #detailsED a, a');
+            for (const link of links) {
+                const text = link.innerText.trim().toLowerCase();
+                if (text === target || text.includes(target)) {
+                    const onclick = link.getAttribute('onclick') || '';
+                    if (onclick) {
+                        try { eval(onclick); } catch (e) { link.click(); }
+                        return `evaluated onclick: ${onclick}`;
+                    } else if (link.href && link.href !== 'javascript:void(0)') {
+                        link.click();
+                        return `clicked href: ${link.href}`;
                     }
                 }
             }
-            // Last resort: list all links in distreport for debugging
-            const allLinks = Array.from(document.querySelectorAll('#distreport a, #detailsED a')).map(a => a.innerText.trim());
-            return { failed: true, available: allLinks.slice(0, 20) };
+            if (typeof getreportdepot === 'function') {
+                try {
+                    getreportdepot('447', 'Betul');
+                    return 'invoked getreportdepot(447, Betul) directly';
+                } catch (_) {}
+            }
+            return { failed: true };
         }, this.DISTRICT_NAME);
 
-        if (!clicked || (typeof clicked === 'object' && clicked.failed)) {
-            const available = (typeof clicked === 'object' && clicked.available) ? clicked.available.join(', ') : 'none';
-            throw new Error(`Could not find district "${this.DISTRICT_NAME}" in #distreport. Available: [${available}]`);
-        }
-        console.log(`   District click result: ${clicked}`);
+        console.log(`   District click result: ${typeof clicked === 'object' ? JSON.stringify(clicked) : clicked}`);
         await this._waitForLoading();
 
-        // Wait up to 60s for depot table (slow portal)
+        // Wait up to 5s for depot table (non-blocking since direct AJAX is used downstream)
         await this.page.waitForFunction(() => {
             const depot = document.getElementById('depotreport');
             return depot && depot.querySelectorAll('tr').length > 3;
-        }, { timeout: 60000 }).catch(() =>
-            console.warn('⚠️ Timed out waiting for #depotreport. Will try anyway.')
+        }, { timeout: 5000 }).catch(() =>
+            console.log('   (Proceeding with direct AJAX issue points extraction)')
         );
 
-        console.log(`✅ [ICDS] #depotreport loaded with district data`);
+        console.log(`✅ [ICDS] District stage ready.`);
     }
 
     async _getDepotList() {
-        console.log('   Using hardcoded ICDS ISSUE_POINTS to avoid government portal depot list corruption...');
+        console.log('   Using hardcoded ICDS ISSUE_POINTS (9 active issue points)...');
         const ISSUE_POINTS = [
+            { id: '2331007',   name: 'AMLA' },
+            { id: '2331003',   name: 'Athner' },
             { id: '2331001',   name: 'Betul' },
             { id: '2331002',   name: 'Bhainsdehi' },
-            { id: '2331003',   name: 'Athner' },
-            { id: '2331004',   name: 'Multai' },
-            { id: '233100401', name: 'Shahpur' },
-            { id: '233100406', name: 'Ghoradongri' },
             { id: '2331005',   name: 'BHIMPUR' },
+            { id: '233100406', name: 'Ghoradongri' },
+            { id: '2331004',   name: 'Multai' },
             { id: '2331006',   name: 'PATTAN' },
-            { id: '2331007',   name: 'AMLA' }
+            { id: '233100401', name: 'Shahpur' }
         ];
 
         return ISSUE_POINTS.map((d, index) => ({
@@ -349,154 +356,121 @@ class ICDSScraper {
 
     async _extractDepotShops(depot, depotIndex) {
         console.log(`   Extracting shops for depot: ${depot.depotName || depot.name} (SL ${depot.slNo})...`);
-
-        // Clear any existing fpsreport to prevent extracting stale data if the request fails
-        await this.page.evaluate(() => {
-            const container = document.getElementById('detailsEDfps');
-            if (container) container.innerHTML = '';
-        });
-
-        // Execute the onclick directly to bypass any DOM mismatch bugs
-        const clicked = await this.page.evaluate((onclickStr) => {
-            try {
-                eval(onclickStr);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }, depot.onclick);
-
-        if (!clicked) {
-            console.warn(`⚠️ Could not click depot SL ${depot.slNo}: ${depot.name}`);
-            return [];
-        }
-        console.log(`   Depot click result: clicked via eval`);
-
-        await this._waitForLoading();
-
-        const waitForFpsReport = async (timeoutMs = 45000) => {
-            await this.page.waitForFunction(() => {
-                const t = document.getElementById('fpsreport');
-                return t && t.querySelectorAll('tr').length > 5;
-            }, { timeout: timeoutMs }).catch(() =>
-                console.warn(`⚠️ fpsreport table timeout for ${depot.depotName || depot.name}`)
-            );
-        };
-
-        await waitForFpsReport();
-
-        // Retry once if too few rows
-        const rowCount = await this.page.evaluate(() => {
-            const t = document.getElementById('fpsreport');
-            return t ? t.querySelectorAll('tr').length : 0;
-        });
-        if (rowCount <= 5) {
-            console.log(`   Retrying depot click for ${depot.depotName} (got only ${rowCount} rows)...`);
-            await this.page.evaluate((slNo) => {
-                const rows = document.querySelectorAll('#depotreport tbody tr');
-                for (const row of rows) {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length < 2) continue;
-                    if (parseInt((cells[0].innerText || '').trim()) === slNo) {
-                        const link = cells[1].querySelector('a');
-                        if (link) { link.click(); return true; }
+        let extractedShops = [];
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            const shopsResult = await this.page.evaluate(({ m, y, distCode, distName, depotId, depotName }) => {
+                return new Promise((resolve) => {
+                    let container = document.getElementById('detailsEDfps');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'detailsEDfps';
+                        document.body.appendChild(container);
                     }
-                }
-                return false;
-            }, depot.slNo);
-            await waitForFpsReport(45000);
+
+                    if (typeof $ === 'undefined') {
+                        resolve({ shops: [], error: 'jQuery not available' });
+                        return;
+                    }
+
+                    const postData = 'month=' + m + '&year=' + y + 
+                        '&dist_code=' + distCode + '&depot_id=' + depotId + 
+                        '&dist_name=' + encodeURIComponent(distName) + '&depot_name=' + encodeURIComponent(depotName);
+
+                    $.ajax({
+                        type: 'post',
+                        url: 'ICDS_allotment_fps.jsp',
+                        data: postData,
+                        cache: false,
+                        timeout: 30000,
+                        success: function(html) {
+                            container.innerHTML = html;
+                            const table = document.getElementById('fpsreport') || container.querySelector('table');
+                            if (!table) return resolve({ shops: [], htmlLen: html ? html.length : 0 });
+
+                            const rows = table.querySelectorAll('tr');
+                            const result = [];
+                            let firstDataCols = 0;
+                            let sampleRow = null;
+
+                            const parseKg = (td) => {
+                                if (!td) return 0;
+                                const v = parseFloat((td.innerText || '0').replace(/,/g, '').trim());
+                                return isNaN(v) ? 0 : v / 100; // Kg → Quintal
+                            };
+
+                            const parseNum = (td) => {
+                                if (!td) return 0;
+                                const v = parseInt((td.innerText || '0').replace(/,/g, '').trim(), 10);
+                                return isNaN(v) ? 0 : v;
+                            };
+
+                            for (let i = 0; i < rows.length; i++) {
+                                const cells = rows[i].querySelectorAll('td');
+                                if (firstDataCols === 0 && cells.length > 5) firstDataCols = cells.length;
+                                if (cells.length < 5) continue;
+
+                                const shopCode = (cells[1] ? cells[1].innerText : '').trim();
+                                if (!/^\d{5,}$/.test(shopCode)) continue;
+
+                                if (result.length === 0) {
+                                    sampleRow = Array.from(cells).map((c, idx) => `[${idx}]=${c.innerText.trim().substring(0, 20)}`);
+                                }
+
+                                const colCount = cells.length;
+                                const hasRiceBlock = colCount >= 24;
+
+                                result.push({
+                                    shopCode,
+                                    shopName: `ICDS AWC ${shopCode}`,
+                                    issuePoint: depotName,
+                                    columnCount: colCount,
+                                    awcCount: parseNum(cells[2]),
+                                    inmatesCount: parseNum(cells[3]),
+                                    wheatAllotted: parseKg(cells[6]),
+                                    wheatDispatched: parseKg(cells[8]),
+                                    wheatReceived: parseKg(cells[9]),
+                                    fsaltAllotted: parseKg(cells[13]),
+                                    fsaltDispatched: parseKg(cells[15]),
+                                    fsaltReceived: parseKg(cells[16]),
+                                    riceAllotted: hasRiceBlock ? parseKg(cells[20]) : 0,
+                                    riceDispatched: hasRiceBlock ? parseKg(cells[22]) : 0,
+                                    riceReceived: hasRiceBlock ? parseKg(cells[23]) : 0
+                                });
+                            }
+                            resolve({ shops: result, tableFound: true, totalRows: rows.length, firstDataCols, sampleRow });
+                        },
+                        error: function(xhr, status, err) {
+                            resolve({ shops: [], error: status + ': ' + err });
+                        }
+                    });
+                });
+            }, {
+                m: this.currentMonth,
+                y: this.currentYear || 2026,
+                distCode: '447',
+                distName: this.DISTRICT_NAME,
+                depotId: depot.depotId,
+                depotName: depot.depotName || depot.name
+            });
+
+            extractedShops = Array.isArray(shopsResult) ? shopsResult : (shopsResult.shops || []);
+            if (extractedShops.length > 0) break;
+
+            console.warn(`   ⚠️ Attempt ${attempt}/3 for depot ${depot.name} returned 0 shops. Retrying in 2s...`);
+            await new Promise(r => setTimeout(r, 2000));
         }
 
         // Save debug HTML for first 2 depots
         if (depotIndex < 2) {
-            const html = await this.page.content();
-            fs.writeFileSync(path.join(this.logsDir, `icds_fps_depot${depot.slNo}_debug.html`), html);
-            console.log(`   Saved debug HTML: icds_fps_depot${depot.slNo}_debug.html`);
-        }
-
-        // Parse shop data from #fpsreport
-        const shops = await this.page.evaluate((depotNameStr) => {
-            const table = document.getElementById('fpsreport');
-            if (!table) return { shops: [], tableFound: false };
-
-            const rows = table.querySelectorAll('tr');
-            const result = [];
-            let firstDataCols = 0;
-            let sampleRow = null;
-
-            for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].querySelectorAll('td');
-                if (firstDataCols === 0 && cells.length > 5) firstDataCols = cells.length;
-                if (cells.length < 5) continue;
-
-                const shopCode = (cells[1] ? cells[1].innerText : '').trim();
-                if (!/^\d{5,}$/.test(shopCode)) continue;
-
-                const parseKg = (td) => {
-                    if (!td) return 0;
-                    const v = parseFloat((td.innerText || '0').replace(/,/g, '').trim());
-                    return isNaN(v) ? 0 : v / 100; // Kg → Quintal
-                };
-
-                if (result.length === 0) {
-                    sampleRow = Array.from(cells).map((c, idx) => `[${idx}]=${c.innerText.trim().substring(0, 20)}`);
-                }
-
-                // Column mapping for ICDS #fpsreport:
-                // Expected 25-col layout:
-                // [0]=SL, [1]=FPS/AWC, [2]=Centres, [3]=Beneficiaries
-                // Wheat:  [4]=Required, [5]=CB, [6]=Allotted, [7]=RO, [8]=Dispatch, [9]=ReceivedFPS, [10]=Issued
-                // FSalt:  [11]=Required, [12]=CB, [13]=Allotted, [14]=RO, [15]=Dispatch, [16]=ReceivedFPS, [17]=Issued
-                // Rice:   [18]=Required, [19]=CB, [20]=Allotted, [21]=RO, [22]=Dispatch, [23]=ReceivedFPS, [24]=Issued
-                const colCount = cells.length;
-                const hasRiceBlock = colCount >= 24;
-
-                result.push({
-                    shopCode,
-                    shopName: `ICDS AWC ${shopCode}`,
-                    issuePoint: depotNameStr,
-                    columnCount: colCount,
-                    // Wheat (Block 1)
-                    wheatAllotted: parseKg(cells[6]),
-                    wheatDispatched: parseKg(cells[8]),
-                    wheatReceived: parseKg(cells[9]),
-                    // FSalt (Block 2)
-                    fsaltAllotted: parseKg(cells[13]),
-                    fsaltDispatched: parseKg(cells[15]),
-                    fsaltReceived: parseKg(cells[16]),
-                    // Rice (Block 3)
-                    riceAllotted: hasRiceBlock ? parseKg(cells[20]) : 0,
-                    riceDispatched: hasRiceBlock ? parseKg(cells[22]) : 0,
-                    riceReceived: hasRiceBlock ? parseKg(cells[23]) : 0
-                });
-            }
-            return { shops: result, tableFound: true, totalRows: rows.length, firstDataCols, sampleRow };
-        }, depot.depotName || depot.name);
-
-        const extractedShops = Array.isArray(shops) ? shops : (shops.shops || []);
-        if (!Array.isArray(shops) && shops.tableFound) {
-            console.log(`   #fpsreport found: ${shops.totalRows} rows, ${shops.firstDataCols} cols`);
-            if (shops.sampleRow) {
-                console.log(`   Sample row: ${shops.sampleRow.join(' | ')}`);
-            }
-        } else if (!Array.isArray(shops) && !shops.tableFound) {
-            console.warn(`   ⚠️ #fpsreport table not found in DOM`);
+            try {
+                const html = await this.page.content();
+                fs.writeFileSync(path.join(this.logsDir, `icds_fps_depot${depot.slNo}_debug.html`), html);
+                console.log(`   Saved debug HTML: icds_fps_depot${depot.slNo}_debug.html`);
+            } catch (_) {}
         }
 
         console.log(`   Extracted ${extractedShops.length} shops for ${depot.depotName || depot.name}`);
         return extractedShops;
-    }
-
-    async _goBackToDepotList() {
-        const depotTableStillPresent = await this.page.evaluate(() => {
-            const t = document.getElementById('depotreport');
-            return t && t.querySelectorAll('tr').length > 3;
-        });
-        if (!depotTableStillPresent) {
-            console.log('   #depotreport gone — re-clicking district...');
-            await this._clickDistrict();
-        }
-        await this.page.waitForTimeout(500);
     }
 }
 
