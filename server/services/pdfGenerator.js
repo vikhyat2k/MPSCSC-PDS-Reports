@@ -98,6 +98,28 @@ class PDFGenerator {
                 tr:nth-child(even) td { background-color: #f9f9f9; }
                 tr.total-row td { font-weight: bold; background-color: #fff3cd; }
                 tr { page-break-inside: avoid; }
+
+                /* Color coding for Difference % (प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत) */
+                td.diff-normal {
+                    background-color: #d1fae5 !important; /* Soft Emerald Green */
+                    color: #065f46;
+                    font-weight: 600;
+                }
+                td.diff-warning {
+                    background-color: #fef3c7 !important; /* Soft Amber */
+                    color: #92400e;
+                    font-weight: bold;
+                }
+                td.diff-critical {
+                    background-color: #fee2e2 !important; /* Soft Coral Red */
+                    color: #991b1b;
+                    font-weight: bold;
+                }
+                td.diff-anomaly {
+                    background-color: #ede9fe !important; /* Soft Purple */
+                    color: #6b21a8;
+                    font-weight: bold;
+                }
             </style>
         </head>
         <body>
@@ -130,6 +152,23 @@ class PDFGenerator {
                 <tbody>
         `;
 
+        // Helper to determine color coding class and formatted display for diff percentage
+        const getDiffPctBadge = (diff) => {
+            const val = parseFloat(diff) || 0;
+            let className = 'diff-normal';
+            if (val > 15) {
+                className = 'diff-critical'; // High POS Feeding Lag / In-transit (>15%)
+            } else if (val > 5) {
+                className = 'diff-warning';  // Moderate POS Lag (5% to 15%)
+            } else if (val < -0.01) {
+                className = 'diff-anomaly';  // POS Over-receipt / Anomaly (<0%)
+            } else {
+                className = 'diff-normal';   // Normal in-sync (0% to 5%)
+            }
+            const formatted = (val > 0 ? '+' : '') + val.toFixed(2) + '%';
+            return { className, formatted };
+        };
+
         if (processedData && processedData.sectors) {
             let totalShops = 0;
             processedData.sectors.forEach((sector, i) => {
@@ -141,6 +180,7 @@ class PDFGenerator {
                 const diffPct = sector.dispatchReceiptDiffPercentage !== undefined 
                     ? sector.dispatchReceiptDiffPercentage 
                     : (dispatchPct - receiptPct);
+                const diffBadge = getDiffPctBadge(diffPct);
                 htmlContent += `
                     <tr>
                         <td>${i + 1}</td>
@@ -152,7 +192,7 @@ class PDFGenerator {
                         <td>${(sector.dispatch || 0).toFixed(2)}</td>
                         <td>${dispatchPct.toFixed(2)}%</td>
                         <td>${receiptPct.toFixed(2)}%</td>
-                        <td>${diffPct.toFixed(2)}%</td>
+                        <td class="${diffBadge.className}">${diffBadge.formatted}</td>
                         <td>${bal.toFixed(2)}</td>
                         <td>${sector.transporter || ''}</td>
                         <td>${sector.mobileNumber || ''}</td>
@@ -169,6 +209,7 @@ class PDFGenerator {
             const totalDiffPct = totals.dispatchReceiptDiffPercentage !== undefined
                 ? totals.dispatchReceiptDiffPercentage
                 : (parseFloat(totalDispatchPct) - parseFloat(totalReceiptPct));
+            const totalDiffBadge = getDiffPctBadge(totalDiffPct);
 
             htmlContent += `
                 <tr class="total-row">
@@ -179,7 +220,7 @@ class PDFGenerator {
                     <td>${(totals.totalDispatch || 0).toFixed(2)}</td>
                     <td>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</td>
                     <td>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</td>
-                    <td>${(parseFloat(totalDiffPct) || 0).toFixed(2)}%</td>
+                    <td class="${totalDiffBadge.className}">${totalDiffBadge.formatted}</td>
                     <td>${tBal.toFixed(2)}</td>
                     <td colspan="2"></td>
                 </tr>
@@ -189,6 +230,13 @@ class PDFGenerator {
         htmlContent += `
                 </tbody>
             </table>
+            <div style="margin-top: 7px; font-size: 9px; color: #475569; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                <span style="font-weight: bold; color: #1e293b;">अंतर % कलर कोड संकेत (Legend):</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#d1fae5;border:1px solid #10b981;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> सामान्य / In-Sync (0%–5%)</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#fef3c7;border:1px solid #f59e0b;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> मध्यम अंतर / Moderate Lag (+5% से +15%)</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#fee2e2;border:1px solid #ef4444;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> उच्च अंतर / High Lag (&gt;+15%)</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#ede9fe;border:1px solid #a855f7;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> विसंगति / Data Anomaly (&lt;0%)</span>
+            </div>
         </body>
         </html>
         `;

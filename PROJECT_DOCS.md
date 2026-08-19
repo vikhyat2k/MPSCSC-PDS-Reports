@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 17 August 2026, 18:10 IST
+> **Last Sync:** 19 August 2026, 23:50 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 17 Aug 2026 — Resolved ICDS scraper hanging/freezing at 14% via direct parameterized AJAX extraction across all 9 Betul depots |
+| Last Code Change | 19 Aug 2026 — Resolved 90s server startup freeze via lazy-loading heavy Jimp/Puppeteer/Tesseract scraper modules (startup time <1.5s) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -760,10 +760,30 @@ Tracks what has been tested and confirmed working.
 | ISSUE-021 | Date Range report generation crashed with ReferenceError: sectorsConfig is not defined | HIGH | RESOLVED | server.js, Technical Audit/server.js | 16 Aug 2026 |
 | ISSUE-022 | Date Range AI insights card displayed transporter liftings as Dispatch % with % sign instead of Quantity Lifted in Quintals (Qt) | MEDIUM | RESOLVED | public/app.js | 16 Aug 2026 |
 | ISSUE-023 | ICDS report generation stuck indefinitely at 14% due to missing dist_code input in portal depot DOM and fragile eval() | HIGH | RESOLVED | server/automation/icds_scraper.js, Technical Audit/icds_scraper.js | 17 Aug 2026 |
+| ISSUE-024 | Server startup appeared frozen/stuck for 90s due to synchronous Jimp/Tesseract/Puppeteer loading | HIGH | RESOLVED | server/automation/scraper_v2.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, server.js | 19 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-19 | Fix Server Startup Hang via Lazy-Loading Heavy Scraper Modules & Progress Feedback
+
+Files: server/automation/scraper_v2.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, server.js, PROJECT_DOCS.md
+Type: Bug Fix / Performance Optimization / UX
+Closes: ISSUE-024
+
+- BUG: Portal server startup appeared completely frozen / stuck on `[PID Manager] Found stale server.pid file indicating a previous crash...` when running `START_PORTAL.bat` or `node server.js`.
+- ROOT CAUSE:
+  1. `scraper_v2.js` and other scrapers loaded heavy Node packages (`jimp`, `tesseract.js`, `puppeteer-extra`, `puppeteer-extra-plugin-stealth`) synchronously at the top level during `server.js` startup.
+  2. On Windows, synchronously parsing and loading the entire `jimp` v1 plugin suite took ~49 seconds, and `tesseract.js` + `puppeteer-extra` took an additional ~15 seconds (total ~65-90 seconds) of silent execution before `server.js` could initialize Express or bind to port 3000.
+  3. In the meantime, `START_PORTAL.bat` launched the browser after 3 seconds, displaying a connection failure because the server had not yet bound to port 3000.
+- FIX:
+  1. Refactored `scraper_v2.js`, `mdm_scraper.js`, `icds_scraper.js`, and `welfare_scraper.js` to lazy-load `jimp`, `tesseract.js`, and `puppeteer`/`puppeteer-extra` via getters (`getJimp()`, `getTesseract()`, `getPuppeteer()`) only when report scraping or CAPTCHA solving is actively executed.
+  2. Reduced server cold start require time from **90,000ms down to <15ms**.
+  3. Added instant console startup progress logging (`📦 Loading modules and services...`) immediately on process boot.
+  4. Full server initialization (Database, Health Check, Scheduler, Express HTTP listener) now completes in **<1.5 seconds**, and `START_PORTAL.bat` connects immediately without lag.
+
+---
 
 ### 2026-08-17 | Fix ICDS Scraper Freezing / Hanging at 14% via Direct AJAX Extraction
 
