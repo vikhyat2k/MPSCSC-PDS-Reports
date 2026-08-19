@@ -25,6 +25,36 @@ class ExcelGenerator {
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
 
+        // Helper to determine color coding style and formatted display for Excel diff percentage
+        const getExcelDiffStyle = (diff) => {
+            const val = parseFloat(diff) || 0;
+            if (val > 15) {
+                return {
+                    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }, // Soft Coral Red
+                    font: { color: { argb: 'FF991B1B' }, bold: true, name: 'Calibri', size: 10 },
+                    formatted: (val > 0 ? '+' : '') + val.toFixed(2) + '%'
+                };
+            } else if (val > 5) {
+                return {
+                    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }, // Soft Amber
+                    font: { color: { argb: 'FF92400E' }, bold: true, name: 'Calibri', size: 10 },
+                    formatted: (val > 0 ? '+' : '') + val.toFixed(2) + '%'
+                };
+            } else if (val < -0.01) {
+                return {
+                    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEDE9FE' } }, // Soft Purple
+                    font: { color: { argb: 'FF6B21A8' }, bold: true, name: 'Calibri', size: 10 },
+                    formatted: val.toFixed(2) + '%'
+                };
+            } else {
+                return {
+                    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } }, // Soft Emerald Green
+                    font: { color: { argb: 'FF065F46' }, bold: false, name: 'Calibri', size: 10 },
+                    formatted: (val > 0 ? '+' : '') + val.toFixed(2) + '%'
+                };
+            }
+        };
+
         if (processedResult && processedResult.sectors) {
             let totalShops = 0;
             processedResult.sectors.forEach((sector, i) => {
@@ -36,7 +66,8 @@ class ExcelGenerator {
                 const diffPct = sector.dispatchReceiptDiffPercentage !== undefined
                     ? sector.dispatchReceiptDiffPercentage
                     : (dispatchPct - receiptPct);
-                worksheet.addRow([
+                const diffStyle = getExcelDiffStyle(diffPct);
+                const row = worksheet.addRow([
                     i + 1,
                     'बैतूल',
                     sector.block || '',
@@ -46,11 +77,17 @@ class ExcelGenerator {
                     parseFloat((sector.dispatch || 0).toFixed(2)),
                     (dispatchPct || 0).toFixed(2) + '%',
                     (receiptPct || 0).toFixed(2) + '%',
-                    (diffPct || 0).toFixed(2) + '%',
+                    diffStyle.formatted,
                     parseFloat(bal.toFixed(2)),
                     sector.transporter || '',
                     sector.mobileNumber || ''
                 ]);
+
+                // Apply color coding fill and font to Column 10 (प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत)
+                const diffCell = row.getCell(10);
+                diffCell.fill = diffStyle.fill;
+                diffCell.font = diffStyle.font;
+                diffCell.alignment = { horizontal: 'center', vertical: 'middle' };
             });
 
             worksheet.addRow([]);
@@ -63,17 +100,34 @@ class ExcelGenerator {
             const totalDiffPct = totals.dispatchReceiptDiffPercentage !== undefined
                 ? totals.dispatchReceiptDiffPercentage
                 : (parseFloat(totalDispatchPct) - parseFloat(totalReceiptPct));
+            const totalDiffStyle = getExcelDiffStyle(totalDiffPct);
 
-            worksheet.addRow([
+            const totalRow = worksheet.addRow([
                 '', 'योग', '', totalShops, '',
                 parseFloat((totals.totalAllocation || 0).toFixed(2)),
                 parseFloat((totals.totalDispatch || 0).toFixed(2)),
                 (parseFloat(totalDispatchPct) || 0).toFixed(2) + '%',
                 (parseFloat(totalReceiptPct) || 0).toFixed(2) + '%',
-                (parseFloat(totalDiffPct) || 0).toFixed(2) + '%',
+                totalDiffStyle.formatted,
                 parseFloat(tBal.toFixed(2)),
                 '', ''
             ]);
+
+            const totalDiffCell = totalRow.getCell(10);
+            totalDiffCell.fill = totalDiffStyle.fill;
+            totalDiffCell.font = totalDiffStyle.font;
+            totalDiffCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+            // Add Color Code Legend row in Excel
+            worksheet.addRow([]);
+            const legendRow = worksheet.addRow([
+                'अंतर % संकेत (Legend):',
+                '🟢 सामान्य / In-Sync (0%–5%)',
+                '🟡 मध्यम अंतर / Moderate Lag (+5% to +15%)',
+                '🔴 उच्च अंतर / High Lag (>+15%)',
+                '🟣 विसंगति / Data Anomaly (<0%)'
+            ]);
+            legendRow.font = { italic: true, size: 9, color: { argb: 'FF475569' } };
         }
 
         const reportsDir = path.join(__dirname, '../../reports');
