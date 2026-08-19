@@ -1,3 +1,43 @@
+const path = require('path');
+const fs = require('fs');
+
+let _puppeteer = null;
+function getPuppeteer() {
+    if (!_puppeteer) {
+        _puppeteer = require('puppeteer');
+    }
+    return _puppeteer;
+}
+
+/**
+ * MDM Scraper
+ * Scrapes Mid Day Meal (MDM) lifting data from public portal.
+ * URL: https://scm.mp.gov.in/MDM_allotment.jsp
+ * No login required. All links use javascript:void(0) — must click, not navigate.
+ */
+class MDMScraper {
+    constructor() {
+        this.VERSION = '1.0.1';
+        this.browser = null;
+        this.page = null;
+        this.MDM_URL = 'https://scm.mp.gov.in/MDM_allotment.jsp';
+        this.DISTRICT_NAME = 'Betul';
+        this.SKIP_DEPOT_SL = []; // Do not skip any depots for MDM
+
+        this.logsDir = path.join(__dirname, '../../logs');
+        if (!fs.existsSync(this.logsDir)) {
+            fs.mkdirSync(this.logsDir, { recursive: true });
+        }
+    }
+
+    async init(headless = true) {
+        console.log(`🚀 [MDM] Initializing browser (headless: ${headless})...`);
+        const puppeteer = getPuppeteer();
+        this.browser = await puppeteer.launch({
+            headless: headless ? 'new' : false,
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
                 '--disable-dev-shm-usage', 
                 '--hide-scrollbars', 
                 '--mute-audio',

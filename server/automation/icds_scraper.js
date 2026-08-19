@@ -1,6 +1,13 @@
-const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
+
+let _puppeteer = null;
+function getPuppeteer() {
+    if (!_puppeteer) {
+        _puppeteer = require('puppeteer');
+    }
+    return _puppeteer;
+}
 
 /**
  * ICDS Scraper
@@ -27,6 +34,7 @@ class ICDSScraper {
 
     async init(headless = true) {
         console.log(`🚀 [ICDS] Initializing browser (headless: ${headless})...`);
+        const puppeteer = getPuppeteer();
         this.browser = await puppeteer.launch({
             headless: headless ? 'new' : false,
             args: [
