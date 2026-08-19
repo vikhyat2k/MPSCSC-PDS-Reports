@@ -1,3 +1,47 @@
+const path = require('path');
+const fs = require('fs');
+
+let _puppeteer = null;
+function getPuppeteer() {
+    if (!_puppeteer) {
+        _puppeteer = require('puppeteer');
+    }
+    return _puppeteer;
+}
+
+/**
+ * Welfare Scheme Scraper
+ * Scrapes Welfare Institute commodity lifting data from public portal.
+ * URL: https://scm.mp.gov.in/welfareInstituteroanddispatchnew.jsp
+ * No login required. Scheme=ALL (value "00"). 
+ * AJAX endpoint: welfareInstituteroanddispatchdistnew.jsp (POST month/year/scheme)
+ * Navigation: Month/Year/Scheme → Get Report → #distreport District → #depotreport Depot → #fpsreport shops
+ * 2 commodities: Wheat (गेहूँ) + Fortified Rice (फोर्टिफाइड चावल)
+ */
+class WelfareScraper {
+    constructor() {
+        this.VERSION = '1.0.0';
+        this.browser = null;
+        this.page = null;
+        this.WELFARE_URL = 'https://scm.mp.gov.in/welfareInstituteroanddispatchnew.jsp';
+        this.DISTRICT_NAME = 'Betul';
+        this.SCHEME_VALUE = '00'; // ALL
+        this.SKIP_DEPOT_SL = [];
+
+        this.logsDir = path.join(__dirname, '../../logs');
+        if (!fs.existsSync(this.logsDir)) {
+            fs.mkdirSync(this.logsDir, { recursive: true });
+        }
+    }
+
+    async init(headless = true) {
+        console.log(`🚀 [Welfare] Initializing browser (headless: ${headless})...`);
+        const puppeteer = getPuppeteer();
+        this.browser = await puppeteer.launch({
+            headless: 'new',
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
                 '--disable-dev-shm-usage', 
                 '--hide-scrollbars', 
                 '--mute-audio',
