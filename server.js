@@ -10,6 +10,8 @@ process.on('uncaughtException', (error) => {
     console.error('🚨 Uncaught Exception:', error);
 });
 
+console.log('📦 Loading modules and services...');
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
