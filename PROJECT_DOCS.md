@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 20 August 2026, 13:14 IST
+> **Last Sync:** 20 August 2026, 13:21 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 20 Aug 2026 — 3 analytics refinements: calendar days-left, below-district-avg sectors, worst transporter Lag names in PDF footnote |
+| Last Code Change | 20 Aug 2026 — Fixed remainingDays: ideal deadline = last day of prev month (e.g. Aug 31 for Sep allotment), fallback to allotment month-end if already past |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,25 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-20 | Fix NFSA PDF Footnote — Remaining Days Deadline Logic (Session 4)
+
+Files: server/services/pdfGenerator.js, PROJECT_DOCS.md
+Type: Bug Fix / Business Logic
+Closes: N/A
+
+- USER REQUIREMENT: `शेष दिन: 42` was wrong. For September allotment, lifting must be completed **before September 1** — i.e. deadline = **August 31**. Today Aug 20 → 11 days remaining (not 42).
+- BUSINESS RULE IMPLEMENTED:
+  - **Ideal case**: `deadline = last day of (allotment month − 1)` (i.e. day before allotment month starts)
+  - **Same-month fallback**: If that deadline has already passed (lifting month = allotment month, or we are already into the allotment month), `deadline = last day of allotment month`
+  - Uses `Math.floor` (not ceil) for day count, matching natural "days left" expectation.
+- VERIFIED SCENARIOS:
+  | Scenario | Allotment Month | Today | Deadline | Days Left |
+  |---|---|---|---|---|
+  | Ideal | Sep 2026 | Aug 20 | Aug 31 | **11** |
+  | Same-month | Aug 2026 | Aug 20 | Aug 31 | 11 |
+  | Already in month | Sep 2026 | Sep 5 | Sep 30 | 25 |
+  | Near prev-month end | Oct 2026 | Sep 28 | Sep 30 | 2 |
 
 ### 2026-08-20 | NFSA PDF Footnote — 3 Analytics Precision Fixes (Session 3)
 
