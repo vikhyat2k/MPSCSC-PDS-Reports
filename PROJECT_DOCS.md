@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 19 August 2026, 23:50 IST
+> **Last Sync:** 19 August 2026, 23:58 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 19 Aug 2026 — Resolved 90s server startup freeze via lazy-loading heavy Jimp/Puppeteer/Tesseract scraper modules (startup time <1.5s) |
+| Last Code Change | 19 Aug 2026 — Color-coded "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column in NFSA PDF and Excel reports with status highlights and legend |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -761,10 +761,37 @@ Tracks what has been tested and confirmed working.
 | ISSUE-022 | Date Range AI insights card displayed transporter liftings as Dispatch % with % sign instead of Quantity Lifted in Quintals (Qt) | MEDIUM | RESOLVED | public/app.js | 16 Aug 2026 |
 | ISSUE-023 | ICDS report generation stuck indefinitely at 14% due to missing dist_code input in portal depot DOM and fragile eval() | HIGH | RESOLVED | server/automation/icds_scraper.js, Technical Audit/icds_scraper.js | 17 Aug 2026 |
 | ISSUE-024 | Server startup appeared frozen/stuck for 90s due to synchronous Jimp/Tesseract/Puppeteer loading | HIGH | RESOLVED | server/automation/scraper_v2.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, server.js | 19 Aug 2026 |
+| ISSUE-025 | "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column lacked visual status color-coding to highlight anomalous differences | MEDIUM | RESOLVED | server/services/pdfGenerator.js, server/services/excelGenerator.js | 19 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-19 | Color-Code "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" Column in PDF & Excel Reports
+
+Files: server/services/pdfGenerator.js, server/services/excelGenerator.js, tests/test-nfsa-diff-column.js, PROJECT_DOCS.md
+Type: Feature / UI & Export Formatting Enhancement
+Closes: ISSUE-025
+
+- USER REQUIREMENT: Flag "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" (Difference % = Dispatch % - POS Receipt %) having difference from normal by color code in report.
+- IMPLEMENTATION:
+  1. **Threshold & Status Classification Rules**:
+     - **🟢 Normal / In-Sync (`0.00%` to `5.00%`)**: Minimal transit gap. Soft Emerald Green (`#d1fae5` / `#065f46`).
+     - **🟡 Moderate POS Feeding Lag (`+5.01%` to `+15.00%`)**: Noticeable delivery lag. Soft Amber (`#fef3c7` / `#92400e`), Bold.
+     - **🔴 High / Critical POS Feeding Lag (`> +15.00%`)**: Critical dispatch vs POS entry backlog. Soft Coral Red (`#fee2e2` / `#991b1b`), Bold.
+     - **🟣 Over-Receipt / Data Anomaly (`< 0.00%`)**: POS receipt exceeds recorded depot dispatch. Soft Purple (`#ede9fe` / `#6b21a8`), Bold.
+  2. **PDF Report (`server/services/pdfGenerator.js`)**:
+     - Added CSS classes `.diff-normal`, `.diff-warning`, `.diff-critical`, `.diff-anomaly` with soft pastel background fills and contrasting text.
+     - Formatted positive differences with explicit `+` prefix (e.g. `+7.44%`, `+18.20%`).
+     - Applied styling to all sector rows and district total summary row.
+     - Added a clean 4-item visual Color Code Legend at the bottom of the table.
+  3. **Excel Report (`server/services/excelGenerator.js`)**:
+     - Applied `exceljs` solid pattern fills and bold font colors on Column 10 (Cell J) matching the status color codes.
+     - Added a Color Code Legend row beneath the summary row in Excel.
+  4. **Automated Testing**:
+     - Verified end-to-end PDF and Excel generation via `tests/test-nfsa-diff-column.js`.
+
+---
 
 ### 2026-08-19 | Fix Server Startup Hang via Lazy-Loading Heavy Scraper Modules & Progress Feedback
 
