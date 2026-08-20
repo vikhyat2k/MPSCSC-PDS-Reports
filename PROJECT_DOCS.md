@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 19 August 2026, 23:58 IST
+> **Last Sync:** 20 August 2026, 11:36 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 19 Aug 2026 — Color-coded "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column in NFSA PDF and Excel reports with status highlights and legend |
+| Last Code Change | 20 Aug 2026 — Added 3-Column Executive Summary Analytical Footnote to NFSA single-page PDF report & removed old legend for clean presentation |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -731,6 +731,7 @@ Tracks what has been tested and confirmed working.
 | Stock Snapshots Database & Health Score Trend Arrow | Unit & Integration | VERIFIED | 17 Aug 2026 | Added stock_snapshots table, IST date conversion, upsert handler, history endpoint, and cover trend arrow |
 | Commodity Abbreviation Legend in Executive Report | UI & Export Verification | VERIFIED | 17 Aug 2026 | Added static commodity abbreviation legend beneath Section 2 heatmap with terms verified against View_LiveRollup source headers |
 | ICDS Scraper Direct AJAX Extraction Pipeline | Automation & Scraping Verification | VERIFIED | 17 Aug 2026 | Replaced broken DOM onclick eval with direct parameterized $.ajax calls, extracting all 9 depots (562 shops) in ~19.8s |
+| NFSA Single-Page 3-Column Analytical Footnote | PDF & Layout Verification | VERIFIED | 20 Aug 2026 | Replaced color legend with 3-column executive summary cards (Run rate, Transit lag, Sector alerts) in single-page A4 landscape |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -766,6 +767,28 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-20 | Add 3-Column Executive Summary Analytical Footnote to NFSA Single-Page PDF Report
+
+Files: server/services/pdfGenerator.js, PROJECT_DOCS.md, tests/test-nfsa-footnote.js
+Type: Feature / PDF Analytics & Layout Optimization
+Closes: N/A
+
+- USER REQUIREMENT: Add analytical footnote to available space in NFSA report without exceeding single page (Single-Page A4 Landscape); remove the old "अंतर % कलर कोड संकेत (Legend)" bar to maximize available space.
+- IMPLEMENTATION:
+  1. **Analytical Data Calculations**:
+     - **Column 1 (उठाव प्रगति एवं दैनिक लक्ष्य दर)**: Total dispatch %, remaining balance (Qt), required daily lifting rate (`Qt/day` based on days remaining in the month for 100% completion), completed sectors count, and total shops.
+     - **Column 2 (मार्गस्थ एवं POS प्रविष्टि स्थिति)**: In-transit / pending entry quantity (`Qt` and `%`), POS machine receipt %, in-sync sectors count (0–5%), and high-lag sectors count (>15% lag with alert badge).
+     - **Column 3 (सेक्टर समीक्षा एवं निगरानी अलर्ट)**: Best performing sector & lifting %, lowest/lagging sector with remaining balance, and transporter monitoring action alert.
+  2. **PDF Layout & Styling (`server/services/pdfGenerator.js`)**:
+     - Built `.analytics-footer-strip` with 3 responsive flex cards (`.analytics-card`), border radius, bold card titles, and high-contrast text styling.
+     - Removed the bottom legend bar as requested, saving ~8mm of vertical height.
+     - Guaranteed 100% single-page A4 landscape output with ample safe vertical margin (~16mm).
+  3. **Automated Testing & Page Count Verification**:
+     - Created and ran `tests/test-nfsa-footnote.js` on real 22-sector database reports.
+     - Verified that the generated PDF report strictly fits on **1 of 1 single page**.
+
+---
 
 ### 2026-08-19 | Color-Code "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" Column in PDF & Excel Reports
 

@@ -120,6 +120,42 @@ class PDFGenerator {
                     color: #6b21a8;
                     font-weight: bold;
                 }
+
+                /* Executive Summary Analytical Footnote Strip */
+                .analytics-footer-strip {
+                    margin-top: 5px;
+                    display: flex;
+                    gap: 8px;
+                    justify-content: space-between;
+                    width: 100%;
+                }
+                .analytics-card {
+                    flex: 1;
+                    background: #f8fafc;
+                    border: 1px solid #94a3b8;
+                    border-radius: 4px;
+                    padding: 4px 6px;
+                    font-size: 9.5px;
+                    line-height: 1.35;
+                }
+                .analytics-card-title {
+                    font-weight: bold;
+                    color: #0f172a;
+                    border-bottom: 1px solid #cbd5e1;
+                    padding-bottom: 2px;
+                    margin-bottom: 3px;
+                    font-size: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .analytics-card-item {
+                    color: #334155;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    margin-bottom: 1px;
+                }
             </style>
         </head>
         <body>
@@ -225,18 +261,76 @@ class PDFGenerator {
                     <td colspan="2"></td>
                 </tr>
             `;
+
+            // Compute Executive Analytics for Footnote
+            const now = new Date();
+            const rMonth = parseInt(month, 10) || (now.getMonth() + 1);
+            const rYear = parseInt(year, 10) || now.getFullYear();
+            const daysInMonth = new Date(rYear, rMonth, 0).getDate();
+            let remainingDays = 1;
+            if (now.getFullYear() === rYear && (now.getMonth() + 1) === rMonth) {
+                remainingDays = Math.max(1, daysInMonth - now.getDate());
+            } else if (new Date(rYear, rMonth - 1, 1) > now) {
+                remainingDays = daysInMonth;
+            }
+
+            const requiredDailyRate = (tBal > 0 && remainingDays > 0) ? (tBal / remainingDays).toFixed(2) : '0.00';
+            const inTransitQty = Math.max(0, (totals.totalDispatch || 0) - (totals.totalPOSReceipt || 0));
+            const inTransitPct = (totals.totalAllocation || 0) > 0 ? ((inTransitQty / totals.totalAllocation) * 100).toFixed(2) : '0.00';
+
+            let sectorsInSync = 0;
+            let sectorsModerateLag = 0;
+            let sectorsHighLag = 0;
+            let sectorsCompleted = 0;
+
+            const sectorList = processedData.sectors || [];
+            sectorList.forEach(s => {
+                const dPct = s.dispatchPercentage || 0;
+                const rPct = s.receiptPercentage || 0;
+                const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - rPct);
+                if (dPct >= 100) sectorsCompleted++;
+                if (diff > 15) sectorsHighLag++;
+                else if (diff > 5) sectorsModerateLag++;
+                else if (diff >= 0) sectorsInSync++;
+            });
+
+            const activeSectors = sectorList.filter(s => (s.allocation || 0) > 0);
+            const sortedByDisp = [...activeSectors].sort((a, b) => (b.dispatchPercentage || 0) - (a.dispatchPercentage || 0));
+            const topSector = sortedByDisp[0];
+            const bottomSector = sortedByDisp[sortedByDisp.length - 1];
+
+            htmlContent += `
+                </tbody>
+            </table>
+            <div class="analytics-footer-strip">
+                <div class="analytics-card">
+                    <div class="analytics-card-title">📈 उठाव प्रगति एवं दैनिक लक्ष्य दर</div>
+                    <div class="analytics-card-item">• कुल उठाव: <b>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</b> | शेष: <b>${tBal.toFixed(2)} Qt.</b></div>
+                    <div class="analytics-card-item">• 100% लक्ष्य हेतु दैनिक दर: <b>${requiredDailyRate} Qt./दिन</b> (शेष दिन: ${remainingDays})</div>
+                    <div class="analytics-card-item">• पूर्ण उठाव सेक्टर: <b>${sectorsCompleted}/${sectorList.length}</b> | कुल दुकानें: <b>${totalShops}</b></div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-title">🚚 मार्गस्थ एवं POS प्रविष्टि स्थिति</div>
+                    <div class="analytics-card-item">• मार्गस्थ / प्रविष्टि शेष: <b>${inTransitQty.toFixed(2)} Qt.</b> (${inTransitPct}%)</div>
+                    <div class="analytics-card-item">• POS मशीन प्राप्ति: <b>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</b> | इन-सिंक (0-5%): <b>${sectorsInSync}/${sectorList.length}</b></div>
+                    <div class="analytics-card-item">• उच्च विलंब (&gt;15% Lag): <b style="color:${sectorsHighLag > 0 ? '#b91c1c' : '#15803d'}">${sectorsHighLag} सेक्टर</b> ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}</div>
+                </div>
+                <div class="analytics-card">
+                    <div class="analytics-card-title">🎯 सेक्टर समीक्षा एवं निगरानी अलर्ट</div>
+                    <div class="analytics-card-item">• सर्वोत्तम उठाव: <b>${topSector ? `${topSector.sectorName} (${(topSector.dispatchPercentage || 0).toFixed(2)}%)` : 'N/A'}</b></div>
+                    <div class="analytics-card-item">• न्यूनतम उठाव: <b>${bottomSector ? `${bottomSector.sectorName} (${(bottomSector.dispatchPercentage || 0).toFixed(2)}%, शेष ${Math.max(0, (bottomSector.allocation || 0) - (bottomSector.dispatch || 0)).toFixed(2)} Qt.)` : 'N/A'}</b></div>
+                    <div class="analytics-card-item">• परिवहनकर्ता निगरानी: <b>${bottomSector && bottomSector.transporter ? bottomSector.transporter : 'N/A'}</b></div>
+                </div>
+            </div>
+            `;
+        } else {
+            htmlContent += `
+                </tbody>
+            </table>
+            `;
         }
 
         htmlContent += `
-                </tbody>
-            </table>
-            <div style="margin-top: 7px; font-size: 9px; color: #475569; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
-                <span style="font-weight: bold; color: #1e293b;">अंतर % कलर कोड संकेत (Legend):</span>
-                <span><span style="display:inline-block;width:10px;height:10px;background:#d1fae5;border:1px solid #10b981;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> सामान्य / In-Sync (0%–5%)</span>
-                <span><span style="display:inline-block;width:10px;height:10px;background:#fef3c7;border:1px solid #f59e0b;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> मध्यम अंतर / Moderate Lag (+5% से +15%)</span>
-                <span><span style="display:inline-block;width:10px;height:10px;background:#fee2e2;border:1px solid #ef4444;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> उच्च अंतर / High Lag (&gt;+15%)</span>
-                <span><span style="display:inline-block;width:10px;height:10px;background:#ede9fe;border:1px solid #a855f7;border-radius:2px;vertical-align:middle;margin-right:3px;"></span> विसंगति / Data Anomaly (&lt;0%)</span>
-            </div>
         </body>
         </html>
         `;

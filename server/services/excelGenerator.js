@@ -118,17 +118,73 @@ class ExcelGenerator {
             totalDiffCell.font = totalDiffStyle.font;
             totalDiffCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-            // Add Color Code Legend row in Excel
+            // Compute Executive Analytics for Excel Footnote
+            const now = new Date();
+            const rMonth = parseInt(month, 10) || (now.getMonth() + 1);
+            const rYear = parseInt(year, 10) || now.getFullYear();
+            const daysInMonth = new Date(rYear, rMonth, 0).getDate();
+            let remainingDays = 1;
+            if (now.getFullYear() === rYear && (now.getMonth() + 1) === rMonth) {
+                remainingDays = Math.max(1, daysInMonth - now.getDate());
+            } else if (new Date(rYear, rMonth - 1, 1) > now) {
+                remainingDays = daysInMonth;
+            }
+
+            const requiredDailyRate = (tBal > 0 && remainingDays > 0) ? (tBal / remainingDays).toFixed(2) : '0.00';
+            const inTransitQty = Math.max(0, (totals.totalDispatch || 0) - (totals.totalPOSReceipt || 0));
+            const inTransitPct = (totals.totalAllocation || 0) > 0 ? ((inTransitQty / totals.totalAllocation) * 100).toFixed(2) : '0.00';
+
+            let sectorsInSync = 0;
+            let sectorsModerateLag = 0;
+            let sectorsHighLag = 0;
+            let sectorsCompleted = 0;
+
+            const sectorList = processedResult.sectors || [];
+            sectorList.forEach(s => {
+                const dPct = s.dispatchPercentage || 0;
+                const rPct = s.receiptPercentage || 0;
+                const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - rPct);
+                if (dPct >= 100) sectorsCompleted++;
+                if (diff > 15) sectorsHighLag++;
+                else if (diff > 5) sectorsModerateLag++;
+                else if (diff >= 0) sectorsInSync++;
+            });
+
+            const activeSectors = sectorList.filter(s => (s.allocation || 0) > 0);
+            const sortedByDisp = [...activeSectors].sort((a, b) => (b.dispatchPercentage || 0) - (a.dispatchPercentage || 0));
+            const topSector = sortedByDisp[0];
+            const bottomSector = sortedByDisp[sortedByDisp.length - 1];
+
             worksheet.addRow([]);
-            const legendRow = worksheet.addRow([
-                'अंतर % संकेत (Legend):',
-                '🟢 सामान्य / In-Sync (0%–5%)',
-                '🟡 मध्यम अंतर / Moderate Lag (+5% to +15%)',
-                '🔴 उच्च अंतर / High Lag (>+15%)',
-                '🟣 विसंगति / Data Anomaly (<0%)'
+            
+            // Header for Analytical Summary
+            const fnHeaderRow = worksheet.addRow(['📊 विश्लेषणात्मक सारांश (Analytical Executive Summary)']);
+            fnHeaderRow.font = { bold: true, size: 11, color: { argb: 'FF0F172A' } };
+
+            // 3 Rows of Analytical Notes
+            const fnRow1 = worksheet.addRow([
+                '📈 उठाव प्रगति एवं दैनिक लक्ष्य दर:',
+                `• कुल उठाव: ${(parseFloat(totalDispatchPct) || 0).toFixed(2)}% (शेष: ${tBal.toFixed(2)} Qt.)`,
+                `• 100% लक्ष्य हेतु आवश्यक दैनिक दर: ${requiredDailyRate} Qt./दिन (शेष दिन: ${remainingDays})`,
+                `• पूर्ण उठाव सेक्टर: ${sectorsCompleted}/${sectorList.length} | कुल उचित मूल्य दुकानें: ${totalShops}`
             ]);
-            legendRow.font = { italic: true, size: 9, color: { argb: 'FF475569' } };
-        }
+            fnRow1.font = { size: 10, color: { argb: 'FF334155' } };
+
+            const fnRow2 = worksheet.addRow([
+                '🚚 मार्गस्थ एवं POS प्रविष्टि स्थिति:',
+                `• मार्गस्थ / प्रविष्टि शेष: ${inTransitQty.toFixed(2)} Qt. (${inTransitPct}%)`,
+                `• POS मशीन प्राप्ति: ${(parseFloat(totalReceiptPct) || 0).toFixed(2)}% | इन-सिंक (0-5%): ${sectorsInSync}/${sectorList.length}`,
+                `• उच्च विलंब (>15% Lag): ${sectorsHighLag} सेक्टर ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}`
+            ]);
+            fnRow2.font = { size: 10, color: { argb: 'FF334155' } };
+
+            const fnRow3 = worksheet.addRow([
+                '🎯 सेक्टर समीक्षा एवं निगरानी अलर्ट:',
+                `• सर्वोत्तम उठाव: ${topSector ? `${topSector.sectorName} (${(topSector.dispatchPercentage || 0).toFixed(2)}%)` : 'N/A'}`,
+                `• न्यूनतम उठाव: ${bottomSector ? `${bottomSector.sectorName} (${(bottomSector.dispatchPercentage || 0).toFixed(2)}%, शेष ${Math.max(0, (bottomSector.allocation || 0) - (bottomSector.dispatch || 0)).toFixed(2)} Qt.)` : 'N/A'}`,
+                `• परिवहनकर्ता निगरानी: ${bottomSector && bottomSector.transporter ? bottomSector.transporter : 'N/A'}`
+            ]);
+            fnRow3.font = { size: 10, color: { argb: 'FF334155' } };
 
         const reportsDir = path.join(__dirname, '../../reports');
         if (!fs.existsSync(reportsDir)) {
