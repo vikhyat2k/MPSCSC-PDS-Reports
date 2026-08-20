@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 20 August 2026, 11:51 IST
+> **Last Sync:** 20 August 2026, 13:07 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 20 Aug 2026 — Activated 3-Column Executive Summary Footnote across PDF, Excel & Web Dashboard with live daemon reload |
+| Last Code Change | 20 Aug 2026 — Replaced generic analytics cards with actionable district-officer insights: POS Lag names, Bottom-3 sectors with transporters, Critical <25% sectors |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,23 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-20 | Redesign NFSA PDF Footnote — Actionable District-Officer Analytics (Session 2)
+
+Files: server/services/pdfGenerator.js, PROJECT_DOCS.md
+Type: Improvement / Analytics Content Redesign
+Closes: N/A
+
+- USER REQUIREMENT: Replace the generic analytics cards with more useful / actionable insights for district PDS officers.
+- SELECTED ANALYTICS (user-chosen via multi-select):
+  1. 🚚 **मार्गस्थ / POS प्रविष्टि स्थिति** — In-transit Qt. & %, POS receipt %, High Lag (>15%) sector count, and names of lag sectors.
+  2. ⚠️ **निम्नतम उठाव — Bottom 3 सेक्टर** — Worst 3 sectors by lifting %, each showing: sector name, dispatch %, remaining Qt., and transporter name.
+  3. 🔴 **विशेष ध्यान अपेक्षित (<25% उठाव)** — Overall progress (lifting %, remaining Qt., required daily rate, days left), count + names of critical sectors below 25%, and completed (100%) sector count.
+- KEY CHANGES:
+  - Removed old Card 1 ("उठाव प्रगति एवं दैनिक लक्ष्य दर") from its own card — its key metrics now embedded in Card 3.
+  - Removed old Card 3 ("सेक्टर समीक्षा / Top–Bottom 1") — replaced by actionable Bottom-3 card.
+  - Added `shortName()` helper to abbreviate long sector names while preserving readability.
+  - Single-page A4 Landscape guarantee maintained (verified 1 of 1).
 
 ### 2026-08-20 | Add 3-Column Executive Summary Analytical Footnote Across NFSA PDF, Excel & Web Dashboard
 

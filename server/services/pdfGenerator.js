@@ -267,59 +267,90 @@ class PDFGenerator {
             const rMonth = parseInt(month, 10) || (now.getMonth() + 1);
             const rYear = parseInt(year, 10) || now.getFullYear();
             const daysInMonth = new Date(rYear, rMonth, 0).getDate();
-            let remainingDays = 1;
-            if (now.getFullYear() === rYear && (now.getMonth() + 1) === rMonth) {
-                remainingDays = Math.max(1, daysInMonth - now.getDate());
-            } else if (new Date(rYear, rMonth - 1, 1) > now) {
-                remainingDays = daysInMonth;
-            }
+            // Days left = calendar days from today until last day of the report month
+            const monthEnd = new Date(rYear, rMonth - 1, daysInMonth, 23, 59, 59);
+            const remainingDays = Math.max(1, Math.ceil((monthEnd - now) / (1000 * 60 * 60 * 24)));
 
             const requiredDailyRate = (tBal > 0 && remainingDays > 0) ? (tBal / remainingDays).toFixed(2) : '0.00';
             const inTransitQty = Math.max(0, (totals.totalDispatch || 0) - (totals.totalPOSReceipt || 0));
             const inTransitPct = (totals.totalAllocation || 0) > 0 ? ((inTransitQty / totals.totalAllocation) * 100).toFixed(2) : '0.00';
 
             let sectorsInSync = 0;
-            let sectorsModerateLag = 0;
             let sectorsHighLag = 0;
             let sectorsCompleted = 0;
 
             const sectorList = processedData.sectors || [];
-            sectorList.forEach(s => {
+            const activeSectors = sectorList.filter(s => (s.allocation || 0) > 0);
+            const sortedByDisp = [...activeSectors].sort((a, b) => (b.dispatchPercentage || 0) - (a.dispatchPercentage || 0));
+
+            // --- Card 2: निम्नतम 3 सेक्टर (worst lifting, worst first) ---
+            const bottom3Sectors = sortedByDisp.slice(-3).reverse();
+
+            // --- Card 3: सेक्टर जिनका उठाव जिला औसत से कम है ---
+            const districtAvgDisp = activeSectors.length > 0
+                ? activeSectors.reduce((sum, s) => sum + (s.dispatchPercentage || 0), 0) / activeSectors.length
+                : 0;
+            const belowAvgSectors = activeSectors.filter(s => (s.dispatchPercentage || 0) < districtAvgDisp);
+
+            // --- Card 1: High POS Lag sectors (diff > 15%) ---
+            const highLagSectors = activeSectors.filter(s => {
                 const dPct = s.dispatchPercentage || 0;
                 const rPct = s.receiptPercentage || 0;
                 const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - rPct);
-                if (dPct >= 100) sectorsCompleted++;
-                if (diff > 15) sectorsHighLag++;
-                else if (diff > 5) sectorsModerateLag++;
-                else if (diff >= 0) sectorsInSync++;
+                return diff > 15;
             });
 
-            const activeSectors = sectorList.filter(s => (s.allocation || 0) > 0);
-            const sortedByDisp = [...activeSectors].sort((a, b) => (b.dispatchPercentage || 0) - (a.dispatchPercentage || 0));
-            const topSector = sortedByDisp[0];
-            const bottomSector = sortedByDisp[sortedByDisp.length - 1];
+            sectorList.forEach(s => {
+                const dPct = s.dispatchPercentage || 0;
+                const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - (s.receiptPercentage || 0));
+                if (dPct >= 100) sectorsCompleted++;
+                if (diff > 15) sectorsHighLag++;
+            });
+
+            // Worst transporters by highest in-transit lag (dispatch-POS diff, de-duplicated by transporter name)
+            const transporterLagMap = {};
+            activeSectors.forEach(s => {
+                const dPct = s.dispatchPercentage || 0;
+                const rPct = s.receiptPercentage || 0;
+                const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - rPct);
+                const name = (s.transporter || '').trim();
+                if (name && diff > 0) {
+                    if (!transporterLagMap[name] || diff > transporterLagMap[name].diff) {
+                        transporterLagMap[name] = { diff, dispatchPct: dPct };
+                    }
+                }
+            });
+            const worstTransporters = Object.entries(transporterLagMap)
+                .sort((a, b) => b[1].diff - a[1].diff)
+                .slice(0, 3)
+                .map(([name, v]) => `${name} (+${v.diff.toFixed(1)}%)`);
+
+            // Shorten sector name to first meaningful word for compact display
+            const shortName = (name) => (name || '').replace(/\s*सेक्टर.*$/i, '').replace(/\s*क्र.*$/i, '').trim() || name;
 
             htmlContent += `
                 </tbody>
             </table>
             <div class="analytics-footer-strip">
                 <div class="analytics-card">
-                    <div class="analytics-card-title">📈 उठाव प्रगति एवं दैनिक लक्ष्य दर</div>
-                    <div class="analytics-card-item">• कुल उठाव: <b>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</b> | शेष: <b>${tBal.toFixed(2)} Qt.</b></div>
-                    <div class="analytics-card-item">• 100% लक्ष्य हेतु दैनिक दर: <b>${requiredDailyRate} Qt./दिन</b> (शेष दिन: ${remainingDays})</div>
-                    <div class="analytics-card-item">• पूर्ण उठाव सेक्टर: <b>${sectorsCompleted}/${sectorList.length}</b> | कुल दुकानें: <b>${totalShops}</b></div>
+                    <div class="analytics-card-title">🚚 मार्गस्थ / POS प्रविष्टि स्थिति</div>
+                    <div class="analytics-card-item">• मार्गस्थ शेष: <b>${inTransitQty.toFixed(2)} Qt.</b> (${inTransitPct}% of allotment)</div>
+                    <div class="analytics-card-item">• POS प्राप्ति: <b>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</b> | उच्च Lag (&gt;15%): <b style="color:${sectorsHighLag > 0 ? '#b91c1c' : '#15803d'}">${sectorsHighLag} सेक्टर</b></div>
+                    <div class="analytics-card-item">• उच्च Lag परिवहनकर्ता: <b style="color:${worstTransporters.length > 0 ? '#b91c1c' : '#15803d'}">${worstTransporters.length > 0 ? worstTransporters.join(' | ') : 'सभी संतोषजनक'}</b></div>
                 </div>
                 <div class="analytics-card">
-                    <div class="analytics-card-title">🚚 मार्गस्थ एवं POS प्रविष्टि स्थिति</div>
-                    <div class="analytics-card-item">• मार्गस्थ / प्रविष्टि शेष: <b>${inTransitQty.toFixed(2)} Qt.</b> (${inTransitPct}%)</div>
-                    <div class="analytics-card-item">• POS मशीन प्राप्ति: <b>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</b> | इन-सिंक (0-5%): <b>${sectorsInSync}/${sectorList.length}</b></div>
-                    <div class="analytics-card-item">• उच्च विलंब (&gt;15% Lag): <b style="color:${sectorsHighLag > 0 ? '#b91c1c' : '#15803d'}">${sectorsHighLag} सेक्टर</b> ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}</div>
+                    <div class="analytics-card-title">⚠️ निम्नतम उठाव — Bottom 3 सेक्टर</div>
+                    ${bottom3Sectors.map((s, idx) => {
+                        const bal = Math.max(0, (s.allocation || 0) - (s.dispatch || 0));
+                        const rank = ['①', '②', '③'][idx];
+                        return '<div class="analytics-card-item">' + rank + ' <b>' + shortName(s.sectorName) + '</b> — ' + (s.dispatchPercentage || 0).toFixed(1) + '% | शेष ' + bal.toFixed(0) + ' Qt. | ' + (s.transporter || 'N/A') + '</div>';
+                    }).join('')}
                 </div>
                 <div class="analytics-card">
-                    <div class="analytics-card-title">🎯 सेक्टर समीक्षा एवं निगरानी अलर्ट</div>
-                    <div class="analytics-card-item">• सर्वोत्तम उठाव: <b>${topSector ? `${topSector.sectorName} (${(topSector.dispatchPercentage || 0).toFixed(2)}%)` : 'N/A'}</b></div>
-                    <div class="analytics-card-item">• न्यूनतम उठाव: <b>${bottomSector ? `${bottomSector.sectorName} (${(bottomSector.dispatchPercentage || 0).toFixed(2)}%, शेष ${Math.max(0, (bottomSector.allocation || 0) - (bottomSector.dispatch || 0)).toFixed(2)} Qt.)` : 'N/A'}</b></div>
-                    <div class="analytics-card-item">• परिवहनकर्ता निगरानी: <b>${bottomSector && bottomSector.transporter ? bottomSector.transporter : 'N/A'}</b></div>
+                    <div class="analytics-card-title">🔴 औसत से निम्न उठाव सेक्टर (जिला औसत: ${districtAvgDisp.toFixed(1)}%)</div>
+                    <div class="analytics-card-item">• कुल उठाव: <b>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</b> | शेष: <b>${tBal.toFixed(0)} Qt.</b> | दर: <b>${requiredDailyRate} Qt./दिन</b> (शेष दिन: ${remainingDays})</div>
+                    <div class="analytics-card-item">• औसत से कम: <b style="color:${belowAvgSectors.length > 0 ? '#b91c1c' : '#15803d'}">${belowAvgSectors.length} सेक्टर</b>${belowAvgSectors.length > 0 ? ' — ' + belowAvgSectors.map(s => shortName(s.sectorName)).join(', ') : ' (कोई नहीं ✓)'}</div>
+                    <div class="analytics-card-item">• पूर्ण (100%): <b style="color:#15803d">${sectorsCompleted}/${sectorList.length}</b> सेक्टर | कुल दुकानें: <b>${totalShops}</b></div>
                 </div>
             </div>
             `;
