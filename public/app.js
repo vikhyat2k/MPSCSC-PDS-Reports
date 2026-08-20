@@ -651,13 +651,92 @@ function resetForm() {
  */
 function displayAnalytics(analytics, genTime) {
     document.getElementById('analyticsSection').style.display = 'block';
-    const metrics = analytics.metrics;
+    const metrics = analytics.metrics || {};
     
     // Summary metrics
     document.getElementById('metricsGrid').innerHTML = `
-        <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">📦</div><div class="stat-content"><div class="stat-label">Dispatch</div><div class="stat-value">${metrics.dispatchPercentage.toFixed(2)}%</div></div></div>
+        <div class="stat-card" onclick="toggleMatrix()"><div class="stat-icon">📦</div><div class="stat-content"><div class="stat-label">Dispatch</div><div class="stat-value">${(metrics.dispatchPercentage || 0).toFixed(2)}%</div></div></div>
         <div class="stat-card" onclick="toggleShopsLeftDetails()"><div class="stat-icon">🏪</div><div class="stat-content"><div class="stat-label">Pending</div><div class="stat-value">${metrics.totalShopsLeft || metrics.totalPendingShops || 0}</div></div></div>
     `;
+
+    // Compute and Render 3-Column Executive Summary Strip in Web UI
+    const allSectors = analytics.allSectors || analytics.sectors || [];
+    const tAlloc = parseFloat(metrics.totalAllocation || 0);
+    const tDisp = parseFloat(metrics.totalDispatch || 0);
+    const tRec = parseFloat(metrics.totalPOSReceipt || 0);
+    const tBal = Math.max(0, tAlloc - tDisp);
+    const inTransit = Math.max(0, tDisp - tRec);
+    const inTransitPct = tAlloc > 0 ? ((inTransit / tAlloc) * 100).toFixed(2) : '0.00';
+
+    const now = new Date();
+    const rMonth = parseInt(analytics.month || (window.currentReportAnalytics && window.currentReportAnalytics.month) || (now.getMonth() + 1), 10);
+    const rYear = parseInt(analytics.year || (window.currentReportAnalytics && window.currentReportAnalytics.year) || now.getFullYear(), 10);
+    const daysInMonth = new Date(rYear, rMonth, 0).getDate();
+    let remainingDays = 1;
+    if (now.getFullYear() === rYear && (now.getMonth() + 1) === rMonth) {
+        remainingDays = Math.max(1, daysInMonth - now.getDate());
+    } else if (new Date(rYear, rMonth - 1, 1) > now) {
+        remainingDays = daysInMonth;
+    }
+    const requiredDailyRate = (tBal > 0 && remainingDays > 0) ? (tBal / remainingDays).toFixed(2) : '0.00';
+
+    let sectorsInSync = 0;
+    let sectorsHighLag = 0;
+    let sectorsCompleted = 0;
+
+    allSectors.forEach(s => {
+        const dPct = parseFloat(s.dispatchPercentage || 0);
+        const rPct = parseFloat(s.receivingPercentage || s.receiptPercentage || 0);
+        const diff = dPct - rPct;
+        if (dPct >= 100) sectorsCompleted++;
+        if (diff > 15) sectorsHighLag++;
+        else if (diff >= 0 && diff <= 5) sectorsInSync++;
+    });
+
+    const sorted = [...allSectors].sort((a, b) => (parseFloat(b.dispatchPercentage || 0)) - (parseFloat(a.dispatchPercentage || 0)));
+    const topSec = sorted[0];
+    const botSec = sorted[sorted.length - 1];
+
+    let summaryStripEl = document.getElementById('nfsaExecutiveSummaryStrip');
+    if (!summaryStripEl) {
+        summaryStripEl = document.createElement('div');
+        summaryStripEl.id = 'nfsaExecutiveSummaryStrip';
+        const metricsGridEl = document.getElementById('metricsGrid');
+        if (metricsGridEl && metricsGridEl.parentNode) {
+            metricsGridEl.parentNode.insertBefore(summaryStripEl, metricsGridEl.nextSibling);
+        }
+    }
+
+    if (summaryStripEl) {
+        summaryStripEl.innerHTML = `
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin: 18px 0 20px 0;">
+                <div style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.25); border-radius:10px; padding:12px 14px;">
+                    <div style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:8px; display:flex; align-items:center; gap:6px;">📈 उठाव प्रगति एवं दैनिक लक्ष्य दर</div>
+                    <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
+                        <div>• कुल उठाव: <b style="color:var(--text-main);">${(metrics.dispatchPercentage || 0).toFixed(2)}%</b> (शेष: <b style="color:var(--text-main);">${tBal.toFixed(2)} Qt.</b>)</div>
+                        <div>• 100% लक्ष्य हेतु दैनिक दर: <b style="color:var(--primary);">${requiredDailyRate} Qt./दिन</b> (शेष दिन: ${remainingDays})</div>
+                        <div>• पूर्ण उठाव सेक्टर: <b style="color:var(--success);">${sectorsCompleted}/${allSectors.length}</b></div>
+                    </div>
+                </div>
+                <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.25); border-radius:10px; padding:12px 14px;">
+                    <div style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:8px; display:flex; align-items:center; gap:6px;">🚚 मार्गस्थ एवं POS प्रविष्टि स्थिति</div>
+                    <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
+                        <div>• मार्गस्थ / प्रविष्टि शेष: <b style="color:var(--text-main);">${inTransit.toFixed(2)} Qt.</b> (${inTransitPct}%)</div>
+                        <div>• POS मशीन प्राप्ति: <b style="color:var(--text-main);">${(parseFloat(metrics.receiptPercentage || 0)).toFixed(2)}%</b> | इन-सिंक: <b>${sectorsInSync}/${allSectors.length}</b></div>
+                        <div>• उच्च विलंब (>15% Lag): <b style="color:${sectorsHighLag > 0 ? 'var(--danger, #ef4444)' : 'var(--success, #10b981)'};">${sectorsHighLag} सेक्टर</b> ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}</div>
+                    </div>
+                </div>
+                <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px 14px;">
+                    <div style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:8px; display:flex; align-items:center; gap:6px;">🎯 सेक्टर समीक्षा एवं निगरानी अलर्ट</div>
+                    <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
+                        <div>• सर्वोत्तम उठाव: <b style="color:var(--text-main);">${topSec ? `${escapeHtml(topSec.name)} (${parseFloat(topSec.dispatchPercentage || 0).toFixed(2)}%)` : 'N/A'}</b></div>
+                        <div>• न्यूनतम उठाव: <b style="color:var(--text-main);">${botSec ? `${escapeHtml(botSec.name)} (${parseFloat(botSec.dispatchPercentage || 0).toFixed(2)}%)` : 'N/A'}</b></div>
+                        <div>• परिवहनकर्ता निगरानी: <b style="color:var(--text-main);">${botSec && botSec.transporter ? escapeHtml(botSec.transporter) : 'N/A'}</b></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
     
     // Transporters
     renderPerformerList('topTransportersList', analytics.topTransporters, true);

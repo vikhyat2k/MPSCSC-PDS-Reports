@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 20 August 2026, 11:36 IST
+> **Last Sync:** 20 August 2026, 11:51 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 20 Aug 2026 — Added 3-Column Executive Summary Analytical Footnote to NFSA single-page PDF report & removed old legend for clean presentation |
+| Last Code Change | 20 Aug 2026 — Activated 3-Column Executive Summary Footnote across PDF, Excel & Web Dashboard with live daemon reload |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -768,25 +768,27 @@ Tracks what has been tested and confirmed working.
 
 ## 20. CHANGE LOG (DATEWISE)
 
-### 2026-08-20 | Add 3-Column Executive Summary Analytical Footnote to NFSA Single-Page PDF Report
+### 2026-08-20 | Add 3-Column Executive Summary Analytical Footnote Across NFSA PDF, Excel & Web Dashboard
 
-Files: server/services/pdfGenerator.js, PROJECT_DOCS.md, tests/test-nfsa-footnote.js
-Type: Feature / PDF Analytics & Layout Optimization
+Files: server/services/pdfGenerator.js, server/services/excelGenerator.js, public/app.js, PROJECT_DOCS.md, tests/test-nfsa-footnote.js
+Type: Feature / PDF, Excel & Web UI Analytics Footnote
 Closes: N/A
 
-- USER REQUIREMENT: Add analytical footnote to available space in NFSA report without exceeding single page (Single-Page A4 Landscape); remove the old "अंतर % कलर कोड संकेत (Legend)" bar to maximize available space.
-- IMPLEMENTATION:
-  1. **Analytical Data Calculations**:
-     - **Column 1 (उठाव प्रगति एवं दैनिक लक्ष्य दर)**: Total dispatch %, remaining balance (Qt), required daily lifting rate (`Qt/day` based on days remaining in the month for 100% completion), completed sectors count, and total shops.
-     - **Column 2 (मार्गस्थ एवं POS प्रविष्टि स्थिति)**: In-transit / pending entry quantity (`Qt` and `%`), POS machine receipt %, in-sync sectors count (0–5%), and high-lag sectors count (>15% lag with alert badge).
-     - **Column 3 (सेक्टर समीक्षा एवं निगरानी अलर्ट)**: Best performing sector & lifting %, lowest/lagging sector with remaining balance, and transporter monitoring action alert.
-  2. **PDF Layout & Styling (`server/services/pdfGenerator.js`)**:
+- USER REQUIREMENT: Add analytical footnote to available space in NFSA report without exceeding single page (Single-Page A4 Landscape); remove the old "अंतर % कलर कोड संकेत (Legend)" bar to maximize available space; ensure it reflects across PDF, Excel, and Web Dashboard views.
+- ROOT CAUSE OF "NOT SHOWING":
+  1. The running Node.js background process on port 3000 held the pre-update module in memory cache.
+  2. The analytical footnote was initially only written to `pdfGenerator.js`, while users downloading Excel reports or viewing on-screen analytics needed parity in `excelGenerator.js` and `public/app.js`.
+- FIX & IMPLEMENTATION:
+  1. **PDF Generator (`server/services/pdfGenerator.js`)**:
      - Built `.analytics-footer-strip` with 3 responsive flex cards (`.analytics-card`), border radius, bold card titles, and high-contrast text styling.
-     - Removed the bottom legend bar as requested, saving ~8mm of vertical height.
-     - Guaranteed 100% single-page A4 landscape output with ample safe vertical margin (~16mm).
-  3. **Automated Testing & Page Count Verification**:
-     - Created and ran `tests/test-nfsa-footnote.js` on real 22-sector database reports.
-     - Verified that the generated PDF report strictly fits on **1 of 1 single page**.
+     - Removed the old bottom legend bar to maximize vertical whitespace.
+     - Confirmed strictly 1 of 1 single page in A4 landscape layout.
+  2. **Excel Generator (`server/services/excelGenerator.js`)**:
+     - Added 3-row Analytical Summary block below the total row (Target velocity, Transit lag, Sector alerts) with formatted bold headers and clean data cells.
+  3. **Web Dashboard (`public/app.js`)**:
+     - Enhanced `displayAnalytics()` to render the 3-column `#nfsaExecutiveSummaryStrip` directly below summary metrics on screen.
+  4. **Server Daemon Reload**:
+     - Restarted Node.js server daemon (`http://localhost:3000`), flushing memory cache and verifying live PDF generation returns the full 3-column footnote.
 
 ---
 

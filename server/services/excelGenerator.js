@@ -185,6 +185,7 @@ class ExcelGenerator {
                 `• परिवहनकर्ता निगरानी: ${bottomSector && bottomSector.transporter ? bottomSector.transporter : 'N/A'}`
             ]);
             fnRow3.font = { size: 10, color: { argb: 'FF334155' } };
+        }
 
         const reportsDir = path.join(__dirname, '../../reports');
         if (!fs.existsSync(reportsDir)) {
