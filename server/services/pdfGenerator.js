@@ -266,10 +266,15 @@ class PDFGenerator {
             const now = new Date();
             const rMonth = parseInt(month, 10) || (now.getMonth() + 1);
             const rYear = parseInt(year, 10) || now.getFullYear();
-            const daysInMonth = new Date(rYear, rMonth, 0).getDate();
-            // Days left = calendar days from today until last day of the report month
-            const monthEnd = new Date(rYear, rMonth - 1, daysInMonth, 23, 59, 59);
-            const remainingDays = Math.max(1, Math.ceil((monthEnd - now) / (1000 * 60 * 60 * 24)));
+            // Days remaining logic:
+            // IDEAL: lifting for allotment month X should complete before month X starts,
+            //        i.e. by the last day of month (X-1). e.g. September allotment → deadline = Aug 31.
+            // SAME-MONTH FALLBACK: if the prev-month deadline has already passed (lifting = allotment month),
+            //        use last day of the allotment month itself.
+            const prevMonthEnd  = new Date(rYear, rMonth - 1, 0, 23, 59, 59); // last day of month before allotment
+            const sameMonthEnd  = new Date(rYear, rMonth, 0, 23, 59, 59);     // last day of allotment month
+            const deadline      = (prevMonthEnd > now) ? prevMonthEnd : sameMonthEnd;
+            const remainingDays = Math.max(1, Math.floor((deadline - now) / (1000 * 60 * 60 * 24)));
 
             const requiredDailyRate = (tBal > 0 && remainingDays > 0) ? (tBal / remainingDays).toFixed(2) : '0.00';
             const inTransitQty = Math.max(0, (totals.totalDispatch || 0) - (totals.totalPOSReceipt || 0));
