@@ -145,8 +145,7 @@ class ExcelGenerator {
                 const rPct = s.receiptPercentage || 0;
                 const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - rPct);
                 if (dPct >= 100) sectorsCompleted++;
-                if (diff > 15) sectorsHighLag++;
-                else if (diff > 5) sectorsModerateLag++;
+                if (diff > 5) sectorsHighLag++;
                 else if (diff >= 0) sectorsInSync++;
             });
 
@@ -174,7 +173,7 @@ class ExcelGenerator {
                 '🚚 मार्गस्थ एवं POS प्रविष्टि स्थिति:',
                 `• मार्गस्थ / प्रविष्टि शेष: ${inTransitQty.toFixed(2)} Qt. (${inTransitPct}%)`,
                 `• POS मशीन प्राप्ति: ${(parseFloat(totalReceiptPct) || 0).toFixed(2)}% | इन-सिंक (0-5%): ${sectorsInSync}/${sectorList.length}`,
-                `• उच्च विलंब (>15% Lag): ${sectorsHighLag} सेक्टर ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}`
+                `• उच्च विलंब (>5% Lag): ${sectorsHighLag} सेक्टर ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}`
             ]);
             fnRow2.font = { size: 10, color: { argb: 'FF334155' } };
 
