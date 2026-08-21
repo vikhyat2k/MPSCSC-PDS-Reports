@@ -310,9 +310,11 @@ class AnalyticsService {
                 sectorMap.set(key, {
                     sectorName: cfg.sectorName,
                     transporter: cfg.transporter || 'N/A',
+                    mobileNumber: cfg.mobile || '',
                     name: `${cfg.transporter || 'N/A'} (${cfg.sectorName})`,
                     dispatchSum: 0,
-                    allottedSum: 0
+                    allottedSum: 0,
+                    posReceiptSum: 0
                 });
             });
 
@@ -323,12 +325,15 @@ class AnalyticsService {
                 const existing = sectorMap.get(key) || {
                     sectorName: sName,
                     transporter: s.transporter || 'N/A',
+                    mobileNumber: s.mobileNumber || '',
                     name: `${s.transporter || 'N/A'} (${sName})`,
                     dispatchSum: 0,
-                    allottedSum: 0
+                    allottedSum: 0,
+                    posReceiptSum: 0
                 };
 
                 existing.dispatchSum += parseFloat(s.dispatch || 0);
+                existing.posReceiptSum += parseFloat(s.posReceipt || 0);
                 if (s.allocation !== undefined) {
                     existing.allottedSum = parseFloat(s.allocation || 0);
                 } else if (existing.allottedSum === 0) {
@@ -336,18 +341,24 @@ class AnalyticsService {
                 }
 
                 if (s.transporter) existing.transporter = s.transporter;
+                if (s.mobileNumber) existing.mobileNumber = s.mobileNumber;
                 sectorMap.set(key, existing);
             });
 
             allTransportersFlatList = Array.from(sectorMap.values()).map(t => {
                 const avgDispatch = t.allottedSum > 0 ? parseFloat(((t.dispatchSum / t.allottedSum) * 100).toFixed(2)) : 0;
+                const posReceiptPct = t.allottedSum > 0 ? parseFloat(((t.posReceiptSum / t.allottedSum) * 100).toFixed(2)) : 0;
+                const diffPct = parseFloat((avgDispatch - posReceiptPct).toFixed(2));
                 const bal = parseFloat((t.allottedSum - t.dispatchSum).toFixed(2));
                 return {
                     name: t.name,
                     transporter: t.transporter,
                     sectorName: t.sectorName,
+                    mobileNumber: t.mobileNumber || '',
                     avgDispatch,
                     dispatchPct: avgDispatch,
+                    posReceiptPct,
+                    diffPct,
                     sectorCount: 1,
                     balance: bal < 0 ? 0 : bal
                 };

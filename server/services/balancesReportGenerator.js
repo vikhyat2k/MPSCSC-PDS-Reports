@@ -273,6 +273,9 @@ class BalancesReportGenerator {
                     <tr>
                         ${subHeaders}
                     </tr>
+                    <tr>
+                        ${Array.from({length: totalCols}, (_, i) => `<th>${i + 1}</th>`).join('')}
+                    </tr>
                     <tr class="group-header" style="background:#d0e8ff;">
                         <td colspan="3" style="text-align:right; font-weight:bold;">कुल योग</td>`;
             
@@ -403,6 +406,7 @@ class BalancesReportGenerator {
         // Simple header
         worksheet.addRow(['दुकानवार उठाव शेष रिपोर्ट']);
         worksheet.addRow(['क्र.', 'दुकान कोड', 'दुकान का नाम', ...commodities.map(c => this.getCommodityHindi(c)), 'कुल योग (Qt.)']);
+        worksheet.addRow(Array.from({length: 3 + commodities.length + 1}, (_, i) => i + 1));
         
         groups.forEach(group => {
             worksheet.addRow([group.label]);
@@ -723,7 +727,10 @@ class BalancesReportGenerator {
         const headerRow4 = ws.getRow(4);
         headerRow4.values = ['', '', '', '', 'लंबित दुकानें', 'मात्रा (क्विंटल)', 'लंबित दुकानें', 'मात्रा (क्विंटल)', 'लंबित दुकानें', 'मात्रा (क्विंटल)'];
 
-        [3, 4].forEach(rn => {
+        const headerRow5 = ws.getRow(5);
+        headerRow5.values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+        [3, 4, 5].forEach(rn => {
             const row = ws.getRow(rn);
             row.eachCell(cell => {
                 cell.font = { bold: true, size: 10, name: 'Arial' };
@@ -734,7 +741,7 @@ class BalancesReportGenerator {
                     left: { style: 'thin' }, right: { style: 'thin' }
                 };
             });
-            row.height = 22;
+            row.height = 20;
         });
 
         // Data rows
@@ -863,6 +870,9 @@ class BalancesReportGenerator {
         <th class="col-comm">लंबित दुकानें</th><th class="col-comm">मात्रा (क्विंटल)</th>
         <th class="col-comm">लंबित दुकानें</th><th class="col-comm">मात्रा (क्विंटल)</th>
         <th class="col-comm">लंबित दुकानें</th><th class="col-comm">मात्रा (क्विंटल)</th>
+      </tr>
+      <tr>
+        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
       </tr>
     </thead>
     <tbody>

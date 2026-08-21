@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 21 August 2026, 09:35 IST
+> **Last Sync:** 21 August 2026, 09:38 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 21 Aug 2026 — Added numbered column sub-headers (1 to 13) to NFSA & NFSA DateRange PDF report tables |
+| Last Code Change | 21 Aug 2026 — Standardized column numbering across ALL schemes & formats (PDF & Excel for NFSA, NFSA DateRange, MDM, ICDS, Welfare, and Balance Reports) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,23 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-21 | All Reports Across All Schemes — Standardized Column Numbering (PDF & Excel)
+
+Files: server/services/excelGenerator.js, server/services/nfsaDaterangeExcelGenerator.js, server/services/mdmExcelGenerator.js, server/services/icdsExcelGenerator.js, server/services/welfareExcelGenerator.js, server/services/balancesReportGenerator.js, server/services/pdfGenerator.js, server/services/nfsaDaterangePdfGenerator.js, PROJECT_DOCS.md
+Type: Improvement / Global Report Standardization
+Closes: N/A
+
+- USER REQUIREMENT: Number each column for all reports across all schemes.
+- SCOPE & COVERAGE:
+  1. **NFSA**: PDF (Cols 1-13) & Excel (Cols 1-13)
+  2. **NFSA DateRange**: PDF (Cols 1-12) & Excel (Cols 1-12)
+  3. **MDM**: PDF (Cols 1-17) & Excel (Cols 1-17)
+  4. **ICDS**: PDF (Cols 1-22) & Excel (Cols 1-21)
+  5. **Welfare**: PDF (Cols 1-17) & Excel (Cols 1-16)
+  6. **Balances & Summaries**: Shopwise Balances PDF & Excel (Cols 1 to N), Pending Summary PDF & Excel (Cols 1-10)
+- VERIFICATION:
+  - Validated syntax and output structure across all PDF and Excel report generators. Server reloaded cleanly.
 
 ### 2026-08-21 | NFSA & DateRange PDF Reports — Added Column Numbering Row (1 to 13)
 
