@@ -393,9 +393,21 @@ function updateMessengerPreview() {
         period = rawPeriod.replace(/\s*\(.*\)/, '').trim();
     }
 
-    // Build list string — include POS & diff data when available
     const isDiffTemplate = templateIndex >= 4;
-    const listString = Array.from(selectedChecks).map((cb, index) => {
+    let checksArr = Array.from(selectedChecks);
+
+    // For POS Lag templates: exclude sectors with Lag ≤ 0% from the message
+    if (isDiffTemplate) {
+        checksArr = checksArr.filter(cb => parseFloat(cb.getAttribute('data-diff') || 0) > 0);
+    }
+
+    if (checksArr.length === 0) {
+        preview.innerText = 'चुने गए सेक्टरों में POS Lag 0% है। कृपया अन्य सेक्टर चुनें।';
+        return;
+    }
+
+    // Build list string—include POS & diff data for diff templates; renumber from 1
+    const listString = checksArr.map((cb, index) => {
         const name = cb.getAttribute('data-name');
         const rate = cb.getAttribute('data-rate');
         const pos = cb.getAttribute('data-pos');
@@ -407,10 +419,9 @@ function updateMessengerPreview() {
         return `${index + 1}. *${name}:* ${rate}% (शेष मात्रा: ${bal} Qt)`;
     }).join('\n');
 
-    // Update Avg Lag & POS cards
-    const checks = Array.from(selectedChecks);
-    const avgSelectedDiff = checks.length > 0 ? (checks.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-diff')) || 0), 0) / checks.length).toFixed(2) : '0.00';
-    const avgSelectedPOS  = checks.length > 0 ? (checks.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-pos'))  || 0), 0) / checks.length).toFixed(2) : '0.00';
+    // Update Avg Lag & POS cards (based on actually included checks)
+    const avgSelectedDiff = checksArr.length > 0 ? (checksArr.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-diff')) || 0), 0) / checksArr.length).toFixed(2) : '0.00';
+    const avgSelectedPOS  = checksArr.length > 0 ? (checksArr.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-pos'))  || 0), 0) / checksArr.length).toFixed(2) : '0.00';
     if (document.getElementById('messengerAvgDiff')) document.getElementById('messengerAvgDiff').innerText = avgSelectedDiff + '%';
     if (document.getElementById('messengerAvgPOS'))  document.getElementById('messengerAvgPOS').innerText  = avgSelectedPOS + '%';
 
@@ -418,7 +429,17 @@ function updateMessengerPreview() {
 }
 
 function selectAllTransporters(checked) {
-    document.querySelectorAll('.messenger-check').forEach(cb => cb.checked = checked);
+    const filterMode = document.getElementById('messengerFilterMode') ? document.getElementById('messengerFilterMode').value : 'dispatch';
+    const templateIndex = parseInt((document.getElementById('messengerTemplateSelect') || {}).value || 0);
+    const isDiffContext = filterMode === 'diff' || templateIndex >= 4;
+    document.querySelectorAll('.messenger-check').forEach(cb => {
+        if (checked && isDiffContext) {
+            // In diff mode, "✓ All" only selects sectors with actual lag > 0
+            cb.checked = parseFloat(cb.getAttribute('data-diff') || 0) > 0;
+        } else {
+            cb.checked = checked;
+        }
+    });
     updateMessengerPreview();
 }
 

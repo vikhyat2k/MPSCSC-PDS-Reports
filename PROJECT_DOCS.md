@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 21 August 2026, 09:38 IST
+> **Last Sync:** 21 August 2026, 09:51 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 21 Aug 2026 — Standardized column numbering across ALL schemes & formats (PDF & Excel for NFSA, NFSA DateRange, MDM, ICDS, Welfare, and Balance Reports) |
+| Last Code Change | 21 Aug 2026 — WhatsApp Messenger: Added POS Lag Diff Alert mode with configurable threshold, 2 new Hindi templates, 3-metric transporter rows (Dispatch%, POS%, Lag) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,20 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-21 | WhatsApp Messenger — POS Lag Diff Alert Mode (Dispatch% vs POS% Gap)
+
+Files: server/services/analytics.js, public/app.js, public/index.html, PROJECT_DOCS.md
+Type: Feature / WhatsApp Messenger Enhancement
+Closes: N/A
+
+- USER REQUIREMENT: Alert transporters based on difference between Dispatch % and POS receiving %.
+- ROOT CAUSE / CONTEXT: The existing WhatsApp Messenger only filtered by low dispatch %. The user wants a second alert mode targeting sectors where grain has been dispatched from depot but POS receipt is lagging — indicating delayed/unregistered delivery at FPS shops.
+- CHANGES IMPLEMENTED:
+  1. **analytics.js**: `allTransportersFlatList` now includes `posReceiptPct`, `diffPct` (dispatch% − POS%), and `mobileNumber` per sector. Also seeds `posReceiptSum` and `mobileNumber` from sectorsConfig.
+  2. **app.js**: Added 2 new WhatsApp message templates (indices 4 & 5): `POS Lag Alert (Hindi)` and `POS Lag Strict Notice (Hindi)`. Rewrote `loadMessengerTransporters()` to support 3 filter modes (`dispatch` / `diff` / `all`) with configurable lag threshold (default 5%). Rewrote `renderMessengerTransporterList()` to show 3 metrics per row (Dispatch%, POS%, Lag badge, color-coded). Rewrote `updateMessengerPreview()` to populate avg POS% and avg Lag metric cards and pass district POS & diff to templates.
+  3. **index.html**: Added Alert Mode select dropdown, Min. Lag Threshold input, 2 new template options, and Avg POS% + Avg Lag metric cards.
+- VERIFICATION: Server restarted cleanly. Messenger panel renders new controls. On diff mode, sectors where Dispatch% − POS% > 5% are auto-selected with the ⚠️ POS Lag Alert template pre-filled.
 
 ### 2026-08-21 | All Reports Across All Schemes — Standardized Column Numbering (PDF & Excel)
 
