@@ -689,7 +689,7 @@ function displayAnalytics(analytics, genTime) {
         const rPct = parseFloat(s.receivingPercentage || s.receiptPercentage || 0);
         const diff = dPct - rPct;
         if (dPct >= 100) sectorsCompleted++;
-        if (diff > 15) sectorsHighLag++;
+        if (diff > 5) sectorsHighLag++;
         else if (diff >= 0 && diff <= 5) sectorsInSync++;
     });
 
@@ -723,7 +723,7 @@ function displayAnalytics(analytics, genTime) {
                     <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
                         <div>• मार्गस्थ / प्रविष्टि शेष: <b style="color:var(--text-main);">${inTransit.toFixed(2)} Qt.</b> (${inTransitPct}%)</div>
                         <div>• POS मशीन प्राप्ति: <b style="color:var(--text-main);">${(parseFloat(metrics.receiptPercentage || 0)).toFixed(2)}%</b> | इन-सिंक: <b>${sectorsInSync}/${allSectors.length}</b></div>
-                        <div>• उच्च विलंब (>15% Lag): <b style="color:${sectorsHighLag > 0 ? 'var(--danger, #ef4444)' : 'var(--success, #10b981)'};">${sectorsHighLag} सेक्टर</b> ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}</div>
+                        <div>• उच्च विलंब (>5% Lag): <b style="color:${sectorsHighLag > 0 ? 'var(--danger, #ef4444)' : 'var(--success, #10b981)'};">${sectorsHighLag} सेक्टर</b> ${sectorsHighLag > 0 ? '(समीक्षा अपेक्षित)' : '(संतोषजनक)'}</div>
                     </div>
                 </div>
                 <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.25); border-radius:10px; padding:12px 14px;">
