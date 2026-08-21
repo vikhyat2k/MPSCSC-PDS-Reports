@@ -24,6 +24,7 @@ class ExcelGenerator {
             'उठाव का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत', 'आवंटन उठाव शेष (Qt.)', 
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
+        worksheet.addRow([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
 
         // Helper to determine color coding style and formatted display for Excel diff percentage
         const getExcelDiffStyle = (diff) => {

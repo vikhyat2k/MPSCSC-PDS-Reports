@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 21 August 2026, 09:33 IST
+> **Last Sync:** 21 August 2026, 09:35 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 21 Aug 2026 — Updated NFSA footer analytics POS high lag threshold from >15% to >5% across PDF, Excel, and Web Dashboard |
+| Last Code Change | 21 Aug 2026 — Added numbered column sub-headers (1 to 13) to NFSA & NFSA DateRange PDF report tables |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,19 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-21 | NFSA & DateRange PDF Reports — Added Column Numbering Row (1 to 13)
+
+Files: server/services/pdfGenerator.js, server/services/nfsaDaterangePdfGenerator.js, PROJECT_DOCS.md
+Type: Improvement / Report Header Styling & Standardisation
+Closes: N/A
+
+- USER REQUIREMENT: Number each column in the report table header.
+- CHANGES IMPLEMENTED:
+  1. **server/services/pdfGenerator.js**: Added a dedicated `<tr><th>1</th><th>2</th>...<th>13</th></tr>` numbering row inside `<thead>` under column titles.
+  2. **server/services/nfsaDaterangePdfGenerator.js**: Added `<tr><th>1</th><th>2</th>...<th>12</th></tr>` row to `<thead>` for consistency with standard state report formatting.
+- VERIFICATION:
+  - Verified PDF generation with 22 sectors. Table renders cleanly on 1 single page with all 13 columns numbered in header matching MDM, ICDS, and Welfare formats.
 
 ### 2026-08-21 | NFSA Report Footnote — Updated POS High Lag Threshold to >5%
 
