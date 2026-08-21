@@ -26,6 +26,7 @@ class MDMExcelGenerator {
             'फो.चावल आवंटन (Qt.)', 'फो.चावल उठाव (Qt.)', 'फो.चावल उठाव %', 'फो.चावल प्राप्ति (Qt.)', 'फो.चावल प्राप्ति %',
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
+        worksheet.addRow([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
 
         const sectors = (processedResult && processedResult.sectors) ? processedResult.sectors : [];
 
