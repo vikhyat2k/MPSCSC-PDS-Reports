@@ -297,19 +297,19 @@ class PDFGenerator {
                 : 0;
             const belowAvgSectors = activeSectors.filter(s => (s.dispatchPercentage || 0) < districtAvgDisp);
 
-            // --- Card 1: High POS Lag sectors (diff > 15%) ---
+            // --- Card 1: High POS Lag sectors (diff > 5%) ---
             const highLagSectors = activeSectors.filter(s => {
                 const dPct = s.dispatchPercentage || 0;
                 const rPct = s.receiptPercentage || 0;
                 const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - rPct);
-                return diff > 15;
+                return diff > 5;
             });
 
             sectorList.forEach(s => {
                 const dPct = s.dispatchPercentage || 0;
                 const diff = s.dispatchReceiptDiffPercentage !== undefined ? s.dispatchReceiptDiffPercentage : (dPct - (s.receiptPercentage || 0));
                 if (dPct >= 100) sectorsCompleted++;
-                if (diff > 15) sectorsHighLag++;
+                if (diff > 5) sectorsHighLag++;
             });
 
             // Worst transporters by highest in-transit lag (dispatch-POS diff, de-duplicated by transporter name)
@@ -340,7 +340,7 @@ class PDFGenerator {
                 <div class="analytics-card">
                     <div class="analytics-card-title">🚚 मार्गस्थ / POS प्रविष्टि स्थिति</div>
                     <div class="analytics-card-item">• मार्गस्थ शेष: <b>${inTransitQty.toFixed(2)} Qt.</b> (${inTransitPct}% of allotment)</div>
-                    <div class="analytics-card-item">• POS प्राप्ति: <b>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</b> | उच्च Lag (&gt;15%): <b style="color:${sectorsHighLag > 0 ? '#b91c1c' : '#15803d'}">${sectorsHighLag} सेक्टर</b></div>
+                    <div class="analytics-card-item">• POS प्राप्ति: <b>${(parseFloat(totalReceiptPct) || 0).toFixed(2)}%</b> | उच्च Lag (&gt;5%): <b style="color:${sectorsHighLag > 0 ? '#b91c1c' : '#15803d'}">${sectorsHighLag} सेक्टर</b></div>
                     <div class="analytics-card-item">• उच्च Lag परिवहनकर्ता: <b style="color:${worstTransporters.length > 0 ? '#b91c1c' : '#15803d'}">${worstTransporters.length > 0 ? worstTransporters.join(' | ') : 'सभी संतोषजनक'}</b></div>
                 </div>
                 <div class="analytics-card">
