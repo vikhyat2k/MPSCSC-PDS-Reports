@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 21 August 2026, 09:51 IST
+> **Last Sync:** 21 August 2026, 09:56 IST
 
 ---
 
@@ -767,6 +767,17 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-21 | WhatsApp Messenger — Bug Fix: Exclude 0% Lag Sectors from POS Lag Templates
+
+Files: public/app.js, PROJECT_DOCS.md
+Type: Bug Fix
+Closes: N/A
+
+- ROOT CAUSE: POS Lag templates (4 & 5) were including sectors with 0% or sub-threshold lag in the generated message because `updateMessengerPreview()` iterated all checked boxes without filtering by lag > 0. Users could also use "✓ All" to select all visible rows including 0% lag sectors.
+- FIX:
+  1. `updateMessengerPreview()`: When template index ≥ 4 (POS Lag templates), filter `checksArr` to only include entries where `data-diff > 0` before building the message list. Items with 0% lag are silently excluded. Numbers in the list renumber correctly from 1.
+  2. `selectAllTransporters()`: In diff mode or when a POS Lag template is active, "✓ All" only selects checkboxes where `data-diff > 0`. "✗ None" still unchecks everything.
 
 ### 2026-08-21 | WhatsApp Messenger — POS Lag Diff Alert Mode (Dispatch% vs POS% Gap)
 
