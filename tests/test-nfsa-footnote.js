@@ -30,13 +30,12 @@ async function testFootnote() {
     console.log('Parsed PDF total pages/text length:', parsed.text.length);
 
     // Verify page count by loading in puppeteer and counting pages
-    const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-    
-    // We can also take a screenshot of the rendered page for inspection
-    // Let's get the HTML content directly from PDFGenerator
-    // To do that, let's see how PDFGenerator renders it
-    await browser.close();
+    const lines = parsed.text.split('\n').filter(l => l.trim().length > 0);
+    const footerLines = lines.filter(l => l.includes('POS') || l.includes('Lag') || l.includes('मार्गस्थ') || l.includes('उठाव'));
+    console.log('\n--- Extracted Footer Text from Generated PDF ---');
+    footerLines.forEach(l => console.log('  ', l.trim()));
+    console.log('------------------------------------------------\n');
+
     console.log('✅ Test complete!');
 }
 

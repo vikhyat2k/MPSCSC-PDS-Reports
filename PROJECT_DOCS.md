@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 20 August 2026, 13:21 IST
+> **Last Sync:** 21 August 2026, 09:33 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 20 Aug 2026 — Fixed remainingDays: ideal deadline = last day of prev month (e.g. Aug 31 for Sep allotment), fallback to allotment month-end if already past |
+| Last Code Change | 21 Aug 2026 — Updated NFSA footer analytics POS high lag threshold from >15% to >5% across PDF, Excel, and Web Dashboard |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,21 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-21 | NFSA Report Footnote — Updated POS High Lag Threshold to >5%
+
+Files: server/services/pdfGenerator.js, server/services/excelGenerator.js, public/app.js, PROJECT_DOCS.md
+Type: Improvement / Analytics Threshold Adjustment
+Closes: N/A
+
+- USER REQUIREMENT: In footer of NFSA report, update `• POS प्राप्ति: 56.10% | उच्च Lag (>15%): 0 सेक्टर` to `उच्च Lag (>5%)`.
+- MOTIVATION: The previous 15% cutoff was too lenient and masked sectors with moderate but actionable in-transit or POS feeding delays. Adjusting the threshold to >5% highlights sectors requiring timely entry verification.
+- CHANGES IMPLEMENTED:
+  1. **server/services/pdfGenerator.js**: Changed `diff > 15` to `diff > 5` for counting `sectorsHighLag` and updated the card label to `• POS प्राप्ति: XX.XX% | उच्च Lag (>5%): N सेक्टर`.
+  2. **server/services/excelGenerator.js**: Changed `diff > 15` to `diff > 5` for counting `sectorsHighLag` and updated the label to `• उच्च विलंब (>5% Lag): N सेक्टर`.
+  3. **public/app.js**: Updated the client-side executive summary strip calculation (`diff > 5`) and label to maintain full parity across PDF, Excel, and Web UI.
+- VERIFICATION:
+  - Verified with real 22-sector NFSA data: PDF generator correctly identified and rendered `उच्च Lag (>5%): 11 सेक्टर` in the analytical footer. Single-page A4 landscape layout preserved.
 
 ### 2026-08-20 | Fix NFSA PDF Footnote — Remaining Days Deadline Logic (Session 4)
 
