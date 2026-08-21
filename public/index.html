@@ -753,24 +753,47 @@
                                             <option value="">-- Choose a recent report --</option>
                                         </select>
                                     </div>
-                                    <div class="form-group" style="margin-top:15px;">
-                                        <label for="messengerTemplateSelect">2. Message Template</label>
+                                    <div class="form-group" style="margin-top:12px;">
+                                        <label for="messengerFilterMode">2. Alert Mode</label>
+                                        <select id="messengerFilterMode" class="form-input" onchange="loadMessengerTransporters()" style="background:rgba(7,94,84,0.07);border-color:rgba(37,211,102,0.3);">
+                                            <option value="dispatch">📉 Low Dispatch % (below avg)</option>
+                                            <option value="diff" selected>⚠️ High POS Lag (Dispatch% &gt; POS%)</option>
+                                            <option value="all">📋 Show All Sectors</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="messengerDiffThresholdGroup" style="margin-top:12px;">
+                                        <label for="messengerDiffThreshold">3. Min. Lag Threshold (%)</label>
+                                        <input type="number" id="messengerDiffThreshold" class="form-input" value="5" min="0" max="100" step="1" onchange="loadMessengerTransporters()" style="width:120px;">
+                                    </div>
+                                    <div class="form-group" style="margin-top:12px;">
+                                        <label for="messengerTemplateSelect">4. Message Template</label>
                                         <select id="messengerTemplateSelect" class="form-input" onchange="updateMessengerPreview()">
                                             <option value="0">Standard Direct (Hindi)</option>
                                             <option value="1">Urgent Formal (Hindi)</option>
                                             <option value="2">Admin Follow-up (Hindi)</option>
                                             <option value="3">Strict Notice (3-Day Review)</option>
+                                            <option value="4" selected>⚠️ POS Lag Alert (Hindi)</option>
+                                            <option value="5">🚨 POS Lag Strict Notice (Hindi)</option>
                                         </select>
                                     </div>
                                 </div>
+                                <!-- right col: metrics -->
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;">
                                     <div class="metric-card">
                                         <div class="metric-label">Selected</div>
                                         <div id="messengerSelectedCount" class="metric-value">0</div>
                                     </div>
                                     <div class="metric-card">
-                                        <div class="metric-label">Avg. Lifting</div>
+                                        <div class="metric-label">Avg. Dispatch</div>
                                         <div id="messengerAvgLifting" class="metric-value" style="color:var(--secondary);">0%</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-label">Avg. POS %</div>
+                                        <div id="messengerAvgPOS" class="metric-value" style="color:#6366f1;">0%</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-label">Avg. Lag</div>
+                                        <div id="messengerAvgDiff" class="metric-value" style="color:#ef4444;">0%</div>
                                     </div>
                                 </div>
                             </div>
