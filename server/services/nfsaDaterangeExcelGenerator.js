@@ -36,6 +36,7 @@ class NFSADaterangeExcelGenerator {
             'उठाव का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'आवंटन उठाव शेष (Qt.)', 
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
+        worksheet.addRow([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 
         if (processedResult && processedResult.sectors) {
             let totalShops = 0;
