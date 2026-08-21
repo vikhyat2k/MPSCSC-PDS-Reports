@@ -137,6 +137,14 @@ const MESSAGE_TEMPLATES = [
     {
         name: "Strict Notice (3-Day Review)",
         text: (avg, list, period) => `*🛑 सख्त चेतावनी: पिछले 3 दिनों के उठाव (Lifting) की समीक्षा - ${period} 🛑*\n\nबार-बार दिए गए सख्त निर्देशों के बावजूद, आपके संबंधित सेक्टरों में उठाव की स्थिति अत्यंत निराशाजनक बनी हुई है। जिले का औसत उठाव *${avg}%* है, जबकि आपकी प्रगति निम्नवत है:\n\n${list}\n\n*अंतिम निर्देश:* यदि अगले 24 घंटों में उठाव में उल्लेखनीय सुधार नहीं हुआ, तो पेनाल्टी अधिरोपित की जाएगी। इसे अंतिम चेतावनी समझें।\n\n🕒 _रिपोर्ट दिनांक: ${new Date().toLocaleString('en-IN')}_`
+    },
+    {
+        name: "POS Lag Alert (Hindi)",
+        text: (avg, list, period, avgPos, avgDiff) => `*⚠️ विषय: POS प्राप्ति अंतर (Lag) चेतावनी - ${period}*\n\nजिले का वर्तमान औसत उठाव: *${avg}%*\nPOS मशीन में औसत प्राप्ति: *${avgPos || 'N/A'}%*\n\nनिम्नलिखित सेक्टरों में *प्रेषित मात्रा एवं POS प्राप्ति के बीच अंतर (Lag)* अधिक पाया गया है — अर्थात् गोदाम से खाद्यान्न प्रेषित हो चुका है, परंतु उचित मूल्य दुकान पर POS मशीन में प्राप्ति दर्ज नहीं हुई है:\n\n${list}\n\n*निर्देश:* संबंधित ट्रांसपोर्टर तत्काल दुकानों पर वितरण सुनिश्चित कराएं तथा POS प्राप्ति की पुष्टि करवाएं। अन्यथा आगामी समीक्षा बैठक में स्पष्टीकरण प्रस्तुत करना होगा।\n\n🕒 _रिपोर्ट दिनांक: ${new Date().toLocaleString('en-IN')}_`
+    },
+    {
+        name: "POS Lag Strict Notice (Hindi)",
+        text: (avg, list, period, avgPos, avgDiff) => `*🚨 सख्त चेतावनी: POS प्राप्ति में गंभीर विसंगति - ${period} 🚨*\n\nजिला प्रबंधक, म.प्र. स्टेट सिविल सप्लाईज़ कॉर्पो. लि., बैतूल\n\nउठाव औसत: *${avg}%* | POS प्राप्ति औसत: *${avgPos || 'N/A'}%*\n\n*निम्न सेक्टरों में प्रेषित मात्रा एवं POS प्राप्ति का अंतर (Lag) अस्वीकार्य स्तर पर है:*\n\n${list}\n\n⚠️ यह स्थिति खाद्यान्न के दुरुपयोग/देरी की संभावना को दर्शाती है।\n\n*अंतिम निर्देश:*\n1. तत्काल संबंधित दुकानदारों से संपर्क कर POS प्राप्ति दर्ज करावें।\n2. 24 घंटे में Lag कम न होने पर लिखित स्पष्टीकरण प्रस्तुत करें।\n3. बार-बार Lag पाए जाने पर अनुबंध निरस्तीकरण की कार्रवाई प्रस्तावित की जाएगी।\n\n🕒 _रिपोर्ट दिनांक: ${new Date().toLocaleString('en-IN')}_`
     }
 ];
 
@@ -202,28 +210,36 @@ async function loadMessengerTransporters() {
     const listContainer = document.getElementById('messengerTransporterList');
     listContainer.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading-spinner"></div><p>Analyzing transporters...</p></div>';
 
+    // Show/hide threshold input based on filter mode
+    const filterMode = document.getElementById('messengerFilterMode') ? document.getElementById('messengerFilterMode').value : 'dispatch';
+    const thresholdGroup = document.getElementById('messengerDiffThresholdGroup');
+    if (thresholdGroup) thresholdGroup.style.display = filterMode === 'diff' ? '' : 'none';
+
     try {
         const response = await fetch(`api/reports/${reportId}/analytics`);
         if (!response.ok) throw new Error('Failed to load report analytics');
         const analytics = await response.json();
         window.currentMessengerAnalytics = analytics;
 
-        const showAll = document.getElementById('messengerShowAll').checked;
         const metrics = analytics.metrics || {};
-        // Support both NFSA dispatchPercentage and scheme-specific totalDispatchPct
         const districtAvg = parseFloat(
             metrics.dispatchPercentage ||
             metrics.totalDispatchPct ||
             0
         );
+        const districtPOS = parseFloat(metrics.totalPOSReceipt && metrics.totalAllocation > 0
+            ? ((metrics.totalPOSReceipt / metrics.totalAllocation) * 100)
+            : 0).toFixed(2);
 
         document.getElementById('messengerAvgLifting').innerText = districtAvg.toFixed(2) + '%';
+        if (document.getElementById('messengerAvgPOS')) document.getElementById('messengerAvgPOS').innerText = districtPOS + '%';
+        if (document.getElementById('messengerAvgDiff')) document.getElementById('messengerAvgDiff').innerText = (districtAvg - parseFloat(districtPOS)).toFixed(2) + '%';
 
         // Build a flat list of transporters from analytics regardless of scheme
         let transporters = [];
 
         if (analytics.allTransporters && analytics.allTransporters.length > 0) {
-            // NFSA: has a flat allTransporters array
+            // NFSA: has a flat allTransporters array with posReceiptPct and diffPct
             transporters = analytics.allTransporters;
         } else {
             // MDM / ICDS / Welfare: extract from topTransporters + bottomTransporters items
@@ -234,7 +250,6 @@ async function loadMessengerTransporters() {
             ];
             groups.forEach(g => {
                 const items = g.items || [];
-                // If no items sub-array, treat group itself as a transporter entry
                 if (items.length === 0 && g.name) {
                     const key = g.name;
                     if (!seen.has(key)) {
@@ -243,6 +258,8 @@ async function loadMessengerTransporters() {
                             name: g.name,
                             avgDispatch: parseFloat(g.dispatchPct || g.avgDispatch || 0),
                             dispatchPct: parseFloat(g.dispatchPct || g.avgDispatch || 0),
+                            posReceiptPct: parseFloat(g.posReceiptPct || 0),
+                            diffPct: parseFloat(g.diffPct || 0),
                             sectorCount: g.sectorCount || 1,
                             balance: g.balance || '0.00'
                         });
@@ -259,19 +276,29 @@ async function loadMessengerTransporters() {
             });
         }
 
-        // Filter to below-average unless 'Show All' is checked
-        if (!showAll) {
+        // Apply filter based on selected mode
+        const diffThreshold = parseFloat((document.getElementById('messengerDiffThreshold') || {}).value || 5);
+        if (filterMode === 'dispatch') {
             transporters = transporters.filter(t => {
                 const rate = parseFloat(t.avgDispatch !== undefined ? t.avgDispatch : (t.dispatchPct || 0));
                 return rate < districtAvg;
             });
+        } else if (filterMode === 'diff') {
+            transporters = transporters.filter(t => {
+                const diff = parseFloat(t.diffPct !== undefined ? t.diffPct : 0);
+                return diff > diffThreshold;
+            });
         }
+        // 'all' shows everything
 
         if (transporters.length === 0) {
-            listContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #475569;"><p>${showAll ? 'No transporters found.' : 'No transporters below average! ✅'}</p></div>`;
+            const modeLabel = filterMode === 'diff'
+                ? `कोई सेक्टर नहीं जहाँ POS Lag >${diffThreshold}% हो ✅`
+                : 'No transporters below average! ✅';
+            listContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #475569;"><p>${modeLabel}</p></div>`;
             return;
         }
-        renderMessengerTransporterList(transporters, districtAvg);
+        renderMessengerTransporterList(transporters, districtAvg, filterMode);
         updateMessengerPreview();
     } catch (error) {
         console.error('Messenger load error:', error);
@@ -279,31 +306,63 @@ async function loadMessengerTransporters() {
     }
 }
 
-function renderMessengerTransporterList(transporters, districtAvg) {
+function renderMessengerTransporterList(transporters, districtAvg, filterMode) {
     const listContainer = document.getElementById('messengerTransporterList');
     listContainer.innerHTML = '';
+    const isDiffMode = filterMode === 'diff';
+
+    // Sort: diff mode → by diffPct desc; dispatch mode → by dispatchPct asc
     transporters.sort((a, b) => {
+        if (isDiffMode) {
+            return (parseFloat(b.diffPct) || 0) - (parseFloat(a.diffPct) || 0);
+        }
         const rateA = parseFloat(a.avgDispatch !== undefined ? a.avgDispatch : (a.dispatchPct || 0));
         const rateB = parseFloat(b.avgDispatch !== undefined ? b.avgDispatch : (b.dispatchPct || 0));
         return rateA - rateB;
     });
-    
+
     transporters.forEach(t => {
         const rate = parseFloat(t.avgDispatch !== undefined ? t.avgDispatch : (t.dispatchPct || 0));
+        const posRate = parseFloat(t.posReceiptPct !== undefined ? t.posReceiptPct : 0);
+        const diff = parseFloat(t.diffPct !== undefined ? t.diffPct : (rate - posRate));
         const isBelow = rate < districtAvg;
+        const isHighLag = diff > 5;
         const balance = t.balance !== undefined && t.balance !== null ? t.balance : 'N/A';
         const sectorCount = t.sectorCount !== undefined ? t.sectorCount : '-';
+
+        // Diff color coding
+        const diffColor = diff > 15 ? '#dc2626' : diff > 5 ? '#d97706' : '#059669';
+        const lagBadge = diff > 0 ? `<span style="font-size:11px;font-weight:700;background:${diffColor}20;color:${diffColor};border:1px solid ${diffColor}40;border-radius:6px;padding:2px 6px;">Lag: +${diff.toFixed(1)}%</span>` : '';
+
+        const hasPOSData = t.posReceiptPct !== undefined;
+        const metricsHtml = hasPOSData
+            ? `<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+                <span style="font-size:11px;color:#64748b;">उठाव: <b style="color:${pColor(rate)}">${rate.toFixed(1)}%</b></span>
+                <span style="font-size:11px;color:#64748b;">POS: <b style="color:#6366f1">${posRate.toFixed(1)}%</b></span>
+                ${lagBadge}
+               </div>`
+            : `<div style="font-size:11px;color:#475569;margin-top:2px;">${sectorCount} Sectors | शेष: ${balance} Qt</div>`;
+
         const row = document.createElement('div');
         row.className = 'messenger-row';
-        row.style = `display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; background: ${isBelow ? 'rgba(239, 68, 68, 0.02)' : 'transparent'};`;
+        const rowBg = isDiffMode && isHighLag ? 'rgba(239,68,68,0.04)' : (isBelow ? 'rgba(239,68,68,0.02)' : 'transparent');
+        row.style = `display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #f1f5f9;cursor:pointer;background:${rowBg};`;
         row.innerHTML = `
-            <input type="checkbox" class="messenger-check" data-name="${escapeHtml(t.name)}" data-rate="${rate}" data-bal="${balance}" ${isBelow ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: #075e54;" onchange="updateMessengerPreview()">
-            <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600; font-size: 14px;">${escapeHtml(t.name)}</span>
-                    <span style="font-weight: 800; font-size: 13px; color: ${pColor(rate)};">${rate.toFixed(2)}%</span>
+            <input type="checkbox" class="messenger-check"
+                data-name="${escapeHtml(t.name)}"
+                data-rate="${rate.toFixed(2)}"
+                data-pos="${posRate.toFixed(2)}"
+                data-diff="${diff.toFixed(2)}"
+                data-bal="${balance}"
+                ${isDiffMode && isHighLag ? 'checked' : (!isDiffMode && isBelow ? 'checked' : '')}
+                style="width:18px;height:18px;accent-color:#075e54;flex-shrink:0;"
+                onchange="updateMessengerPreview()">
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <span style="font-weight:600;font-size:13px;white-space:normal;line-height:1.3;">${escapeHtml(t.name)}</span>
+                    <span style="font-weight:800;font-size:13px;color:${pColor(rate)};flex-shrink:0;">${rate.toFixed(1)}%</span>
                 </div>
-                <div style="font-size: 11px; color: #475569; margin-top: 2px;">${sectorCount} Sectors | शेष मात्रा: ${balance} Qt</div>
+                ${metricsHtml}
             </div>`;
         row.onclick = (e) => { if (e.target.type !== 'checkbox') { const cb = row.querySelector('.messenger-check'); cb.checked = !cb.checked; updateMessengerPreview(); } };
         listContainer.appendChild(row);
@@ -317,19 +376,45 @@ function updateMessengerPreview() {
     document.getElementById('messengerSelectedCount').innerText = selectedChecks.length;
     const preview = document.getElementById('messengerTextPreview');
     if (selectedChecks.length === 0) { preview.innerText = 'Select transporters to preview message...'; return; }
-    const templateIndex = document.getElementById('messengerTemplateSelect').value;
+    const templateIndex = parseInt(document.getElementById('messengerTemplateSelect').value) || 0;
     const template = MESSAGE_TEMPLATES[templateIndex];
     const metrics = analytics.metrics || {};
     const districtAvg = parseFloat(metrics.dispatchPercentage || metrics.totalDispatchPct || 0).toFixed(2);
-    let period = "Month";
+    const districtPOSAvg = metrics.totalPOSReceipt && metrics.totalAllocation > 0
+        ? ((metrics.totalPOSReceipt / metrics.totalAllocation) * 100).toFixed(2)
+        : '—';
+    const districtDiff = (parseFloat(districtAvg) - parseFloat(districtPOSAvg === '—' ? 0 : districtPOSAvg)).toFixed(2);
+
+    let period = 'Month';
     const reportSelect = document.getElementById('messengerReportSelect');
     const selectedOption = reportSelect.options[reportSelect.selectedIndex];
     if (selectedOption) {
-        const rawPeriod = selectedOption.text.split(' - ')[1] || "Month";
+        const rawPeriod = selectedOption.text.split(' - ')[1] || 'Month';
         period = rawPeriod.replace(/\s*\(.*\)/, '').trim();
     }
-    const listString = Array.from(selectedChecks).map((cb, index) => `${index + 1}. *${cb.getAttribute('data-name')}:* ${cb.getAttribute('data-rate')}% (शेष मात्रा: ${cb.getAttribute('data-bal')} Qt)`).join('\n');
-    preview.innerText = template.text(districtAvg, listString, period);
+
+    // Build list string — include POS & diff data when available
+    const isDiffTemplate = templateIndex >= 4;
+    const listString = Array.from(selectedChecks).map((cb, index) => {
+        const name = cb.getAttribute('data-name');
+        const rate = cb.getAttribute('data-rate');
+        const pos = cb.getAttribute('data-pos');
+        const diff = cb.getAttribute('data-diff');
+        const bal = cb.getAttribute('data-bal');
+        if (isDiffTemplate && pos && diff) {
+            return `${index + 1}. *${name}*\n   उठाव: ${rate}% | POS प्राप्ति: ${pos}% | Lag: *+${diff}%*\n   शेष मात्रा: ${bal} Qt`;
+        }
+        return `${index + 1}. *${name}:* ${rate}% (शेष मात्रा: ${bal} Qt)`;
+    }).join('\n');
+
+    // Update Avg Lag & POS cards
+    const checks = Array.from(selectedChecks);
+    const avgSelectedDiff = checks.length > 0 ? (checks.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-diff')) || 0), 0) / checks.length).toFixed(2) : '0.00';
+    const avgSelectedPOS  = checks.length > 0 ? (checks.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-pos'))  || 0), 0) / checks.length).toFixed(2) : '0.00';
+    if (document.getElementById('messengerAvgDiff')) document.getElementById('messengerAvgDiff').innerText = avgSelectedDiff + '%';
+    if (document.getElementById('messengerAvgPOS'))  document.getElementById('messengerAvgPOS').innerText  = avgSelectedPOS + '%';
+
+    preview.innerText = template.text(districtAvg, listString, period, districtPOSAvg, districtDiff);
 }
 
 function selectAllTransporters(checked) {
