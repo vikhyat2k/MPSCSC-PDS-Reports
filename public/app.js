@@ -1733,8 +1733,121 @@ function navigateToScheme(key) {
 }
 window.navigateToScheme = navigateToScheme;
 
+// Global helper to automatically load and render the latest analytics dashboard for any scheme
+function autoDisplayLatestSchemeAnalytics(scheme, mode, reports) {
+    if (typeof isSubViewActive === 'function' && isSubViewActive()) return;
+    
+    const isDR = (scheme === 'nfsa' && mode === 'daterange');
+    const targetSchemeKey = isDR ? 'nfsa_daterange' : scheme;
+
+    // If user is actively viewing a specific historical report of this scheme, don't overwrite on background auto-refresh
+    if (window.currentReportAnalytics && window.currentReportAnalytics.isHistoricalView && window.currentReportAnalytics.scheme === targetSchemeKey) {
+        return;
+    }
+
+    if (!Array.isArray(reports) || reports.length === 0) {
+        const secMap = {
+            'nfsa_monthly': 'analyticsSection',
+            'nfsa_daterange': 'drAnalyticsSection',
+            'mdm': 'mdmAnalyticsSection',
+            'icds': 'icdsAnalyticsSection',
+            'welfare': 'welfareAnalyticsSection'
+        };
+        const key = scheme === 'nfsa' ? `nfsa_${mode || 'monthly'}` : scheme;
+        const sec = document.getElementById(secMap[key]);
+        if (sec) sec.style.display = 'none';
+        return;
+    }
+
+    const latest = reports[0];
+    if (!latest || !latest.insights) return;
+
+    let insights;
+    try {
+        insights = typeof latest.insights === 'string' ? JSON.parse(latest.insights) : latest.insights;
+    } catch (e) {
+        console.warn('Failed to parse latest report insights:', e);
+        return;
+    }
+
+    if (scheme === 'nfsa') {
+        if (mode === 'monthly' && currentScheme === 'nfsa' && currentReportMode === 'monthly') {
+            window.currentReportAnalytics = {
+                ...insights,
+                id: latest.id,
+                month: latest.month,
+                year: latest.year,
+                scheme: 'nfsa',
+                generated_at: latest.generated_at
+            };
+            displayAnalytics(insights);
+            const sec = document.getElementById('analyticsSection');
+            if (sec) sec.style.display = 'block';
+            
+            const subtitleEl = document.getElementById('analyticsSubtitle');
+            if (subtitleEl) {
+                subtitleEl.innerHTML = `📅 माह (Month): <strong>${getMonthName(latest.month)} ${latest.year}</strong> (नवीनतम रिपोर्ट: ${new Date(latest.generated_at).toLocaleDateString('en-GB')})`;
+                subtitleEl.style.color = 'var(--text-secondary)';
+            }
+            if (typeof initBalanceReportControls === 'function') {
+                initBalanceReportControls(latest.id, 'nfsa');
+            }
+        } else if (mode === 'daterange' && currentScheme === 'nfsa' && currentReportMode === 'daterange') {
+            window.currentReportAnalytics = {
+                ...insights,
+                id: latest.id,
+                month: latest.month,
+                year: latest.year,
+                scheme: 'nfsa_daterange',
+                fromDate: latest.from_date || insights.fromDate,
+                toDate: latest.to_date || insights.toDate,
+                generated_at: latest.generated_at
+            };
+            displayNfsaDaterangeAnalytics(insights);
+            const sec = document.getElementById('drAnalyticsSection');
+            if (sec) sec.style.display = 'block';
+            
+            const subtitleEl = document.getElementById('drAnalyticsSubtitle');
+            if (subtitleEl) {
+                subtitleEl.innerHTML = `📅 तिथि सीमा (Date Range): <strong>${latest.from_date || insights.fromDate} से ${latest.to_date || insights.toDate}</strong> (नवीनतम रिपोर्ट: ${new Date(latest.generated_at).toLocaleDateString('en-GB')})`;
+                subtitleEl.style.color = '#4f46e5';
+            }
+        }
+    } else if (currentScheme === scheme) {
+        window.currentReportAnalytics = {
+            ...insights,
+            id: latest.id,
+            month: latest.month,
+            year: latest.year,
+            scheme: scheme,
+            generated_at: latest.generated_at
+        };
+        const funcName = `display${scheme.toUpperCase()}Analytics`;
+        if (typeof window[funcName] === 'function') {
+            window[funcName](insights);
+        } else if (typeof window[`display${scheme.charAt(0).toUpperCase() + scheme.slice(1)}Analytics`] === 'function') {
+            window[`display${scheme.charAt(0).toUpperCase() + scheme.slice(1)}Analytics`](insights);
+        }
+        const sec = document.getElementById(`${scheme}AnalyticsSection`);
+        if (sec) sec.style.display = 'block';
+
+        const subtitleEl = document.getElementById(`${scheme}AnalyticsSubtitle`);
+        if (subtitleEl) {
+            subtitleEl.innerHTML = `📅 माह (Month): <strong>${getMonthName(latest.month)} ${latest.year}</strong> (नवीनतम रिपोर्ट: ${new Date(latest.generated_at).toLocaleDateString('en-GB')})`;
+            subtitleEl.style.color = 'var(--text-secondary)';
+        }
+        if (typeof initBalanceReportControls === 'function') {
+            initBalanceReportControls(latest.id, scheme);
+        }
+    }
+}
+window.autoDisplayLatestSchemeAnalytics = autoDisplayLatestSchemeAnalytics;
+
 function switchScheme(scheme) {
     currentScheme = scheme;
+    if (window.currentReportAnalytics) {
+        window.currentReportAnalytics = null;
+    }
     document.querySelectorAll('.scheme-tab').forEach(t => t.classList.remove('active-tab'));
     const tab = document.querySelector(`.scheme-tab[onclick*="${scheme}"]`);
     if (tab) tab.classList.add('active-tab');
@@ -1773,6 +1886,16 @@ function switchScheme(scheme) {
     if (drEl) {
         drEl.style.display = (!subActive && scheme === 'nfsa' && currentReportMode === 'daterange') ? 'block' : 'none';
     }
+
+    // Toggle Analytics Sections (hide non-active scheme analytics sections)
+    const allAnalyticsSections = [
+        'analyticsSection', 'drAnalyticsSection', 'mdmAnalyticsSection', 
+        'icdsAnalyticsSection', 'welfareAnalyticsSection'
+    ];
+    allAnalyticsSections.forEach(secId => {
+        const el = document.getElementById(secId);
+        if (el) el.style.display = 'none';
+    });
 
     // Load data for the selected scheme
     if (scheme === 'nfsa') {
@@ -1831,6 +1954,7 @@ async function loadReports() {
         if (!Array.isArray(reports) || reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No reports found. Generate one to see it here!</td></tr>';
             setupHistoryExpansion('nfsa', 0);
+            autoDisplayLatestSchemeAnalytics('nfsa', 'monthly', []);
             return;
         }
 
@@ -1888,6 +2012,7 @@ async function loadReports() {
         }).join('');
 
         setupHistoryExpansion('nfsa', reports.length);
+        autoDisplayLatestSchemeAnalytics('nfsa', 'monthly', reports);
 
     } catch (error) {
         console.error('Failed to load reports:', error);
@@ -1916,6 +2041,7 @@ async function loadDaterangeReports() {
         if (!Array.isArray(reports) || reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No Date Range reports found. Generate one to see it here!</td></tr>';
             setupHistoryExpansion('nfsa_daterange', 0);
+            autoDisplayLatestSchemeAnalytics('nfsa', 'daterange', []);
             return;
         }
 
@@ -1958,6 +2084,7 @@ async function loadDaterangeReports() {
             </tr>`;
         }).join('');
         setupHistoryExpansion('nfsa_daterange', reports.length);
+        autoDisplayLatestSchemeAnalytics('nfsa', 'daterange', reports);
     } catch (error) {
         console.error('Error loading daterange reports:', error);
     }
@@ -1982,6 +2109,7 @@ async function loadMDMReports() {
         if (!Array.isArray(reports) || reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No MDM reports found. Generate one to see it here!</td></tr>';
             setupHistoryExpansion('mdm', 0);
+            autoDisplayLatestSchemeAnalytics('mdm', null, []);
             return;
         }
 
@@ -2009,6 +2137,7 @@ async function loadMDMReports() {
             </tr>
         `).join('');
         setupHistoryExpansion('mdm', reports.length);
+        autoDisplayLatestSchemeAnalytics('mdm', null, reports);
     } catch (e) { console.error('MDM load error:', e); }
 }
 
@@ -2031,6 +2160,7 @@ async function loadICDSReports() {
         if (!Array.isArray(reports) || reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No ICDS reports found. Generate one to see it here!</td></tr>';
             setupHistoryExpansion('icds', 0);
+            autoDisplayLatestSchemeAnalytics('icds', null, []);
             return;
         }
 
@@ -2058,6 +2188,7 @@ async function loadICDSReports() {
             </tr>
         `).join('');
         setupHistoryExpansion('icds', reports.length);
+        autoDisplayLatestSchemeAnalytics('icds', null, reports);
     } catch (e) { console.error('ICDS load error:', e); }
 }
 
@@ -2080,6 +2211,7 @@ async function loadWelfareReports() {
         if (!Array.isArray(reports) || reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted, #94a3b8);">No Welfare reports found. Generate one to see it here!</td></tr>';
             setupHistoryExpansion('welfare', 0);
+            autoDisplayLatestSchemeAnalytics('welfare', null, []);
             return;
         }
 
@@ -2109,6 +2241,7 @@ async function loadWelfareReports() {
             </tr>
         `).join('');
         setupHistoryExpansion('welfare', reports.length);
+        autoDisplayLatestSchemeAnalytics('welfare', null, reports);
     } catch (e) { console.error('Welfare load error:', e); }
 }
 
@@ -2133,7 +2266,14 @@ async function loadStats() {
     }
 }
 
-function refreshAllReportsSilent() { loadReports(); loadDaterangeReports(); loadStats(); }
+function refreshAllReportsSilent() { 
+    loadReports(); 
+    loadDaterangeReports(); 
+    loadMDMReports();
+    loadICDSReports();
+    loadWelfareReports();
+    loadStats(); 
+}
 function hideAllMessages() { document.querySelectorAll('.alert').forEach(el => el.style.display = 'none'); }
 function showProgress() { document.getElementById(currentScheme === 'nfsa' ? 'progressSection' : currentScheme + 'ProgressSection').style.display = 'block'; }
 function hideProgress() { document.querySelectorAll('.progress-section').forEach(el => el.style.display = 'none'); }
