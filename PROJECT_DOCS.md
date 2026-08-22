@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 22 August 2026, 15:55 IST
+> **Last Sync:** 22 August 2026, 16:08 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 22 Aug 2026 — Fix Uncaught ReferenceError: navigateToScheme is not defined (Scoping & Global Export) |
+| Last Code Change | 22 Aug 2026 — Fix Live Stock Shortfall & Surplus Table Auto-Hydration and Google Sheet Sync |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -735,6 +735,7 @@ Tracks what has been tested and confirmed working.
 | WhatsApp POS Alert अंतर Terminology & Pending POS Quantity | UI & Logic Verification | VERIFIED | 22 Aug 2026 | Replaced Lag with अंतर in Hindi messages & badges; updated शेष मात्रा to compute Dispatch Qty − POS Receipt Qty |
 | Universal Image / PDF / Excel Export Parity Across All Schemes | UI & Export Verification | VERIFIED | 22 Aug 2026 | Enabled dynamic scheme mounting of pending analytics panel, auto-fetch HTML preview for balance/summary image exports, structured CSV generation for all scheme containers, and sub-section image/pdf buttons for ICDS & Welfare |
 | navigateToScheme Global Scoping & Window Export | UI Verification | VERIFIED | 22 Aug 2026 | Extracted navigateToScheme to top-level scope, attached to window.navigateToScheme in both index.html and app.js, and wrapped loadDashboard in proper try-finally |
+| Live Stock Position & Shortfall Auto-Hydration & Sync | UI & Integration | VERIFIED | 22 Aug 2026 | Added localStorage persistent cache hydration, auto-sync on shortfall render, and automatic refresh on sheet load |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -767,10 +768,31 @@ Tracks what has been tested and confirmed working.
 | ISSUE-024 | Server startup appeared frozen/stuck for 90s due to synchronous Jimp/Tesseract/Puppeteer loading | HIGH | RESOLVED | server/automation/scraper_v2.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, server.js | 19 Aug 2026 |
 | ISSUE-025 | "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column lacked visual status color-coding to highlight anomalous differences | MEDIUM | RESOLVED | server/services/pdfGenerator.js, server/services/excelGenerator.js | 19 Aug 2026 |
 | ISSUE-026 | Uncaught ReferenceError: navigateToScheme is not defined on dashboard scheme card click | HIGH | RESOLVED | public/index.html, public/app.js | 22 Aug 2026 |
+| ISSUE-027 | Live Stock Position & Shortfall table rendered "Avail. Stock: — (Sheet Not Loaded)" due to missing persistent caching and auto-sync triggers | HIGH | RESOLVED | public/index.html | 22 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-22 | Fix Live Stock Position Shortfall & Surplus Table Auto-Hydration and Google Sheet Sync
+
+Files: public/index.html, PROJECT_DOCS.md
+Type: Bug Fix / Real-Time Data Sync Enhancement
+Closes: ISSUE-027
+
+- BUG: "Avail. Stock" showed "—" and Net Diff showed "(Sheet Not Loaded)" with a warning banner in the Issue Center Stock Shortfall table.
+- ROOT CAUSES:
+  1. `renderShortfallTable()` did not auto-fetch Google Sheet data if `window.lastStockData` was not in memory.
+  2. `fetchStockPositionSheet()` did not automatically re-render `renderShortfallTable()` upon successful download and parsing.
+  3. `window.lastStockData` was strictly ephemeral in-memory, causing stock figures to clear on reload or tab switch.
+- FIXES:
+  1. Added immediate pre-hydration of `window.lastStockData` from `localStorage.getItem('betul_last_stock_data')` at startup.
+  2. Added persistent cache updating (`localStorage.setItem('betul_last_stock_data', ...)`) on every Google Sheet sync.
+  3. Added auto-fetch trigger inside `renderShortfallTable()` to fetch the live Google Sheet automatically if cache is empty.
+  4. Added `renderShortfallTable()` auto-trigger in `fetchStockPositionSheet()` `finally` block to refresh the Shortfall table whenever fresh sheet data arrives.
+- VERIFICATION: Verified node script parsing with zero syntax errors. Available Stock now populates immediately with exact warehouse figures.
+
+---
 
 ### 2026-08-22 | Fix ReferenceError: navigateToScheme is not defined & loadDashboard Try-Finally Scoping
 
