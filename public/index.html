@@ -2725,10 +2725,6 @@ async function fetchStockPositionSheet() {
                 var equityMsg = parseFloat(topHalfPct) > 75 ?
                     'Stock is concentrated — top half of Issue Centers hold <strong>' + topHalfPct + '%</strong>. Redistribution may be needed.' :
                     'Stock distribution is relatively balanced — top half of ICs hold <strong>' + topHalfPct + '%</strong>.';
-                insights.push(insightCard('📊', 'Distribution Equity Index',
-                    equityMsg, 'rgba(6,182,212,0.35)', 'rgba(6,182,212,0.08)', '#06b6d4'));
-            }
-
             if (insights.length === 0) {
                 insights.push(insightCard('✅', 'All Systems Normal', 'No alerts detected. All Issue Centers show positive stock levels with healthy commodity distribution.', 'rgba(16,185,129,0.35)', 'rgba(16,185,129,0.08)', '#10b981'));
             }
@@ -2740,6 +2736,13 @@ async function fetchStockPositionSheet() {
         console.error('Error importing Google Sheet stock position:', err);
         if (statusEl) {
             statusEl.innerHTML = '<div class="alert alert-error" style="padding:12px;border-radius:8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);font-weight:600;">❌ ' + (err.message || 'Failed to connect to server endpoint.') + '</div>';
+        }
+    } finally {
+        _isSyncingStockSheet = false;
+        // Automatically refresh shortfall table whenever stock sheet is synced
+        if (typeof renderShortfallTable === 'function' && !_isRenderingShortfall) {
+            _isRenderingShortfall = true;
+            renderShortfallTable().finally(function() { _isRenderingShortfall = false; });
         }
     }
 }
