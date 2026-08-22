@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 21 August 2026, 09:56 IST
+> **Last Sync:** 21 August 2026, 10:03 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 21 Aug 2026 — WhatsApp Messenger: Added POS Lag Diff Alert mode with configurable threshold, 2 new Hindi templates, 3-metric transporter rows (Dispatch%, POS%, Lag) |
+| Last Code Change | 21 Aug 2026 — WhatsApp Template 4: Updated निर्देश text with stronger POS-at-delivery directive and ASO/JSO escalation instruction |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -767,6 +767,16 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-21 | WhatsApp Template 4 — Updated निर्देश Instruction Text
+
+Files: public/app.js, PROJECT_DOCS.md
+Type: Content Update
+
+- Changed निर्देश in POS Lag Alert (Template 4) from the generic review-meeting disclaimer to a stronger on-delivery directive:
+  - Instructs transporter to ensure POS receipt AT TIME OF DELIVERY
+  - States failure = presumed non-delivery of grain to FPS shop
+  - Directs transporter to alert ASO/JSO if shopkeeper refuses to do POS receipt
 
 ### 2026-08-21 | WhatsApp Messenger — Bug Fix: Exclude 0% Lag Sectors from POS Lag Templates
 
