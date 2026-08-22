@@ -1725,6 +1725,14 @@ function isSubViewActive() {
 }
 window.isSubViewActive = isSubViewActive;
 
+function navigateToScheme(key) {
+    var navGen = document.getElementById('nav-generate');
+    if (typeof setActiveNav === 'function' && navGen) setActiveNav(navGen);
+    if (typeof showGenerate === 'function') showGenerate();
+    if (typeof switchScheme === 'function') switchScheme(key);
+}
+window.navigateToScheme = navigateToScheme;
+
 function switchScheme(scheme) {
     currentScheme = scheme;
     document.querySelectorAll('.scheme-tab').forEach(t => t.classList.remove('active-tab'));
