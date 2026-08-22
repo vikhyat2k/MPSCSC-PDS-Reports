@@ -4298,18 +4298,44 @@ async function exportPendingSummary(format, buttonEl) {
  * Export pending summary table as JPEG image using html2canvas on the iframe.
  */
 async function exportPendingSummaryImage() {
+    const card = document.getElementById('pendingAnalyticsCard');
+    const reportId = card ? card.dataset.reportId : '';
+    if (!reportId) { alert('No report loaded.'); return; }
+
+    const groupBy = document.getElementById('pendingGroupBy')?.value || 'transporter';
+    const sortBy  = document.getElementById('pendingSortBy')?.value || 'pendingQty';
+    const filterTransporter = document.getElementById('pendingFilterTransporter')?.value || '';
+    const filterIssueCenter = document.getElementById('pendingFilterIssueCenter')?.value || '';
+
     const previewSection = document.getElementById('pendingSummaryPreviewSection');
     const iframe = document.getElementById('pendingSummaryPreviewIframe');
-    const iframeDoc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
-    const hasContent = iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.trim().length > 0;
-
-    if (!iframe || !previewSection || previewSection.style.display === 'none' || !hasContent) {
-        alert('रिपोर्ट अभी लोड हो रही है। कृपया कुछ सेकंड प्रतीक्षा करें और दोबारा Image बटन दबाएं।\n\n(Report is loading. Please wait a moment and try again.)');
-        return;
-    }
+    let iframeDoc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
+    let hasContent = iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.trim().length > 0;
 
     try {
-        await new Promise(r => setTimeout(r, 500));
+        if (!hasContent) {
+            const params = new URLSearchParams({ groupBy, sortBy });
+            if (filterTransporter) params.set('filterTransporter', filterTransporter);
+            if (filterIssueCenter) params.set('filterIssueCenter', filterIssueCenter);
+
+            const res = await fetch(`/api/reports/${reportId}/balances/pending-summary/html?${params}`);
+            if (!res.ok) throw new Error('Failed to load pending summary HTML');
+            const html = await res.text();
+
+            if (previewSection && iframe) {
+                previewSection.style.display = 'block';
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open(); doc.write(html); doc.close();
+                iframeDoc = doc;
+            }
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        if (!iframeDoc || !iframeDoc.body) {
+            throw new Error('Could not access pending summary document.');
+        }
+
+        await new Promise(r => setTimeout(r, 400));
         const canvas = await html2canvas(iframeDoc.body, {
             scale: 2,
             useCORS: true,
@@ -4322,13 +4348,10 @@ async function exportPendingSummaryImage() {
             windowHeight: iframeDoc.body.scrollHeight
         });
 
-        const card = document.getElementById('pendingAnalyticsCard');
-        const reportId = card ? card.dataset.reportId : '';
         const analytics = window.currentReportAnalytics;
         const monthNames = {1:'January',2:'February',3:'March',4:'April',5:'May',6:'June',7:'July',8:'August',9:'September',10:'October',11:'November',12:'December'};
         const month = analytics ? monthNames[analytics.month] || analytics.month : '';
         const year = analytics ? analytics.year : '';
-        const groupBy = document.getElementById('pendingGroupBy')?.value || 'transporter';
         const tag = groupBy === 'issuecenter' ? 'IC' : 'Transporter';
 
         const link = document.createElement('a');
@@ -4337,6 +4360,7 @@ async function exportPendingSummaryImage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        if (typeof showToast === 'function') showToast('🖼️ Pending summary image downloaded successfully!', 'success');
     } catch (err) {
         console.error('Image export error:', err);
         alert('Image बनाने में समस्या आई: ' + err.message);
