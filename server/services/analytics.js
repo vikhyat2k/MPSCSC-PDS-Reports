@@ -350,6 +350,7 @@ class AnalyticsService {
                 const posReceiptPct = t.allottedSum > 0 ? parseFloat(((t.posReceiptSum / t.allottedSum) * 100).toFixed(2)) : 0;
                 const diffPct = parseFloat((avgDispatch - posReceiptPct).toFixed(2));
                 const bal = parseFloat((t.allottedSum - t.dispatchSum).toFixed(2));
+                const posDiffQty = parseFloat(Math.max(0, t.dispatchSum - t.posReceiptSum).toFixed(2));
                 return {
                     name: t.name,
                     transporter: t.transporter,
@@ -359,6 +360,9 @@ class AnalyticsService {
                     dispatchPct: avgDispatch,
                     posReceiptPct,
                     diffPct,
+                    dispatchSum: parseFloat(t.dispatchSum.toFixed(2)),
+                    posReceiptSum: parseFloat(t.posReceiptSum.toFixed(2)),
+                    posDiffQty,
                     sectorCount: 1,
                     balance: bal < 0 ? 0 : bal
                 };
