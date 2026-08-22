@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 21 August 2026, 10:03 IST
+> **Last Sync:** 22 August 2026, 13:05 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 21 Aug 2026 — WhatsApp Template 4: Updated निर्देश text with stronger POS-at-delivery directive and ASO/JSO escalation instruction |
+| Last Code Change | 22 Aug 2026 — WhatsApp POS Alert: Replaced 'Lag' with 'अंतर' and updated 'शेष मात्रा' to compute Dispatch Quantity − POS Receipt Quantity |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -732,6 +732,7 @@ Tracks what has been tested and confirmed working.
 | Commodity Abbreviation Legend in Executive Report | UI & Export Verification | VERIFIED | 17 Aug 2026 | Added static commodity abbreviation legend beneath Section 2 heatmap with terms verified against View_LiveRollup source headers |
 | ICDS Scraper Direct AJAX Extraction Pipeline | Automation & Scraping Verification | VERIFIED | 17 Aug 2026 | Replaced broken DOM onclick eval with direct parameterized $.ajax calls, extracting all 9 depots (562 shops) in ~19.8s |
 | NFSA Single-Page 3-Column Analytical Footnote | PDF & Layout Verification | VERIFIED | 20 Aug 2026 | Replaced color legend with 3-column executive summary cards (Run rate, Transit lag, Sector alerts) in single-page A4 landscape |
+| WhatsApp POS Alert अंतर Terminology & Pending POS Quantity | UI & Logic Verification | VERIFIED | 22 Aug 2026 | Replaced Lag with अंतर in Hindi messages & badges; updated शेष मात्रा to compute Dispatch Qty − POS Receipt Qty |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -767,6 +768,25 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-22 | WhatsApp POS Alert — 'अंतर' Terminology & Pending POS Quantity (Dispatch − POS Receipt)
+
+Files: server/services/analytics.js, public/app.js, public/index.html, PROJECT_DOCS.md
+Type: Improvement / WhatsApp Messenger Refinement
+Closes: N/A
+
+- USER REQUIREMENT: In POS diff templates (Templates 4 & 5), replace "Lag" with "अंतर" only, and calculate "शेष मात्रा:" as the difference between quantity dispatched and quantity received on POS.
+- ROOT CAUSE / CONTEXT: Previously, Templates 4 & 5 included the term "(Lag)" / "Lag: +X%" in Hindi messages, and the line item displayed `data-bal` (the unlifted allocation balance `allottedSum - dispatchSum`), rather than the pending/in-transit quantity dispatched from depot but not yet received on POS machines (`dispatchSum - posReceiptSum`).
+- CHANGES IMPLEMENTED:
+  1. **server/services/analytics.js**: `allTransportersFlatList` now computes and returns `posDiffQty` (`Math.max(0, dispatchSum - posReceiptSum)`), `dispatchSum`, and `posReceiptSum`.
+  2. **public/app.js**:
+     - Updated `MESSAGE_TEMPLATES[4]` (`POS अंतर Alert (Hindi)`) and `MESSAGE_TEMPLATES[5]` (`POS अंतर Strict Notice (Hindi)`) replacing all instances of `(Lag)` / `Lag` with `अंतर`.
+     - Updated `renderMessengerTransporterList()` to compute `posDiffQty` (dispatched qty − POS received qty) and attach `data-pos-diff-qty="${posDiffQty.toFixed(2)}"`.
+     - Updated `renderMessengerTransporterList()` badge to display `अंतर: +${diff.toFixed(1)}%`.
+     - Updated `updateMessengerPreview()` to format list items as `उठाव: ${rate}% | POS प्राप्ति: ${pos}% | अंतर: *+${diff}%*\n   शेष मात्रा: ${posDiffQty} Qt`.
+     - Updated empty/alert status messages to use `POS अंतर` instead of `POS Lag`.
+  3. **public/index.html**: Aligned dropdown options, threshold labels, and metric cards to use `POS अंतर` / `Avg. अंतर`.
+- VERIFICATION: Verified node execution of AnalyticsService generating exact pending POS difference quantity (`1641.28 - 1201.92 = 439.36 Qt`), verified template rendering and syntax.
 
 ### 2026-08-21 | WhatsApp Template 4 — Updated निर्देश Instruction Text
 
