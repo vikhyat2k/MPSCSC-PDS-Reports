@@ -2461,6 +2461,9 @@ async function fetchStockPositionSheet() {
         });
 
         window.lastStockData = { icData: icData, headers: headers };
+        try {
+            localStorage.setItem('betul_last_stock_data', JSON.stringify(window.lastStockData));
+        } catch (e) {}
 
         if (!districtTotal) districtTotal = icData.reduce(function(s, ic) { return s + ic.total; }, 0);
 
