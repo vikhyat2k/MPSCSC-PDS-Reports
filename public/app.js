@@ -3050,6 +3050,19 @@ async function viewReport(id) {
         }
 
         const insights = typeof data.insights === 'string' ? JSON.parse(data.insights) : data.insights;
+
+        // Normalize scheme name for switchScheme
+        let targetScheme = data.scheme || 'nfsa';
+        const isDaterange = targetScheme === 'nfsa_daterange';
+        if (isDaterange) targetScheme = 'nfsa';
+
+        // Switch to correct scheme tab
+        switchScheme(targetScheme);
+        if (targetScheme === 'nfsa') {
+            toggleNfsaMode(isDaterange ? 'daterange' : 'monthly');
+        }
+
+        // Set historical view context
         window.currentReportAnalytics = { 
             ...insights, 
             id: data.id,
@@ -3057,22 +3070,17 @@ async function viewReport(id) {
             year: data.year, 
             scheme: data.scheme,
             fromDate: data.from_date || insights.fromDate,
-            toDate: data.to_date || insights.toDate
+            toDate: data.to_date || insights.toDate,
+            generated_at: data.generated_at,
+            isHistoricalView: true
         };
-
-        // Normalize scheme name for switchScheme
-        let targetScheme = data.scheme || 'nfsa';
-        if (targetScheme === 'nfsa_daterange') targetScheme = 'nfsa';
-
-        // Switch to correct scheme tab (loads report history for that scheme)
-        switchScheme(targetScheme);
 
         // Load balance report controls/filters
         await initBalanceReportControls(data.id, targetScheme);
 
         // Map scheme to its analytics section element ID
         const analyticsSectionMap = {
-            'nfsa': data.scheme === 'nfsa_daterange' ? 'drAnalyticsSection' : 'analyticsSection',
+            'nfsa': isDaterange ? 'drAnalyticsSection' : 'analyticsSection',
             'mdm': 'mdmAnalyticsSection',
             'icds': 'icdsAnalyticsSection',
             'welfare': 'welfareAnalyticsSection'
@@ -3086,15 +3094,17 @@ async function viewReport(id) {
 
         // Render analytics data into the correct section
         if (targetScheme === 'nfsa') {
-            if (data.scheme === 'nfsa_daterange') {
+            if (isDaterange) {
                 displayNfsaDaterangeAnalytics(insights);
             } else {
                 displayAnalytics(insights);
             }
         } else {
             const funcName = `display${targetScheme.toUpperCase()}Analytics`;
-            if (window[funcName]) {
+            if (typeof window[funcName] === 'function') {
                 window[funcName](insights);
+            } else if (typeof window[`display${targetScheme.charAt(0).toUpperCase() + targetScheme.slice(1)}Analytics`] === 'function') {
+                window[`display${targetScheme.charAt(0).toUpperCase() + targetScheme.slice(1)}Analytics`](insights);
             } else {
                 console.warn(`Analytics function ${funcName} not found.`);
                 alert(`Analytics display function not available for scheme: ${targetScheme}`);
@@ -3110,11 +3120,11 @@ async function viewReport(id) {
 
             // Show a banner indicating this is a historical view
             const subtitleId = targetScheme === 'nfsa'
-                ? (data.scheme === 'nfsa_daterange' ? 'drAnalyticsSubtitle' : 'analyticsSubtitle')
+                ? (isDaterange ? 'drAnalyticsSubtitle' : 'analyticsSubtitle')
                 : `${targetScheme}AnalyticsSubtitle`;
             const subtitleEl = document.getElementById(subtitleId);
             if (subtitleEl) {
-                if (data.scheme === 'nfsa_daterange') {
+                if (isDaterange) {
                     subtitleEl.innerHTML = `📅 तिथि सीमा (Date Range): <strong>${data.from_date || insights.fromDate} से ${data.to_date || insights.toDate}</strong> (रिपोर्ट निर्माण: ${new Date(data.generated_at).toLocaleDateString('en-GB')})`;
                 } else {
                     subtitleEl.innerHTML = `📅 Viewing historical report: <strong>${getMonthName(data.month)} ${data.year}</strong> (Generated: ${new Date(data.generated_at).toLocaleDateString('en-GB')})`;
