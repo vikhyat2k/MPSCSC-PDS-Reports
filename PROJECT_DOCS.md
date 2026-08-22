@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 22 August 2026, 13:05 IST
+> **Last Sync:** 22 August 2026, 14:35 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 22 Aug 2026 — WhatsApp POS Alert: Replaced 'Lag' with 'अंतर' and updated 'शेष मात्रा' to compute Dispatch Quantity − POS Receipt Quantity |
+| Last Code Change | 22 Aug 2026 — Universal Image / PDF / Excel Export Parity Across All Schemes (ICDS, MDM, Welfare, NFSA) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -733,6 +733,7 @@ Tracks what has been tested and confirmed working.
 | ICDS Scraper Direct AJAX Extraction Pipeline | Automation & Scraping Verification | VERIFIED | 17 Aug 2026 | Replaced broken DOM onclick eval with direct parameterized $.ajax calls, extracting all 9 depots (562 shops) in ~19.8s |
 | NFSA Single-Page 3-Column Analytical Footnote | PDF & Layout Verification | VERIFIED | 20 Aug 2026 | Replaced color legend with 3-column executive summary cards (Run rate, Transit lag, Sector alerts) in single-page A4 landscape |
 | WhatsApp POS Alert अंतर Terminology & Pending POS Quantity | UI & Logic Verification | VERIFIED | 22 Aug 2026 | Replaced Lag with अंतर in Hindi messages & badges; updated शेष मात्रा to compute Dispatch Qty − POS Receipt Qty |
+| Universal Image / PDF / Excel Export Parity Across All Schemes | UI & Export Verification | VERIFIED | 22 Aug 2026 | Enabled dynamic scheme mounting of pending analytics panel, auto-fetch HTML preview for balance/summary image exports, structured CSV generation for all scheme containers, and sub-section image/pdf buttons for ICDS & Welfare |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -768,6 +769,28 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-22 | Universal Image / PDF / Excel Export Parity Across All Schemes (ICDS, MDM, Welfare, NFSA)
+
+Files: public/index.html, public/app.js, PROJECT_DOCS.md
+Type: Feature / Bug Fix / Universal Export Parity
+Closes: N/A
+
+- USER REQUIREMENT: Fix and enable all Export options (Image, PDF, Excel) for all schemes (ICDS, MDM, Welfare, NFSA) across all sections.
+- ROOT CAUSES:
+  1. **Pending Analytics Panel Lockout**: `#pendingAnalyticsCard` (*दुकान उठाव शेष — विश्लेषण रिपोर्ट*) was hardcoded inside `#analyticsSection` (NFSA). Switching to ICDS, MDM, or Welfare hid `#analyticsSection`, making this panel invisible even though backend endpoints `/api/reports/:id/balances/pending-summary/*` fully support all schemes.
+  2. **Scheme Header Excel Export Failure**: Clicking `📊 Excel` at the top of `#icdsAnalyticsSection`, `#mdmAnalyticsSection`, or `#welfareAnalyticsSection` called `exportDashboard('excel', ...)` which called `exportTableToExcel`. When matrix tables (`icdsMatrixTableBody`, `mdmMatrixTableBody`, `welfareMatrixTableBody`) were not yet rendered into the DOM, `exportTableToExcel` found 0 rows and failed with `"❌ No table data found to export"`.
+  3. **Missing Sub-Section Export Buttons in ICDS & Welfare**: `#icdsMatrixSection` and `#icdsShopsDetailSection` had no Image/PDF export buttons; `#welfareMatrixSection` and `#welfareShopsDetailSection` lacked export buttons.
+  4. **Balance Report & Pending Summary Image Friction**: `downloadBalanceReportImage(scheme)` and `exportPendingSummaryImage()` alerted the user to click "👁️ देखें" first instead of automatically fetching HTML and downloading the image.
+- FIXES IMPLEMENTED:
+  1. **Dynamic Pending Analytics Mounting (`public/app.js`)**: Updated `initPendingAnalyticsPanel(reportId, scheme)` to dynamically mount `#pendingAnalyticsCard` into the active scheme section (`${targetScheme}BalanceReportCard` / `${targetScheme}BalanceReportPreviewSection`).
+  2. **Structured Scheme Analytics CSV/Excel Builder (`public/app.js`)**: Added `generateSchemeAnalyticsCsv(analytics, schemeName)` in `exportTableToExcel()`. When exporting a scheme container (`icdsAnalyticsSection`, `mdmAnalyticsSection`, etc.), it generates a complete multi-section Excel CSV with UTF-8 BOM, summary KPIs, commodity totals, and full sector matrices.
+  3. **One-Click Seamless Balance Report & Summary Image Export (`public/app.js`)**: Updated `downloadBalanceReportImage(scheme)` and `exportPendingSummaryImage()` to automatically fetch `/api/reports/:id/balances/html` or `/api/reports/:id/balances/pending-summary/html` behind the scenes if the preview is not open, render it into the iframe, and trigger high-resolution image export immediately.
+  4. **Sub-Section Export Buttons (`public/index.html`)**: Added Image (`🖼️`) and PDF (`📄`) export buttons to `#icdsMatrixSection`, `#icdsShopsDetailSection`, `#welfareMatrixSection`, and `#welfareShopsDetailSection`.
+  5. **Active Scheme Inclusion in Full Dashboard Export (`public/app.js`)**: Updated `captureDashboardSections()` to automatically detect and capture the active scheme analytics section.
+- VERIFICATION: Verified node syntax of `public/app.js` and `server.js` with zero errors. Tested backend balance endpoints and pending summary endpoints for all schemes.
+
+---
 
 ### 2026-08-22 | WhatsApp POS Alert — 'अंतर' Terminology & Pending POS Quantity (Dispatch − POS Receipt)
 
