@@ -3754,33 +3754,62 @@ async function downloadBalanceReport(format, buttonEl, scheme) {
 }
 
 async function downloadBalanceReportImage(scheme) {
-    const iframe = document.getElementById(`${scheme}BalanceReportPreviewIframe`);
-    const previewSection = document.getElementById(`${scheme}BalanceReportPreviewSection`);
-
-    // Check if preview section is visible and iframe has content
-    const iframeDoc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
-    const hasContent = iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.trim().length > 0;
-
-    if (!iframe || !previewSection || previewSection.style.display === 'none' || !hasContent) {
-        alert('कृपया पहले "👁️ देखें" बटन दबाकर रिपोर्ट प्रीव्यू खोलें, उसके बाद इमेज सेव करें।\n\n(Please click "👁️ देखें" to view the report first, then export as Image.)');
+    const reportId = window.currentReportAnalytics ? window.currentReportAnalytics.id : null;
+    if (!reportId) {
+        alert('No report loaded.');
         return;
     }
+
+    const typeEl = document.getElementById(`${scheme}BalanceReportType`);
+    const valueEl = document.getElementById(`${scheme}BalanceValueSelect`);
+    const type = typeEl ? typeEl.value : 'transporter';
+    const value = (valueEl && (type === 'individual_transporter' || type === 'individual_depot')) ? valueEl.value : '';
+
+    const iframe = document.getElementById(`${scheme}BalanceReportPreviewIframe`);
+    const previewSection = document.getElementById(`${scheme}BalanceReportPreviewSection`);
+    let iframeDoc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
+    let hasContent = iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.trim().length > 0;
+
+    let targetDoc = iframeDoc;
+
     try {
-        // Brief delay to ensure rendering is complete
-        await new Promise(r => setTimeout(r, 600));
+        if (!hasContent) {
+            // Automatically fetch the HTML and render into iframe (and show preview)
+            const queryParams = new URLSearchParams({ type, value }).toString();
+            const url = `/api/reports/${reportId}/balances/html?${queryParams}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Failed to load balance report HTML');
+            const htmlContent = await res.text();
+
+            if (previewSection && iframe) {
+                previewSection.style.display = 'block';
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open();
+                doc.write(htmlContent);
+                doc.close();
+                targetDoc = doc;
+            }
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        if (!targetDoc || !targetDoc.body) {
+            throw new Error('Could not access report preview document.');
+        }
+
+        await new Promise(r => setTimeout(r, 400));
 
         // Capture the full iframe body
-        const canvas = await html2canvas(iframeDoc.body, {
+        const canvas = await html2canvas(targetDoc.body, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
             scrollX: 0,
             scrollY: 0,
-            width: iframeDoc.body.scrollWidth,
-            height: iframeDoc.body.scrollHeight,
-            windowWidth: iframeDoc.body.scrollWidth,
-            windowHeight: iframeDoc.body.scrollHeight
+            width: targetDoc.body.scrollWidth,
+            height: targetDoc.body.scrollHeight,
+            windowWidth: targetDoc.body.scrollWidth,
+            windowHeight: targetDoc.body.scrollHeight
         });
 
         const monthNames = { 1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June', 7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December' };
@@ -3796,9 +3825,10 @@ async function downloadBalanceReportImage(scheme) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        if (typeof showToast === 'function') showToast('🖼️ Balance report image downloaded successfully!', 'success');
     } catch (error) {
         console.error('Error generating image:', error);
-        alert('इमेज बनाने में समस्या आई। कृपया रिपोर्ट प्रीव्यू पूरी तरह लोड होने के बाद दोबारा कोशिश करें।\n\nError: ' + error.message);
+        alert('इमेज बनाने में समस्या आई: ' + error.message);
     }
 }
 
