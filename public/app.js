@@ -4046,6 +4046,13 @@ async function initPendingAnalyticsPanel(reportId, scheme) {
         return;
     }
 
+    // Dynamically mount pendingAnalyticsCard into active scheme container
+    const targetScheme = scheme === 'nfsa_daterange' ? 'nfsa' : scheme;
+    const previewSection = document.getElementById(`${targetScheme}BalanceReportPreviewSection`) || document.getElementById(`${targetScheme}BalanceReportCard`);
+    if (previewSection && previewSection.parentNode) {
+        previewSection.parentNode.insertBefore(card, previewSection.nextSibling);
+    }
+
     card.style.display = 'block';
 
     // Populate filter dropdowns from already-fetched filters
