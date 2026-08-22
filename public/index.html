@@ -3605,6 +3605,14 @@ function processReports(arr, totalCount) {
     return totals;
 }
 
+function navigateToScheme(key) {
+    var navGen = document.getElementById('nav-generate');
+    if (typeof setActiveNav === 'function' && navGen) setActiveNav(navGen);
+    if (typeof showGenerate === 'function') showGenerate();
+    if (typeof switchScheme === 'function') switchScheme(key);
+}
+window.navigateToScheme = navigateToScheme;
+
 var _isDashLoading = false;
 
 async function loadDashboard() {
@@ -3672,6 +3680,146 @@ async function loadDashboard() {
 
         var upd = document.getElementById('dashLastUpdated');
         if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+        /* Scheme Cards */
+        var grid = document.getElementById('schemeCardsGrid');
+        if (grid) {
+            grid.innerHTML = Object.keys(SCHEME_META).map(function(key) {
+                var m = SCHEME_META[key]; var s = schemes[key];
+                var barW = Math.min(100, Math.round(s.pct)) + '%';
+                var periodText = getCardPeriodText(s.reports);
+                return '<div class="scheme-perf-card ' + m.tag + '" role="button" tabindex="0" onclick="navigateToScheme(\'' + key + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \') navigateToScheme(\'' + key + '\')">' +
+                  '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+                    '<span class="scheme-tag" style="background:' + m.bg + ';color:' + m.color + ';margin-bottom:0;">' + m.label + '</span>' +
+                    '<span style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">' + periodText + '</span>' +
+                  '</div>' +
+                  '<div class="scheme-pct" style="color:' + m.color + ';">' + fmtPct(s.pct) + '</div>' +
+                  '<div style="font-size:11px;color:var(--text-muted);font-weight:500;">' + s.count + ' reports · Dispatch rate</div>' +
+                  '<div class="scheme-bar-bg"><div class="scheme-bar-fill" style="width:' + barW + ';background:' + m.color + ';"></div></div>' +
+                  '<div class="scheme-stat-row">' +
+                    '<span><strong>' + fmtQt(s.allotted) + '</strong>Allotted</span>' +
+                    '<span><strong>' + fmtQt(s.dispatched) + '</strong>Dispatched</span>' +
+                    '<span><strong>' + fmtQt(s.received) + '</strong>Received</span>' +
+                  '</div></div>';
+            }).join('');
+        }
+
+        /* Comparison Bar Chart */
+        destroyChart('schemeComparison');
+        var barCanvas = document.getElementById('schemeComparisonChart');
+        if (barCanvas && typeof Chart !== 'undefined') {
+            var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+            var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+            var tickColor = isDark ? '#4a6283' : '#94a3b8';
+            var labels  = Object.keys(SCHEME_META).map(function(k){ return SCHEME_META[k].label; });
+            
+            var isPctMode = _currentChartMode === 'pct';
+            var allottedData, dispatchedData, receivedData;
+            if (isPctMode) {
+                allottedData   = [100, 100, 100, 100];
+                dispatchedData = Object.keys(schemes).map(function(k){ return Math.min(100, Math.round(schemes[k].pct)); });
+                receivedData   = Object.keys(schemes).map(function(k){
+                    var s = schemes[k];
+                    return s.allotted > 0 ? Math.min(100, Math.round((s.received / s.allotted) * 100)) : 0;
+                });
+            } else {
+                allottedData   = Object.keys(schemes).map(function(k){ return Math.round(schemes[k].allotted); });
+                dispatchedData = Object.keys(schemes).map(function(k){ return Math.round(schemes[k].dispatched); });
+                receivedData   = Object.keys(schemes).map(function(k){ return Math.round(schemes[k].received); });
+            }
+
+            _dashCharts['schemeComparison'] = new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: isPctMode ? 'Allotted (100%)' : 'Allotted',   data: allottedData,   backgroundColor: isDark ? '#556a85' : '#475569', borderRadius: 4 },
+                        { label: isPctMode ? 'Dispatched (%)'  : 'Dispatched', data: dispatchedData, backgroundColor: ['#f26b2b','#6366f1','#06b6d4','#10b981'], borderRadius: 4 },
+                        { label: isPctMode ? 'Received (%)'    : 'Received',   data: receivedData,   backgroundColor: ['rgba(242,107,43,0.4)','rgba(99,102,241,0.4)','rgba(6,182,212,0.4)','rgba(16,185,129,0.4)'], borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: {
+                        legend: { labels: { color: tickColor, font: { size: 11, family: 'Inter' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    var val = ctx.raw;
+                                    return ctx.dataset.label + ': ' + (isPctMode ? val + '%' : fmtQt(val));
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
+                        y: {
+                            grid: { color: gridColor },
+                            max: isPctMode ? 100 : undefined,
+                            ticks: {
+                                color: tickColor,
+                                font: { size: 11 },
+                                callback: function(v){ return isPctMode ? v + '%' : fmtQt(v); }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* Cache schemes for fast filtering */
+        _cachedSchemes = schemes;
+
+        /* Progress Rings */
+        var ringsGrid = document.getElementById('dashRingsGrid');
+        if (ringsGrid) {
+            var isDark2 = document.documentElement.getAttribute('data-theme') !== 'light';
+            var ringBg  = isDark2 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
+            ringsGrid.innerHTML = Object.keys(SCHEME_META).map(function(key) {
+                var m = SCHEME_META[key]; var s = schemes[key];
+                return '<div class="ring-wrap">' +
+                    '<div class="ring-canvas-wrap">' +
+                        '<canvas id="ring_' + key + '"></canvas>' +
+                        '<div class="ring-center-text">' +
+                            '<div class="ring-pct-val" style="color:' + m.color + ';">' + Math.round(s.pct) + '</div>' +
+                            '<div class="ring-pct-unit">%</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="ring-info">' +
+                        '<div class="ring-scheme-name">' + m.label + '</div>' +
+                        '<div class="ring-detail-row">Allotted <strong>' + fmtQt(s.allotted) + '</strong></div>' +
+                        '<div class="ring-detail-row">Dispatched <strong>' + fmtQt(s.dispatched) + '</strong></div>' +
+                        '<div class="ring-detail-row">Received <strong>' + fmtQt(s.received) + '</strong></div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            if (typeof Chart !== 'undefined') {
+                Object.keys(SCHEME_META).forEach(function(key) {
+                    var m = SCHEME_META[key]; var s = schemes[key];
+                    var pct = Math.min(100, Math.round(s.pct));
+                    destroyChart('ring_' + key);
+                    var rc = document.getElementById('ring_' + key);
+                    if (!rc) return;
+                    _dashCharts['ring_' + key] = new Chart(rc, {
+                        type: 'doughnut',
+                        data: {
+                            datasets: [{ data: [pct, 100 - pct], backgroundColor: [m.color, ringBg], borderWidth: 0 }]
+                        },
+                        options: { cutout: '76%', responsive: false, plugins: { legend: { display: false }, tooltip: { enabled: true } }, animation: { duration: 900 } }
+                    });
+                });
+            }
+        }
+
+        /* Transporter Leaderboard — fetch latest report insights */
+        renderTransporterLeaderboard(schemes);
+
+        /* FPS Lifting Activity comparison card */
+        updateFpsDiff(nfsaRaw, mdmRaw, icdsRaw, welfareRaw);
+
+    } catch (err) {
+        console.error('Dashboard load error:', err);
     } finally {
         _isDashLoading = false;
         if (btnRefresh) {
@@ -3679,150 +3827,6 @@ async function loadDashboard() {
             btnRefresh.innerHTML = '🔄 Refresh';
         }
     }
-
-function navigateToScheme(key) {
-    var navGen = document.getElementById('nav-generate');
-    if (typeof setActiveNav === 'function' && navGen) setActiveNav(navGen);
-    if (typeof showGenerate === 'function') showGenerate();
-    if (typeof switchScheme === 'function') switchScheme(key);
-}
-
-    /* Scheme Cards */
-    var grid = document.getElementById('schemeCardsGrid');
-    if (grid) {
-        grid.innerHTML = Object.keys(SCHEME_META).map(function(key) {
-            var m = SCHEME_META[key]; var s = schemes[key];
-            var barW = Math.min(100, Math.round(s.pct)) + '%';
-            var periodText = getCardPeriodText(s.reports);
-            return '<div class="scheme-perf-card ' + m.tag + '" role="button" tabindex="0" onclick="navigateToScheme(\'' + key + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \') navigateToScheme(\'' + key + '\')">' +
-              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-                '<span class="scheme-tag" style="background:' + m.bg + ';color:' + m.color + ';margin-bottom:0;">' + m.label + '</span>' +
-                '<span style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;">' + periodText + '</span>' +
-              '</div>' +
-              '<div class="scheme-pct" style="color:' + m.color + ';">' + fmtPct(s.pct) + '</div>' +
-              '<div style="font-size:11px;color:var(--text-muted);font-weight:500;">' + s.count + ' reports · Dispatch rate</div>' +
-              '<div class="scheme-bar-bg"><div class="scheme-bar-fill" style="width:' + barW + ';background:' + m.color + ';"></div></div>' +
-              '<div class="scheme-stat-row">' +
-                '<span><strong>' + fmtQt(s.allotted) + '</strong>Allotted</span>' +
-                '<span><strong>' + fmtQt(s.dispatched) + '</strong>Dispatched</span>' +
-                '<span><strong>' + fmtQt(s.received) + '</strong>Received</span>' +
-              '</div></div>';
-        }).join('');
-    }
-
-    /* Comparison Bar Chart */
-    destroyChart('schemeComparison');
-    var barCanvas = document.getElementById('schemeComparisonChart');
-    if (barCanvas && typeof Chart !== 'undefined') {
-        var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-        var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
-        var tickColor = isDark ? '#4a6283' : '#94a3b8';
-        var labels  = Object.keys(SCHEME_META).map(function(k){ return SCHEME_META[k].label; });
-        
-        var isPctMode = _currentChartMode === 'pct';
-        var allottedData, dispatchedData, receivedData;
-        if (isPctMode) {
-            allottedData   = [100, 100, 100, 100];
-            dispatchedData = Object.keys(schemes).map(function(k){ return Math.min(100, Math.round(schemes[k].pct)); });
-            receivedData   = Object.keys(schemes).map(function(k){
-                var s = schemes[k];
-                return s.allotted > 0 ? Math.min(100, Math.round((s.received / s.allotted) * 100)) : 0;
-            });
-        } else {
-            allottedData   = Object.keys(schemes).map(function(k){ return Math.round(schemes[k].allotted); });
-            dispatchedData = Object.keys(schemes).map(function(k){ return Math.round(schemes[k].dispatched); });
-            receivedData   = Object.keys(schemes).map(function(k){ return Math.round(schemes[k].received); });
-        }
-
-        _dashCharts['schemeComparison'] = new Chart(barCanvas, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: isPctMode ? 'Allotted (100%)' : 'Allotted',   data: allottedData,   backgroundColor: isDark ? '#556a85' : '#475569', borderRadius: 4 },
-                    { label: isPctMode ? 'Dispatched (%)'  : 'Dispatched', data: dispatchedData, backgroundColor: ['#f26b2b','#6366f1','#06b6d4','#10b981'], borderRadius: 4 },
-                    { label: isPctMode ? 'Received (%)'    : 'Received',   data: receivedData,   backgroundColor: ['rgba(242,107,43,0.4)','rgba(99,102,241,0.4)','rgba(6,182,212,0.4)','rgba(16,185,129,0.4)'], borderRadius: 4 }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: true,
-                plugins: {
-                    legend: { labels: { color: tickColor, font: { size: 11, family: 'Inter' } } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                var val = ctx.raw;
-                                return ctx.dataset.label + ': ' + (isPctMode ? val + '%' : fmtQt(val));
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
-                    y: {
-                        grid: { color: gridColor },
-                        max: isPctMode ? 100 : undefined,
-                        ticks: {
-                            color: tickColor,
-                            font: { size: 11 },
-                            callback: function(v){ return isPctMode ? v + '%' : fmtQt(v); }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    /* Cache schemes for fast filtering */
-    _cachedSchemes = schemes;
-
-    /* Progress Rings */
-    var ringsGrid = document.getElementById('dashRingsGrid');
-    if (ringsGrid) {
-        var isDark2 = document.documentElement.getAttribute('data-theme') !== 'light';
-        var ringBg  = isDark2 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
-        ringsGrid.innerHTML = Object.keys(SCHEME_META).map(function(key) {
-            var m = SCHEME_META[key]; var s = schemes[key];
-            return '<div class="ring-wrap">' +
-                '<div class="ring-canvas-wrap">' +
-                    '<canvas id="ring_' + key + '"></canvas>' +
-                    '<div class="ring-center-text">' +
-                        '<div class="ring-pct-val" style="color:' + m.color + ';">' + Math.round(s.pct) + '</div>' +
-                        '<div class="ring-pct-unit">%</div>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="ring-info">' +
-                    '<div class="ring-scheme-name">' + m.label + '</div>' +
-                    '<div class="ring-detail-row">Allotted <strong>' + fmtQt(s.allotted) + '</strong></div>' +
-                    '<div class="ring-detail-row">Dispatched <strong>' + fmtQt(s.dispatched) + '</strong></div>' +
-                    '<div class="ring-detail-row">Received <strong>' + fmtQt(s.received) + '</strong></div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-
-        if (typeof Chart !== 'undefined') {
-            Object.keys(SCHEME_META).forEach(function(key) {
-                var m = SCHEME_META[key]; var s = schemes[key];
-                var pct = Math.min(100, Math.round(s.pct));
-                destroyChart('ring_' + key);
-                var rc = document.getElementById('ring_' + key);
-                if (!rc) return;
-                _dashCharts['ring_' + key] = new Chart(rc, {
-                    type: 'doughnut',
-                    data: {
-                        datasets: [{ data: [pct, 100 - pct], backgroundColor: [m.color, ringBg], borderWidth: 0 }]
-                    },
-                    options: { cutout: '76%', responsive: false, plugins: { legend: { display: false }, tooltip: { enabled: true } }, animation: { duration: 900 } }
-                });
-            });
-        }
-    }
-
-    /* Transporter Leaderboard — fetch latest report insights */
-    renderTransporterLeaderboard(schemes);
-
-    /* FPS Lifting Activity comparison card */
-    updateFpsDiff(nfsaRaw, mdmRaw, icdsRaw, welfareRaw);
 }
 
 var _currentChartMode = 'qt';
