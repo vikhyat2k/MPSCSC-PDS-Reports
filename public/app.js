@@ -6564,3 +6564,22 @@ window.openManualCaptchaModal = openManualCaptchaModal;
 window.closeManualCaptchaModal = closeManualCaptchaModal;
 window.submitManualCaptcha = submitManualCaptcha;
 window.refreshManualCaptcha = refreshManualCaptcha;
+
+// Global exports for analytics and scheme management
+window.displayAnalytics = displayAnalytics;
+window.displayNfsaAnalytics = displayAnalytics;
+window.displayNfsaDaterangeAnalytics = displayNfsaDaterangeAnalytics;
+window.displayMDMAnalytics = displayMDMAnalytics;
+window.displayMdmAnalytics = displayMDMAnalytics;
+window.displayICDSAnalytics = displayICDSAnalytics;
+window.displayIcdsAnalytics = displayICDSAnalytics;
+window.displayWELFAREAnalytics = displayWELFAREAnalytics;
+window.displayWelfareAnalytics = displayWELFAREAnalytics;
+window.autoDisplayLatestSchemeAnalytics = autoDisplayLatestSchemeAnalytics;
+window.viewReport = viewReport;
+window.switchScheme = switchScheme;
+window.loadReports = loadReports;
+window.loadDaterangeReports = loadDaterangeReports;
+window.loadMDMReports = loadMDMReports;
+window.loadICDSReports = loadICDSReports;
+window.loadWelfareReports = loadWelfareReports;
