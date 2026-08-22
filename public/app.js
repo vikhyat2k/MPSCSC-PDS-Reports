@@ -3119,17 +3119,115 @@ async function deleteSelectedReports(scheme) {
 /**
  * Universal Table Export to Excel / CSV with UTF-8 Devanagari Hindi BOM support
  */
+function generateSchemeAnalyticsCsv(analytics, schemeName) {
+    const csv = [];
+    const monthStr = analytics.month ? `${getMonthName(analytics.month)} ${analytics.year}` : `${analytics.fromDate || ''} to ${analytics.toDate || ''}`;
+    csv.push([`"Madhya Pradesh State Civil Supplies Corporation (MPSCSC) - District Office Betul"`]);
+    csv.push([`"PDS Lifting Intelligence Report: ${(schemeName || analytics.scheme || '').toUpperCase()}"`]);
+    csv.push([`"Reporting Period: ${monthStr}"`]);
+    csv.push([`"Export Generated At: ${new Date().toLocaleString('en-IN')}"`]);
+    csv.push([]);
+
+    const m = analytics.metrics || analytics.totals || {};
+    csv.push([`"=== OVERALL SUMMARY METRICS ==="`]);
+    csv.push([`"Metric"`, `"Value"`]);
+    
+    const dispPct = m.totalDispatchPct !== undefined ? m.totalDispatchPct : (m.dispatchPercentage || 0);
+    const rcptPct = m.totalReceiptPct !== undefined ? m.totalReceiptPct : (m.receipt_percentage || 0);
+    csv.push([`"Total Dispatch %"`, `"${parseFloat(dispPct).toFixed(2)}%"`]);
+    csv.push([`"Total Receipt %"`, `"${parseFloat(rcptPct).toFixed(2)}%"`]);
+    csv.push([`"Pending Shops / Units"`, `"${m.totalShopsLeft || m.totalPendingShops || 0}"`]);
+    
+    if (m.wheatAllotted !== undefined) {
+        csv.push([`"Wheat Allotted (Qt)"`, `"${m.wheatAllotted}"`]);
+        csv.push([`"Wheat Dispatched (Qt)"`, `"${m.wheatDispatched}"`]);
+        csv.push([`"Wheat Received (Qt)"`, `"${m.wheatReceived}"`]);
+        csv.push([`"Wheat Dispatch %"`, `"${parseFloat(m.wheatDispatchPct || 0).toFixed(2)}%"`]);
+        csv.push([`"Wheat Receipt %"`, `"${parseFloat(m.wheatReceiptPct || 0).toFixed(2)}%"`]);
+    }
+    if (m.riceAllotted !== undefined) {
+        csv.push([`"Rice Allotted (Qt)"`, `"${m.riceAllotted}"`]);
+        csv.push([`"Rice Dispatched (Qt)"`, `"${m.riceDispatched}"`]);
+        csv.push([`"Rice Received (Qt)"`, `"${m.riceReceived}"`]);
+        csv.push([`"Rice Dispatch %"`, `"${parseFloat(m.riceDispatchPct || 0).toFixed(2)}%"`]);
+        csv.push([`"Rice Receipt %"`, `"${parseFloat(m.riceReceiptPct || 0).toFixed(2)}%"`]);
+    }
+    if (m.fsaltAllotted !== undefined) {
+        csv.push([`"Fortified Salt Allotted (Qt)"`, `"${m.fsaltAllotted}"`]);
+        csv.push([`"Fortified Salt Dispatched (Qt)"`, `"${m.fsaltDispatched}"`]);
+        csv.push([`"Fortified Salt Received (Qt)"`, `"${m.fsaltReceived}"`]);
+        csv.push([`"Fortified Salt Dispatch %"`, `"${parseFloat(m.fsaltDispatchPct || 0).toFixed(2)}%"`]);
+        csv.push([`"Fortified Salt Receipt %"`, `"${parseFloat(m.fsaltReceiptPct || 0).toFixed(2)}%"`]);
+    }
+    if (m.sugarAllotted !== undefined) {
+        csv.push([`"Sugar Allotted (Qt)"`, `"${m.sugarAllotted}"`]);
+        csv.push([`"Sugar Dispatched (Qt)"`, `"${m.sugarDispatched}"`]);
+        csv.push([`"Sugar Received (Qt)"`, `"${m.sugarReceived}"`]);
+        csv.push([`"Sugar Dispatch %"`, `"${parseFloat(m.sugarDispatchPct || 0).toFixed(2)}%"`]);
+    }
+    csv.push([]);
+
+    const sectors = analytics.allSectors || analytics.matrix || analytics.sectors;
+    if (Array.isArray(sectors) && sectors.length > 0) {
+        csv.push([`"=== SECTOR-WISE PERFORMANCE MATRIX ==="`]);
+        csv.push([`"S.No"`, `"Sector Name"`, `"Transporter"`, `"Allotted (Qt)"`, `"Dispatched (Qt)"`, `"Received (Qt)"`, `"Dispatch %"`, `"Receiving %"`, `"Balance (Qt)"`]);
+        sectors.forEach((s, idx) => {
+            const allot = parseFloat(s.totalAllotted || s.allotted || 0);
+            const disp = parseFloat(s.totalDispatched || s.dispatched || s.dispatch || 0);
+            const rec = parseFloat(s.totalReceived || s.received || 0);
+            const dPct = s.dispatchPercentage !== undefined ? parseFloat(s.dispatchPercentage) : (allot > 0 ? (disp / allot) * 100 : 0);
+            const rPct = s.receivingPercentage !== undefined ? parseFloat(s.receivingPercentage) : (allot > 0 ? (rec / allot) * 100 : 0);
+            const bal = s.balance !== undefined ? parseFloat(s.balance) : (allot > disp ? allot - disp : 0);
+            csv.push([
+                `"${idx + 1}"`,
+                `"${(s.name || s.sectorName || '').replace(/"/g, '""')}"`,
+                `"${(s.transporter || '-').replace(/"/g, '""')}"`,
+                `"${allot.toFixed(2)}"`,
+                `"${disp.toFixed(2)}"`,
+                `"${rec.toFixed(2)}"`,
+                `"${dPct.toFixed(2)}%"`,
+                `"${rPct.toFixed(2)}%"`,
+                `"${bal.toFixed(2)}"`
+            ]);
+        });
+    }
+
+    return '\uFEFF' + csv.map(row => row.join(',')).join('\n');
+}
+
+/**
+ * Universal Table Export to Excel / CSV with UTF-8 Devanagari Hindi BOM support
+ */
 function exportTableToExcel(target, filename) {
     let element = typeof target === 'string' ? document.getElementById(target) : target;
     if (!element) return;
+
     let table = element.tagName === 'TABLE' ? element : element.querySelector('table');
+    let rows = table ? table.querySelectorAll('tr') : [];
+    let hasBodyRows = table ? table.querySelectorAll('tbody tr').length > 0 : false;
+
+    // If no table or empty table and we have currentReportAnalytics, generate full structured CSV
+    if ((!table || !hasBodyRows || rows.length <= 1) && window.currentReportAnalytics) {
+        const schemeTag = (filename || window.currentReportAnalytics.scheme || currentScheme || 'Scheme').replace(/_Analytics/i, '');
+        const csvString = generateSchemeAnalyticsCsv(window.currentReportAnalytics, schemeTag);
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', (filename || 'Report') + '_' + new Date().toISOString().slice(0,10) + '.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        if (typeof showToast === 'function') showToast('📊 Complete Scheme Analytics exported to Excel/CSV successfully!', 'success');
+        return;
+    }
+
     if (!table) {
         if (typeof showToast === 'function') showToast('❌ No table data found to export.', 'error');
         return;
     }
 
     let csv = [];
-    const rows = table.querySelectorAll('tr');
     rows.forEach(row => {
         const cols = row.querySelectorAll('th, td');
         const rowData = [];
