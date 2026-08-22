@@ -4618,6 +4618,18 @@ async function captureDashboardSections() {
         { id: 'dashboardSection', selector: '.dash-equal-2col', name: 'Leaderboards' }
     ];
 
+    const activeSchemeSection = [
+        'analyticsSection', 'mdmAnalyticsSection', 'icdsAnalyticsSection', 
+        'welfareAnalyticsSection', 'drAnalyticsSection'
+    ].find(id => {
+        const el = document.getElementById(id);
+        return el && el.offsetParent !== null && window.getComputedStyle(el).display !== 'none';
+    });
+
+    if (activeSchemeSection) {
+        sectionSelectors.push({ id: activeSchemeSection, name: 'Scheme Analytics' });
+    }
+
     const capturedTiles = [];
     
     for (let i = 0; i < sectionSelectors.length; i++) {
