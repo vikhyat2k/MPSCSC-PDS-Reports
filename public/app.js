@@ -239,7 +239,7 @@ async function loadMessengerTransporters() {
         let transporters = [];
 
         if (analytics.allTransporters && analytics.allTransporters.length > 0) {
-            // NFSA: has a flat allTransporters array with posReceiptPct and diffPct
+            // NFSA: has a flat allTransporters array with posReceiptPct, diffPct, posDiffQty
             transporters = analytics.allTransporters;
         } else {
             // MDM / ICDS / Welfare: extract from topTransporters + bottomTransporters items
@@ -254,6 +254,9 @@ async function loadMessengerTransporters() {
                     const key = g.name;
                     if (!seen.has(key)) {
                         seen.add(key);
+                        const dSum = parseFloat(g.dispatchSum || g.dispatch || 0);
+                        const pSum = parseFloat(g.posReceiptSum || g.posReceipt || 0);
+                        const pDiff = g.posDiffQty !== undefined ? parseFloat(g.posDiffQty) : Math.max(0, parseFloat((dSum - pSum).toFixed(2)));
                         transporters.push({
                             name: g.name,
                             avgDispatch: parseFloat(g.dispatchPct || g.avgDispatch || 0),
@@ -261,7 +264,10 @@ async function loadMessengerTransporters() {
                             posReceiptPct: parseFloat(g.posReceiptPct || 0),
                             diffPct: parseFloat(g.diffPct || 0),
                             sectorCount: g.sectorCount || 1,
-                            balance: g.balance || '0.00'
+                            balance: g.balance || '0.00',
+                            posDiffQty: pDiff,
+                            dispatchSum: dSum,
+                            posReceiptSum: pSum
                         });
                     }
                 } else {
@@ -293,7 +299,7 @@ async function loadMessengerTransporters() {
 
         if (transporters.length === 0) {
             const modeLabel = filterMode === 'diff'
-                ? `कोई सेक्टर नहीं जहाँ POS Lag >${diffThreshold}% हो ✅`
+                ? `कोई सेक्टर नहीं जहाँ POS अंतर >${diffThreshold}% हो ✅`
                 : 'No transporters below average! ✅';
             listContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #475569;"><p>${modeLabel}</p></div>`;
             return;
@@ -330,9 +336,22 @@ function renderMessengerTransporterList(transporters, districtAvg, filterMode) {
         const balance = t.balance !== undefined && t.balance !== null ? t.balance : 'N/A';
         const sectorCount = t.sectorCount !== undefined ? t.sectorCount : '-';
 
+        // Calculate POS difference quantity (quantity dispatched - quantity received on POS)
+        let posDiffQty = 0;
+        if (t.posDiffQty !== undefined && t.posDiffQty !== null) {
+            posDiffQty = parseFloat(t.posDiffQty);
+        } else if (t.dispatchSum !== undefined && t.posReceiptSum !== undefined) {
+            posDiffQty = Math.max(0, parseFloat((t.dispatchSum - t.posReceiptSum).toFixed(2)));
+        } else if (t.dispatch !== undefined && t.posReceipt !== undefined) {
+            posDiffQty = Math.max(0, parseFloat((t.dispatch - t.posReceipt).toFixed(2)));
+        } else if (t.allottedSum || t.allocation) {
+            const alloc = parseFloat(t.allottedSum || t.allocation || 0);
+            posDiffQty = Math.max(0, parseFloat((diff * alloc / 100).toFixed(2)));
+        }
+
         // Diff color coding
         const diffColor = diff > 15 ? '#dc2626' : diff > 5 ? '#d97706' : '#059669';
-        const lagBadge = diff > 0 ? `<span style="font-size:11px;font-weight:700;background:${diffColor}20;color:${diffColor};border:1px solid ${diffColor}40;border-radius:6px;padding:2px 6px;">Lag: +${diff.toFixed(1)}%</span>` : '';
+        const lagBadge = diff > 0 ? `<span style="font-size:11px;font-weight:700;background:${diffColor}20;color:${diffColor};border:1px solid ${diffColor}40;border-radius:6px;padding:2px 6px;">अंतर: +${diff.toFixed(1)}%</span>` : '';
 
         const hasPOSData = t.posReceiptPct !== undefined;
         const metricsHtml = hasPOSData
@@ -354,6 +373,7 @@ function renderMessengerTransporterList(transporters, districtAvg, filterMode) {
                 data-pos="${posRate.toFixed(2)}"
                 data-diff="${diff.toFixed(2)}"
                 data-bal="${balance}"
+                data-pos-diff-qty="${posDiffQty.toFixed(2)}"
                 ${isDiffMode && isHighLag ? 'checked' : (!isDiffMode && isBelow ? 'checked' : '')}
                 style="width:18px;height:18px;accent-color:#075e54;flex-shrink:0;"
                 onchange="updateMessengerPreview()">
@@ -396,13 +416,13 @@ function updateMessengerPreview() {
     const isDiffTemplate = templateIndex >= 4;
     let checksArr = Array.from(selectedChecks);
 
-    // For POS Lag templates: exclude sectors with Lag ≤ 0% from the message
+    // For POS difference templates: exclude sectors with diff ≤ 0% from the message
     if (isDiffTemplate) {
         checksArr = checksArr.filter(cb => parseFloat(cb.getAttribute('data-diff') || 0) > 0);
     }
 
     if (checksArr.length === 0) {
-        preview.innerText = 'चुने गए सेक्टरों में POS Lag 0% है। कृपया अन्य सेक्टर चुनें।';
+        preview.innerText = 'चुने गए सेक्टरों में POS अंतर 0% है। कृपया अन्य सेक्टर चुनें।';
         return;
     }
 
@@ -413,13 +433,14 @@ function updateMessengerPreview() {
         const pos = cb.getAttribute('data-pos');
         const diff = cb.getAttribute('data-diff');
         const bal = cb.getAttribute('data-bal');
+        const posDiffQty = cb.getAttribute('data-pos-diff-qty') || cb.getAttribute('data-bal');
         if (isDiffTemplate && pos && diff) {
-            return `${index + 1}. *${name}*\n   उठाव: ${rate}% | POS प्राप्ति: ${pos}% | Lag: *+${diff}%*\n   शेष मात्रा: ${bal} Qt`;
+            return `${index + 1}. *${name}*\n   उठाव: ${rate}% | POS प्राप्ति: ${pos}% | अंतर: *+${diff}%*\n   शेष मात्रा: ${posDiffQty} Qt`;
         }
         return `${index + 1}. *${name}:* ${rate}% (शेष मात्रा: ${bal} Qt)`;
     }).join('\n');
 
-    // Update Avg Lag & POS cards (based on actually included checks)
+    // Update Avg अंतर & POS cards (based on actually included checks)
     const avgSelectedDiff = checksArr.length > 0 ? (checksArr.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-diff')) || 0), 0) / checksArr.length).toFixed(2) : '0.00';
     const avgSelectedPOS  = checksArr.length > 0 ? (checksArr.reduce((s, cb) => s + (parseFloat(cb.getAttribute('data-pos'))  || 0), 0) / checksArr.length).toFixed(2) : '0.00';
     if (document.getElementById('messengerAvgDiff')) document.getElementById('messengerAvgDiff').innerText = avgSelectedDiff + '%';
@@ -434,7 +455,7 @@ function selectAllTransporters(checked) {
     const isDiffContext = filterMode === 'diff' || templateIndex >= 4;
     document.querySelectorAll('.messenger-check').forEach(cb => {
         if (checked && isDiffContext) {
-            // In diff mode, "✓ All" only selects sectors with actual lag > 0
+            // In diff mode, "✓ All" only selects sectors with actual diff > 0
             cb.checked = parseFloat(cb.getAttribute('data-diff') || 0) > 0;
         } else {
             cb.checked = checked;
