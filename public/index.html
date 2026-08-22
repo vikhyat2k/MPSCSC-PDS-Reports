@@ -2676,7 +2676,6 @@ async function fetchStockPositionSheet() {
                 '</div>';
             }
 
-            // Negative stock alerts
             negativeItems.forEach(function(ni) {
                 insights.push(insightCard('🔴', 'Negative Stock Alert',
                     '<strong>' + ni.center + '</strong> — ' + ni.commodity + ': <strong style="color:#ef4444;">' + ni.val.toFixed(2) + ' Qt</strong>. Immediate replenishment or audit required.',
