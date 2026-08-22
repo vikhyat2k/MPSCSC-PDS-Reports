@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 22 August 2026, 14:35 IST
+> **Last Sync:** 22 August 2026, 15:55 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 22 Aug 2026 — Universal Image / PDF / Excel Export Parity Across All Schemes (ICDS, MDM, Welfare, NFSA) |
+| Last Code Change | 22 Aug 2026 — Fix Uncaught ReferenceError: navigateToScheme is not defined (Scoping & Global Export) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -734,6 +734,7 @@ Tracks what has been tested and confirmed working.
 | NFSA Single-Page 3-Column Analytical Footnote | PDF & Layout Verification | VERIFIED | 20 Aug 2026 | Replaced color legend with 3-column executive summary cards (Run rate, Transit lag, Sector alerts) in single-page A4 landscape |
 | WhatsApp POS Alert अंतर Terminology & Pending POS Quantity | UI & Logic Verification | VERIFIED | 22 Aug 2026 | Replaced Lag with अंतर in Hindi messages & badges; updated शेष मात्रा to compute Dispatch Qty − POS Receipt Qty |
 | Universal Image / PDF / Excel Export Parity Across All Schemes | UI & Export Verification | VERIFIED | 22 Aug 2026 | Enabled dynamic scheme mounting of pending analytics panel, auto-fetch HTML preview for balance/summary image exports, structured CSV generation for all scheme containers, and sub-section image/pdf buttons for ICDS & Welfare |
+| navigateToScheme Global Scoping & Window Export | UI Verification | VERIFIED | 22 Aug 2026 | Extracted navigateToScheme to top-level scope, attached to window.navigateToScheme in both index.html and app.js, and wrapped loadDashboard in proper try-finally |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -765,10 +766,29 @@ Tracks what has been tested and confirmed working.
 | ISSUE-023 | ICDS report generation stuck indefinitely at 14% due to missing dist_code input in portal depot DOM and fragile eval() | HIGH | RESOLVED | server/automation/icds_scraper.js, Technical Audit/icds_scraper.js | 17 Aug 2026 |
 | ISSUE-024 | Server startup appeared frozen/stuck for 90s due to synchronous Jimp/Tesseract/Puppeteer loading | HIGH | RESOLVED | server/automation/scraper_v2.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, server.js | 19 Aug 2026 |
 | ISSUE-025 | "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column lacked visual status color-coding to highlight anomalous differences | MEDIUM | RESOLVED | server/services/pdfGenerator.js, server/services/excelGenerator.js | 19 Aug 2026 |
+| ISSUE-026 | Uncaught ReferenceError: navigateToScheme is not defined on dashboard scheme card click | HIGH | RESOLVED | public/index.html, public/app.js | 22 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-22 | Fix ReferenceError: navigateToScheme is not defined & loadDashboard Try-Finally Scoping
+
+Files: public/index.html, public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / UI Crash Resolution
+Closes: ISSUE-026
+
+- BUG: Clicking any Scheme Performance Card or Comparison Matrix button threw `Uncaught ReferenceError: navigateToScheme is not defined`.
+- ROOT CAUSES:
+  1. `function navigateToScheme(key)` was defined locally inside `async function loadDashboard()` in `public/index.html` without assignment to `window.navigateToScheme`.
+  2. In `loadDashboard()`, the `} finally { ... }` block was closed prematurely after KPI metrics rendering (line 3681), leaving the remainder of the function (Scheme Cards, Charts, Leaderboards) executing outside the `try` block.
+- FIXES:
+  1. Extracted `navigateToScheme(key)` to the top-level script scope in `public/index.html` and explicitly attached it to `window.navigateToScheme = navigateToScheme;`.
+  2. Added redundant `window.navigateToScheme` export in `public/app.js` adjacent to `switchScheme()`.
+  3. Properly enclosed the entire dashboard rendering logic inside `loadDashboard()` within `try { ... } catch (err) { ... } finally { ... }`.
+- VERIFICATION: Verified node syntax on both `public/app.js` and all script blocks of `public/index.html` with zero syntax errors.
+
+---
 
 ### 2026-08-22 | Universal Image / PDF / Excel Export Parity Across All Schemes (ICDS, MDM, Welfare, NFSA)
 

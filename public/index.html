@@ -2234,6 +2234,15 @@ async function showComparisonView() {
 
 var DEFAULT_BETUL_STOCK_SHEET_URL = 'https://docs.google.com/spreadsheets/d/13lEnaakk6idsNkAV--RH5cr2PAiwXQEjeNEP836tRa8/edit?gid=519497993#gid=519497993';
 
+// Pre-hydrate lastStockData from localStorage immediately on startup
+try {
+    var _cachedStock = localStorage.getItem('betul_last_stock_data');
+    if (_cachedStock) window.lastStockData = JSON.parse(_cachedStock);
+} catch (e) {}
+
+var _isSyncingStockSheet = false;
+var _isRenderingShortfall = false;
+
 async function showStockPositionView() {
     var dash  = document.getElementById('dashboardSection');
     var gen   = document.getElementById('generateView');
@@ -2256,11 +2265,16 @@ async function showStockPositionView() {
     if (input && !input.value) {
         input.value = localStorage.getItem('betul_stock_sheet_url') || DEFAULT_BETUL_STOCK_SHEET_URL;
     }
+
+    // Immediately render shortfall table (with cached data if available), then fetch fresh live data
+    renderShortfallTable();
     await fetchStockPositionSheet();
-    renderShortfallTable(); // load scheme shortfall data in parallel
 }
 
 async function fetchStockPositionSheet() {
+    if (_isSyncingStockSheet) return;
+    _isSyncingStockSheet = true;
+
     var input = document.getElementById('stockSheetUrlInput');
     var statusEl = document.getElementById('stockPositionStatus');
     var summaryGrid = document.getElementById('stockSummaryGrid');
