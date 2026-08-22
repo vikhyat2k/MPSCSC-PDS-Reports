@@ -2843,6 +2843,24 @@ async function renderShortfallTable() {
     var metaLabels = document.getElementById('shortfallMetaLabels');
 
     if (!tableCont) return;
+
+    // Check localStorage cache if not yet in memory
+    if (!window.lastStockData || !window.lastStockData.icData || !window.lastStockData.icData.length) {
+        try {
+            var _cached = localStorage.getItem('betul_last_stock_data');
+            if (_cached) window.lastStockData = JSON.parse(_cached);
+        } catch (e) {}
+    }
+
+    // If still no stock data in memory, trigger background fetch of live stock sheet
+    if (!window.lastStockData || !window.lastStockData.icData || !window.lastStockData.icData.length) {
+        if (typeof fetchStockPositionSheet === 'function' && !_isSyncingStockSheet) {
+            fetchStockPositionSheet().catch(function(e) {
+                console.warn('Auto-fetch stock position error in renderShortfallTable:', e);
+            });
+        }
+    }
+
     if (statusEl) statusEl.textContent = '⏳ Fetching latest scheme reports...';
 
     try {
