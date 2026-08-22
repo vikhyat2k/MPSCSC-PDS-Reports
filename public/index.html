@@ -1644,6 +1644,13 @@
                             <div id="icdsInsightsList" class="insights-container"></div>
                         </div>
                         <div id="icdsMatrixSection" style="display:none;margin-top:20px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <h3 style="font-size:15px;margin:0;font-weight:600;color:var(--text-main);">📋 ICDS Sector-wise Matrix</h3>
+                                <div class="export-btn-group">
+                                    <button onclick="exportDashboard('jpeg','icdsMatrixSection','ICDS_Sector_Matrix')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️</button>
+                                    <button onclick="exportDashboard('pdf','icdsMatrixSection','ICDS_Sector_Matrix')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄</button>
+                                </div>
+                            </div>
                             <div class="table-container">
                                 <table class="reports-table">
                                     <thead><tr>
@@ -1671,7 +1678,13 @@
                         <div id="icdsShopsDetailSection" style="display:none;margin-top:20px;border:1px solid var(--glass-border);padding:15px;border-radius:12px;background:var(--bg-elevated);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                                 <h3 id="icdsShopsDetailTitle" style="font-size:15px;font-weight:700;color:var(--text-main);margin:0;">👶 ICDS Institutes Pending Dispatch</h3>
-                                <button onclick="toggleShopsLeftDetails()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;">✕</button>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <div class="export-btn-group">
+                                        <button onclick="exportDashboard('jpeg','icdsShopsDetailSection','Pending_Institutes')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️</button>
+                                        <button onclick="exportDashboard('pdf','icdsShopsDetailSection','Pending_Institutes')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄</button>
+                                    </div>
+                                    <button onclick="toggleShopsLeftDetails()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;">✕</button>
+                                </div>
                             </div>
                             <div id="icdsShopsDetailList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;"></div>
                         </div>
@@ -1776,6 +1789,13 @@
                             </div>
                         </div>
                         <div id="welfareMatrixSection" style="display:none;margin-top:20px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <h3 style="font-size:15px;margin:0;font-weight:600;color:var(--text-main);">📋 Welfare Sector-wise Matrix</h3>
+                                <div class="export-btn-group">
+                                    <button onclick="exportDashboard('jpeg','welfareMatrixSection','Welfare_Sector_Matrix')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️</button>
+                                    <button onclick="exportDashboard('pdf','welfareMatrixSection','Welfare_Sector_Matrix')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄</button>
+                                </div>
+                            </div>
                             <div class="table-container">
                                 <table class="reports-table">
                                     <thead><tr>
@@ -1791,7 +1811,13 @@
                         <div id="welfareShopsDetailSection" style="display:none;margin-top:20px;border:1px solid var(--glass-border);padding:15px;border-radius:12px;background:var(--bg-elevated);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                                 <h3 id="welfareShopsDetailTitle" style="font-size:15px;font-weight:700;color:var(--text-main);margin:0;">🎓 Welfare Institutes Pending Dispatch</h3>
-                                <button onclick="toggleShopsLeftDetails()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;">✕</button>
+                                <div style="display:flex;gap:8px;align-items:center;">
+                                    <div class="export-btn-group">
+                                        <button onclick="exportDashboard('jpeg','welfareShopsDetailSection','Pending_Institutes')" class="btn btn-sm btn-secondary export-btn" style="padding:4px 8px;font-size:11px;">🖼️</button>
+                                        <button onclick="exportDashboard('pdf','welfareShopsDetailSection','Pending_Institutes')" class="btn btn-sm btn-primary export-btn" style="padding:4px 8px;font-size:11px;">📄</button>
+                                    </div>
+                                    <button onclick="toggleShopsLeftDetails()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;">✕</button>
+                                </div>
                             </div>
                             <div id="welfareShopsDetailList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;"></div>
                         </div>
