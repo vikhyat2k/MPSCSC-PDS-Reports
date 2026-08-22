@@ -3557,6 +3557,11 @@ function toggleNfsaMode(mode) {
         if (document.getElementById('daterangeHistory')) {
             document.getElementById('daterangeHistory').style.display = 'none';
         }
+        const drSec = document.getElementById('drAnalyticsSection');
+        if (drSec) drSec.style.display = 'none';
+        if (window.currentReportAnalytics && window.currentReportAnalytics.scheme === 'nfsa_daterange') {
+            window.currentReportAnalytics = null;
+        }
         loadReports();
     } else {
         if (monthlyForm) monthlyForm.style.display = 'none';
@@ -3579,6 +3584,11 @@ function toggleNfsaMode(mode) {
         }
         if (document.getElementById('daterangeHistory')) {
             document.getElementById('daterangeHistory').style.display = (subActive || currentScheme !== 'nfsa') ? 'none' : 'block';
+        }
+        const nfsaSec = document.getElementById('analyticsSection');
+        if (nfsaSec) nfsaSec.style.display = 'none';
+        if (window.currentReportAnalytics && window.currentReportAnalytics.scheme === 'nfsa') {
+            window.currentReportAnalytics = null;
         }
         
         // Load and show daterange history
