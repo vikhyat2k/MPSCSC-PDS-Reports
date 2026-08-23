@@ -11,50 +11,54 @@ class NFSADaterangeExcelGenerator {
 
     async generateReport(processedResult, fromD, toD, month, year) {
         // Fallback/Parsing if not provided
+        const parseD = (d) => (d && d !== 'Start' && d !== 'End' && String(d).trim() !== '') ? String(d).trim().replace(/-/g, '/') : null;
+        fromD = parseD(fromD);
+        toD = parseD(toD);
+
         if (!month || !year) {
             if (fromD && fromD.includes('/')) {
                 const parts = fromD.split('/');
                 if (parts.length === 3) {
-                    month = month || parseInt(parts[1]);
-                    year = year || parseInt(parts[2]);
+                    month = month || parseInt(parts[1], 10);
+                    year = year || parseInt(parts[2], 10);
                 }
             }
         }
         if (!month) month = new Date().getMonth() + 1;
         if (!year) year = new Date().getFullYear();
 
+        if (!fromD) fromD = `01/${String(month).padStart(2, '0')}/${year}`;
+        if (!toD) {
+            const lastDay = new Date(year, month, 0).getDate();
+            toD = `${String(lastDay).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+        }
+
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('NFSA DateRange Monthly Report');
+        const worksheet = workbook.addWorksheet('NFSA DateRange Report');
         
         worksheet.addRow(['म०प्र० स्टेट सिविल सप्लाईज़ कार्पो लि० जिला कार्यालय बैतूल']);
-        worksheet.addRow([`NFSA DateRange NFSA (DateRange) दिनांक ${fromD} से ${toD} रेगुलर/अतिरिक्त/पोर्टेबिलिटी , आवंटन उठाव`]);
+        worksheet.addRow([`NFSA दिनांक ${fromD} से ${toD} रेगुलर/अतिरिक्त/पोर्टेबिलिटी , आवंटन उठाव`]);
         worksheet.addRow([]);
 
         worksheet.addRow([
             'क्रमांक', 'प्रदाय केंद्र का नाम', 'विकासखंड', 'कुल उचित मूल्य की दुकान', 
-            'सेक्टर का नाम व सेक्टर क्रमांक', 'मासिक आवंटन NFSA DateRange (Qt.)', 'आवंटन उठाव NFSA DateRange (Qt.)', 
-            'उठाव का प्रतिशत', 'POS मशीन में प्राप्ति (%)', 'आवंटन उठाव शेष (Qt.)', 
+            'सेक्टर का नाम व सेक्टर क्रमांक', 'आवंटन उठाव (Qt.)', 
             'परिवहनकर्ता का नाम', 'मोबाइल नंबर'
         ]);
-        worksheet.addRow([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+        worksheet.addRow([1, 2, 3, 4, 5, 6, 7, 8]);
 
         if (processedResult && processedResult.sectors) {
             let totalShops = 0;
             processedResult.sectors.forEach((sector, i) => {
                 const shopCount = sector.totalShops || (sector.shops ? sector.shops.length : 0);
                 totalShops += shopCount;
-                const bal = (sector.allocation || 0) - (sector.dispatch || 0);
                 worksheet.addRow([
                     i + 1,
                     'बैतूल',
                     sector.block || '',
                     shopCount,
                     sector.sectorName,
-                    parseFloat((sector.allocation || 0).toFixed(2)),
                     parseFloat((sector.dispatch || 0).toFixed(2)),
-                    (sector.dispatchPercentage || 0).toFixed(2) + '%',
-                    (sector.receiptPercentage || 0).toFixed(2) + '%',
-                    parseFloat(bal.toFixed(2)),
                     sector.transporter || '',
                     sector.mobileNumber || ''
                 ]);
@@ -62,14 +66,9 @@ class NFSADaterangeExcelGenerator {
 
             worksheet.addRow([]);
             const totals = processedResult.totals || {};
-            const tBal = (totals.totalAllocation || 0) - (totals.totalDispatch || 0);
             worksheet.addRow([
                 '', 'योग', '', totalShops, '',
-                parseFloat((totals.totalAllocation || 0).toFixed(2)),
                 parseFloat((totals.totalDispatch || 0).toFixed(2)),
-                (totals.dispatchPercentage || 0).toFixed(2) + '%',
-                (totals.receiptPercentage || 0).toFixed(2) + '%',
-                parseFloat(tBal.toFixed(2)),
                 '', ''
             ]);
         }
