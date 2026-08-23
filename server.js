@@ -1306,14 +1306,7 @@ app.post('/api/generate-pdf/:id', async (req, res) => {
             processedData = welfareDataProcessor.processData(rawData);
             pdfFile = await welfarePdfGenerator.generateReport(processedData, report.month, report.year);
         } else if (scheme === 'nfsa_daterange') {
-            let fromD = "Start", toD = "End";
-            // Extract from filename: NFSA_DD-MM-YYYY_to_DD-MM-YYYY_timestamp.xlsx
-            const match = report.filename.match(/NFSA_(\d{2}-\d{2}-\d{4})_to_(\d{2}-\d{2}-\d{4})/);
-            if (match) {
-                fromD = match[1].replace(/-/g, '/');
-                toD = match[2].replace(/-/g, '/');
-            }
-            
+            const { fromD, toD } = extractDateRangeDates(report, rawData);
             const rData = rawData.rawData || rawData;
             const summaryTotals = rawData.summaryTotals || null;
             const allotmentMapping = rawData.allotmentMapping || null;
@@ -3214,15 +3207,8 @@ app.post('/api/email-report', async (req, res) => {
                     const allotmentMapping = rData.allotmentMapping || null;
                     procData = daterangeProcessor.processData(actualRData, summaryTotals, allotmentMapping);
                     
-                    // Extract actual fromDate and toDate from filename for DR PDF header
-                    const match = report.filename.match(/NFSA_(\d{2}-\d{2}-\d{4})_to_(\d{2}-\d{2}-\d{4})/);
-                    let actualFromDate = "Start";
-                    let actualToDate = "End";
-                    if (match) {
-                        actualFromDate = match[1].replace(/-/g, '/');
-                        actualToDate = match[2].replace(/-/g, '/');
-                    }
-                    pdfResult = await pdfGen.generateReport(procData, actualFromDate, actualToDate);
+                    const { fromD: actualFromDate, toD: actualToDate } = extractDateRangeDates(report, rData);
+                    pdfResult = await pdfGen.generateReport(procData, actualFromDate, actualToDate, report.month, report.year);
                 } else if (repScheme === 'mdm') {
                     pdfGen = new MDMPDFGenerator();
                     procData = mdmDataProcessor.processData(rData);
@@ -3570,13 +3556,7 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
                                 const allotmentMapping = rData.allotmentMapping || null;
                                 const procData = daterangeProcessor.processData(actualRData, summaryTotals, allotmentMapping);
                                 
-                                const match = report.filename.match(/NFSA_(\d{2}-\d{2}-\d{4})_to_(\d{2}-\d{2}-\d{4})/);
-                                let actualFromDate = "Start";
-                                let actualToDate = "End";
-                                if (match) {
-                                    actualFromDate = match[1].replace(/-/g, '/');
-                                    actualToDate = match[2].replace(/-/g, '/');
-                                }
+                                const { fromD: actualFromDate, toD: actualToDate } = extractDateRangeDates(report, rData);
                                 pdfResult = await new NFSADaterangePdfGenerator().generateReport(procData, actualFromDate, actualToDate, report.month, report.year);
                             } else if (scheme === 'mdm') {
                                 const procData = mdmDataProcessor.processData(rData);
