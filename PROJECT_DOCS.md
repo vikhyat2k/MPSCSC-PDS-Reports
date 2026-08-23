@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 22 August 2026, 16:08 IST
+> **Last Sync:** 22 August 2026, 16:55 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 22 Aug 2026 — Fix Live Stock Shortfall & Surplus Table Auto-Hydration and Google Sheet Sync |
+| Last Code Change | 22 Aug 2026 — Fix Automatic Analytics Section Vanishing & Scheme Auto-Hydration Sync |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -736,6 +736,7 @@ Tracks what has been tested and confirmed working.
 | Universal Image / PDF / Excel Export Parity Across All Schemes | UI & Export Verification | VERIFIED | 22 Aug 2026 | Enabled dynamic scheme mounting of pending analytics panel, auto-fetch HTML preview for balance/summary image exports, structured CSV generation for all scheme containers, and sub-section image/pdf buttons for ICDS & Welfare |
 | navigateToScheme Global Scoping & Window Export | UI Verification | VERIFIED | 22 Aug 2026 | Extracted navigateToScheme to top-level scope, attached to window.navigateToScheme in both index.html and app.js, and wrapped loadDashboard in proper try-finally |
 | Live Stock Position & Shortfall Auto-Hydration & Sync | UI & Integration | VERIFIED | 22 Aug 2026 | Added localStorage persistent cache hydration, auto-sync on shortfall render, and automatic refresh on sheet load |
+| Scheme Analytics Auto-Hydration & View Synchronization | UI & Analytics Verification | VERIFIED | 22 Aug 2026 | Added autoDisplayLatestSchemeAnalytics helper to automatically render latest report insights across all schemes upon loading/switching tabs; synchronized view switching and added subtitle badges |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -769,10 +770,35 @@ Tracks what has been tested and confirmed working.
 | ISSUE-025 | "प्रेषित एव प्राप्त मात्रा का अंतर प्रतिशत" column lacked visual status color-coding to highlight anomalous differences | MEDIUM | RESOLVED | server/services/pdfGenerator.js, server/services/excelGenerator.js | 19 Aug 2026 |
 | ISSUE-026 | Uncaught ReferenceError: navigateToScheme is not defined on dashboard scheme card click | HIGH | RESOLVED | public/index.html, public/app.js | 22 Aug 2026 |
 | ISSUE-027 | Live Stock Position & Shortfall table rendered "Avail. Stock: — (Sheet Not Loaded)" due to missing persistent caching and auto-sync triggers | HIGH | RESOLVED | public/index.html | 22 Aug 2026 |
+| ISSUE-028 | Analytics section of every scheme vanished automatically upon tab switch, load, or return from sub-views | HIGH | RESOLVED | public/app.js, public/index.html | 22 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-22 | Fix Automatic Analytics Section Vanishing & Scheme Auto-Hydration Sync
+
+Files: public/app.js, public/index.html, PROJECT_DOCS.md
+Type: Bug Fix / Analytics UI Synchronization
+Closes: ISSUE-028
+
+- BUG: Analytics section of every scheme was vanished / hidden automatically upon loading, switching schemes, toggling modes, or returning from sub-views.
+- ROOT CAUSES:
+  1. `loadReports()`, `loadDaterangeReports()`, `loadMDMReports()`, `loadICDSReports()`, and `loadWelfareReports()` populated history tables but never rendered or unhid the scheme's analytics section for the latest report (`reports[0]`). Analytics only rendered if the user clicked "View" on a row.
+  2. `switchScheme()` did not hide inactive scheme analytics sections nor load/unhide the newly selected scheme's analytics section.
+  3. `toggleNfsaMode()` did not hide the alternate mode's analytics section.
+  4. `hideAllReportSections()` hid all analytics sections on Comparison / Stock Position view, and `showGenerate()` never restored the active scheme's analytics section.
+- FIXES:
+  1. Added `autoDisplayLatestSchemeAnalytics(scheme, mode, reports)` helper to automatically render and display the latest report's analytics dashboard across all schemes (`NFSA Monthly`, `NFSA Date Range`, `MDM`, `ICDS`, `Welfare`) and initialize balance report controls.
+  2. Integrated `autoDisplayLatestSchemeAnalytics` into all report loaders (`loadReports`, `loadDaterangeReports`, `loadMDMReports`, `loadICDSReports`, `loadWelfareReports`).
+  3. Updated `switchScheme(scheme)` to hide inactive scheme analytics sections and auto-load active scheme data with fresh analytics.
+  4. Updated `toggleNfsaMode()` to cleanly toggle between monthly and date-range analytics.
+  5. Updated `viewReport()` with an `isHistoricalView` flag to preserve historical report inspections during background silent refreshes.
+  6. Added `<h4 id="analyticsSubtitle">` and `<h4 id="drAnalyticsSubtitle">` badges to NFSA sections.
+  7. Exported all analytics display and loader functions to `window` for reliable access.
+- VERIFICATION: Verified node check with zero syntax errors. Validated scheme tab switching and automated latest analytics hydration.
+
+---
 
 ### 2026-08-22 | Fix Live Stock Position Shortfall & Surplus Table Auto-Hydration and Google Sheet Sync
 
