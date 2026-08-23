@@ -1279,6 +1279,8 @@ app.get('/api/reports/insights/:scheme', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch insights', message: error.message });
     }
+});
+
 /**
  * Helper to reliably resolve fromDate and toDate for Date Range reports
  */
