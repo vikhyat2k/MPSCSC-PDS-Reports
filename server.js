@@ -1279,7 +1279,49 @@ app.get('/api/reports/insights/:scheme', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch insights', message: error.message });
     }
-});
+/**
+ * Helper to reliably resolve fromDate and toDate for Date Range reports
+ */
+function extractDateRangeDates(report, rawData = null) {
+    let fromD = report?.from_date || report?.fromDate || null;
+    let toD = report?.to_date || report?.toDate || null;
+
+    if (!fromD || !toD) {
+        const insights = report?.insights ? (typeof report.insights === 'string' ? JSON.parse(report.insights) : report.insights) : null;
+        if (!fromD && insights?.fromDate) fromD = insights.fromDate;
+        if (!toD && insights?.toDate) toD = insights.toDate;
+    }
+
+    if (!fromD || !toD) {
+        const rData = rawData || (report?.raw_data ? (typeof report.raw_data === 'string' ? JSON.parse(report.raw_data) : report.raw_data) : null);
+        if (!fromD && rData?.fromDate) fromD = rData.fromDate;
+        if (!toD && rData?.toDate) toD = rData.toDate;
+    }
+
+    if (!fromD || !toD) {
+        const match = (report?.filename || '').match(/NFSA_(\d{2}[-\/]\d{2}[-\/]\d{4})_to_(\d{2}[-\/]\d{4})/);
+        if (match) {
+            if (!fromD) fromD = match[1].replace(/-/g, '/');
+            if (!toD) toD = match[2].replace(/-/g, '/');
+        }
+    }
+
+    const month = report?.month || new Date().getMonth() + 1;
+    const year = report?.year || new Date().getFullYear();
+    const mStr = String(month).padStart(2, '0');
+
+    const parseD = (d) => (d && d !== 'Start' && d !== 'End' && String(d).trim() !== '') ? String(d).trim().replace(/-/g, '/') : null;
+    fromD = parseD(fromD);
+    toD = parseD(toD);
+
+    if (!fromD) fromD = `01/${mStr}/${year}`;
+    if (!toD) {
+        const lastDay = new Date(year, month, 0).getDate();
+        toD = `${String(lastDay).padStart(2, '0')}/${mStr}/${year}`;
+    }
+
+    return { fromD, toD };
+}
 
 // Generate PDF from existing report
 app.post('/api/generate-pdf/:id', async (req, res) => {
