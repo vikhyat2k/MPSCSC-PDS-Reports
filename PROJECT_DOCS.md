@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 22 August 2026, 16:55 IST
+> **Last Sync:** 23 August 2026, 20:05 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 22 Aug 2026 — Fix Automatic Analytics Section Vanishing & Scheme Auto-Hydration Sync |
+| Last Code Change | 23 Aug 2026 — Fix NFSA Date Range Report Title Dates & Remove Non-Applicable Allocation/Balance Columns |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -737,6 +737,7 @@ Tracks what has been tested and confirmed working.
 | navigateToScheme Global Scoping & Window Export | UI Verification | VERIFIED | 22 Aug 2026 | Extracted navigateToScheme to top-level scope, attached to window.navigateToScheme in both index.html and app.js, and wrapped loadDashboard in proper try-finally |
 | Live Stock Position & Shortfall Auto-Hydration & Sync | UI & Integration | VERIFIED | 22 Aug 2026 | Added localStorage persistent cache hydration, auto-sync on shortfall render, and automatic refresh on sheet load |
 | Scheme Analytics Auto-Hydration & View Synchronization | UI & Analytics Verification | VERIFIED | 22 Aug 2026 | Added autoDisplayLatestSchemeAnalytics helper to automatically render latest report insights across all schemes upon loading/switching tabs; synchronized view switching and added subtitle badges |
+| NFSA Date Range 8-Column Layout & Title Date Resolution | PDF & Excel Verification | VERIFIED | 23 Aug 2026 | Fixed literal 'Start' to 'End' title dates via extractDateRangeDates, cleaned title phrasing, removed 4 non-applicable allocation/balance columns, and verified 8-column layout in PDF & Excel |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -771,10 +772,37 @@ Tracks what has been tested and confirmed working.
 | ISSUE-026 | Uncaught ReferenceError: navigateToScheme is not defined on dashboard scheme card click | HIGH | RESOLVED | public/index.html, public/app.js | 22 Aug 2026 |
 | ISSUE-027 | Live Stock Position & Shortfall table rendered "Avail. Stock: — (Sheet Not Loaded)" due to missing persistent caching and auto-sync triggers | HIGH | RESOLVED | public/index.html | 22 Aug 2026 |
 | ISSUE-028 | Analytics section of every scheme vanished automatically upon tab switch, load, or return from sub-views | HIGH | RESOLVED | public/app.js, public/index.html | 22 Aug 2026 |
+| ISSUE-029 | NFSA Date Range PDF & Excel reports printed literal 'Start' and 'End' dates in title, duplicated title phrasing, and contained non-applicable allocation, %, and balance columns | MEDIUM | RESOLVED | server/services/nfsaDaterangePdfGenerator.js, server/services/nfsaDaterangeExcelGenerator.js, server.js | 23 Aug 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-08-23 | Fix NFSA Date Range Report Title Dates & Remove Non-Applicable Allocation/Balance Columns
+
+Files: server/services/nfsaDaterangePdfGenerator.js, server/services/nfsaDaterangeExcelGenerator.js, server.js, PROJECT_DOCS.md
+Type: Bug Fix / Export Layout & Date Formatting Parity
+Closes: ISSUE-029
+
+- USER REQUIREMENT:
+  1. Fix the header title in NFSA Date Range reports where dates appeared as literal "Start" and "End" with duplicated prefix ("NFSA DateRange NFSA (DateRange) दिनांक Start से End...").
+  2. Remove the 4 non-applicable columns: "मासिक आवंटन NFSA DateRange (Qt.)", "उठाव का प्रतिशत", "POS मशीन में प्राप्ति (%)", and "आवंटन उठाव शेष (Qt.)".
+- ROOT CAUSES:
+  1. `server.js` attempted to extract `fromD` and `toD` using a strict regex against `report.filename` (`NFSA_(\d{2}-\d{2}-\d{4})_to_...`), which failed on actual generated filenames (`NFSA DateRange_Report_Month_Year_UUID.xlsx`), leaving `fromD="Start"` and `toD="End"`.
+  2. Title template was hardcoded with duplicate phrasing `NFSA DateRange NFSA (DateRange)...`.
+  3. `nfsaDaterangePdfGenerator.js` and `nfsaDaterangeExcelGenerator.js` contained columns for monthly allocation, dispatch %, POS receipt %, and remaining balance, which are not applicable for arbitrary date ranges and produced misleading `0.00` and negative balance figures.
+- FIXES:
+  1. Added `extractDateRangeDates(report, rawData)` helper in `server.js` to reliably resolve `from_date` and `to_date` from database records, insights, and raw data before applying clean date fallbacks.
+  2. Standardized report title in `nfsaDaterangePdfGenerator.js` and `nfsaDaterangeExcelGenerator.js` to `NFSA दिनांक ${fromD} से ${toD} रेगुलर/अतिरिक्त/पोर्टेबिलिटी , आवंटन उठाव`.
+  3. Removed the 4 non-applicable columns and updated both generators to an 8-column layout:
+     `['क्रमांक', 'प्रदाय केंद्र का नाम', 'विकासखंड', 'कुल उचित मूल्य की दुकान', 'सेक्टर का नाम व सेक्टर क्रमांक', 'आवंटन उठाव (Qt.)', 'परिवहनकर्ता का नाम', 'मोबाइल नंबर']`
+     with subheader `[1, 2, 3, 4, 5, 6, 7, 8]`, balanced `<colgroup>` widths, and an aligned totals row.
+  4. Updated date resolution in `server.js` across single PDF generation (`/api/generate-pdf/:id`), email attachments, and background task PDF generation.
+- VERIFICATION:
+  - Verified unit test generation for both Excel and PDF generators with real sample sector data.
+  - Verified all existing scheme test suites (`test-daterange-analytics.js`, `test-all-schemes-receipt-pct.js`) pass with 0 errors.
+
+---
 
 ### 2026-08-22 | Fix Automatic Analytics Section Vanishing & Scheme Auto-Hydration Sync
 
