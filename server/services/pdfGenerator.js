@@ -224,7 +224,25 @@ class PDFGenerator {
 
         if (processedData && processedData.sectors) {
             let totalShops = 0;
-            processedData.sectors.forEach((sector, i) => {
+
+            // Pre-calculate consecutive row spans for Column 2 (प्रदाय केंद्र का नाम)
+            const sectors = processedData.sectors || [];
+            const issueCenterSpans = [];
+            let sIdx = 0;
+            while (sIdx < sectors.length) {
+                const centerVal = sectors[sIdx].block || 'बैतूल';
+                let spanCount = 1;
+                while (
+                    sIdx + spanCount < sectors.length &&
+                    (sectors[sIdx + spanCount].block || 'बैतूल') === centerVal
+                ) {
+                    spanCount++;
+                }
+                issueCenterSpans.push({ startIndex: sIdx, count: spanCount, val: centerVal });
+                sIdx += spanCount;
+            }
+
+            sectors.forEach((sector, i) => {
                 const shopCount = sector.totalShops || (sector.shops ? sector.shops.length : 0);
                 totalShops += shopCount;
                 const bal = (sector.allocation || 0) - (sector.dispatch || 0);
@@ -234,10 +252,17 @@ class PDFGenerator {
                     ? sector.dispatchReceiptDiffPercentage 
                     : (dispatchPct - receiptPct);
                 const diffBadge = getDiffPctBadge(diffPct);
+
+                // Column 2: Merged Issue Center cell (rendered only on first row of span)
+                const span = issueCenterSpans.find(s => s.startIndex === i);
+                const col2Html = span 
+                    ? `<td rowspan="${span.count}" style="vertical-align: middle; font-weight: bold; background: #ffffff;">${span.val}</td>` 
+                    : '';
+
                 htmlContent += `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${sector.block || 'बैतूल'}</td>
+                        ${col2Html}
                         <td>${sector.block || ''}</td>
                         <td>${shopCount}</td>
                         <td>${sector.sectorName || ''}</td>
