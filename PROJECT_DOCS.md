@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 23 August 2026, 20:05 IST
+> **Last Sync:** 17 September 2026, 11:25 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 23 Aug 2026 — Fix NFSA Date Range Report Title Dates & Remove Non-Applicable Allocation/Balance Columns |
+| Last Code Change | 17 Sep 2026 — Enhanced NFSA PDF Footnote Font Size, Card Proportions & Deduplicated Sector Names |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -738,6 +738,7 @@ Tracks what has been tested and confirmed working.
 | Live Stock Position & Shortfall Auto-Hydration & Sync | UI & Integration | VERIFIED | 22 Aug 2026 | Added localStorage persistent cache hydration, auto-sync on shortfall render, and automatic refresh on sheet load |
 | Scheme Analytics Auto-Hydration & View Synchronization | UI & Analytics Verification | VERIFIED | 22 Aug 2026 | Added autoDisplayLatestSchemeAnalytics helper to automatically render latest report insights across all schemes upon loading/switching tabs; synchronized view switching and added subtitle badges |
 | NFSA Date Range 8-Column Layout & Title Date Resolution | PDF & Excel Verification | VERIFIED | 23 Aug 2026 | Fixed literal 'Start' to 'End' title dates via extractDateRangeDates, cleaned title phrasing, removed 4 non-applicable allocation/balance columns, and verified 8-column layout in PDF & Excel |
+| NFSA PDF Footnote Font Size & Proportions Enhancement | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Increased footnote font size (11.5px/12.5px), enlarged padding (6px 9px), optimized card flex ratios (1.05 / 0.95 / 1.25), deduplicated below-avg sector names, and verified single-page A4 landscape layout |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -777,6 +778,30 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-17 | Enhanced NFSA PDF Footnote Font Size, Card Proportions & Deduplicated Sector Names
+
+Files: server/services/pdfGenerator.js, PROJECT_DOCS.md
+Type: Improvement / PDF Layout & Legibility
+Closes: N/A
+
+- USER REQUIREMENT:
+  "you can increase the font size as there is plenty of space available at bottom of the page" (addressing the 3-column executive summary analytical footnote in the NFSA PDF report).
+- ROOT CAUSE / CONTEXT:
+  The 3 executive summary cards (`.analytics-card`) at the bottom of the NFSA report had been styled with a compact 9.5px font size (10px for titles) and 4px padding to guarantee single-page fit. While the 22-sector table left ~90px of whitespace at the bottom of the A4 landscape sheet, the footnote text was noticeably smaller than the main table font (12px). Additionally, Card 3's list of below-average sectors contained repeated block names ("आठनेर, आठनेर, प्रभातपटटन, प्रभातपटटन, मुलताई, मुलताई...").
+- CHANGES IMPLEMENTED:
+  1. **server/services/pdfGenerator.js**:
+     - Increased card body font size from `9.5px` to `11.5px` (+21%) with `1.4` line height.
+     - Increased card title font size from `10px` to `12.5px` (+25%) with prominent `1.5px` divider and `5px` gap.
+     - Increased card internal padding from `4px 6px` to `6px 9px` and top margin from `5px` to `8px`.
+     - Optimized flex distribution across the 3 cards: Card 1 (`flex: 1.05`), Card 2 (`flex: 0.95`), Card 3 (`flex: 1.25`) to provide extra horizontal width for sector lists and transporter alerts without clipping.
+     - Extracted `generateHtml(processedData, month, year)` as a modular template method for clean testing and separation of concerns.
+     - Deduplicated sector block names in Card 3 using `[...new Set(belowAvgSectors.map(s => shortName(s.sectorName)))].join(', ')` eliminating redundant duplicate names.
+  2. **Server Daemon Reload**:
+     - Restarted Node.js server daemon (`PID 12476`) on port 3000 to ensure live web exports immediately deliver the updated PDF layout.
+- VERIFICATION:
+  - Verified with real 22-sector database data: strictly renders on `1 of 1` page in A4 landscape.
+  - Inspected high-resolution Puppeteer viewport screenshot: all 3 cards render crisply with high legibility, comfortable padding, balanced spacing, and zero page-overflow.
 
 ### 2026-08-23 | Fix NFSA Date Range Report Title Dates & Remove Non-Applicable Allocation/Balance Columns
 
