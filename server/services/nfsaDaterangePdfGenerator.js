@@ -119,6 +119,22 @@ class NFSADaterangePdfGenerator {
                 sIdx += spanCount;
             }
 
+            // Pre-calculate consecutive row spans for Column 3 (विकासखंड)
+            const blockSpans = [];
+            let bIdx = 0;
+            while (bIdx < sectors.length) {
+                const blockVal = sectors[bIdx].block || '';
+                let spanCount = 1;
+                while (
+                    bIdx + spanCount < sectors.length &&
+                    (sectors[bIdx + spanCount].block || '') === blockVal
+                ) {
+                    spanCount++;
+                }
+                blockSpans.push({ startIndex: bIdx, count: spanCount, val: blockVal });
+                bIdx += spanCount;
+            }
+
             sectors.forEach((sector, i) => {
                 const shopCount = sector.totalShops || (sector.shops ? sector.shops.length : 0);
                 totalShops += shopCount;
@@ -129,11 +145,17 @@ class NFSADaterangePdfGenerator {
                     ? `<td rowspan="${span.count}" style="vertical-align: middle; font-weight: bold; background: #ffffff;">${span.val}</td>` 
                     : '';
 
+                // Column 3: Merged Block cell (rendered only on first row of span)
+                const bSpan = blockSpans.find(s => s.startIndex === i);
+                const col3Html = bSpan 
+                    ? `<td rowspan="${bSpan.count}" style="vertical-align: middle; background: #ffffff;">${bSpan.val}</td>` 
+                    : '';
+
                 htmlContent += `
                     <tr>
                         <td>${i + 1}</td>
                         ${col2Html}
-                        <td>${sector.block || ''}</td>
+                        ${col3Html}
                         <td>${shopCount}</td>
                         <td>${sector.sectorName || ''}</td>
                         <td>${(sector.dispatch || 0).toFixed(2)}</td>
