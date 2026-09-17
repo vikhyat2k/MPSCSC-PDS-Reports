@@ -9,7 +9,7 @@ class PDFGenerator {
         return months[parseInt(month) - 1] || month;
     }
 
-    async generateReport(processedData, month, year) {
+    generateHtml(processedData, month, year) {
         const monthName = this.getMonthNameHindi(month);
         const dateStr = new Date().toLocaleDateString('en-GB');
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
@@ -130,7 +130,6 @@ class PDFGenerator {
                     width: 100%;
                 }
                 .analytics-card {
-                    flex: 1;
                     background: #f8fafc;
                     border: 1px solid #94a3b8;
                     border-radius: 4px;
@@ -138,6 +137,9 @@ class PDFGenerator {
                     font-size: 11.5px;
                     line-height: 1.4;
                 }
+                .analytics-card:nth-child(1) { flex: 1.05; }
+                .analytics-card:nth-child(2) { flex: 0.95; }
+                .analytics-card:nth-child(3) { flex: 1.25; }
                 .analytics-card-title {
                     font-weight: bold;
                     color: #0f172a;
@@ -369,7 +371,7 @@ class PDFGenerator {
                 <div class="analytics-card">
                     <div class="analytics-card-title">🔴 औसत से निम्न उठाव सेक्टर (जिला औसत: ${districtAvgDisp.toFixed(1)}%)</div>
                     <div class="analytics-card-item">• कुल उठाव: <b>${(parseFloat(totalDispatchPct) || 0).toFixed(2)}%</b> | शेष: <b>${tBal.toFixed(0)} Qt.</b> | दर: <b>${requiredDailyRate} Qt./दिन</b> (शेष दिन: ${remainingDays})</div>
-                    <div class="analytics-card-item">• औसत से कम: <b style="color:${belowAvgSectors.length > 0 ? '#b91c1c' : '#15803d'}">${belowAvgSectors.length} सेक्टर</b>${belowAvgSectors.length > 0 ? ' — ' + belowAvgSectors.map(s => shortName(s.sectorName)).join(', ') : ' (कोई नहीं ✓)'}</div>
+                    <div class="analytics-card-item">• औसत से कम: <b style="color:${belowAvgSectors.length > 0 ? '#b91c1c' : '#15803d'}">${belowAvgSectors.length} सेक्टर</b>${belowAvgSectors.length > 0 ? ' — ' + [...new Set(belowAvgSectors.map(s => shortName(s.sectorName)))].join(', ') : ' (कोई नहीं ✓)'}</div>
                     <div class="analytics-card-item">• पूर्ण (100%): <b style="color:#15803d">${sectorsCompleted}/${sectorList.length}</b> सेक्टर | कुल दुकानें: <b>${totalShops}</b></div>
                 </div>
             </div>
@@ -385,6 +387,12 @@ class PDFGenerator {
         </body>
         </html>
         `;
+
+        return htmlContent;
+    }
+
+    async generateReport(processedData, month, year) {
+        const htmlContent = this.generateHtml(processedData, month, year);
 
         const browser = await puppeteer.launch({
             headless: 'new',
