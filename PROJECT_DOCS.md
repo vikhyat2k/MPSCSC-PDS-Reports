@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 17 September 2026, 11:25 IST
+> **Last Sync:** 17 September 2026, 16:20 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 17 Sep 2026 — Enhanced NFSA PDF Footnote Font Size, Card Proportions & Deduplicated Sector Names |
+| Last Code Change | 17 Sep 2026 — Merged Identical Issue Centers with Rowspan in NFSA PDF & Fixed Excel Issue Center Column |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -739,6 +739,7 @@ Tracks what has been tested and confirmed working.
 | Scheme Analytics Auto-Hydration & View Synchronization | UI & Analytics Verification | VERIFIED | 22 Aug 2026 | Added autoDisplayLatestSchemeAnalytics helper to automatically render latest report insights across all schemes upon loading/switching tabs; synchronized view switching and added subtitle badges |
 | NFSA Date Range 8-Column Layout & Title Date Resolution | PDF & Excel Verification | VERIFIED | 23 Aug 2026 | Fixed literal 'Start' to 'End' title dates via extractDateRangeDates, cleaned title phrasing, removed 4 non-applicable allocation/balance columns, and verified 8-column layout in PDF & Excel |
 | NFSA PDF Footnote Font Size & Proportions Enhancement | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Increased footnote font size (11.5px/12.5px), enlarged padding (6px 9px), optimized card flex ratios (1.05 / 0.95 / 1.25), deduplicated below-avg sector names, and verified single-page A4 landscape layout |
+| NFSA PDF Merged Issue Centers (rowspan) | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Merged consecutive matching issue centers under 'प्रदाय केंद्र का नाम' column using rowspan, with vertically centered bold text and clean single-page A4 landscape layout; fixed hardcoded issue center column in Excel export |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -778,6 +779,30 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-17 | Merged Identical Issue Centers with Rowspan in NFSA PDF & Fixed Excel Issue Center Column
+
+Files: server/services/pdfGenerator.js, server/services/nfsaDaterangePdfGenerator.js, server/services/excelGenerator.js, PROJECT_DOCS.md
+Type: Improvement / PDF & Excel Table Layout Standardization
+Closes: N/A
+
+- USER REQUIREMENT:
+  "under प्रदाय केंद्र का नाम column can same प्रदाय केंद्र merged togther?"
+- MOTIVATION & SOLUTION:
+  In the NFSA report table, the Issue Center name (Column 2: `प्रदाय केंद्र का नाम`) was repeated on every row (e.g., "बैतूल" repeated 3 times, "शाहपुर" repeated 2 times, "घोडाडोंगरी" repeated 3 times, etc.). Merging consecutive rows sharing the same Issue Center vertically using `rowspan` streamlines the layout, reduces visual clutter, and matches standard state-level administrative reporting standards.
+- CHANGES IMPLEMENTED:
+  1. **server/services/pdfGenerator.js**:
+     - Pre-calculated spans for consecutive identical Issue Centers (`issueCenterSpans`).
+     - Replaced repeating `<td>` cells with vertically centered, bold, white-background `<td rowspan="${span.count}">` on the first row of each group.
+  2. **server/services/nfsaDaterangePdfGenerator.js**:
+     - Applied identical `rowspan` pre-calculation and rendering logic across NFSA Date Range PDF reports.
+  3. **server/services/excelGenerator.js**:
+     - Fixed hardcoded `'बैतूल'` string on row 73 to dynamic `sector.block || 'बैतूल'`, ensuring all 22 sectors output their true Issue Center name in Excel downloads.
+  4. **Server Daemon Reload**:
+     - Restarted Node.js server daemon (`PID: 8`) on port 3000 to ensure live exports immediately deliver the merged layout.
+- VERIFICATION:
+  - Generated full 22-sector PDF and confirmed strict `1 of 1` single-page A4 landscape layout.
+  - Inspected high-resolution visual screenshot confirming clean vertical alignment and professional presentation.
 
 ### 2026-09-17 | Enhanced NFSA PDF Footnote Font Size, Card Proportions & Deduplicated Sector Names
 
