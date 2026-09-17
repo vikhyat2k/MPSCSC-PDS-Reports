@@ -123,9 +123,9 @@ class PDFGenerator {
 
                 /* Executive Summary Analytical Footnote Strip */
                 .analytics-footer-strip {
-                    margin-top: 5px;
+                    margin-top: 8px;
                     display: flex;
-                    gap: 8px;
+                    gap: 10px;
                     justify-content: space-between;
                     width: 100%;
                 }
@@ -134,27 +134,27 @@ class PDFGenerator {
                     background: #f8fafc;
                     border: 1px solid #94a3b8;
                     border-radius: 4px;
-                    padding: 4px 6px;
-                    font-size: 9.5px;
-                    line-height: 1.35;
+                    padding: 6px 9px;
+                    font-size: 11.5px;
+                    line-height: 1.4;
                 }
                 .analytics-card-title {
                     font-weight: bold;
                     color: #0f172a;
-                    border-bottom: 1px solid #cbd5e1;
-                    padding-bottom: 2px;
-                    margin-bottom: 3px;
-                    font-size: 10px;
+                    border-bottom: 1.5px solid #cbd5e1;
+                    padding-bottom: 3px;
+                    margin-bottom: 4px;
+                    font-size: 12.5px;
                     display: flex;
                     align-items: center;
-                    gap: 4px;
+                    gap: 5px;
                 }
                 .analytics-card-item {
                     color: #334155;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    margin-bottom: 1px;
+                    margin-bottom: 2px;
                 }
             </style>
         </head>
