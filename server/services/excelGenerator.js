@@ -70,7 +70,7 @@ class ExcelGenerator {
                 const diffStyle = getExcelDiffStyle(diffPct);
                 const row = worksheet.addRow([
                     i + 1,
-                    'बैतूल',
+                    sector.block || 'बैतूल',
                     sector.block || '',
                     shopCount,
                     sector.sectorName,
