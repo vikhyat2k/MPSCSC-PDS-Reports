@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 17 September 2026, 16:20 IST
+> **Last Sync:** 17 September 2026, 16:22 IST
 
 ---
 
@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 11 |
 | Pending Milestones | 0 |
-| Last Code Change | 17 Sep 2026 — Merged Identical Issue Centers with Rowspan in NFSA PDF & Fixed Excel Issue Center Column |
+| Last Code Change | 17 Sep 2026 — Merged विकासखंड (Block) Column with Rowspan in NFSA Monthly & Date Range PDF Reports |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -740,6 +740,7 @@ Tracks what has been tested and confirmed working.
 | NFSA Date Range 8-Column Layout & Title Date Resolution | PDF & Excel Verification | VERIFIED | 23 Aug 2026 | Fixed literal 'Start' to 'End' title dates via extractDateRangeDates, cleaned title phrasing, removed 4 non-applicable allocation/balance columns, and verified 8-column layout in PDF & Excel |
 | NFSA PDF Footnote Font Size & Proportions Enhancement | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Increased footnote font size (11.5px/12.5px), enlarged padding (6px 9px), optimized card flex ratios (1.05 / 0.95 / 1.25), deduplicated below-avg sector names, and verified single-page A4 landscape layout |
 | NFSA PDF Merged Issue Centers (rowspan) | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Merged consecutive matching issue centers under 'प्रदाय केंद्र का नाम' column using rowspan, with vertically centered bold text and clean single-page A4 landscape layout; fixed hardcoded issue center column in Excel export |
+| NFSA PDF Merged Block Column (rowspan) | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Merged consecutive matching blocks under 'विकासखंड' column using rowspan alongside 'प्रदाय केंद्र का नाम', strictly preserving single-page A4 landscape layout |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -780,7 +781,24 @@ Tracks what has been tested and confirmed working.
 
 ## 20. CHANGE LOG (DATEWISE)
 
-### 2026-09-17 | Merged Identical Issue Centers with Rowspan in NFSA PDF & Fixed Excel Issue Center Column
+### 2026-09-17 | Merged विकासखंड (Block) Column with Rowspan in NFSA Monthly & Date Range PDF Reports
+
+Files: server/services/pdfGenerator.js, server/services/nfsaDaterangePdfGenerator.js, PROJECT_DOCS.md
+Type: Improvement / PDF Layout Harmonization
+Closes: N/A
+
+- USER REQUIREMENT:
+  "विकासखंड column to be merged in the same way"
+- IMPLEMENTATION:
+  1. **server/services/pdfGenerator.js**:
+     - Added `blockSpans` pre-calculation to find consecutive identical block names across sectors.
+     - Merged consecutive cells in Column 3 (`विकासखंड`) using `<td rowspan="${bSpan.count}" style="vertical-align: middle; background: #ffffff;">`, matching the Column 2 Issue Center formatting.
+  2. **server/services/nfsaDaterangePdfGenerator.js**:
+     - Applied identical `blockSpans` pre-calculation and `rowspan` rendering in Date Range PDF generator.
+  3. **Server Daemon Reload**:
+     - Restarted Node.js server daemon (`PID: 11008`) on port 3000 to serve the updated PDF layout immediately.
+- VERIFICATION:
+  - Verified with full 22-sector report: both Column 2 and Column 3 cleanly merge consecutive cells while maintaining strict `1 of 1` single-page A4 landscape layout.
 
 Files: server/services/pdfGenerator.js, server/services/nfsaDaterangePdfGenerator.js, server/services/excelGenerator.js, PROJECT_DOCS.md
 Type: Improvement / PDF & Excel Table Layout Standardization
