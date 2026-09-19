@@ -96,6 +96,77 @@ const cleanupOrphanedBrowsers = () => {
 // Run cleanup on startup
 cleanupOrphanedBrowsers();
 
+/**
+ * Clean temporary files older than maxAgeMs (default: 24h) from tmp/ directory (OPS-04)
+ */
+const cleanTempFiles = async (maxAgeMs = 24 * 60 * 60 * 1000) => {
+    try {
+        const tmpDir = path.join(__dirname, 'tmp');
+        if (!fs.existsSync(tmpDir)) return;
+        const files = await fs.promises.readdir(tmpDir);
+        const now = Date.now();
+        let cleaned = 0;
+        for (const file of files) {
+            const filePath = path.join(tmpDir, file);
+            try {
+                const stat = await fs.promises.stat(filePath);
+                if (stat.isFile()) {
+                    const isDebugOrCaptcha = file.startsWith('captcha_') || file.startsWith('debug_');
+                    const threshold = isDebugOrCaptcha ? (60 * 60 * 1000) : maxAgeMs;
+                    if (now - stat.mtimeMs > threshold) {
+                        await fs.promises.unlink(filePath);
+                        cleaned++;
+                    }
+                }
+            } catch (fileErr) {}
+        }
+        if (cleaned > 0) console.log(`🧹 [TEMP CLEANER] Cleaned up ${cleaned} stale temporary file(s) from tmp/.`);
+    } catch (err) {
+        console.warn('⚠️ [TEMP CLEANER] Error during temp file cleanup:', err.message);
+    }
+};
+cleanTempFiles();
+setInterval(cleanTempFiles, 24 * 60 * 60 * 1000).unref();
+
+/**
+ * Server-Side Input Validation Helpers (VAL-01 / ISSUE-006 / T5)
+ */
+function validateMonthYear(month, year) {
+    const m = parseInt(month, 10);
+    const y = parseInt(year, 10);
+    if (!month || !year || isNaN(m) || isNaN(y)) {
+        return { valid: false, error: 'Month and year are required and must be valid numbers.' };
+    }
+    if (m < 1 || m > 12) {
+        return { valid: false, error: 'Invalid month. Month must be an integer between 1 and 12.' };
+    }
+    if (y < 2020 || y > 2035) {
+        return { valid: false, error: 'Invalid year. Year must be between 2020 and 2035.' };
+    }
+    return { valid: true, month: m, year: y };
+}
+
+function validateDateRange(fromDate, toDate) {
+    if (!fromDate || !toDate) {
+        return { valid: false, error: 'Both fromDate and toDate are required for date-range reports.' };
+    }
+    const parse = (d) => {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return new Date(d);
+        const parts = String(d).split(/[-/]/);
+        if (parts.length === 3 && parts[2].length === 4) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        return new Date(d);
+    };
+    const d1 = parse(fromDate);
+    const d2 = parse(toDate);
+    if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
+        return { valid: false, error: 'Invalid date format provided for date range.' };
+    }
+    if (d1 > d2) {
+        return { valid: false, error: 'From Date cannot be later than To Date.' };
+    }
+    return { valid: true };
+}
+
 // Global state for active report generations
 const activeRequests = new Map();
 const activeScrapers = new Map(); // Track actual browser instances for termination
@@ -152,6 +223,15 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+
+// Security Defensive Headers (SEC-04)
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+});
 
 // ─────────────────────────────────────────────
 // SECURITY GATEKEEPER
@@ -343,6 +423,10 @@ app.get('/api/status', async (req, res) => {
 app.post('/api/generate-report', async (req, res) => {
     if (!checkConcurrencyLimit(res)) return;
     const { month, year } = req.body;
+    const val = validateMonthYear(month, year);
+    if (!val.valid) {
+        return res.status(400).json({ error: val.error });
+    }
     const requestId = `nfsa_${Date.now()}`;
     
     console.log(`\n⚡ [REPORT] Generation Request: Month=${month}, Year=${year} [ID: ${requestId}]`);
@@ -367,12 +451,6 @@ app.post('/api/generate-report', async (req, res) => {
     }, 20 * 60 * 1000);
 
     try {
-        if (!month || !year) {
-            return res.status(400).json({
-                error: 'Month and year are required'
-            });
-        }
-
         // Track request
         activeRequests.set(requestId, {
             status: 'initializing',
@@ -1001,6 +1079,11 @@ function computeNFSADaterangeAnalytics(processedResult, fromDate, toDate, allotm
 app.post('/api/generate-nfsa-daterange-report', async (req, res) => {
     if (!checkConcurrencyLimit(res)) return;
     const { month, year, fromDate, toDate, headless } = req.body;
+    const valMY = validateMonthYear(month, year);
+    if (!valMY.valid) return res.status(400).json({ error: valMY.error });
+    const valDR = validateDateRange(fromDate, toDate);
+    if (!valDR.valid) return res.status(400).json({ error: valDR.error });
+
     console.log(`\n⚡ [DATE-RANGE] Generation Request: ${fromDate} to ${toDate}`);
     const requestId = Date.now().toString();
 
@@ -1016,10 +1099,6 @@ app.post('/api/generate-nfsa-daterange-report', async (req, res) => {
             }
         }
     }, 20 * 60 * 1000);
-
-    if (!month || !year || !fromDate || !toDate) {
-        return res.status(400).json({ error: 'Month, year, fromDate, and toDate are required' });
-    }
 
     try {
         activeRequests.set(requestId, { status: 'initializing', progress: 0, startTime: Date.now() });
@@ -2155,6 +2234,9 @@ function computeMDMAnalytics(processedResult) {
 app.post('/api/generate-mdm-report', async (req, res) => {
     if (!checkConcurrencyLimit(res)) return;
     const { month, year, headless } = req.body;
+    const val = validateMonthYear(month, year);
+    if (!val.valid) return res.status(400).json({ error: val.error });
+
     console.log(`\n⚡ [MDM] Generation Request: Month=${month}, Year=${year}`);
     const requestId = `mdm_${Date.now()}`;
 
@@ -2170,10 +2252,6 @@ app.post('/api/generate-mdm-report', async (req, res) => {
             }
         }
     }, 10 * 60 * 1000);
-
-    if (!month || !year) {
-        return res.status(400).json({ error: 'Month and year are required' });
-    }
 
     try {
         activeRequests.set(requestId, { status: 'initializing', progress: 0, startTime: Date.now(), scheme: 'mdm' });
@@ -2425,6 +2503,9 @@ function computeICDSAnalytics(processedResult) {
 app.post('/api/generate-icds-report', async (req, res) => {
     if (!checkConcurrencyLimit(res)) return;
     const { month, year, headless } = req.body;
+    const val = validateMonthYear(month, year);
+    if (!val.valid) return res.status(400).json({ error: val.error });
+
     const requestId = `icds_${Date.now()}`;
 
     // Global Hang Safeguard (15m)
@@ -2678,6 +2759,9 @@ function computeWelfareAnalytics(processedResult) {
 app.post('/api/generate-welfare-report', async (req, res) => {
     if (!checkConcurrencyLimit(res)) return;
     const { month, year, headless } = req.body;
+    const val = validateMonthYear(month, year);
+    if (!val.valid) return res.status(400).json({ error: val.error });
+
     const requestId = `welfare_${Date.now()}`;
 
     // Global Hang Safeguard (15m)
@@ -4036,7 +4120,7 @@ app.use((err, req, res, next) => {
             console.log('✅ System Health: GOOD');
         }
 
-        app.listen(PORT, () => {
+        let serverInstance = app.listen(PORT, () => {
             console.log(`\n🚀 PDS Lifting Report Automation Server [V${SERVER_VERSION}]`);
             console.log(`📡 Server running on http://localhost:${PORT}`);
             console.log(`📊 Open your browser and navigate to the URL above\n`);
@@ -4056,10 +4140,45 @@ app.use((err, req, res, next) => {
     }
 })();
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-    console.log('\n🛑 Shutting down server...');
-    if (scheduledEmailTask) scheduledEmailTask.stop();
-    db.close();
+// Graceful shutdown handler (OPS-03)
+let isShuttingDown = false;
+const gracefulShutdown = async (signal) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log(`\n🛑 [SHUTDOWN] Received ${signal}. Shutting down gracefully...`);
+
+    const forceTimer = setTimeout(() => {
+        console.error('⚠️ [SHUTDOWN] Force exiting after timeout.');
+        process.exit(1);
+    }, 6000);
+    forceTimer.unref();
+
+    if (scheduledEmailTask) {
+        try { scheduledEmailTask.stop(); } catch (e) {}
+    }
+
+    if (activeScrapers.size > 0) {
+        console.log(`🧹 [SHUTDOWN] Closing ${activeScrapers.size} active scraper instance(s)...`);
+        const closePromises = [];
+        for (const [id, scraper] of activeScrapers.entries()) {
+            if (scraper && typeof scraper.close === 'function') {
+                closePromises.push(scraper.close().catch(e => console.error(`Error closing scraper ${id}:`, e.message)));
+            }
+        }
+        await Promise.allSettled(closePromises);
+        activeScrapers.clear();
+    }
+
+    try {
+        await db.close();
+    } catch (e) {
+        console.error('Error closing database during shutdown:', e.message);
+    }
+
+    clearTimeout(forceTimer);
+    console.log('👋 [SHUTDOWN] Shutdown complete. Exiting.');
     process.exit(0);
-});
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
