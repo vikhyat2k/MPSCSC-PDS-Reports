@@ -716,6 +716,7 @@ class AdvancedAnalyticsPdfGenerator {
                 <span>Page 5 of 5</span>
             </div>
         </div>
+        </div>
 
         </body>
         </html>
