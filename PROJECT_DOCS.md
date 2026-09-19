@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 19 September 2026, 19:25 IST
+> **Last Sync:** 19 September 2026, 19:45 IST
 
 ---
 
@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 13 |
+| Completed Milestones | 16 |
 | Pending Milestones | 0 |
-| Last Code Change | 19 Sep 2026 — Phase 2 Performance & Stability Hardening (STO-01, STO-02, OPS-01, OPS-02, UX-02) |
+| Last Code Change | 19 Sep 2026 — Phase 3 Operational Hygiene, Input Validation & Security Hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -608,8 +608,12 @@ Tracks implementation status of all major features.
 | SQLite Query Optimization & Indexing | COMPLETE | YES | idx_reports_scheme_generated, idx_reports_period added |
 | Watchdog Scraper Process Cleanup | COMPLETE | YES | scraper.close?.() called on 20-min timeout |
 | UI Scrape Job Cancellation | COMPLETE | YES | Cancel button in progress header across all 4 schemes |
-| UI Polling Error Recovery | PENDING | NO | No error state on network drop |
-| raw_data Lazy Loading | PENDING | NO | History loads full JSON for all reports |
+| UI Polling Error Recovery | COMPLETE | YES | consecutiveNetworkFailures tracking & auto-timeout (UX-03) |
+| Server-Side Input Validation | COMPLETE | YES | validateMonthYear & validateDateRange on all 5 routes (VAL-01) |
+| Automated Temp File Janitor | COMPLETE | YES | cleanTempFiles purges tmp/ files older than 24h (OPS-04) |
+| Graceful Server Shutdown | COMPLETE | YES | SIGINT/SIGTERM handlers close scrapers & DB connection (OPS-03) |
+| HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
+| raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 
 ---
 
@@ -632,14 +636,15 @@ Tracks implementation status of all major features.
 | M11 | Standalone Advanced Analytics Report (Excel & PDF) | 04 Aug 2026 | 5-sheet formula Excel & 9-page bilingual PDF |
 | M13 | Report deletion with file cleanup (fs.unlink) | 19 Sep 2026 | Excel & PDF files unlinked reliably prior to DB row deletion |
 | M16 | Concurrency, Indexing & Scraper Watchdog Hardening | 19 Sep 2026 | Phase 2 stability enhancements (STO-01, STO-02, OPS-01, OPS-02, UX-02) |
+| M14 | UI polling error recovery (network drop handling) | 19 Sep 2026 | consecutiveNetworkFailures tracking and auto-timeout |
+| M17 | Process Hygiene, Input Validation & Defensive Headers | 19 Sep 2026 | Phase 3 operational hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03) |
+| M15 | History lazy-loading (exclude raw_data from list query) | 19 Sep 2026 | getAllReports() queries summary columns only |
 
 ### Upcoming Milestones
 
 | # | Milestone | Priority | Target |
 |---|-----------|----------|--------|
 | M12 | RBAC / Login protection for delete endpoints | High | TBD |
-| M14 | UI polling error recovery (network drop handling) | Medium | TBD |
-| M15 | History lazy-loading (exclude raw_data from list query) | Medium | TBD |
 
 ---
 
@@ -650,9 +655,6 @@ Tasks that are identified but not yet implemented.
 | ID | Task | Priority | Related Issue | Added |
 |----|------|----------|---------------|-------|
 | T1 | Implement RBAC — protect DELETE /api/reports/:id with admin auth | High | ISSUE-001 | 06 Jul 2026 |
-| T3 | Add .catch() to polling fetch — show error UI after 3 failures | Medium | ISSUE-004 | 06 Jul 2026 |
-| T4 | Exclude raw_data column from db.getReports() list query | Medium | ISSUE-005 | 06 Jul 2026 |
-| T5 | Add server-side month/year input validation | Low | ISSUE-006 | 06 Jul 2026 |
 | T6 | Production test 2Captcha fallback API | Low | — | 06 Jul 2026 |
 | T7 | Verify Auto-Schedule cron job with real credentials | Low | — | 06 Jul 2026 |
 | T8 | Test FPS Shop Directory with live data | Low | — | 17 Jul 2026 |
@@ -753,7 +755,11 @@ Tracks what has been tested and confirmed working.
 | Phase 2 Concurrency Enforcement across Endpoints (OPS-01) | Concurrency & Load | VERIFIED | 19 Sep 2026 | Verified checkConcurrencyLimit protects /api/generate-pdf/:id and forceRefresh email |
 | Phase 2 Scraper Watchdog Process Termination (OPS-02) | Automation & Process | VERIFIED | 19 Sep 2026 | Verified scraper.close?.() and activeScrapers cleanup in timeout handlers |
 | Phase 2 UI Scraping Job Cancellation (UX-02) | UI & Process Control | VERIFIED | 19 Sep 2026 | Verified cancel buttons in all 4 progress headers and terminate-report integration |
-| UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
+| Phase 3 Server-Side Input Validation (VAL-01) | Validation & Routing | VERIFIED | 19 Sep 2026 | Verified validateMonthYear and validateDateRange fast-fail with 400 on invalid input |
+| Phase 3 HTTP Security Defensive Headers (SEC-04) | Security & Headers | VERIFIED | 19 Sep 2026 | Verified nosniff, SAMEORIGIN, and Referrer-Policy declared in Express middleware |
+| Phase 3 Automated Temp File Janitor (OPS-04) | Storage & Cleanup | VERIFIED | 19 Sep 2026 | Verified cleanTempFiles identifies and purges stale temp files older than 24h |
+| Phase 3 UI Polling Network Drop Resilience (UX-03) | UI & Network Resilience | VERIFIED | 19 Sep 2026 | Verified failure tracking, reconnection banner, and clean error alert after 8 retries |
+| Phase 3 Graceful Server Shutdown (OPS-03) | Process & Lifecycle | VERIFIED | 19 Sep 2026 | Verified SIGINT/SIGTERM handlers close scrapers, HTTP server, and SQLite database |
 
 ---
 
@@ -764,9 +770,9 @@ Tracks what has been tested and confirmed working.
 | ISSUE-001 | No RBAC/Auth — any user with URL can delete reports | HIGH | OPEN | server.js | 06 Jul 2026 |
 | ISSUE-002 | Orphaned Excel/PDF files when report deleted (fs.unlink not called) | MEDIUM | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-003 | Historical non-NFSA restorer previously corrupted data | MEDIUM | RESOLVED | reportRestorer.js | 06 Jul 2026 |
-| ISSUE-004 | UI polling silent failure on network drop (zombie loading state) | MEDIUM | OPEN | public/app.js | 06 Jul 2026 |
-| ISSUE-005 | History tab loads full raw_data JSON for all reports (memory spike) | MEDIUM | OPEN | server/database/db.js | 06 Jul 2026 |
-| ISSUE-006 | No server-side validation on month/year input | LOW | OPEN | server.js | 06 Jul 2026 |
+| ISSUE-004 | UI polling silent failure on network drop (zombie loading state) | MEDIUM | RESOLVED | public/app.js | 19 Sep 2026 |
+| ISSUE-005 | History tab loads full raw_data JSON for all reports (memory spike) | MEDIUM | RESOLVED | server/database/db.js | 19 Sep 2026 |
+| ISSUE-006 | No server-side validation on month/year input | LOW | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-007 | Performer % values were >100% (posReceipt used instead of dispatch) | HIGH | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-008 | District Intelligence not showing 0-dispatch transporters | MEDIUM | RESOLVED | server/services/analytics.js | 17 Jul 2026 |
 | ISSUE-009 | "Month of August" title shown on date-range reports | LOW | RESOLVED | public/app.js, Technical Audit/app.js | 17 Jul 2026 |
@@ -796,10 +802,30 @@ Tracks what has been tested and confirmed working.
 | ISSUE-035 | Background scrape watchdogs lacked explicit process cleanup and scraper close (OPS-02) | MEDIUM | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-036 | Concurrency cap bypassed by regenerate PDF & forceRefresh email endpoints (OPS-01) | MEDIUM | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-037 | Scrape progress headers lacked UI cancel button to abort running jobs (UX-02) | LOW | RESOLVED | public/index.html, public/app.js | 19 Sep 2026 |
+| ISSUE-038 | Abrupt server termination left orphaned Chromium processes and unclosed SQLite connection (OPS-03) | MEDIUM | RESOLVED | server.js, server/database/db.js | 19 Sep 2026 |
+| ISSUE-039 | Stale debug and CAPTCHA temporary files accumulated indefinitely in tmp/ directory (OPS-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
+| ISSUE-040 | HTTP responses lacked defensive security headers (nosniff, SAMEORIGIN, Referrer-Policy) (SEC-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-19 | Phase 3 Operational Hygiene, Input Validation & Security Hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03)
+
+Files: server.js, server/database/db.js, public/app.js, tests/test-phase3-fixes.js, PROJECT_DOCS.md
+Type: Operational Hygiene, Security Hardening & Robustness
+Closes: ISSUE-004, ISSUE-006, ISSUE-038, ISSUE-039, ISSUE-040
+
+- REQUIREMENT: Implement Phase 3 operational hygiene, input validation, and defensive security measures without altering existing functionality, layout styling, or calculation formulas.
+- ROOT CAUSES & IMPLEMENTED FIXES:
+  1. **OPS-03 (Graceful Server Shutdown & Process Cleanup)**: Terminating the server process abruptly left orphaned Chromium processes (`chrome.exe`) running in the background consuming ~200MB RAM each, and unclosed SQLite connection files. Implemented `gracefulShutdown` hooked to `SIGINT` and `SIGTERM` in `server.js` that closes active scrapers, stops the HTTP server, and awaits clean SQLite shutdown via an async `db.close()` Promise.
+  2. **OPS-04 (Automated Temp File Janitor)**: Scraping and CAPTCHA OCR runs created temp debug/captcha screenshots that accumulated in `tmp/`. Added `cleanTempFiles()` running at boot and on a 24-hour unref interval, automatically deleting files older than 24 hours (and stale captchas older than 1 hour).
+  3. **VAL-01 / ISSUE-006 / T5 (Server-Side Fast-Fail Input Validation)**: Endpoints `/api/generate-report`, `/api/generate-nfsa-daterange-report`, `/api/generate-mdm-report`, `/api/generate-icds-report`, and `/api/generate-welfare-report` accepted unvalidated month/year parameters, launching Puppeteer on malformed requests and hanging before failing. Implemented `validateMonthYear()` (month 1-12, year 2020-2035) and `validateDateRange()` (valid dates and chronological order), returning immediate HTTP 400 Bad Request before spawning browsers.
+  4. **SEC-04 (HTTP Security Defensive Headers)**: Added global Express middleware setting `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, and `X-XSS-Protection: 1; mode=block`.
+  5. **UX-03 / ISSUE-004 / T3 (UI Polling Network Drop Resilience)**: In `public/app.js`, `startPolling()` previously logged network drops to `console.error` silently, leaving the UI progress bar spinning indefinitely in a zombie state. Added `consecutiveNetworkFailures` tracking: displays `⚠️ Network connection interrupted. Retrying...` after 3 consecutive failures, and halts polling after 8 failures with a clear user alert.
+- VERIFICATION:
+  - Created and ran `tests/test-phase3-fixes.js` with 100% pass rate verifying input validation boundaries, security headers, temp file cleaning, async `db.close()`, and app.js network drop recovery.
+  - Ran full regression test `tests/test-verify-merged-both.js` verifying 100% layout preservation and single-page merged PDF exports.
 
 ### 2026-09-19 | Phase 2 Performance & Stability Hardening (STO-01, STO-02, OPS-01, OPS-02, UX-02)
 
