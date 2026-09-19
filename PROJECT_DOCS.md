@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 17 |
 | Pending Milestones | 0 |
-| Last Code Change | 19 Sep 2026 — Executive Analytics Report Redesign (Crisp 5-Page Action-Oriented Decision Dashboard) |
+| Last Code Change | 19 Sep 2026 — Executive Analytics Preview: Centered A4 Canvas & Fit-Width Scaling |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -813,6 +813,32 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-19 | Executive Report Preview Modal — Centered A4 Canvas & Auto Fit-Width Zoom
+
+Files: public/app.js, server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, tests/test-modal-preview.js, PROJECT_DOCS.md
+Type: UI / UX Enhancement / Layout Fix
+Closes: N/A
+
+- USER FEEDBACK: "lot of blank space on right side?" — On wide monitors, the report page was aligned to the far left of the modal iframe with a plain white background, leaving ~1000px of blank white space on the right.
+- ROOT CAUSE:
+  1. `.page` was set to fixed A4 width (`width: 210mm` ≈ 794px) without horizontal centering (`margin: 0 auto`).
+  2. The iframe `body` had `background: #FFFFFF` and the modal was `width: 96%`, blending the document page seamlessly into the modal background and creating the visual appearance of an empty right-hand column.
+  3. No responsive scaling or zoom options existed in the modal preview toolbar to adapt to large screens.
+- FIXES IMPLEMENTED:
+  1. **Centered Document Viewer Architecture (`advancedAnalyticsPdfGenerator.js`)**:
+     - Wrapped all pages inside a responsive `.document-container`.
+     - Styled screen view with a neutral executive slate canvas (`#334155`), horizontal centering (`margin: 0 auto 24px auto`), and deep paper drop-shadows (`box-shadow: 0 8px 30px rgba(0,0,0,0.4)`).
+     - Isolated print media (`@media print`): forces background `#ffffff`, margin 0, and no shadows, ensuring Puppeteer PDF output remains strictly 5 pages with 0 margin.
+  2. **Interactive Zoom Controls & Auto Fit-Width (`public/app.js`)**:
+     - Constrained modal dialog to `max-width: 1300px; width: 96%; height: 95%`.
+     - Added View Zoom selector in modal toolbar: `🔍 दृश्य: [ Fit Width (पूर्ण चौड़ाई) ] [ 100% (A4) ] [ 125% ]`.
+     - Auto-activates `Fit Width` upon modal open: calculates scale factor `(iframeWidth - 48) / 794` (~1.3x-1.45x) and expands document to fill modal width with balanced margins, completely eliminating the blank space on the right.
+     - Updated `downloadAdvAnalyticsImage()` to reset zoom transform during html2canvas capture, guaranteeing crisp 2x resolution exports without canvas distortion.
+- VERIFICATION:
+  - Created `tests/test-modal-preview.js` and verified in Puppeteer at 1920x1080 resolution.
+  - Inspected `tests/modal_preview_fit.png` confirming document fills modal width with zero blank right space.
+  - Inspected `tests/modal_preview_100.png` confirming authentic centered A4 sheet presentation in 100% mode.
 
 ### 2026-09-19 | Executive Analytics Report Redesign — 5-Page Action-Oriented Decision Dashboard
 

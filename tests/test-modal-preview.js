@@ -23,8 +23,24 @@ async function testModalPreview() {
         }
     });
 
-    // Wait for iframe to load and fit zoom to apply
-    await new Promise(r => setTimeout(r, 2000));
+    // Wait for iframe element to exist
+    await page.waitForSelector('#advAnalyticsPreviewIframe');
+    console.log('Waiting for iframe content to finish rendering...');
+
+    // Wait up to 15s for the iframe document to have .page elements
+    await page.waitForFunction(() => {
+        const iframe = document.getElementById('advAnalyticsPreviewIframe');
+        const doc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
+        return doc && doc.querySelectorAll('.page').length >= 5;
+    }, { timeout: 20000 });
+
+    // Apply fit zoom explicitly and wait 500ms
+    await page.evaluate(() => {
+        if (typeof setAdvPreviewZoom === 'function') {
+            setAdvPreviewZoom('fit');
+        }
+    });
+    await new Promise(r => setTimeout(r, 600));
 
     const modalFitPath = path.join(__dirname, 'modal_preview_fit.png');
     await page.screenshot({ path: modalFitPath });
