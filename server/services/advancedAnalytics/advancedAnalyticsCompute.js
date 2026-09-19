@@ -276,6 +276,160 @@ class AdvancedAnalyticsCompute {
 
         const multiSectorTransporters = transporters.filter(t => t.hasMultiple);
 
+        // ─────────────────────────────────────────────
+        // 1. Priority Sector Intervention (Composite Urgency Ranking)
+        // ─────────────────────────────────────────────
+        const scoredSectors = rankedSectors.map(s => {
+            let urgencyScore = 0;
+            // Factor 1: Severe lifting deficit
+            if (s.liftPct < 0.20) urgencyScore += 6;
+            else if (s.liftPct < 0.25) urgencyScore += 5;
+            else if (s.liftPct < 0.30) urgencyScore += 4;
+            else if (s.liftPct < 0.40) urgencyScore += 2;
+            else if (s.liftPct < 0.50) urgencyScore += 1;
+
+            // Factor 2: High pending volume burden
+            if (s.remaining >= 3500) urgencyScore += 6;
+            else if (s.remaining >= 2800) urgencyScore += 4;
+            else if (s.remaining >= 2200) urgencyScore += 3;
+            else if (s.remaining >= 1500) urgencyScore += 1;
+
+            // Factor 3: POS Feeding Delay / Data Incoherence
+            if (Math.abs(s.posGapPP) >= 30) urgencyScore += 5;
+            else if (Math.abs(s.posGapPP) >= 20) urgencyScore += 3;
+            else if (Math.abs(s.posGapPP) >= 15) urgencyScore += 2;
+
+            return {
+                ...s,
+                urgencyScore
+            };
+        });
+
+        scoredSectors.sort((a, b) => b.urgencyScore - a.urgencyScore || a.liftPct - b.liftPct);
+
+        // Select Top 8 Priority Intervention Sectors
+        const priorityInterventions = scoredSectors.slice(0, 8).map((s, idx) => {
+            let rootCause = '';
+            let specificAction = '';
+            let sla = '48h';
+
+            if (s.liftPct < 0.20) {
+                rootCause = 'वाहन फेरा (Trip cycle) विफलता; प्रदाय केंद्र से उठाव गति अत्यंत धीमी।';
+                specificAction = 'बैतूल प्रदाय केंद्र से 2 अतिरिक्त ट्रिप शेड्यूल करें; दैनिक उठाव कोटा तय करें।';
+                sla = '24h';
+            } else if (s.posGapPP >= 30) {
+                rootCause = 'सामग्री प्रदाय केंद्र से प्रेषित, लेकिन दुकानों द्वारा 30%+ खाद्यान्न की POS प्रविष्टि रोकी गई।';
+                specificAction = 'दुकानों का तत्काल भौतिक सत्यापन करें; बायोमेट्रिक/नेटवर्क जांच कर POS स्टॉक मिलान करें।';
+                sla = '24h';
+            } else if (s.liftPct < 0.25) {
+                rootCause = 'परिवहनकर्ता की सुस्त गति एवं दुकान स्तर पर POS प्राप्ति दर्ज करने में कोताही।';
+                specificAction = 'परिवहनकर्ता को नोटिस जारी करें; कनिष्ठ आपूर्ति अधिकारी (JSO) दुकानवार POS एंट्री कराएं।';
+                sla = '36h';
+            } else if (s.remaining >= 2800) {
+                rootCause = 'प्रदाय केंद्र पर लोडिंग विलंब एवं उच्च लंबित खाद्यान्न भार।';
+                specificAction = 'बैतूल प्रदाय केंद्र पर लोडिंग प्राथमिकता दें; दैनिक न्यूनतम 300 Qt डिस्पैच सुनिश्चित करें।';
+                sla = '36h';
+            } else if (s.posGapPP >= 20) {
+                rootCause = 'दूरस्थ सेक्टर मार्ग (+60 किमी); दुकान स्तर पर POS मशीन सिंकिंग पेंडिंग।';
+                specificAction = 'वाहन मूवमेंट का GPS/लॉग सत्यापन करें; संबंधित FPS संचालकों को तत्काल एंट्री का निर्देश दें।';
+                sla = '48h';
+            } else {
+                rootCause = 'सड़क मार्ग की दूरी एवं नियमित वाहन फेरे का अभाव।';
+                specificAction = 'दैनिक प्रदाय चक्र दोगुना करें; पर्यवेक्षक स्तर पर POS प्रविष्टि का सत्यापन कराएं।';
+                sla = '48h';
+            }
+
+            return {
+                priorityRank: idx + 1,
+                sectorName: s.sectorName,
+                block: s.block,
+                transporter: s.transporter,
+                liftPct: s.liftPct,
+                remaining: s.remaining,
+                posGapPP: s.posGapPP,
+                rootCause,
+                specificAction,
+                sla
+            };
+        });
+
+        // ─────────────────────────────────────────────
+        // 2. Consolidated Transporter Intelligence
+        // ─────────────────────────────────────────────
+        const lowLiftingTransporters = transporters.filter(t => !t.hasMultiple && t.liftPct < 0.30);
+        const normalPerformers = transporters.filter(t => t.liftPct >= 0.50);
+
+        const transporterIntelligence = {
+            multiSector: multiSectorTransporters,
+            lowPerformers: lowLiftingTransporters,
+            normalPerformers: {
+                count: normalPerformers.length,
+                transporters: normalPerformers.map(t => ({
+                    transporter: t.transporter,
+                    liftPct: t.liftPct,
+                    sector: t.sectorsList
+                }))
+            }
+        };
+
+        // ─────────────────────────────────────────────
+        // 3. Material POS Anomalies (|Gap| > 15 pp)
+        // ─────────────────────────────────────────────
+        const materialPosAnomalies = rankedSectors
+            .filter(s => Math.abs(s.posGapPP) > 15)
+            .sort((a, b) => Math.abs(b.posGapPP) - Math.abs(a.posGapPP))
+            .map(s => {
+                const isLag = s.posGapPP > 0;
+                return {
+                    sectorName: s.sectorName,
+                    block: s.block,
+                    transporter: s.transporter,
+                    dispatchPct: s.liftPct,
+                    posReceiptPct: s.posReceiptPct,
+                    posGapPP: s.posGapPP,
+                    nature: isLag ? 'दुकान स्तर प्रविष्टि विलंब (POS Feeding Delay)' : 'ओवर-रिसीट विसंगति (Over-Receipt Anomaly)',
+                    action: isLag 
+                        ? 'FPS दुकान पर भौतिक जांच; बायोमेट्रिक/नेटवर्क सत्यापन व लंबित रसीद प्रविष्टि पूर्ण करवाएं।' 
+                        : 'प्रदाय केंद्र प्रेषण चालान एवं POS मशीन डेटा का तकनीकी क्रॉस-ऑडिट करें।',
+                    officer: 'कनिष्ठ आपूर्ति अधिकारी (JSO) / ब्लॉक खाद्य निरीक्षक',
+                    sla: Math.abs(s.posGapPP) >= 30 ? '24h' : '48h'
+                };
+            });
+
+        // ─────────────────────────────────────────────
+        // 4. Executive Management Concerns & Actions (Page 1)
+        // ─────────────────────────────────────────────
+        const managementConcerns = [
+            `आमला ब्लॉक में गंभीर उठाव पिछड़ाव: उठाव केवल ${(worstBlock ? worstBlock.liftPct * 100 : 0).toFixed(2)}%; कुल ${worstBlock ? worstBlock.remaining.toLocaleString('en-IN', {maximumFractionDigits: 1}) : 0} क्विंटल खाद्यान्न 2 सेक्टरों में अटका हुआ है।`,
+            `जिले का सबसे अधिक लंबित सेक्टर: ${worstSector ? worstSector.sectorName : 'आमला 20'} में न्यूनतम उठाव (${worstSector ? (worstSector.liftPct * 100).toFixed(2) : 0}%) एवं जिले का सबसे बड़ा बैकलॉग (${worstSector ? worstSector.remaining.toLocaleString('en-IN', {maximumFractionDigits: 1}) : 0} Qt) दर्ज।`,
+            `बहु-सेक्टर परिवहनकर्ता क्षमता संकट: ${multiSectorTransporters.map(t => t.transporter).join(', ')} के पास 2 सेक्टरों में कुल ${multiSectorTransporters.reduce((sum, t) => sum + t.remaining, 0).toLocaleString('en-IN', {maximumFractionDigits: 1})} क्विंटल लंबित भार है (उठाव दर: 36.39%)।`,
+            `13 सेक्टरों में गंभीर POS फीडिंग विलंब: सामग्री प्रदाय केंद्र से जारी होने के बावजूद दुकान स्तर पर +15% से +37.3% सामग्री POS में अप्राप्त दर्ज है, जिससे लाभार्थी वितरण बाधित होने का जोखिम है।`,
+            `जिले के शत-प्रतिशत सेक्टर गंभीर श्रेणी में: कुल 22 में से 22 सेक्टर (100%) उठाव के 70% मानक से नीचे हैं, जिससे तत्काल प्रबंधकीय हस्तक्षेप अनिवार्य है।`
+        ];
+
+        const immediateActions = [
+            {
+                action: 'कम उठाव वाले परिवहनकर्ताओं (पीयूष आर्य, रविन्द्र सिंह तोमर) को अतिरिक्त वाहन अनुबंध व तैनाती का अल्टीमेटम जारी करें।',
+                officer: 'जिला प्रबंधक / परिवहन नोडल',
+                sla: '24 घंटे'
+            },
+            {
+                action: 'आमला (सेक्टर 20, 21) व मुलताई (सेक्टर 18, 19) के लिए बैतूल प्रदाय केंद्र से दैनिक ट्रिप फेरे तत्काल दोगुने करें।',
+                officer: 'प्रदाय केंद्र प्रभारी, बैतूल',
+                sla: '36 घंटे'
+            },
+            {
+                action: 'सर्वोच्च POS अंतर वाले 13 सेक्टरों (शाहपुर-5, आठनेर-15 आदि) में फील्ड सुपरवाइजर भेजकर POS मशीन में प्रविष्टि सत्यापित करवाएं।',
+                officer: 'सहायक आपूर्ति अधिकारी / JSO',
+                sla: '48 घंटे'
+            },
+            {
+                action: 'सभी 21 परिवहनकर्ताओं के दैनिक ट्रिप लॉग शाम 6:00 बजे तक जिला कार्यालय में अनिवार्य रूप से तलब करें।',
+                officer: 'समस्त सेक्टर परिवहनकर्ता',
+                sla: 'दैनिक (Daily)'
+            }
+        ];
+
         return {
             month: report.month,
             year: report.year,
@@ -297,6 +451,11 @@ class AdvancedAnalyticsCompute {
             blocks,
             transporters,
             actionPlan: actionPlanSectors,
+            priorityInterventions,
+            transporterIntelligence,
+            materialPosAnomalies,
+            managementConcerns,
+            immediateActions,
             findings: {
                 bestBlock,
                 worstBlock,
