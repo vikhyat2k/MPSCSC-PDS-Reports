@@ -5217,7 +5217,7 @@ function showAdvancedAnalyticsModal(reportId) {
     }
 
     modal.innerHTML = `
-        <div style="background:#ffffff; border-radius:14px; width:96%; height:94%; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+        <div style="background:#ffffff; border-radius:14px; width:96%; max-width:1300px; height:95%; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.5);">
             <!-- Toolbar -->
             <div style="background:#0b2545; color:#ffffff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-bottom:3px solid #c9a227;">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -5229,6 +5229,20 @@ function showAdvancedAnalyticsModal(reportId) {
                 </div>
                 
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <!-- Zoom Controls -->
+                    <div style="display:flex; align-items:center; gap:3px; background:rgba(255,255,255,0.12); padding:3px 7px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); margin-right:4px;">
+                        <span style="font-size:11px; font-weight:700; color:#e2e8f0; margin-right:2px;">🔍 दृश्य:</span>
+                        <button id="advZoomFitBtn" onclick="setAdvPreviewZoom('fit')" title="स्क्रीन की चौड़ाई अनुसार फैलाएं" style="background:#2563eb; color:#ffffff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer;">
+                            Fit Width (पूर्ण चौड़ाई)
+                        </button>
+                        <button id="advZoom100Btn" onclick="setAdvPreviewZoom('100')" title="A4 वास्तविक आकार (100%)" style="background:transparent; color:#e2e8f0; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">
+                            100% (A4)
+                        </button>
+                        <button id="advZoom125Btn" onclick="setAdvPreviewZoom('125')" title="125% बड़ा करें" style="background:transparent; color:#e2e8f0; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">
+                            125%
+                        </button>
+                    </div>
+
                     <button onclick="downloadAdvAnalyticsImage()" class="btn btn-sm" style="background:#2563eb; color:#ffffff; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px;">
                         🖼️ Image सेव करें (Export Image)
                     </button>
@@ -5245,14 +5259,55 @@ function showAdvancedAnalyticsModal(reportId) {
             </div>
 
             <!-- Report Content Iframe -->
-            <div style="flex:1; width:100%; background:#f8fafc; position:relative; overflow:hidden;">
-                <iframe id="advAnalyticsPreviewIframe" src="/api/reports/${reportId}/advanced-analytics/html" style="width:100%; height:100%; border:none; background:#ffffff;"></iframe>
+            <div style="flex:1; width:100%; background:#334155; position:relative; overflow:hidden;">
+                <iframe id="advAnalyticsPreviewIframe" src="/api/reports/${reportId}/advanced-analytics/html" onload="setTimeout(() => setAdvPreviewZoom('fit'), 250)" style="width:100%; height:100%; border:none; background:#334155;"></iframe>
             </div>
         </div>
     `;
 
     modal.style.display = 'flex';
 }
+
+function setAdvPreviewZoom(mode) {
+    const iframe = document.getElementById('advAnalyticsPreviewIframe');
+    const iframeDoc = iframe ? (iframe.contentDocument || iframe.contentWindow?.document) : null;
+    if (!iframeDoc) return;
+    const container = iframeDoc.querySelector('.document-container');
+    if (!container) return;
+
+    ['advZoomFitBtn', 'advZoom100Btn', 'advZoom125Btn'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) {
+            b.style.background = 'transparent';
+            b.style.color = '#e2e8f0';
+            b.style.fontWeight = '600';
+        }
+    });
+
+    if (mode === 'fit') {
+        const btn = document.getElementById('advZoomFitBtn');
+        if (btn) { btn.style.background = '#2563eb'; btn.style.color = '#ffffff'; btn.style.fontWeight = '700'; }
+        const iframeWidth = iframe.clientWidth || 950;
+        // 210mm is ~794px. Leave 48px for scrollbar & margins
+        const scale = Math.max(1, (iframeWidth - 48) / 794);
+        container.style.transform = `scale(${scale.toFixed(2)})`;
+        container.style.transformOrigin = 'top center';
+        const extraHeight = Math.max(0, (scale - 1) * 1122 * 5);
+        container.style.marginBottom = `${extraHeight}px`;
+    } else if (mode === '125') {
+        const btn = document.getElementById('advZoom125Btn');
+        if (btn) { btn.style.background = '#2563eb'; btn.style.color = '#ffffff'; btn.style.fontWeight = '700'; }
+        container.style.transform = 'scale(1.25)';
+        container.style.transformOrigin = 'top center';
+        container.style.marginBottom = `${0.25 * 1122 * 5}px`;
+    } else {
+        const btn = document.getElementById('advZoom100Btn');
+        if (btn) { btn.style.background = '#2563eb'; btn.style.color = '#ffffff'; btn.style.fontWeight = '700'; }
+        container.style.transform = 'none';
+        container.style.marginBottom = '0px';
+    }
+}
+window.setAdvPreviewZoom = setAdvPreviewZoom;
 
 function closeAdvAnalyticsModal() {
     const modal = document.getElementById('advAnalyticsPreviewModal');
@@ -5280,24 +5335,29 @@ async function downloadAdvAnalyticsImage() {
 
     try {
         showToast('🖼️ Generating Image export from report preview...', 'info', 4000);
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
 
         if (typeof html2canvas === 'undefined') {
             throw new Error('html2canvas library is not loaded');
         }
 
-        const canvas = await html2canvas(iframeDoc.body, {
+        const container = iframeDoc.querySelector('.document-container') || iframeDoc.body;
+        const prevTransform = container.style.transform;
+        const prevMarginBottom = container.style.marginBottom;
+        container.style.transform = 'none';
+        container.style.marginBottom = '0px';
+
+        const canvas = await html2canvas(container, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
             scrollX: 0,
-            scrollY: 0,
-            width: iframeDoc.body.scrollWidth,
-            height: iframeDoc.body.scrollHeight,
-            windowWidth: iframeDoc.body.scrollWidth,
-            windowHeight: iframeDoc.body.scrollHeight
+            scrollY: 0
         });
+
+        container.style.transform = prevTransform;
+        container.style.marginBottom = prevMarginBottom;
 
         const imgData = canvas.toDataURL('image/jpeg', 0.92);
         const link = document.createElement('a');
