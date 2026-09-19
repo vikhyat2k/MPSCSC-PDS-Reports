@@ -485,9 +485,10 @@
                             <div id="progressSection" class="progress-section" style="display:none;">
                                 <div class="progress-header">
                                     <span id="progressStatus">Initializing...</span>
-                                    <div style="display:flex;gap:15px;">
+                                    <div style="display:flex;gap:15px;align-items:center;">
                                         <span id="generationTimer" style="display:none;color:var(--primary);font-weight:600;">Time: 0m 0s</span>
                                         <span id="progressPercent">0%</span>
+                                        <button type="button" class="btn-cancel-scrape" onclick="cancelCurrentGeneration()" style="padding:2px 8px;font-size:11px;background:#fee2e2;color:#dc2626;border:1px solid #f87171;border-radius:4px;cursor:pointer;font-weight:600;" title="Cancel Report Generation">🛑 Cancel</button>
                                     </div>
                                 </div>
                                 <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
@@ -562,9 +563,10 @@
                             <div id="mdmProgressSection" class="progress-section" style="display:none;">
                                 <div class="progress-header">
                                     <span id="mdmProgressStatus">Initializing MDM...</span>
-                                    <div style="display:flex;gap:15px;">
+                                    <div style="display:flex;gap:15px;align-items:center;">
                                         <span id="mdmGenerationTimer" style="display:none;color:var(--primary);font-weight:600;">Time: 0m 0s</span>
                                         <span id="mdmProgressPercent">0%</span>
+                                        <button type="button" class="btn-cancel-scrape" onclick="cancelCurrentGeneration()" style="padding:2px 8px;font-size:11px;background:#fee2e2;color:#dc2626;border:1px solid #f87171;border-radius:4px;cursor:pointer;font-weight:600;" title="Cancel Report Generation">🛑 Cancel</button>
                                     </div>
                                 </div>
                                 <div class="progress-bar"><div id="mdmProgressFill" class="progress-fill"></div></div>
@@ -634,9 +636,10 @@
                             <div id="icdsProgressSection" class="progress-section" style="display:none;">
                                 <div class="progress-header">
                                     <span id="icdsProgressStatus">Initializing ICDS...</span>
-                                    <div style="display:flex;gap:15px;">
+                                    <div style="display:flex;gap:15px;align-items:center;">
                                         <span id="icdsGenerationTimer" style="display:none;color:var(--primary);font-weight:600;">Time: 0m 0s</span>
                                         <span id="icdsProgressPercent">0%</span>
+                                        <button type="button" class="btn-cancel-scrape" onclick="cancelCurrentGeneration()" style="padding:2px 8px;font-size:11px;background:#fee2e2;color:#dc2626;border:1px solid #f87171;border-radius:4px;cursor:pointer;font-weight:600;" title="Cancel Report Generation">🛑 Cancel</button>
                                     </div>
                                 </div>
                                 <div class="progress-bar"><div id="icdsProgressFill" class="progress-fill"></div></div>
@@ -705,9 +708,10 @@
                             <div id="welfareProgressSection" class="progress-section" style="display:none;">
                                 <div class="progress-header">
                                     <span id="welfareProgressStatus">Initializing Welfare...</span>
-                                    <div style="display:flex;gap:15px;">
+                                    <div style="display:flex;gap:15px;align-items:center;">
                                         <span id="welfareGenerationTimer" style="display:none;color:var(--primary);font-weight:600;">Time: 0m 0s</span>
                                         <span id="welfareProgressPercent">0%</span>
+                                        <button type="button" class="btn-cancel-scrape" onclick="cancelCurrentGeneration()" style="padding:2px 8px;font-size:11px;background:#fee2e2;color:#dc2626;border:1px solid #f87171;border-radius:4px;cursor:pointer;font-weight:600;" title="Cancel Report Generation">🛑 Cancel</button>
                                     </div>
                                 </div>
                                 <div class="progress-bar"><div id="welfareProgressFill" class="progress-fill"></div></div>

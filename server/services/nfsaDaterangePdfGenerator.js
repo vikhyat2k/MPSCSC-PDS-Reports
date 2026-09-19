@@ -42,7 +42,7 @@ class NFSADaterangePdfGenerator {
             <style>
                 @page { size: A4 landscape; margin: 6mm 5mm 5mm 5mm; }
                 * { box-sizing: border-box; }
-                body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; font-size: 11px; -webkit-font-smoothing: antialiased; }
+                body { font-family: 'Nirmala UI', 'Noto Sans Devanagari', Arial, Helvetica, sans-serif; margin: 0; padding: 0; font-size: 11px; -webkit-font-smoothing: antialiased; }
                 /* Ensure numbers render correctly */
                 td, th { font-variant-numeric: tabular-nums; letter-spacing: 0; }
                 h2 { text-align: center; margin: 0 0 2px 0; font-size: 15px; font-weight: bold; }

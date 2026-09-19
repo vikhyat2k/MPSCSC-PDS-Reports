@@ -84,6 +84,10 @@ class DatabaseManager {
       )
     `);
 
+    // Performance indexes for report history queries
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_reports_scheme_generated ON reports(scheme, generated_at DESC)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_reports_period ON reports(month, year)`);
+
     // Portal users table (for application login)
     await this.run(`
       CREATE TABLE IF NOT EXISTS app_users (
@@ -232,7 +236,7 @@ class DatabaseManager {
    * Get all reports, sorted by most recent
    */
   async getAllReports(limit = 50, scheme = null) {
-    const columns = 'id, month, year, filename, filepath, ro_type, total_allocation, total_dispatch, total_pos_receipt, dispatch_percentage, generated_at, scheme, insights';
+    const columns = 'id, month, year, filename, filepath, ro_type, total_allocation, total_dispatch, total_pos_receipt, dispatch_percentage, generated_at, scheme, from_date, to_date, insights';
     
     if (scheme === 'nfsa') {
       return await this.all(`
@@ -507,11 +511,23 @@ class DatabaseManager {
   }
 
   /**
-   * Close database connection
+   * Close database connection (Async Promise-based)
    */
   close() {
-    this.db.close();
-    console.log('🔒 Database connection closed');
+    return new Promise((resolve) => {
+      if (!this.db) {
+        return resolve();
+      }
+      this.db.close((err) => {
+        if (err) {
+          console.error('Error closing database:', err.message);
+        } else {
+          console.log('🔒 Database connection closed');
+        }
+        this.db = null;
+        resolve();
+      });
+    });
   }
 }
 

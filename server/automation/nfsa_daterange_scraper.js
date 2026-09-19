@@ -24,6 +24,21 @@ class NFSADateRangeScraper {
         this.page = this.baseScraper.page;
     }
 
+    async close() {
+        try {
+            if (this.baseScraper && typeof this.baseScraper.close === 'function') {
+                await this.baseScraper.close();
+            } else if (this.browser) {
+                await this.browser.close();
+            }
+        } catch (err) {
+            console.error('[DateRange] Error during close:', err.message);
+        } finally {
+            this.browser = null;
+            this.page = null;
+        }
+    }
+
     /**
      * Main Extraction Method
      */
@@ -161,10 +176,11 @@ class NFSADateRangeScraper {
                 
                 // Actual columns in Date Range report: 
                 // 7:Wheat, 8:Salt, 9:FSalt, 10:Fortified Rice, 11:Dispatched Date, 12:Received Date
-                const wheat = (parseFloat(row[7]) || 0) / 100;
-                const salt = (parseFloat(row[8]) || 0) / 100;
-                const fsalt = (parseFloat(row[9]) || 0) / 100;
-                const fortifiedRice = (parseFloat(row[10]) || 0) / 100;
+                const parseVal = (v) => (parseFloat(String(v || '0').replace(/,/g, '').trim()) || 0) / 100;
+                const wheat = parseVal(row[7]);
+                const salt = parseVal(row[8]);
+                const fsalt = parseVal(row[9]);
+                const fortifiedRice = parseVal(row[10]);
                 const dispatchedDate = row[11] || '';
                 
                 // Total dispatch = ALL commodities (matching portal's TOTAL row)
@@ -207,10 +223,6 @@ class NFSADateRangeScraper {
                 status: 'failed',
                 error: error.message
             };
-        } finally {
-            if (this.browser) {
-                await this.browser.close();
-            }
         }
     }
 }

@@ -104,7 +104,7 @@ class MDMPDFGenerator {
             <style>
                 @page { size: A4 landscape; margin: 5mm; }
                 * { box-sizing: border-box; }
-                body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; font-size: 11px; -webkit-font-smoothing: antialiased; }
+                body { font-family: 'Nirmala UI', 'Noto Sans Devanagari', Arial, Helvetica, sans-serif; margin: 0; padding: 0; font-size: 11px; -webkit-font-smoothing: antialiased; }
                 /* Ensure numbers render correctly */
                 td, th {
                     font-variant-numeric: tabular-nums;

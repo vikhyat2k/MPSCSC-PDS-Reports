@@ -231,7 +231,7 @@ class BalancesReportGenerator {
             <meta charset="UTF-8">
             <title>${title}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+                body { font-family: 'Nirmala UI', 'Noto Sans Devanagari', Arial, sans-serif; margin: 20px; font-size: 12px; }
                 h2, h3 { text-align: center; margin: 5px 0; color: #333; }
                 .report-header { margin-bottom: 20px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
                 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
@@ -836,7 +836,7 @@ class BalancesReportGenerator {
   <meta charset="UTF-8">
   <title>दुकान उठाव शेष — ${groupLabel}वार${icTitleText}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 15px; font-size: 10px; color: #111; }
+    body { font-family: 'Nirmala UI', 'Noto Sans Devanagari', Arial, sans-serif; margin: 15px; font-size: 10px; color: #111; }
     h2 { text-align:center; font-size:14px; margin:3px 0; }
     h3 { text-align:center; font-size:11px; color:#555; margin:2px 0 10px; }
     table { width:100%; border-collapse:collapse; margin-top:8px; table-layout: fixed; }

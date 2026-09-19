@@ -177,13 +177,24 @@ if (process.env.NODE_ENV !== 'production') {
 // ─────────────────────────────────────────────
 
 // ─────────────────────────────────────────────
-// STATIC FILE SERVING
-// ─────────────────────────────────────────────
+// Authentication Guard for Reports Directory (SEC-02 Fix)
+const requireReportAuth = (req, res, next) => {
+    if (req.session && req.session.user && req.session.user.id) {
+        return next();
+    }
+    if (req.accepts('html')) {
+        return res.redirect('/login.html');
+    }
+    return res.status(401).json({ error: 'Unauthorized. Please login to access reports.', authenticated: false });
+};
 
-// Protected reports folder
-app.use('/reports', express.static('reports', {
+// Protected reports folder - Authentication Required
+app.use('/reports', requireReportAuth, express.static(path.join(__dirname, 'reports'), {
     maxAge: '1d',
-    setHeaders: (res) => res.set('X-Content-Type-Options', 'nosniff')
+    setHeaders: (res) => {
+        res.set('X-Content-Type-Options', 'nosniff');
+        res.set('Cache-Control', 'private, no-store');
+    }
 }));
 
 // Public assets from 'public' folder
@@ -337,7 +348,7 @@ app.post('/api/generate-report', async (req, res) => {
     console.log(`\n⚡ [REPORT] Generation Request: Month=${month}, Year=${year} [ID: ${requestId}]`);
 
     // Global Hang Safeguard (20m)
-    const watchdog = setTimeout(() => {
+    const watchdog = setTimeout(async () => {
         const req = activeRequests.get(requestId);
         if (req && req.status !== 'complete' && req.status !== 'error') {
             const lastStage = req.message || req.status || 'unknown';
@@ -347,6 +358,11 @@ app.post('/api/generate-report', async (req, res) => {
                 progress: 0, 
                 error: `Govt portal response timed out at [${lastStage}]. Portal is unresponsive or blocked.` 
             });
+            const scraper = activeScrapers.get(requestId);
+            if (scraper) {
+                await scraper.close?.().catch(e => console.error('Watchdog close error:', e));
+                activeScrapers.delete(requestId);
+            }
         }
     }, 20 * 60 * 1000);
 
@@ -989,10 +1005,15 @@ app.post('/api/generate-nfsa-daterange-report', async (req, res) => {
     const requestId = Date.now().toString();
 
     // Global Hang Safeguard (20m)
-    const watchdog = setTimeout(() => {
+    const watchdog = setTimeout(async () => {
         if (activeRequests.has(requestId) && activeRequests.get(requestId).status !== 'complete' && activeRequests.get(requestId).status !== 'error') {
             console.error(`🕒 [WATCHDOG] DateRange Request ${requestId} killed after 20m hang.`);
             activeRequests.set(requestId, { status: 'error', progress: 0, error: 'Govt portal response timed out.' });
+            const scraper = activeScrapers.get(requestId);
+            if (scraper) {
+                await scraper.close?.().catch(e => console.error('Watchdog close error:', e));
+                activeScrapers.delete(requestId);
+            }
         }
     }, 20 * 60 * 1000);
 
@@ -1327,6 +1348,10 @@ function extractDateRangeDates(report, rawData = null) {
 
 // Generate PDF from existing report
 app.post('/api/generate-pdf/:id', async (req, res) => {
+    if (!checkConcurrencyLimit(res)) return;
+    const pdfJobId = `pdf_${Date.now()}`;
+    activeScrapers.set(pdfJobId, { type: 'pdf', close: async () => {} });
+
     try {
         const report = await db.getReport(req.params.id);
         if (!report) {
@@ -1374,6 +1399,8 @@ app.post('/api/generate-pdf/:id', async (req, res) => {
             error: 'Failed to generate PDF',
             message: error.message
         });
+    } finally {
+        activeScrapers.delete(pdfJobId);
     }
 });
 
@@ -1897,24 +1924,58 @@ app.delete('/api/reports/:id', async (req, res) => {
         const id = req.params.id;
         const report = await db.getReport(id);
 
-        await db.deleteReport(id);
-
-        if (report && report.filepath) {
-            // Asynchronously, defensively unlink Excel file
-            fs.unlink(report.filepath, (err) => {
-                if (err) console.warn(`⚠️ Defensive unlink failed for Excel file: ${report.filepath} (${err.message})`);
-                else console.log(`🗑️ Successfully deleted Excel file: ${report.filepath}`);
-            });
-
-            // Asynchronously, defensively unlink PDF file
-            const pdfPath = report.filepath.replace('.xlsx', '.pdf');
-            fs.unlink(pdfPath, (err) => {
-                if (err) console.warn(`⚠️ Defensive unlink failed for PDF file: ${pdfPath} (${err.message})`);
-                else console.log(`🗑️ Successfully deleted PDF file: ${pdfPath}`);
-            });
+        if (!report) {
+            return res.status(404).json({ error: 'Report not found' });
         }
 
-        res.json({ success: true });
+        // Reliably unlink physical files associated with this report
+        if (report.filepath) {
+            // Unlink Excel file
+            try {
+                if (fs.existsSync(report.filepath)) {
+                    await fs.promises.unlink(report.filepath);
+                    console.log(`🗑️ Successfully deleted Excel file: ${report.filepath}`);
+                }
+            } catch (err) {
+                console.warn(`⚠️ Defensive unlink failed for Excel file: ${report.filepath} (${err.message})`);
+            }
+
+            // Unlink directly associated or derived PDF file
+            const pdfPath = report.filepath.replace('.xlsx', '.pdf');
+            try {
+                if (fs.existsSync(pdfPath)) {
+                    await fs.promises.unlink(pdfPath);
+                    console.log(`🗑️ Successfully deleted PDF file: ${pdfPath}`);
+                }
+            } catch (err) {
+                console.warn(`⚠️ Defensive unlink failed for PDF file: ${pdfPath} (${err.message})`);
+            }
+        }
+
+        // Also clean up any independently generated PDFs in reports/ for this scheme & period
+        try {
+            const reportsDir = path.join(__dirname, 'reports');
+            if (fs.existsSync(reportsDir) && report.month && report.year) {
+                const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                const monthStr = monthNames[report.month - 1];
+                const files = await fs.promises.readdir(reportsDir);
+                for (const f of files) {
+                    const lowerF = f.toLowerCase();
+                    const schemePrefix = (report.scheme || 'nfsa').toLowerCase();
+                    if (lowerF.endsWith('.pdf') && lowerF.includes(schemePrefix) && lowerF.includes(String(report.year)) && (monthStr && lowerF.includes(monthStr.toLowerCase()))) {
+                        const fullPath = path.join(reportsDir, f);
+                        await fs.promises.unlink(fullPath).catch(() => {});
+                        console.log(`🗑️ Cleaned up matching generated PDF: ${f}`);
+                    }
+                }
+            }
+        } catch (scanErr) {
+            console.warn('⚠️ PDF cleanup directory scan warning:', scanErr.message);
+        }
+
+        await db.deleteReport(id);
+
+        res.json({ success: true, message: 'Report and associated physical files deleted successfully' });
     } catch (error) {
         res.status(500).json({
             error: 'Failed to delete report',
@@ -2098,10 +2159,15 @@ app.post('/api/generate-mdm-report', async (req, res) => {
     const requestId = `mdm_${Date.now()}`;
 
     // Global Hang Safeguard (10m)
-    const watchdog = setTimeout(() => {
+    const watchdog = setTimeout(async () => {
         if (activeRequests.has(requestId) && activeRequests.get(requestId).status !== 'complete' && activeRequests.get(requestId).status !== 'error') {
             console.error(`🕒 [WATCHDOG] MDM Request ${requestId} killed after 10m hang.`);
             activeRequests.set(requestId, { status: 'error', progress: 0, error: 'Govt portal response timed out.' });
+            const scraper = activeScrapers.get(requestId);
+            if (scraper) {
+                await scraper.close?.().catch(e => console.error('Watchdog close error:', e));
+                activeScrapers.delete(requestId);
+            }
         }
     }, 10 * 60 * 1000);
 
@@ -2361,9 +2427,18 @@ app.post('/api/generate-icds-report', async (req, res) => {
     const { month, year, headless } = req.body;
     const requestId = `icds_${Date.now()}`;
 
-    if (!month || !year) {
-        return res.status(400).json({ error: 'Month and year are required' });
-    }
+    // Global Hang Safeguard (15m)
+    const watchdog = setTimeout(async () => {
+        if (activeRequests.has(requestId) && activeRequests.get(requestId).status !== 'complete' && activeRequests.get(requestId).status !== 'error') {
+            console.error(`🕒 [WATCHDOG] ICDS Request ${requestId} killed after 15m hang.`);
+            activeRequests.set(requestId, { status: 'error', progress: 0, error: 'Govt portal response timed out.' });
+            const scraper = activeScrapers.get(requestId);
+            if (scraper) {
+                await scraper.close?.().catch(e => console.error('Watchdog close error:', e));
+                activeScrapers.delete(requestId);
+            }
+        }
+    }, 15 * 60 * 1000);
 
     try {
         activeRequests.set(requestId, { status: 'initializing', progress: 0, startTime: Date.now(), scheme: 'icds' });
@@ -2468,6 +2543,7 @@ app.post('/api/generate-icds-report', async (req, res) => {
             } finally {
                 activeScrapers.delete(requestId);
                 await scraper.close().catch(() => { });
+                clearTimeout(watchdog);
             }
         })();
 
@@ -2604,9 +2680,18 @@ app.post('/api/generate-welfare-report', async (req, res) => {
     const { month, year, headless } = req.body;
     const requestId = `welfare_${Date.now()}`;
 
-    if (!month || !year) {
-        return res.status(400).json({ error: 'Month and year are required' });
-    }
+    // Global Hang Safeguard (15m)
+    const watchdog = setTimeout(async () => {
+        if (activeRequests.has(requestId) && activeRequests.get(requestId).status !== 'complete' && activeRequests.get(requestId).status !== 'error') {
+            console.error(`🕒 [WATCHDOG] Welfare Request ${requestId} killed after 15m hang.`);
+            activeRequests.set(requestId, { status: 'error', progress: 0, error: 'Govt portal response timed out.' });
+            const scraper = activeScrapers.get(requestId);
+            if (scraper) {
+                await scraper.close?.().catch(e => console.error('Watchdog close error:', e));
+                activeScrapers.delete(requestId);
+            }
+        }
+    }, 15 * 60 * 1000);
 
     try {
         activeRequests.set(requestId, { status: 'initializing', progress: 0, startTime: Date.now(), scheme: 'welfare' });
@@ -2720,6 +2805,7 @@ app.post('/api/generate-welfare-report', async (req, res) => {
             } finally {
                 activeScrapers.delete(requestId);
                 await scraper.close().catch(() => { });
+                clearTimeout(watchdog);
             }
         })();
 
@@ -3688,6 +3774,9 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
  */
 app.post('/api/email-bundle', async (req, res) => {
     req.setTimeout(300000); // 5-minute socket timeout for multi-RO fresh bundle scraping
+    if (req.body && req.body.forceRefresh) {
+        if (!checkConcurrencyLimit(res)) return;
+    }
     try {
         const result = await runEmailBundleJob(req.body);
         res.json(result);

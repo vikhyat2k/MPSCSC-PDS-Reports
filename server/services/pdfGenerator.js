@@ -24,7 +24,7 @@ class PDFGenerator {
                 }
                 * { box-sizing: border-box; }
                 body {
-                    font-family: Arial, Helvetica, sans-serif;
+                    font-family: 'Nirmala UI', 'Noto Sans Devanagari', Arial, Helvetica, sans-serif;
                     margin: 0;
                     padding: 0;
                     font-size: 12px;

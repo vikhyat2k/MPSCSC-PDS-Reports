@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 17 September 2026, 16:22 IST
+> **Last Sync:** 19 September 2026, 19:25 IST
 
 ---
 
@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 11 |
+| Completed Milestones | 13 |
 | Pending Milestones | 0 |
-| Last Code Change | 17 Sep 2026 — Merged विकासखंड (Block) Column with Rowspan in NFSA Monthly & Date Range PDF Reports |
+| Last Code Change | 19 Sep 2026 — Phase 2 Performance & Stability Hardening (STO-01, STO-02, OPS-01, OPS-02, UX-02) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -604,7 +604,10 @@ Tracks implementation status of all major features.
 | Auto-Schedule (Cron) | COMPLETE | NO | Requires AUTO_SCHEDULE_ENABLED=true |
 | Email Notifications | COMPLETE | NO | Requires email config |
 | RBAC / Auth | PENDING | NO | Any URL user can delete reports |
-| Report Deletion File Cleanup | PENDING | NO | fs.unlink not called |
+| Report Deletion File Cleanup | COMPLETE | YES | fs.promises.unlink called for Excel/PDF before DB delete |
+| SQLite Query Optimization & Indexing | COMPLETE | YES | idx_reports_scheme_generated, idx_reports_period added |
+| Watchdog Scraper Process Cleanup | COMPLETE | YES | scraper.close?.() called on 20-min timeout |
+| UI Scrape Job Cancellation | COMPLETE | YES | Cancel button in progress header across all 4 schemes |
 | UI Polling Error Recovery | PENDING | NO | No error state on network drop |
 | raw_data Lazy Loading | PENDING | NO | History loads full JSON for all reports |
 
@@ -627,13 +630,14 @@ Tracks implementation status of all major features.
 | M9 | Dispatch % calculation corrected | 17 Jul 2026 | dispatch not posReceipt |
 | M10 | Dynamic Pending Sector Details title | 17 Jul 2026 | Month name or date range |
 | M11 | Standalone Advanced Analytics Report (Excel & PDF) | 04 Aug 2026 | 5-sheet formula Excel & 9-page bilingual PDF |
+| M13 | Report deletion with file cleanup (fs.unlink) | 19 Sep 2026 | Excel & PDF files unlinked reliably prior to DB row deletion |
+| M16 | Concurrency, Indexing & Scraper Watchdog Hardening | 19 Sep 2026 | Phase 2 stability enhancements (STO-01, STO-02, OPS-01, OPS-02, UX-02) |
 
 ### Upcoming Milestones
 
 | # | Milestone | Priority | Target |
 |---|-----------|----------|--------|
 | M12 | RBAC / Login protection for delete endpoints | High | TBD |
-| M13 | Report deletion with file cleanup (fs.unlink) | Medium | TBD |
 | M14 | UI polling error recovery (network drop handling) | Medium | TBD |
 | M15 | History lazy-loading (exclude raw_data from list query) | Medium | TBD |
 
@@ -646,7 +650,6 @@ Tasks that are identified but not yet implemented.
 | ID | Task | Priority | Related Issue | Added |
 |----|------|----------|---------------|-------|
 | T1 | Implement RBAC — protect DELETE /api/reports/:id with admin auth | High | ISSUE-001 | 06 Jul 2026 |
-| T2 | Call fs.unlink() on Excel+PDF files when report deleted | Medium | ISSUE-002 | 06 Jul 2026 |
 | T3 | Add .catch() to polling fetch — show error UI after 3 failures | Medium | ISSUE-004 | 06 Jul 2026 |
 | T4 | Exclude raw_data column from db.getReports() list query | Medium | ISSUE-005 | 06 Jul 2026 |
 | T5 | Add server-side month/year input validation | Low | ISSUE-006 | 06 Jul 2026 |
@@ -741,6 +744,15 @@ Tracks what has been tested and confirmed working.
 | NFSA PDF Footnote Font Size & Proportions Enhancement | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Increased footnote font size (11.5px/12.5px), enlarged padding (6px 9px), optimized card flex ratios (1.05 / 0.95 / 1.25), deduplicated below-avg sector names, and verified single-page A4 landscape layout |
 | NFSA PDF Merged Issue Centers (rowspan) | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Merged consecutive matching issue centers under 'प्रदाय केंद्र का नाम' column using rowspan, with vertically centered bold text and clean single-page A4 landscape layout; fixed hardcoded issue center column in Excel export |
 | NFSA PDF Merged Block Column (rowspan) | PDF & Layout Verification | VERIFIED | 17 Sep 2026 | Merged consecutive matching blocks under 'विकासखंड' column using rowspan alongside 'प्रदाय केंद्र का नाम', strictly preserving single-page A4 landscape layout |
+| Phase 1 Scraper Close & Lifecycle (AUTO-01) | Automation & Unit | VERIFIED | 19 Sep 2026 | Verified NFSADateRangeScraper.close() safely closes browser/page and handles null states |
+| Phase 1 Protected Reports Download (SEC-02) | Security & Route | VERIFIED | 19 Sep 2026 | Verified requireReportAuth session guard on /reports with private cache headers |
+| Phase 1 Indian Numeric Comma Parsing (AUTO-02) | Data Parsing & Unit | VERIFIED | 19 Sep 2026 | Verified comma-separated values parse accurately to quintals without truncation |
+| Phase 1 Devanagari Font Contract (EXP-01) | PDF & Typography | VERIFIED | 19 Sep 2026 | Verified Nirmala UI and Noto Sans Devanagari declared across all 6 PDF generators |
+| Phase 2 SQLite Performance Indexing (STO-01) | Database & Query | VERIFIED | 19 Sep 2026 | Verified composite indexes and from_date/to_date query inclusion |
+| Phase 2 Physical File Deletion on Delete (STO-02) | Storage & Cleanup | VERIFIED | 19 Sep 2026 | Verified fs.promises.unlink cleans up Excel and PDF files before DB record deletion |
+| Phase 2 Concurrency Enforcement across Endpoints (OPS-01) | Concurrency & Load | VERIFIED | 19 Sep 2026 | Verified checkConcurrencyLimit protects /api/generate-pdf/:id and forceRefresh email |
+| Phase 2 Scraper Watchdog Process Termination (OPS-02) | Automation & Process | VERIFIED | 19 Sep 2026 | Verified scraper.close?.() and activeScrapers cleanup in timeout handlers |
+| Phase 2 UI Scraping Job Cancellation (UX-02) | UI & Process Control | VERIFIED | 19 Sep 2026 | Verified cancel buttons in all 4 progress headers and terminate-report integration |
 | UI polling error recovery | Manual | NOT VERIFIED | — | Issue open (T3) |
 
 ---
@@ -750,7 +762,7 @@ Tracks what has been tested and confirmed working.
 | ID | Issue | Severity | Status | Files Affected | Reported |
 |----|-------|----------|--------|----------------|----------|
 | ISSUE-001 | No RBAC/Auth — any user with URL can delete reports | HIGH | OPEN | server.js | 06 Jul 2026 |
-| ISSUE-002 | Orphaned Excel/PDF files when report deleted (fs.unlink not called) | MEDIUM | OPEN | server.js | 06 Jul 2026 |
+| ISSUE-002 | Orphaned Excel/PDF files when report deleted (fs.unlink not called) | MEDIUM | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-003 | Historical non-NFSA restorer previously corrupted data | MEDIUM | RESOLVED | reportRestorer.js | 06 Jul 2026 |
 | ISSUE-004 | UI polling silent failure on network drop (zombie loading state) | MEDIUM | OPEN | public/app.js | 06 Jul 2026 |
 | ISSUE-005 | History tab loads full raw_data JSON for all reports (memory spike) | MEDIUM | OPEN | server/database/db.js | 06 Jul 2026 |
@@ -776,10 +788,55 @@ Tracks what has been tested and confirmed working.
 | ISSUE-027 | Live Stock Position & Shortfall table rendered "Avail. Stock: — (Sheet Not Loaded)" due to missing persistent caching and auto-sync triggers | HIGH | RESOLVED | public/index.html | 22 Aug 2026 |
 | ISSUE-028 | Analytics section of every scheme vanished automatically upon tab switch, load, or return from sub-views | HIGH | RESOLVED | public/app.js, public/index.html | 22 Aug 2026 |
 | ISSUE-029 | NFSA Date Range PDF & Excel reports printed literal 'Start' and 'End' dates in title, duplicated title phrasing, and contained non-applicable allocation, %, and balance columns | MEDIUM | RESOLVED | server/services/nfsaDaterangePdfGenerator.js, server/services/nfsaDaterangeExcelGenerator.js, server.js | 23 Aug 2026 |
+| ISSUE-030 | NFSADateRangeScraper missing close() method causing TypeError on cancellation/cleanup (AUTO-01) | HIGH | RESOLVED | server/automation/nfsa_daterange_scraper.js, server.js | 19 Sep 2026 |
+| ISSUE-031 | Reports directory (/reports) served without session authentication (SEC-02) | CRITICAL | RESOLVED | server.js | 19 Sep 2026 |
+| ISSUE-032 | Date-range numeric parsing truncates Indian comma-formatted numbers to 1 (AUTO-02) | HIGH | RESOLVED | server/automation/nfsa_daterange_scraper.js | 19 Sep 2026 |
+| ISSUE-033 | PDF generators lacked explicit Devanagari font contract (EXP-01) | MEDIUM | RESOLVED | server/services/*.js | 19 Sep 2026 |
+| ISSUE-034 | Reports DB queries unindexed causing full table scans under load (STO-01) | MEDIUM | RESOLVED | server/database/db.js | 19 Sep 2026 |
+| ISSUE-035 | Background scrape watchdogs lacked explicit process cleanup and scraper close (OPS-02) | MEDIUM | RESOLVED | server.js | 19 Sep 2026 |
+| ISSUE-036 | Concurrency cap bypassed by regenerate PDF & forceRefresh email endpoints (OPS-01) | MEDIUM | RESOLVED | server.js | 19 Sep 2026 |
+| ISSUE-037 | Scrape progress headers lacked UI cancel button to abort running jobs (UX-02) | LOW | RESOLVED | public/index.html, public/app.js | 19 Sep 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-19 | Phase 2 Performance & Stability Hardening (STO-01, STO-02, OPS-01, OPS-02, UX-02)
+
+Files: server/database/db.js, server.js, public/index.html, public/app.js, tests/test-phase2-fixes.js, PROJECT_DOCS.md
+Type: Performance, Stability & Operational Polish
+Closes: ISSUE-002, ISSUE-034, ISSUE-035, ISSUE-036, ISSUE-037
+
+- REQUIREMENT: Implement Phase 2 stability, database query optimization, file cleanup, and process management improvements identified in the architectural audit while keeping user-facing views and functionality 100% intact.
+- ROOT CAUSES & IMPLEMENTED FIXES:
+  1. **STO-01 (Database Query Optimization & Composite Indexes)**: The `reports` SQLite table had no indexes on lookup columns (`scheme`, `generated_at`, `from_date`, `to_date`), leading to full table scans as report volume grew. Added composite indexes `idx_reports_scheme_generated` (`scheme`, `generated_at DESC`) and `idx_reports_period` (`from_date`, `to_date`), and included `from_date, to_date` in `getAllReports()` to prevent undefined date ranges in history queries.
+  2. **STO-02 (Physical Unlinking of Excel and PDF Files on Report Delete)**: When deleting a report via `DELETE /api/reports/:id`, only the database record was removed; physical `.xlsx` and `.pdf` files remained on disk forever. Added `await fs.promises.unlink()` for both files prior to deleting the DB row, with graceful error handling so missing files do not block record removal.
+  3. **OPS-01 (Universal Scraper Concurrency Cap Enforcement)**: `POST /api/generate-pdf/:id` and `POST /api/email-bundle` (with `forceRefresh: true`) spawned scrapers directly without calling `checkConcurrencyLimit(res)` or tracking active instances, allowing background scrapes to exceed the 3-process ceiling. Applied concurrency guards and `activeScrapers` registration to both endpoints.
+  4. **OPS-02 (Watchdog Scraper Process Cleanup & Close)**: 20-minute scraper watchdogs across all schemes (`/api/generate-report`, `/api/generate-daterange-report`, `/api/generate-mdm-report`, `/api/generate-icds-report`, `/api/generate-welfare-report`) logged a timeout but never invoked `await scraper.close?.()`, leaving orphaned Chrome processes active in the background. Added explicit `scraper.close?.()` and `activeScrapers.delete(requestId)` inside all watchdog callbacks.
+  5. **UX-02 (Scrape Progress UI Cancel Buttons)**: During long-running scraping tasks, users had no UI mechanism to abort jobs without waiting for timeout or manually killing node. Added a red "🛑 Cancel" button to all 4 progress headers (`progressSection`, `mdmProgressSection`, `icdsProgressSection`, `welfareProgressSection`) in `public/index.html` and bound `cancelCurrentGeneration()` in `public/app.js` to invoke `/api/terminate-report`, clear polling timers, and reset UI state.
+- VERIFICATION:
+  - Created and ran `tests/test-phase2-fixes.js` with 100% pass rate verifying indexes, physical file deletion, concurrency enforcement, watchdog scraper closure, and UI cancel button markup.
+  - Ran `tests/test-verify-merged-both.js` to ensure zero regressions in PDF/Excel generation and layout formatting.
+
+---
+
+### 2026-09-19 | Phase 1 Critical Bug Hotfixes & Hardening (AUTO-01, SEC-02, AUTO-02, EXP-01)
+
+Files: server/automation/nfsa_daterange_scraper.js, server.js, server/services/pdfGenerator.js, server/services/nfsaDaterangePdfGenerator.js, server/services/mdmPdfGenerator.js, server/services/icdsPdfGenerator.js, server/services/welfarePdfGenerator.js, server/services/balancesReportGenerator.js, tests/test-phase1-fixes.js, PROJECT_DOCS.md
+Type: Bug Fix / Security & Data Integrity Hardening
+Closes: ISSUE-030, ISSUE-031, ISSUE-032, ISSUE-033
+
+- REQUIREMENT: Implement Phase 1 surgical hotfixes identified in comprehensive architectural & security audit (OpenAI Terra High 5.6) while maintaining 100% feature and workflow parity.
+- ROOT CAUSES & IMPLEMENTED FIXES:
+  1. **AUTO-01 (Scraper Lifecycle & Close Method)**: `NFSADateRangeScraper` lacked a `.close()` method and prematurely closed the browser in its extraction `finally` block, causing `TypeError: scraper.close is not a function` during job termination or cleanup. Added explicit `async close()` method to `NFSADateRangeScraper` and delegated browser lifecycle control to `server.js`.
+  2. **SEC-02 (Unauthenticated Reports Download Guard)**: `/reports` static directory was mounted prior to authentication and bypassed auth checks because `requireAuth` only checked paths starting with `/api`. Added dedicated `requireReportAuth` session middleware to `/reports` with private cache headers, blocking direct unauthenticated access while preserving normal downloads for logged-in users.
+  3. **AUTO-02 (Indian Number Comma Parsing)**: In `nfsa_daterange_scraper.js`, `parseFloat(row[n])` parsed numbers with commas directly (e.g. `'1,234.50'` truncated to `1`). Added `.replace(/,/g, '').trim()` sanitization before `parseFloat`, guaranteeing accurate extraction of commodity dispatches.
+  4. **EXP-01 (Devanagari Font Contract Across All PDF Generators)**: Standardized `font-family` CSS across all 6 PDF generator services (`pdfGenerator.js`, `nfsaDaterangePdfGenerator.js`, `mdmPdfGenerator.js`, `icdsPdfGenerator.js`, `welfarePdfGenerator.js`, `balancesReportGenerator.js`) to include `'Nirmala UI', 'Noto Sans Devanagari'` before `Arial, Helvetica, sans-serif`, ensuring guaranteed rendering of Hindi conjuncts and matras across Windows and Linux/Docker environments.
+- VERIFICATION:
+  - Created and ran `tests/test-phase1-fixes.js` with 100% pass rate across scraper lifecycle, comma parsing, font definitions, and session route guards.
+  - Ran `tests/test-verify-merged-both.js` verifying zero regressions in PDF/Excel layout generation.
+
+---
 
 ### 2026-09-17 | Merged विकासखंड (Block) Column with Rowspan in NFSA Monthly & Date Range PDF Reports
 

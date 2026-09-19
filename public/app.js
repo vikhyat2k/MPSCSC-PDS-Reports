@@ -760,6 +760,15 @@ function showError(msg) {
 }
 
 function resetForm() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+    if (typeof stopTimer === 'function') {
+        stopTimer();
+    }
+    currentRequestId = null;
+
     const schemes = ['nfsa', 'mdm', 'icds', 'welfare'];
     schemes.forEach(s => {
         const btnId = (s === 'nfsa') ? 'generateBtn' : (s + 'GenerateBtn');
@@ -770,6 +779,48 @@ function resetForm() {
             btn.innerHTML = '<span class="btn-icon">' + (icons[s] || '🚀') + '</span> Generate Report';
         }
     });
+}
+
+async function cancelCurrentGeneration() {
+    if (!currentRequestId) {
+        hideProgress();
+        resetForm();
+        return;
+    }
+
+    const reqId = currentRequestId;
+    console.log(`🛑 User requested cancellation for request: ${reqId}`);
+
+    // Update status indicators to visual cancelling state
+    const statusIds = ['progressStatus', 'mdmProgressStatus', 'icdsProgressStatus', 'welfareProgressStatus'];
+    statusIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '🛑 Cancelling generation...';
+    });
+
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+    if (typeof stopTimer === 'function') {
+        stopTimer();
+    }
+
+    try {
+        await fetch('api/terminate-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId: reqId })
+        });
+        console.log(`✅ Server confirmed termination for ${reqId}`);
+    } catch (err) {
+        console.warn('Termination fetch error:', err.message);
+    } finally {
+        currentRequestId = null;
+        hideProgress();
+        resetForm();
+        showError('Report generation was cancelled by user.');
+    }
 }
 
 
@@ -6583,3 +6634,4 @@ window.loadDaterangeReports = loadDaterangeReports;
 window.loadMDMReports = loadMDMReports;
 window.loadICDSReports = loadICDSReports;
 window.loadWelfareReports = loadWelfareReports;
+window.cancelCurrentGeneration = cancelCurrentGeneration;
