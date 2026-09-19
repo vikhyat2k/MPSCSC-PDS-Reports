@@ -267,6 +267,7 @@ class AdvancedAnalyticsPdfGenerator {
             </style>
         </head>
         <body>
+        <div class="document-container">
 
         <!-- ══════════════════════════════════════════
              PAGE 1 — EXECUTIVE DASHBOARD
