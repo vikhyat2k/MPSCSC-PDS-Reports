@@ -76,18 +76,32 @@ class AdvancedAnalyticsPdfGenerator {
                     print-color-adjust: exact !important;
                 }
 
+                * { box-sizing: border-box; }
+
                 body {
                     font-family: 'Inter', 'Noto Sans Devanagari', 'Nirmala UI', -apple-system, sans-serif;
                     color: #0F172A;
                     margin: 0;
                     padding: 0;
-                    background: #FFFFFF;
+                    background: #334155;
                     font-size: 8pt;
                     line-height: 1.35;
                 }
 
+                .document-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 24px 0;
+                    width: 100%;
+                    min-height: 100vh;
+                    box-sizing: border-box;
+                    transition: transform 0.2s ease;
+                }
+
                 .page {
                     width: 210mm;
+                    min-width: 210mm;
                     height: 297mm;
                     max-height: 297mm;
                     padding: 8mm 9mm 10mm 9mm;
@@ -97,10 +111,41 @@ class AdvancedAnalyticsPdfGenerator {
                     page-break-after: always;
                     break-after: page;
                     background: #FFFFFF;
+                    margin: 0 auto 24px auto;
+                    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+                    border-radius: 2px;
                 }
                 .page:last-child {
+                    margin-bottom: 0;
                     page-break-after: avoid;
                     break-after: avoid;
+                }
+
+                @media print {
+                    body {
+                        background: #FFFFFF !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                    .document-container {
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        display: block !important;
+                    }
+                    .page {
+                        margin: 0 !important;
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
+                        width: 210mm !important;
+                        height: 297mm !important;
+                        max-height: 297mm !important;
+                        page-break-after: always !important;
+                        break-after: page !important;
+                    }
+                    .page:last-child {
+                        page-break-after: avoid !important;
+                        break-after: avoid !important;
+                    }
                 }
 
                 /* Top Navigation & Sub-Header */
