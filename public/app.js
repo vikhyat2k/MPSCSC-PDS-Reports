@@ -578,12 +578,14 @@ async function handleWelfareGenerateReport(e) {
 
 function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
+    let consecutiveNetworkFailures = 0;
     pollingInterval = setInterval(async () => {
         try {
             let endpoint = `api/generate-status/${currentRequestId}`;
             if (currentScheme !== 'nfsa') endpoint = `api/generate-${currentScheme}-status/${currentRequestId}`;
             
             const res = await fetch(endpoint);
+            consecutiveNetworkFailures = 0; // Reset network failure count on successful response
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 if (res.status === 404) {
@@ -621,6 +623,22 @@ function startPolling() {
             }
         } catch (e) {
             console.error('Polling error:', e);
+            consecutiveNetworkFailures++;
+            const prefix = currentScheme === 'nfsa' ? 'progress' : `${currentScheme}Progress`;
+            const detailEl = document.getElementById(`${prefix}Detail`);
+
+            if (consecutiveNetworkFailures >= 3 && consecutiveNetworkFailures < 8) {
+                if (detailEl) {
+                    detailEl.innerText = `⚠️ Network connection interrupted. Retrying... (${consecutiveNetworkFailures}/8)`;
+                }
+            } else if (consecutiveNetworkFailures >= 8) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                stopTimer();
+                closeManualCaptchaModal();
+                showError("Network connection to server lost. Please check connection and try again.");
+                resetForm();
+            }
         }
     }, 1500);
 }
