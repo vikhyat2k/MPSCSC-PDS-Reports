@@ -508,9 +508,8 @@ class AdvancedAnalyticsPdfGenerator {
 
             <!-- Top Visual: Chart + Formula & Materiality -->
             <div style="display:flex;gap:10px;margin-bottom:10px;align-items:stretch;">
-                <div style="width:52%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:6px;padding:8px;text-align:center;">
-                    <div style="font-size:7.5pt;font-weight:700;color:#0B192C;margin-bottom:4px;">शीर्ष POS अंतर विसंगतियां / Top POS Gap Anomalies (%)</div>
-                    ${posGapUri ? `<img src="${posGapUri}" style="max-width:100%;max-height:160px;height:auto;display:block;margin:0 auto;" />` : ''}
+                <div style="width:52%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center;">
+                    ${posGapUri ? `<img src="${posGapUri}" style="max-width:100%;max-height:170px;height:auto;display:block;margin:0 auto;" />` : ''}
                 </div>
                 <div style="width:48%;background:#F8FAFC;border:1px solid #CBD5E1;border-left:3.5px solid #D97706;border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;font-size:7.3pt;line-height:1.45;">
                     <div>
