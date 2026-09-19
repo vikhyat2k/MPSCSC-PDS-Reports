@@ -13,7 +13,7 @@
 > **System:** PDS Lifting Intelligence Portal
 > **Stack:** Node.js · Express · Puppeteer · SQLite · Vanilla HTML/CSS/JS
 > **Document Status:** LIVE — auto-updated on every project change
-> **Last Sync:** 19 September 2026, 19:45 IST
+> **Last Sync:** 19 September 2026, 22:30 IST
 
 ---
 
@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 16 |
+| Completed Milestones | 17 |
 | Pending Milestones | 0 |
-| Last Code Change | 19 Sep 2026 — Phase 3 Operational Hygiene, Input Validation & Security Hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03) |
+| Last Code Change | 19 Sep 2026 — Executive Analytics Report Redesign (Crisp 5-Page Action-Oriented Decision Dashboard) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -594,7 +594,7 @@ Tracks implementation status of all major features.
 | Active Shops Details | COMPLETE | YES | Full/Partial lists |
 | District Intelligence Messenger | COMPLETE | YES | Shows all transporters incl 0-dispatch |
 | Transporter Balance Report | COMPLETE | YES | Commodity-level progress bars |
-| Advanced Analytics Report (Excel + PDF) | COMPLETE | YES | 5-sheet Excel & 9-page bilingual PDF for NFSA Monthly |
+| Advanced Analytics Report (Excel + PDF) | COMPLETE | YES | 5-sheet formula Excel & redesigned crisp 5-page executive decision dashboard (strictly 5 pages, zero overflow) |
 | Excel Export | COMPLETE | YES | All schemes |
 | PDF Export | COMPLETE | YES | Client-side + server-side |
 | Historical Report Viewer | COMPLETE | YES | reportRestorer.js |
@@ -614,6 +614,7 @@ Tracks implementation status of all major features.
 | Graceful Server Shutdown | COMPLETE | YES | SIGINT/SIGTERM handlers close scrapers & DB connection (OPS-03) |
 | HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
+| Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
 
 ---
 
@@ -639,6 +640,7 @@ Tracks implementation status of all major features.
 | M14 | UI polling error recovery (network drop handling) | 19 Sep 2026 | consecutiveNetworkFailures tracking and auto-timeout |
 | M17 | Process Hygiene, Input Validation & Defensive Headers | 19 Sep 2026 | Phase 3 operational hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03) |
 | M15 | History lazy-loading (exclude raw_data from list query) | 19 Sep 2026 | getAllReports() queries summary columns only |
+| M18 | Executive Analytics Report Redesign (Crisp 5-Page Dashboard) | 19 Sep 2026 | Replaced 9-page unformatted dump with strictly 5-page actionable dashboard: Exec Dashboard, Priority Interventions, Block & Transporters, POS Integrity Audit, Full 22-Sector Appendix |
 
 ### Upcoming Milestones
 
@@ -760,6 +762,7 @@ Tracks what has been tested and confirmed working.
 | Phase 3 Automated Temp File Janitor (OPS-04) | Storage & Cleanup | VERIFIED | 19 Sep 2026 | Verified cleanTempFiles identifies and purges stale temp files older than 24h |
 | Phase 3 UI Polling Network Drop Resilience (UX-03) | UI & Network Resilience | VERIFIED | 19 Sep 2026 | Verified failure tracking, reconnection banner, and clean error alert after 8 retries |
 | Phase 3 Graceful Server Shutdown (OPS-03) | Process & Lifecycle | VERIFIED | 19 Sep 2026 | Verified SIGINT/SIGTERM handlers close scrapers, HTTP server, and SQLite database |
+| Executive Analytics Report 5-Page Redesign | Unit, PDF & Visual Screenshot Audit | VERIFIED | 19 Sep 2026 | Verified strict 5-page A4 layout (/Type /Page = 5), composite urgency ranking, transporter intelligence, POS materiality standard, zero page overflows |
 
 ---
 
@@ -805,10 +808,44 @@ Tracks what has been tested and confirmed working.
 | ISSUE-038 | Abrupt server termination left orphaned Chromium processes and unclosed SQLite connection (OPS-03) | MEDIUM | RESOLVED | server.js, server/database/db.js | 19 Sep 2026 |
 | ISSUE-039 | Stale debug and CAPTCHA temporary files accumulated indefinitely in tmp/ directory (OPS-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-040 | HTTP responses lacked defensive security headers (nosniff, SAMEORIGIN, Referrer-Policy) (SEC-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
+| ISSUE-041 | Advanced analytics executive PDF spilled into 9 unformatted pages with 22-row identical 48h action plan | HIGH | RESOLVED | server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server/services/advancedAnalytics/advancedAnalyticsCompute.js | 19 Sep 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-19 | Executive Analytics Report Redesign — 5-Page Action-Oriented Decision Dashboard
+
+Files: server/services/advancedAnalytics/advancedAnalyticsCompute.js, server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server/services/advancedAnalytics/advancedAnalyticsChartRenderer.js, tests/test-pdf-redesign.js, PROJECT_DOCS.md
+Type: Feature / Executive Redesign / UX Optimization
+Closes: ISSUE-041
+
+- REQUIREMENT: Redesign the Advanced Analytical Executive Report to make it crisp, executive-friendly, and action-oriented for the District Manager/leadership within a 2-3 minute review window. Strictly eliminate repetitive 22-row data dumps with identical "48 hours" instructions and avoid multi-page table overflow into 9 pages.
+- ROOT CAUSES OF PREVIOUS ISSUES:
+  1. Unconstrained Table Heights & Page Breaks: `advancedAnalyticsPdfGenerator.js` rendered 21-row transporter tables with multi-line sub-rows, a 22-row action plan table, and a 22-row master database on arbitrary pages, spilling across 9 poorly formatted pages.
+  2. Action Monotony: Every sector in the action plan was assigned an identical generic directive: `48 घंटे के भीतर प्रदाय सुनिश्चित करें एवं समीक्षा करें / Ensure dispatch & review within 48 hours`.
+  3. Redundant Visual Headings: Page 3 and Page 4 had duplicate HTML headings rendered directly above embedded Chart.js chart canvases that already featured built-in title plugins, plus colliding y-axis rotated titles.
+- FIXES IMPLEMENTED:
+  1. **Analytics Compute Engine Upgrade (`advancedAnalyticsCompute.js`)**:
+     - Built Composite Urgency Scoring combining lifting deficit, pending volume, and POS feeding gap (`urgencyScore = liftDeficit * 0.45 + (remaining / maxRem) * 100 * 0.35 + (posGap / maxGap) * 100 * 0.20`).
+     - Generated Top 8 Priority Interventions with differentiated Root Causes, specific actions (truck rescheduling, quota enforcement, JSO shop inspection, offline sync), and tiered SLAs (24h, 36h, 48h).
+     - Generated Consolidated Transporter Intelligence: isolated multi-sector transporters with joint capacity liability, low performers (<30% lift), and normal benchmarks.
+     - Generated Material POS Discrepancies filtered strictly to `|Gap| > 15 pp` (13 sectors), eliminating noise.
+     - Generated structured Top 5 Management Concerns and 4 Immediate Actions with accountable officers and SLA tags for Page 1.
+  2. **PDF Generator Complete Redesign (`advancedAnalyticsPdfGenerator.js`)**:
+     - Enforced strict 5-page A4 portrait layout (`width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 8mm 9mm 10mm 9mm;`).
+     - Set Puppeteer print margin to 0 to align 1-to-1 with physical sheet boundaries.
+     - **Page 1 (Executive Dashboard)**: District KPIs, concise 2-line summary snapshot, Top 5 Management Concerns, 4 Immediate Actions with SLA badges.
+     - **Page 2 (Priority Sector Intervention)**: Top 8 exception sectors ranked by urgency, showing `FACT → PROBLEM → ROOT CAUSE → ACTION → SLA` (24h, 36h, 48h).
+     - **Page 3 (Block & Transporter Capacity Analysis)**: Side-by-side block bar chart & summary ranking table (#1 Bhainsdehi down to #10 Amla); consolidated transporter cards (multi-sector review, 7 low-lifting transporters, normal benchmark).
+     - **Page 4 (POS Discrepancy & Data Integrity Audit)**: Top POS Gap anomalies chart, materiality standard definition, material exceptions table (#1 to #13 >15 pp) with required verification actions and SLAs.
+     - **Page 5 (Appendix & System Enhancements)**: Complete 22-sector reference database with district totals, calculation methodology, and 4 system improvement opportunities.
+  3. **Chart Collision Elimination (`advancedAnalyticsChartRenderer.js`)**:
+     - Removed colliding y-axis title from POS Gap bar chart, added clean `pp` formatting, and removed duplicate HTML text headers above charts.
+- VERIFICATION:
+  - Verified with `tests/test-pdf-redesign.js`: Generated PDF verified to contain **strictly 5 physical pages** (`/Type /Page = 5`).
+  - Captured and visually audited high-resolution screenshots of all 5 pages (`tests/redesigned_page_1.png` through `5.png`), confirming zero overflows, no duplicate text, crisp Devanagari typography, and pristine aesthetics.
+  - Ran full regression suites (`test-phase1-fixes.js`, `test-phase2-fixes.js`, `test-phase3-fixes.js`, `test-advanced-analytics.js`, `test-verify-merged-both.js`) with 100% pass rate.
 
 ### 2026-09-19 | Phase 3 Operational Hygiene, Input Validation & Security Hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03)
 
