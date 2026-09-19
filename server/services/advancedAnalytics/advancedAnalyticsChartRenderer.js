@@ -164,11 +164,11 @@ class AdvancedAnalyticsChartRenderer {
                                 options: {
                                     responsive: false,
                                     plugins: {
-                                        title: { display: true, text: 'शीर्ष POS अंतर विसंगतियां / Top POS Gap Anomalies (pp)', font: { size: 16, weight: 'bold' } },
+                                        title: { display: true, text: 'शीर्ष POS अंतर विसंगतियां / Top POS Gap Anomalies (pp)', font: { size: 16, weight: 'bold' }, padding: { bottom: 15 } },
                                         legend: { display: false }
                                     },
                                     scales: {
-                                        y: { title: { display: true, text: 'प्रतिशत अंक अंतर (pp)' } }
+                                        y: { ticks: { callback: v => v + ' pp' } }
                                     }
                                 }
                             });
