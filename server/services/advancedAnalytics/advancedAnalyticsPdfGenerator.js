@@ -408,9 +408,8 @@ class AdvancedAnalyticsPdfGenerator {
 
             <!-- Top Row: Block Chart & Table -->
             <div style="display:flex;gap:10px;margin-bottom:10px;align-items:stretch;">
-                <div style="width:45%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:6px;padding:8px;text-align:center;">
-                    <div style="font-size:7.5pt;font-weight:700;color:#0B192C;margin-bottom:6px;">ब्लॉक-वार उठाव प्रतिशत / Block-wise Lift %</div>
-                    ${blockBarUri ? `<img src="${blockBarUri}" style="max-width:100%;max-height:180px;height:auto;display:block;margin:0 auto;" />` : ''}
+                <div style="width:45%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center;">
+                    ${blockBarUri ? `<img src="${blockBarUri}" style="max-width:100%;max-height:190px;height:auto;display:block;margin:0 auto;" />` : ''}
                 </div>
                 <div style="width:55%;">
                     <div style="font-size:7.8pt;font-weight:800;color:#0B192C;margin-bottom:4px;">📊 ब्लॉक निष्पादन रैंकिंग / Block Performance Summary</div>
