@@ -20,13 +20,27 @@ class DatabaseManager {
     const dbPath = path.join(dbDir, 'pds-reports.db');
     const seedPath = path.join(dbDir, 'pds-seed.db');
 
-    // Auto-seed database on fresh cloud instances if pds-reports.db is missing or empty
-    if ((!fs.existsSync(dbPath) || fs.statSync(dbPath).size === 0) && fs.existsSync(seedPath)) {
-      try {
-        fs.copyFileSync(seedPath, dbPath);
-        console.log('🌱 [Database] Auto-seeded database from pds-seed.db');
-      } catch (seedErr) {
-        console.warn('⚠️ [Database] Failed to auto-seed database:', seedErr.message);
+    // Auto-seed database on fresh cloud instances or if pds-seed.db is newer
+    if (fs.existsSync(seedPath)) {
+      const isDbMissingOrEmpty = !fs.existsSync(dbPath) || fs.statSync(dbPath).size === 0;
+      let shouldSeed = isDbMissingOrEmpty;
+      if (!shouldSeed && fs.existsSync(dbPath)) {
+        try {
+          const seedStat = fs.statSync(seedPath);
+          const dbStat = fs.statSync(dbPath);
+          if (seedStat.mtimeMs > dbStat.mtimeMs || process.env.FORCE_SEED === 'true') {
+            shouldSeed = true;
+          }
+        } catch (e) {}
+      }
+
+      if (shouldSeed) {
+        try {
+          fs.copyFileSync(seedPath, dbPath);
+          console.log('🌱 [Database] Auto-seeded/updated database from pds-seed.db');
+        } catch (seedErr) {
+          console.warn('⚠️ [Database] Failed to auto-seed database:', seedErr.message);
+        }
       }
     }
 
