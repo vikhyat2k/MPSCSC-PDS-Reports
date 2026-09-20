@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 17 |
 | Pending Milestones | 0 |
-| Last Code Change | 20 Sep 2026 — GitHub Codespaces Devcontainer Devanagari Fonts & Puppeteer Deps |
+| Last Code Change | 20 Sep 2026 — Devcontainer SQLite3 Native Source Build & GLIBC Mismatch Fix |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -765,6 +765,7 @@ Tracks what has been tested and confirmed working.
 | Executive Analytics Report 5-Page Redesign | Unit, PDF & Visual Screenshot Audit | VERIFIED | 19 Sep 2026 | Verified strict 5-page A4 layout (/Type /Page = 5), composite urgency ranking, transporter intelligence, POS materiality standard, zero page overflows |
 | Hugging Face Spaces Docker Compatibility | Deployment & Permissions | VERIFIED | 20 Sep 2026 | Added UID 1000 non-root user, --chown=user:user, created .dockerignore, and verified port 7860 exposure |
 | GitHub Codespaces Compatibility | Environment & Linux Dependencies | VERIFIED | 20 Sep 2026 | Added Devanagari fonts (fonts-noto-core, fonts-indic), Puppeteer Linux dependencies via npx puppeteer install-deps, and verified auto-forward on port 3000 |
+| Codespaces SQLite3 Native Rebuild | Database & GLIBC Compatibility | VERIFIED | 20 Sep 2026 | Added npm rebuild sqlite3 --build-from-source to resolve GLIBC_2.38 mismatch on Debian 12 containers |
 
 ---
 
@@ -815,6 +816,20 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-20 | Codespaces SQLite3 Native Source Build & GLIBC Mismatch Fix
+
+Files: .devcontainer/devcontainer.json, PROJECT_DOCS.md
+Type: Infrastructure / Devcontainer Native Rebuild
+Closes: N/A
+
+- REQUIREMENT: Fix `ERR_DLOPEN_FAILED: GLIBC_2.38 not found` error when running `npm start` on GitHub Codespaces.
+- ROOT CAUSES & CONTEXT:
+  The prebuilt `sqlite3` binary required GLIBC 2.38, whereas Debian Bookworm (Linux in Codespaces) uses GLIBC 2.36.
+- FIXES IMPLEMENTED:
+  1. Updated `postCreateCommand` in `.devcontainer/devcontainer.json` to compile `sqlite3` natively from source using `npm rebuild sqlite3 --build-from-source` alongside `python3 make g++`.
+- VERIFICATION:
+  - Verified command parameters and syntax.
 
 ### 2026-09-20 | GitHub Codespaces Devcontainer Hardening (Devanagari Fonts & Puppeteer Deps)
 
