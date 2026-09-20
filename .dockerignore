@@ -1,0 +1,9 @@
+node_modules
+.git
+database/pds-reports.db*
+sessions/
+logs/
+reports/
+tmp/
+scratch/
+.cache

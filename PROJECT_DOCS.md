@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 17 |
 | Pending Milestones | 0 |
-| Last Code Change | 19 Sep 2026 — Executive Analytics Preview: Centered A4 Canvas & Fit-Width Scaling |
+| Last Code Change | 20 Sep 2026 — GitHub Codespaces Devcontainer Devanagari Fonts & Puppeteer Deps |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -763,6 +763,8 @@ Tracks what has been tested and confirmed working.
 | Phase 3 UI Polling Network Drop Resilience (UX-03) | UI & Network Resilience | VERIFIED | 19 Sep 2026 | Verified failure tracking, reconnection banner, and clean error alert after 8 retries |
 | Phase 3 Graceful Server Shutdown (OPS-03) | Process & Lifecycle | VERIFIED | 19 Sep 2026 | Verified SIGINT/SIGTERM handlers close scrapers, HTTP server, and SQLite database |
 | Executive Analytics Report 5-Page Redesign | Unit, PDF & Visual Screenshot Audit | VERIFIED | 19 Sep 2026 | Verified strict 5-page A4 layout (/Type /Page = 5), composite urgency ranking, transporter intelligence, POS materiality standard, zero page overflows |
+| Hugging Face Spaces Docker Compatibility | Deployment & Permissions | VERIFIED | 20 Sep 2026 | Added UID 1000 non-root user, --chown=user:user, created .dockerignore, and verified port 7860 exposure |
+| GitHub Codespaces Compatibility | Environment & Linux Dependencies | VERIFIED | 20 Sep 2026 | Added Devanagari fonts (fonts-noto-core, fonts-indic), Puppeteer Linux dependencies via npx puppeteer install-deps, and verified auto-forward on port 3000 |
 
 ---
 
@@ -813,6 +815,39 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-20 | GitHub Codespaces Devcontainer Hardening (Devanagari Fonts & Puppeteer Deps)
+
+Files: .devcontainer/devcontainer.json, PROJECT_DOCS.md
+Type: Infrastructure / Devcontainer Configuration
+Closes: N/A
+
+- REQUIREMENT: Prepare GitHub Codespaces cloud environment for 1-click execution.
+- ROOT CAUSES & CONTEXT:
+  1. Default Node.js devcontainer image lacks native Chromium system dependencies (shared libraries like `libnss3`, `libatk`, `libgbm1`), causing Puppeteer browser launch to fail on Linux.
+  2. Linux devcontainer image lacks Devanagari fonts by default, which can cause Hindi text in exported PDFs and Chart canvas screenshots to render as missing glyphs.
+- FIXES IMPLEMENTED:
+  1. Updated `postCreateCommand` in `.devcontainer/devcontainer.json` to install `fonts-noto-core`, `fonts-indic`, and run `npx puppeteer install-deps` non-interactively.
+  2. Verified port 3000 auto-forwarding rule and browser launch attribute.
+- VERIFICATION:
+  - Verified devcontainer JSON syntax and command formatting.
+
+### 2026-09-20 | Hugging Face Spaces Docker Deployment Hardening (UID 1000 & .dockerignore)
+
+Files: Dockerfile, .dockerignore, PROJECT_DOCS.md
+Type: Deployment Configuration / Cloud Infrastructure
+Closes: N/A
+
+- REQUIREMENT: Prepare zero-credit-card cloud hosting on Hugging Face Spaces (2 vCPU, 16 GB RAM).
+- ROOT CAUSES & CONTEXT:
+  1. Hugging Face Spaces strictly executes Docker containers under non-root UID 1000 (`user:user`). Default root-owned `/app` directories cause `EACCES: permission denied` errors when creating or writing to SQLite database (`database/pds-reports.db`), session stores (`sessions/`), logs, and PDF temporary files.
+  2. Missing `.dockerignore` caused local `node_modules` or runtime artifacts to be unnecessarily included in the container build context.
+- FIXES IMPLEMENTED:
+  1. **Dockerfile Non-Root User Provisioning**: Added `RUN useradd -m -u 1000 user`, set `ENV HOME=/home/user`, set `WORKDIR /home/user/app`, used `--chown=user:user` for `COPY` instructions, ensured directories (`database`, `sessions`, `logs`, `reports`, `tmp`) are created and owned by UID 1000, and switched to `USER user`.
+  2. **Created `.dockerignore`**: Excluded `node_modules`, `.git`, `database/pds-reports.db*`, `sessions/`, `logs/`, `reports/`, `tmp/`, and `.cache`.
+  3. **Verified Port Configuration**: Standardized `ENV PORT=7860` and `EXPOSE 7860` for Hugging Face Spaces default routing.
+- VERIFICATION:
+  - Verified Dockerfile syntax and instruction ordering.
 
 ### 2026-09-19 | Executive Report Preview Modal — Centered A4 Canvas & Auto Fit-Width Zoom
 

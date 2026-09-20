@@ -8,5 +8,5 @@
       "onAutoForward": "openBrowser"
     }
   },
-  "postCreateCommand": "npm install"
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y fonts-noto-core fonts-indic && npm install && sudo npx puppeteer install-deps"
 }
