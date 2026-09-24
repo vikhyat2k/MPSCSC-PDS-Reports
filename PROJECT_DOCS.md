@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 17 |
 | Pending Milestones | 0 |
-| Last Code Change | 20 Sep 2026 — Synchronized pds-seed.db (October 2026 Reports) & Enhanced Cloud Auto-Seed |
+| Last Code Change | 24 Sep 2026 — Fix Welfare Scheme Dispatch vs Received Inversion & Portal Zero-Dispatch Anomaly (ISSUE-042) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 
@@ -580,7 +580,7 @@ Tracks implementation status of all major features.
 | NFSA Date Range Scraper | COMPLETE | YES | nfsa_daterange_scraper.js |
 | MDM Scraper | COMPLETE | YES | mdm_scraper.js |
 | ICDS Scraper | COMPLETE | YES | icds_scraper.js |
-| Welfare Scraper | COMPLETE | YES | welfare_scraper.js |
+| Welfare Scraper | COMPLETE | YES | welfare_scraper.js, welfareDataProcessor.js (Reconciled dispatch with received to eliminate portal 0-dispatch anomalies) |
 | CAPTCHA Solver (OCR) | COMPLETE | PARTIAL | ~60% accuracy, retry logic added |
 | 2Captcha Fallback | COMPLETE | NO | Not tested in production |
 | Concurrency Limit (max 3) | COMPLETE | YES | checkConcurrencyLimit() |
@@ -767,6 +767,7 @@ Tracks what has been tested and confirmed working.
 | GitHub Codespaces Compatibility | Environment & Linux Dependencies | VERIFIED | 20 Sep 2026 | Added Devanagari fonts (fonts-noto-core, fonts-indic), Puppeteer Linux dependencies via npx puppeteer install-deps, and verified auto-forward on port 3000 |
 | Codespaces SQLite3 Native Rebuild | Database & GLIBC Compatibility | VERIFIED | 20 Sep 2026 | Added npm rebuild sqlite3 --build-from-source to resolve GLIBC_2.38 mismatch on Debian 12 containers |
 | Cloud Database Synchronization & Seed Mtime Check | Database & Data Persistence | VERIFIED | 20 Sep 2026 | WAL-checkpointed and synchronized pds-seed.db with Report 573 (October 2026); added mtime auto-update in db.js |
+| Welfare Scheme Dispatch Reconciliation & Portal Verification | Scraping & Verification | VERIFIED | 24 Sep 2026 | Enforced physical invariant (dispatched >= received), captured official #depotreport summary totals, updated loading spinner hooks, synchronized pds-seed.db, and corrected June 2026 reports (#579, #580) |
 
 ---
 
@@ -813,10 +814,32 @@ Tracks what has been tested and confirmed working.
 | ISSUE-039 | Stale debug and CAPTCHA temporary files accumulated indefinitely in tmp/ directory (OPS-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-040 | HTTP responses lacked defensive security headers (nosniff, SAMEORIGIN, Referrer-Policy) (SEC-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-041 | Advanced analytics executive PDF spilled into 9 unformatted pages with 22-row identical 48h action plan | HIGH | RESOLVED | server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server/services/advancedAnalytics/advancedAnalyticsCompute.js | 19 Sep 2026 |
+| ISSUE-042 | Welfare scheme reports showed intermittent dispatch deficits and dispatch % lower than received % (e.g. June 2026 showing 80.73% vs 90.09% vs 93.13% received) due to portal zero-dispatch anomalies and lack of logical dispatch reconciliation | HIGH | RESOLVED | server/services/welfareDataProcessor.js, server/automation/welfare_scraper.js, database/pds-reports.db, database/pds-seed.db | 24 Sep 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-09-24 | Fix Welfare Scheme Dispatch vs Received Inversion and Portal Zero-Dispatch Anomaly (ISSUE-042)
+
+Files: server/services/welfareDataProcessor.js, server/automation/welfare_scraper.js, database/pds-reports.db, database/pds-seed.db, PROJECT_DOCS.md
+Type: Bug Fix / Data Integrity / Portal Scraping Reliability
+Closes: ISSUE-042
+
+- ROOT CAUSE:
+  1. On the MP SCM portal, individual depot/FPS tables intermittently display `Dispatch Qty = 0.000` while `Receive (FPS) Qty` is positive (due to unclosed transit batches or ePoS delivery confirmations without updated SCM dispatch links). In run #580 (June 2026), Athner depot's 18 shops returned `wheatDispatched = 0` and `riceDispatched = 0` while showing positive receipts, causing total dispatch to register as 1,489.05 Qt (80.73%) against 1,717.80 Qt (93.13%) received. In earlier run #579, AMLA depot's 4 shops had 0 dispatch, registering as 1,661.70 Qt (90.09%).
+  2. `welfareDataProcessor.js` lacked logical reconciliation: in PDS operations, an institution cannot receive stock that was never dispatched. Recording `dispatched < received` produced physical impossibilities where receipt % exceeded dispatch %.
+  3. `welfare_scraper.js` computed `summaryTotals` circularly by summing shop rows rather than capturing the official SCM portal summary row from `#depotreport` (which correctly reported 1,717.80 Qt dispatch for June 2026). Thus, `reportValidator.validate` could not detect missing depot dispatches.
+  4. `_waitForLoading` in `welfare_scraper.js` watched only `#loading`, while `getreportInst` displays `#loadingdepot`, causing the spinner wait to time out and risk reading unready DOM states.
+
+- FIX:
+  1. In `welfareDataProcessor.js`: Enforced the physical invariant `wheatDisp = Math.max(wheatDisp, wheatRec)` and `riceDisp = Math.max(riceDisp, riceRec)` for all shops. Updated `shop.wheatDispatched` and `shop.riceDispatched` so that sector rollups, balance calculations, and Excel/PDF generation always reflect consistent figures.
+  2. In `welfare_scraper.js`:
+     - Extracted the official district-level summary totals directly from `#depotreport`'s Total row, providing genuine verification data to `reportValidator`.
+     - In `_extractDepotShops`, reconciled `wDisp = Math.max(wDisp, wRec)` and `rDisp = Math.max(rDisp, rRec)` at parse time.
+     - Updated `_waitForLoading` to monitor `#loading`, `#loadingdepot`, and `#loadingdist`.
+  3. Corrected historical database records (#579 and #580) in `database/pds-reports.db` and synchronized `database/pds-seed.db`. Re-generated the corresponding Excel files (`Welfare_Report_June_2026_1364f1c9.xlsx` and `Welfare_Report_June_2026_2c8772ad.xlsx`), establishing consistent 93.13% dispatch and 93.13% receipt across both entries.
+
 
 ### 2026-09-20 | Synchronized pds-seed.db (October 2026 Reports) & Enhanced Cloud Auto-Seed
 
