@@ -109,8 +109,13 @@ class WelfareScraper {
 
     async _waitForLoading() {
         try {
-            await this.page.waitForSelector('#loading', { visible: true, timeout: 2000 });
-            await this.page.waitForSelector('#loading', { hidden: true, timeout: 30000 });
+            await this.page.waitForFunction(() => {
+                const l1 = document.getElementById('loading');
+                const l2 = document.getElementById('loadingdepot');
+                const l3 = document.getElementById('loadingdist');
+                const isVisible = el => el && (el.offsetWidth > 0 || el.offsetHeight > 0 || window.getComputedStyle(el).display !== 'none');
+                return !isVisible(l1) && !isVisible(l2) && !isVisible(l3);
+            }, { timeout: 30000 });
         } catch (e) {
             await new Promise(r => setTimeout(r, 1000));
         }
@@ -196,7 +201,14 @@ class WelfareScraper {
             console.log(`   Processing ${validDepots.length} depots.`);
 
             const rawData = [];
-            const summaryTotals = {
+            const summaryTotals = this.portalSummary ? {
+                wheat: { ...this.portalSummary.wheat },
+                rice: { ...this.portalSummary.rice }
+            } : {
+                wheat: { allotted: 0, dispatched: 0, received: 0 },
+                rice: { allotted: 0, dispatched: 0, received: 0 }
+            };
+            const accumulatedTotals = {
                 wheat: { allotted: 0, dispatched: 0, received: 0 },
                 rice: { allotted: 0, dispatched: 0, received: 0 }
             };
@@ -210,12 +222,20 @@ class WelfareScraper {
 
                 shops.forEach(shop => {
                     rawData.push(shop);
-                    summaryTotals.wheat.allotted += shop.wheatAllotted;
-                    summaryTotals.wheat.dispatched += shop.wheatDispatched;
-                    summaryTotals.wheat.received += shop.wheatReceived;
-                    summaryTotals.rice.allotted += shop.riceAllotted;
-                    summaryTotals.rice.dispatched += shop.riceDispatched;
-                    summaryTotals.rice.received += shop.riceReceived;
+                    accumulatedTotals.wheat.allotted += shop.wheatAllotted;
+                    accumulatedTotals.wheat.dispatched += shop.wheatDispatched;
+                    accumulatedTotals.wheat.received += shop.wheatReceived;
+                    accumulatedTotals.rice.allotted += shop.riceAllotted;
+                    accumulatedTotals.rice.dispatched += shop.riceDispatched;
+                    accumulatedTotals.rice.received += shop.riceReceived;
+                    if (!this.portalSummary) {
+                        summaryTotals.wheat.allotted += shop.wheatAllotted;
+                        summaryTotals.wheat.dispatched += shop.wheatDispatched;
+                        summaryTotals.wheat.received += shop.wheatReceived;
+                        summaryTotals.rice.allotted += shop.riceAllotted;
+                        summaryTotals.rice.dispatched += shop.riceDispatched;
+                        summaryTotals.rice.received += shop.riceReceived;
+                    }
                 });
 
                 console.log(`   ✅ Extracted ${shops.length} welfare institutes from ${depot.name}`);
@@ -391,6 +411,37 @@ class WelfareScraper {
                     (container && container.innerText.includes('Depot'));
             }, { timeout: 90000 });
             console.log(`✅ [Welfare] #depotreport loaded with Betul's data`);
+
+            // Extract official portal summary from #depotreport Total row
+            this.portalSummary = await this.page.evaluate(() => {
+                const table = document.getElementById('depotreport');
+                if (!table) return null;
+                const rows = table.querySelectorAll('tr');
+                for (let i = rows.length - 1; i >= 0; i--) {
+                    const cells = rows[i].querySelectorAll('td');
+                    if (cells.length > 20 && cells[0].innerText.trim().toLowerCase().includes('total')) {
+                        const parseKg = td => td ? (parseFloat(td.innerText.replace(/,/g, '').trim()) / 100 || 0) : 0;
+                        return {
+                            rice: {
+                                allotted: parseKg(cells[8]),
+                                dispatched: parseKg(cells[10]),
+                                received: parseKg(cells[11])
+                            },
+                            wheat: {
+                                allotted: parseKg(cells[17]),
+                                dispatched: parseKg(cells[19]),
+                                received: parseKg(cells[20])
+                            }
+                        };
+                    }
+                }
+                return null;
+            });
+            if (this.portalSummary) {
+                console.log(`📍 [Welfare] Captured official portal summary totals:`);
+                console.log(`   Wheat: Allot=${this.portalSummary.wheat.allotted} Qt, Disp=${this.portalSummary.wheat.dispatched} Qt, Rec=${this.portalSummary.wheat.received} Qt`);
+                console.log(`   Rice:  Allot=${this.portalSummary.rice.allotted} Qt, Disp=${this.portalSummary.rice.dispatched} Qt, Rec=${this.portalSummary.rice.received} Qt`);
+            }
         } catch (e) {
             console.error('❌ Timed out waiting for #depotreport. Dumping content...');
             const html = await this.page.content();
@@ -494,17 +545,28 @@ class WelfareScraper {
                         continue;
                     }
 
+                    const wA_val = parseKg(cells[wA]);
+                    let wDi_val = parseKg(cells[wDi]);
+                    const wRe_val = parseKg(cells[wRe]);
+                    // Reconcile: received grain must have been dispatched
+                    if (wRe_val > wDi_val) wDi_val = wRe_val;
+
+                    const rA_val = parseKg(cells[rA]);
+                    let rDi_val = parseKg(cells[rDi]);
+                    const rRe_val = parseKg(cells[rRe]);
+                    if (rRe_val > rDi_val) rDi_val = rRe_val;
+
                     result.push({
                         shopCode,
                         shopName: `Welfare Inst ${shopCode}`,
                         issuePoint: depotNameStr,
                         columnCount: colCount,
-                        wheatAllotted: parseKg(cells[wA]),
-                        wheatDispatched: parseKg(cells[wDi]),
-                        wheatReceived: parseKg(cells[wRe]),
-                        riceAllotted: parseKg(cells[rA]),
-                        riceDispatched: parseKg(cells[rDi]),
-                        riceReceived: parseKg(cells[rRe])
+                        wheatAllotted: wA_val,
+                        wheatDispatched: wDi_val,
+                        wheatReceived: wRe_val,
+                        riceAllotted: rA_val,
+                        riceDispatched: rDi_val,
+                        riceReceived: rRe_val
                     });
                 }
                 return { shops: result, tableFound: true, totalRows: rows.length, firstDataCols, sampleRow };
