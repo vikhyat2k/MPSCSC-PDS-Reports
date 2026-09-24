@@ -62,12 +62,28 @@ class WelfareDataProcessor {
             const riceAlloc = parseNumeric(shop.riceAllotted || shop.fortifiedRiceAllotted || 0);
             const totalAlloc = wheatAlloc + riceAlloc;
 
-            const wheatDisp = parseNumeric(shop.wheatDispatched || 0);
-            const riceDisp = parseNumeric(shop.riceDispatched || shop.fortifiedRiceDispatched || 0);
-            const totalDisp = wheatDisp + riceDisp;
+            let wheatDisp = parseNumeric(shop.wheatDispatched || 0);
+            let riceDisp = parseNumeric(shop.riceDispatched || shop.fortifiedRiceDispatched || 0);
 
             const wheatRec = parseNumeric(shop.wheatReceived || 0);
             const riceRec = parseNumeric(shop.riceReceived || shop.fortifiedRiceReceived || 0);
+
+            // Logical reconciliation: Goods received by an institute must have been dispatched.
+            // If portal data intermittently omits/glitches dispatch to 0 when receipt is recorded,
+            // dispatch cannot logically be less than receipt.
+            if (wheatRec > wheatDisp) {
+                wheatDisp = wheatRec;
+                shop.wheatDispatched = wheatDisp;
+            }
+            if (riceRec > riceDisp) {
+                riceDisp = riceRec;
+                shop.riceDispatched = riceDisp;
+                if (shop.fortifiedRiceDispatched !== undefined) {
+                    shop.fortifiedRiceDispatched = riceDisp;
+                }
+            }
+
+            const totalDisp = wheatDisp + riceDisp;
             const totalRec = wheatRec + riceRec;
 
             if (totalAlloc === 0 && totalDisp === 0 && totalRec === 0) return;
