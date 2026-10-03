@@ -574,21 +574,49 @@
   margin-bottom: 6px;
 }
 
+/* ── Rice Quality Inspection (KMS 2025-26) ───────────── */
+.rice-sheet-table {
+  font-size: 11px;
+}
+
+.rice-sheet-table th,
+.rice-sheet-table td {
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.rice-sheet-table input.superv-input {
+  padding: 4px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.rice-sheet-table input.miller-name-input {
+  text-align: left;
+}
+
+/* ── Print Media Rules ───────────────────────────────── */
 @media print {
+  @page {
+    size: auto;
+    margin: 8mm;
+  }
   body * {
     visibility: hidden;
   }
-  #printableReportArea, #printableReportArea * {
+  #printableReportArea, #printableReportArea *,
+  #printableRiceSheetArea, #printableRiceSheetArea * {
     visibility: visible;
   }
-  #printableReportArea {
+  #printableReportArea, #printableRiceSheetArea {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     margin: 0;
     padding: 0;
-    background: #fff;
-    color: #000;
+    background: #fff !important;
+    color: #000 !important;
   }
 }
