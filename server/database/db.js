@@ -894,6 +894,7 @@ class DatabaseManager {
    */
   async saveSupervisionMeeting(data) {
     const id = data.id || ('MEET_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const isTest = (data.is_test || data.isTest || (id && (id.startsWith('TEST_') || id.startsWith('DUMMY_')))) ? 1 : 0;
     const meetingType = data.meetingType || data.meeting_type || 'coordination';
     const agency = data.agency || '';
     const meetingDate = data.meetingDate || data.meeting_date || new Date().toISOString().split('T')[0];
@@ -905,8 +906,8 @@ class DatabaseManager {
 
     await this.run(`
       INSERT INTO supervision_meetings (
-        id, meeting_type, agency, meeting_date, chairperson, attendees, agenda_items, minutes, action_points
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, meeting_type, agency, meeting_date, chairperson, attendees, agenda_items, minutes, action_points, is_test
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         meeting_type = excluded.meeting_type,
         agency = excluded.agency,
@@ -915,10 +916,31 @@ class DatabaseManager {
         attendees = excluded.attendees,
         agenda_items = excluded.agenda_items,
         minutes = excluded.minutes,
-        action_points = excluded.action_points
-    `, [id, meetingType, agency, meetingDate, chairperson, attendees, agendaItems, minutes, actionPoints]);
+        action_points = excluded.action_points,
+        is_test = excluded.is_test
+    `, [id, meetingType, agency, meetingDate, chairperson, attendees, agendaItems, minutes, actionPoints, isTest]);
 
     return { success: true, id };
+  }
+
+  /**
+   * Get single Supervision Meeting by ID
+   */
+  async getSupervisionMeetingById(id) {
+    const row = await this.get('SELECT * FROM supervision_meetings WHERE id = ?', [id]);
+    if (!row) return null;
+    return {
+      ...row,
+      agenda_items: JSON.parse(row.agenda_items || '[]'),
+      action_points: JSON.parse(row.action_points || '[]')
+    };
+  }
+
+  /**
+   * Delete Supervision Meeting by ID
+   */
+  async deleteSupervisionMeeting(id) {
+    return await this.run('DELETE FROM supervision_meetings WHERE id = ?', [id]);
   }
 
   /**
