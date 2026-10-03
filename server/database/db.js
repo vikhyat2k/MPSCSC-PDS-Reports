@@ -753,6 +753,7 @@ class DatabaseManager {
    */
   async saveSurpriseInspection(data) {
     const id = data.id || ('SURP_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const isTest = (data.is_test || data.isTest || (id && (id.startsWith('TEST_') || id.startsWith('DUMMY_')))) ? 1 : 0;
     const mode = data.mode || 'dm';
     const issueCenter = data.issueCenter || data.issue_center || '';
     const inspectionDate = data.inspectionDate || data.inspection_date || new Date().toISOString().split('T')[0];
@@ -764,8 +765,8 @@ class DatabaseManager {
 
     await this.run(`
       INSERT INTO supervision_surprise (
-        id, mode, issue_center, inspection_date, officer_name, officer_designation, score, defects_count, payload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, mode, issue_center, inspection_date, officer_name, officer_designation, score, defects_count, payload, is_test
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         mode = excluded.mode,
         issue_center = excluded.issue_center,
@@ -774,8 +775,9 @@ class DatabaseManager {
         officer_designation = excluded.officer_designation,
         score = excluded.score,
         defects_count = excluded.defects_count,
-        payload = excluded.payload
-    `, [id, mode, issueCenter, inspectionDate, officerName, officerDesignation, score, defectsCount, payload]);
+        payload = excluded.payload,
+        is_test = excluded.is_test
+    `, [id, mode, issueCenter, inspectionDate, officerName, officerDesignation, score, defectsCount, payload, isTest]);
 
     return { success: true, id };
   }
