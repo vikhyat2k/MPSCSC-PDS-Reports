@@ -760,8 +760,8 @@ class DatabaseManager {
     const officerName = data.officerName || data.officer_name || '';
     const officerDesignation = data.officerDesignation || data.officer_designation || '';
     const score = parseInt(data.score || 0, 10);
-    const defectsCount = parseInt(data.defectsCount || data.defects_count || 0, 10);
-    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify(data);
+    const defectsCount = parseInt(data.defectsCount || data.deficienciesCount || data.defects_count || 0, 10);
+    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify(data.payload || data);
 
     await this.run(`
       INSERT INTO supervision_surprise (
@@ -881,6 +881,16 @@ class DatabaseManager {
     return await this.run('DELETE FROM supervision_roster WHERE id = ?', [id]);
   }
 
+  _safeJson(val, fallback = []) {
+    if (!val) return fallback;
+    if (typeof val !== 'string') return val;
+    try {
+      return JSON.parse(val);
+    } catch (e) {
+      return val;
+    }
+  }
+
   /**
    * Get Supervision Meetings
    */
@@ -896,8 +906,8 @@ class DatabaseManager {
     const rows = await this.all(sql, params);
     return rows.map(r => ({
       ...r,
-      agenda_items: JSON.parse(r.agenda_items || '[]'),
-      action_points: JSON.parse(r.action_points || '[]')
+      agenda_items: this._safeJson(r.agenda_items, []),
+      action_points: this._safeJson(r.action_points, [])
     }));
   }
 
@@ -943,8 +953,8 @@ class DatabaseManager {
     if (!row) return null;
     return {
       ...row,
-      agenda_items: JSON.parse(row.agenda_items || '[]'),
-      action_points: JSON.parse(row.action_points || '[]')
+      agenda_items: this._safeJson(row.agenda_items, []),
+      action_points: this._safeJson(row.action_points, [])
     };
   }
 
@@ -976,16 +986,26 @@ class DatabaseManager {
       `, [currentYear]);
 
       const meetingsCount = await this.get('SELECT COUNT(*) as count FROM supervision_meetings');
+      const riceCount = await this.get('SELECT COUNT(*) as count FROM supervision_rice_inspections');
+
+      const avgScore = Math.round(inspTotal?.avgScore || 0);
+      const totalInsp = inspTotal?.count || 0;
+      const totalSurp = surpTotal?.count || 0;
 
       return {
-        totalInspections: inspTotal?.count || 0,
-        averageComplianceScore: Math.round(inspTotal?.avgScore || 0),
+        totalInspections: totalInsp,
+        inspectionsCompleted: totalInsp,
+        averageComplianceScore: avgScore,
+        avgComplianceScore: avgScore,
         inspectionsThisMonth: inspThisMonth?.count || 0,
-        totalSurpriseVisits: surpTotal?.count || 0,
+        totalSurpriseVisits: totalSurp,
+        surpriseVisitsCompleted: totalSurp,
         totalRosterPlanned: rosterStats?.totalRoster || 0,
         rosterCompleted: rosterStats?.completedRoster || 0,
         rosterPending: rosterStats?.pendingRoster || 0,
         totalMeetingsRecorded: meetingsCount?.count || 0,
+        meetingsRecorded: meetingsCount?.count || 0,
+        riceInspectionsCount: riceCount?.count || 0,
         activeDistrict: 'Betul',
         headquartersOrder: 'Order 3/1 (DM) & 3/2 (RM)'
       };
@@ -1399,10 +1419,16 @@ class DatabaseManager {
       LIMIT ?
     `, [parseInt(limit, 10) || 50]);
 
-    return rows.map(r => ({
-      ...r,
-      payload: JSON.parse(r.payload || '{}')
-    }));
+    return rows.map(r => {
+      const payload = JSON.parse(r.payload || '{}');
+      const lots = payload.lots || [];
+      const hasRejected = lots.some(l => (l.result || '').toUpperCase().includes('REJECT') || (l.result || '').toUpperCase().includes('BEYOND'));
+      return {
+        ...r,
+        payload,
+        overall_result: hasRejected ? 'REJECTED' : 'PASSED'
+      };
+    });
   }
 
   /**
@@ -1411,9 +1437,13 @@ class DatabaseManager {
   async getRiceInspectionById(id) {
     const row = await this.get('SELECT * FROM supervision_rice_inspections WHERE id = ?', [id]);
     if (!row) return null;
+    const payload = JSON.parse(row.payload || '{}');
+    const lots = payload.lots || [];
+    const hasRejected = lots.some(l => (l.result || '').toUpperCase().includes('REJECT') || (l.result || '').toUpperCase().includes('BEYOND'));
     return {
       ...row,
-      payload: JSON.parse(row.payload || '{}')
+      payload,
+      overall_result: hasRejected ? 'REJECTED' : 'PASSED'
     };
   }
 
@@ -1495,6 +1525,8 @@ class DatabaseManager {
     await this.run("DELETE FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
     return {
       success: true,
+      totalDeleted: before.total,
+      deleted: before.counts || before,
       deletedCounts: before,
       message: `सफलतापूर्वक ${before.total} टेस्ट/डमी रिकॉर्ड्स हटाए गए। मूल वास्तविक रिकॉर्ड सुरक्षित हैं।`
     };

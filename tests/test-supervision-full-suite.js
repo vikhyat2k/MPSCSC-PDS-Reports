@@ -101,6 +101,11 @@ async function runSupervisionFullTestSuite() {
     // ──────────────────────────────────────────────────────────
     console.log('\n▶️ SUITE 2: Test Data Seeding & Sandbox Status API');
 
+    await recordTest('Purge any previous ad-hoc test records to establish clean baseline', async () => {
+        const res = await request('POST', '/api/supervision/test-data/cleanup');
+        assert.strictEqual(res.status, 200);
+    })();
+
     await recordTest('Seed 22 realistic dummy test records across 5 modules', async () => {
         const res = await request('POST', '/api/supervision/test-data/seed');
         assert.strictEqual(res.status, 200);

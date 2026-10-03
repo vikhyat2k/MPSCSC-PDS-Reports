@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 19 |
+| Completed Milestones | 20 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Surprise Inspection Modal Opaque Solid Surfaces & High-Contrast Typography (ISSUE-045) |
+| Last Code Change | 04 Oct 2026 — Comprehensive Supervision Testing, Safe Dummy Dataset & 1-Click Purge (ISSUE-046) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Rice KMS 2025-26) |
@@ -617,6 +617,7 @@ Tracks implementation status of all major features.
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
 | Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape direct print engine (ISSUE-044) + Solid opaque surfaces & high-contrast typography eliminating background bleed-through (ISSUE-045) |
+| Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
 
 ---
 
@@ -644,6 +645,7 @@ Tracks implementation status of all major features.
 | M15 | History lazy-loading (exclude raw_data from list query) | 19 Sep 2026 | getAllReports() queries summary columns only |
 | M18 | Executive Analytics Report Redesign (Crisp 5-Page Dashboard) | 19 Sep 2026 | Replaced 9-page unformatted dump with strictly 5-page actionable dashboard: Exec Dashboard, Priority Interventions, Block & Transporters, POS Integrity Audit, Full 22-Sector Appendix |
 | M19 | Supervision & Inspection Module (Orders 3/1, 3/2 & Rice KMS 2025-26) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 + Rice Quality Analysis Sheet (KMS 2025-26) |
+| M20 | Comprehensive Supervision Testing, Realistic Dummy Dataset & 1-Click Safe Purge | 04 Oct 2026 | Full functional testing, CRUD verification across all 5 modules, input validation, 22-record multi-scenario dummy dataset, dedicated Sandbox UI modal with 1-click safe purge strictly preserving genuine production records, 33 automated tests verified (100% pass) |
 
 ### Upcoming Milestones
 
@@ -776,6 +778,7 @@ Tracks what has been tested and confirmed working.
 | Supervision Modals Responsive Layout & Sticky Action Footers | UI & Usability Verification | VERIFIED | 03 Oct 2026 | Re-architected modal box, scrollable body container, and pinned footer across all supervision modals (modalSurprise, modalRoster, modalMeeting). Pinned Save/Cancel buttons, added live compliance score pill and quick bulk toggles |
 | A4 Landscape Default Print Engine & Single-Page Fitting | UI, CSS & PDF Print Verification | VERIFIED | 03 Oct 2026 | Verified default @page { size: A4 landscape; margin: 5mm 6mm; }, isolated iframe printing via printElementDirectly(), modal unconstraining in @media print, and strict single-page (1 of 1) rendering with all 18 columns, totals, and 3 official signatures intact |
 | Supervision Surprise Modal Solid Opaque Surfaces & Contrast | UI, CSS & Visual Screenshot Audit | VERIFIED | 04 Oct 2026 | Verified solid opaque surfaces (--surface, --surface-light, --surface-input), elimination of transparent background bleed-through, 3-column input header layout, prominent blue scrollbar, and crystal-clear contrast in both dark and light modes (ISSUE-045) |
+| Supervision Full Functional Testing & Dummy Data Sandbox | End-to-End, CRUD & Data Safety | VERIFIED | 04 Oct 2026 | Verified 33/33 automated tests covering CRUD, boundary tests, input validation, search/filter, stats sync, 22 multi-scenario dummy records, and 100% data safety preservation of original records (ISSUE-046) |
 
 ---
 
@@ -826,10 +829,80 @@ Tracks what has been tested and confirmed working.
 | ISSUE-043 | Supervision modals vertically overflowed on standard 768px laptop viewports, pushing action buttons ('सुरक्षित करें', 'रद्द करें') and checkpoints off-screen | HIGH | RESOLVED | public/supervision.html, public/supervision.css, public/supervision_logic.js | 03 Oct 2026 |
 | ISSUE-044 | Rice Quality Inspection printout defaulted to portrait, clipping 30% of quality columns, cutting off lower lot rows and signatures due to modal container height overflow and app shell print leakage | HIGH | RESOLVED | public/supervision.css, public/supervision_logic.js, public/supervision.html | 03 Oct 2026 |
 | ISSUE-045 | Surprise Inspection modal was translucent/unreadable due to undefined --surface token falling back to transparent, causing underlying dashboard and protocol table text to bleed through | HIGH | RESOLVED | public/supervision.css, public/supervision.html, public/supervision_logic.js | 04 Oct 2026 |
+| ISSUE-046 | Supervision Portal lacked dedicated multi-scenario dummy test datasets, 1-click safe cleanup mechanism, and full CRUD automated test coverage | HIGH | RESOLVED | server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-supervision-full-suite.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Comprehensive Supervision Testing, Multi-Scenario Dummy Dataset & 1-Click Safe Cleanup
+
+Files: server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-supervision-full-suite.js, tests/test-ui-supervision-browser.js, PROJECT_DOCS.md
+Type: Feature / Quality Assurance / Data Safety / CRUD Hardening
+Closes: ISSUE-046
+
+- USER REQUIREMENT:
+  1. Conduct full functional testing of every module, option, workflow, button, form, report, and CRUD operation in the Supervision Portal using realistic dummy data.
+  2. Implement strict data safety: guarantee original/production data is never modified, overwritten, or deleted. Take database backup snapshot prior to testing.
+  3. Create a dedicated multi-scenario dummy dataset covering edge cases, different statuses, dates, issue centers, and boundary conditions.
+  4. Provide a 1-click safe dummy data cleanup mechanism with explicit warnings, counts preview, and zero risk to genuine records.
+  5. Test every CRUD operation, print layout, input validation, error handling, and data integrity.
+
+- IMPLEMENTATION & ARCHITECTURAL ENHANCEMENTS:
+  1. **Strict Data Safety & Timestamped Snapshot**:
+     - Created pre-testing database backup snapshot: `database/backups/pds-reports_backup_before_test_2026-10-03T18-45-36-921Z.db` (10.49 MB).
+     - Audited and established baseline preservation invariants for genuine production records:
+       * `INSP_BETUL_DEMO_01` (Detailed Inspection baseline)
+       * `SURP_BETUL_DEMO_01` (Surprise Inspection baseline)
+       * `MEET_COORD_MPWLC_01` (Coordination Meeting baseline)
+       * `ROST_2026_01` through `ROST_2026_24` (All 24 KMS 2026-27 Roster targets).
+  2. **Database Schema & Data Isolation Engine (`server/database/db.js`)**:
+     - Added `is_test INTEGER DEFAULT 0` column migrations across all 5 tables (`supervision_inspections`, `supervision_surprise`, `supervision_roster`, `supervision_meetings`, `supervision_rice_inspections`).
+     - Added `getSupervisionMeetingById(id)` and `deleteSupervisionMeeting(id)`.
+     - Added `getSurpriseInspectionById(id)` and enriched rice queries with `overall_result`.
+     - Hardened JSON serialization across detailed inspection and surprise inspection saves (`JSON.stringify(data.payload || data)`).
+     - Implemented `_safeJson` resilient parser for meeting minutes and action points, completely eliminating syntax error crashes on plain-text input.
+     - Added `getSupervisionTestDataCounts()` providing real-time breakdown counts and preview records.
+     - Added `seedComprehensiveTestData()` generating 22 multi-scenario records tagged with `is_test = 1` and `TEST_` prefix:
+       * 5 Detailed Inspections (various centers: Multai, Bhainsdehi, Shahpur, Amla, Athner; scores: 100%, 76%, 53%, 88%, 94%; diverse defect flags).
+       * 5 Surprise Visits (Kosmi, Chicholi, Betul, Ghodadongri, Ganj; pass/defects).
+       * 5 Annual Roster items (2026/2027, Pending and Completed).
+       * 3 Coordination Meetings (FCI, Markfed, DCCB).
+       * 4 Rice Inspections (Kosmi, Multai, Shahpur, Amla; Passed and BRL/Rejected).
+     - Added `cleanupSupervisionTestData()`: safe one-click purge targeting ONLY records with `is_test = 1` OR `id LIKE 'TEST_%'` OR `id LIKE 'DUMMY_%'`, strictly preserving 100% of baseline records.
+  3. **Backend API Endpoints & Request Validation (`server.js`)**:
+     - Added `GET /api/supervision/test-data/status` (live preview of test records and counts).
+     - Added `POST /api/supervision/test-data/seed` (programmatic test data generation).
+     - Added `POST /api/supervision/test-data/cleanup` (safe purge of test records).
+     - Added `GET /api/supervision/surprise/:id` and `/api/supervision/rice-inspections` route aliases.
+     - Added strict fast-fail request validation (HTTP 400 Bad Request) on all POST endpoints (`/api/supervision/inspections`, `/api/supervision/surprise`, `/api/supervision/roster`, `/api/supervision/meetings`, `/api/supervision/rice`) preventing blank or malformed submissions.
+  4. **Frontend UI Test Data Sandbox Modal (`public/supervision.html` & `public/supervision_logic.js`)**:
+     - Added prominent `🧪 टेस्ट डेटा` button to the application header.
+     - Built `#modalTestData` featuring:
+       * Data safety guarantee badge.
+       * 6 real-time stat counter pills (Detailed, Surprise, Roster, Meetings, Rice, Active Total).
+       * Active test records preview table with badge styling.
+       * Action buttons: `🚀 22 टेस्ट रिकॉर्ड्स पुनः लोड करें` and `🧹 केवल टेस्ट डेटा हटाएं (Safe Purge)`.
+       * Safe deletion confirmation with explicit warning dialog displaying the exact number of records to be deleted.
+       * Auto-refresh of all supervision UI views upon seed or purge.
+  5. **Comprehensive Automated Verification (`tests/test-supervision-full-suite.js`)**:
+     - Built and ran 33 end-to-end automated tests covering:
+       * Suite 1: Data Safety & Baseline Invariants (4/4 passed)
+       * Suite 2: Test Data Seeding & Sandbox Status (3/3 passed)
+       * Suite 3: Detailed Inspections CRUD (4/4 passed)
+       * Suite 4: Surprise Visits CRUD (3/3 passed)
+       * Suite 5: Annual Roster CRUD (3/3 passed)
+       * Suite 6: Coordination Meetings CRUD (3/3 passed)
+       * Suite 7: Rice Quality Inspection CRUD & Analysis (3/3 passed)
+       * Suite 8: Negative Inputs & Validation (5/5 passed)
+       * Suite 9: Dashboard KPI Aggregations (1/1 passed)
+       * Suite 10: 1-Click Safe Cleanup & Zero-Data-Loss Verification (3/3 passed)
+       * Suite 11: Final Re-seed for Browser Exploration (1/1 passed)
+       * **Result: 33/33 Tests Passed (0 Failed, 100% Success)**.
+  6. **Puppeteer UI/UX Browser Verification (`tests/test-ui-supervision-browser.js`)**:
+     - Automated headless Chromium session verified: Dashboard KPI rendering, opening Test Data Sandbox modal, counter values, modal preview table, closing modal, Archives search filtering ("Multai"), Rice Quality sheet rendering, and Annual Roster view switching.
+
+---
 
 ### 2026-10-04 | Surprise Inspection Modal Opaque Solid Surfaces & High-Contrast Typography
 

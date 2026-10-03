@@ -4101,6 +4101,9 @@ app.get('/api/supervision/inspections/:id', async (req, res) => {
 
 app.post('/api/supervision/inspections', async (req, res) => {
     try {
+        if (!req.body || (!req.body.issueCenter && !req.body.issue_center)) {
+            return res.status(400).json({ success: false, error: 'Validation failed: issueCenter is required' });
+        }
         const result = await db.saveSupervisionInspection(req.body);
         res.json(result);
     } catch (err) {
@@ -4143,6 +4146,9 @@ app.get('/api/supervision/surprise/:id', async (req, res) => {
 
 app.post('/api/supervision/surprise', async (req, res) => {
     try {
+        if (!req.body || (!req.body.issueCenter && !req.body.issue_center)) {
+            return res.status(400).json({ success: false, error: 'Validation failed: issueCenter is required' });
+        }
         const result = await db.saveSurpriseInspection(req.body);
         res.json(result);
     } catch (err) {
@@ -4174,6 +4180,9 @@ app.get('/api/supervision/roster', async (req, res) => {
 
 app.post('/api/supervision/roster', async (req, res) => {
     try {
+        if (!req.body || (!req.body.issueCenter && !req.body.issue_center)) {
+            return res.status(400).json({ success: false, error: 'Validation failed: issueCenter is required' });
+        }
         const result = await db.saveRosterItem(req.body);
         res.json(result);
     } catch (err) {
@@ -4205,6 +4214,9 @@ app.get('/api/supervision/meetings', async (req, res) => {
 
 app.post('/api/supervision/meetings', async (req, res) => {
     try {
+        if (!req.body || !req.body.agency) {
+            return res.status(400).json({ success: false, error: 'Validation failed: agency is required' });
+        }
         const result = await db.saveSupervisionMeeting(req.body);
         res.json(result);
     } catch (err) {
@@ -4258,6 +4270,9 @@ app.get('/api/supervision/rice/:id', async (req, res) => {
 
 app.post('/api/supervision/rice', async (req, res) => {
     try {
+        if (!req.body || (!req.body.warehouseName && !req.body.warehouse_name)) {
+            return res.status(400).json({ success: false, error: 'Validation failed: warehouseName is required' });
+        }
         const result = await db.saveRiceInspection(req.body);
         res.json(result);
     } catch (err) {
