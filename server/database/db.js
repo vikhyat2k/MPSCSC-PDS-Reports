@@ -1412,6 +1412,568 @@ class DatabaseManager {
     return await this.run('DELETE FROM supervision_rice_inspections WHERE id = ?', [id]);
   }
 
+  /* ═════════════════════════════════════════════════════════
+   * TEST / DUMMY DATA MANAGEMENT & 1-CLICK CLEANUP ENGINE
+   * ═════════════════════════════════════════════════════════ */
+
+  /**
+   * Get preview counts of all test/dummy records in the supervision tables
+   */
+  async getSupervisionTestDataCounts() {
+    const counts = {
+      inspections: 0,
+      surprise: 0,
+      roster: 0,
+      meetings: 0,
+      rice: 0,
+      total: 0
+    };
+    try {
+      const i = await this.get("SELECT COUNT(*) as c FROM supervision_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+      counts.inspections = i ? i.c : 0;
+      const s = await this.get("SELECT COUNT(*) as c FROM supervision_surprise WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+      counts.surprise = s ? s.c : 0;
+      const r = await this.get("SELECT COUNT(*) as c FROM supervision_roster WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+      counts.roster = r ? r.c : 0;
+      const m = await this.get("SELECT COUNT(*) as c FROM supervision_meetings WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+      counts.meetings = m ? m.c : 0;
+      const rc = await this.get("SELECT COUNT(*) as c FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+      counts.rice = rc ? rc.c : 0;
+      counts.total = counts.inspections + counts.surprise + counts.roster + counts.meetings + counts.rice;
+    } catch (e) {
+      console.error('Error fetching test data counts:', e.message);
+    }
+    return counts;
+  }
+
+  /**
+   * Safe One-Click Cleanup: Permanently deletes ONLY test/dummy records
+   * Strictly preserves all original production data
+   */
+  async cleanupSupervisionTestData() {
+    const before = await this.getSupervisionTestDataCounts();
+    await this.run("DELETE FROM supervision_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+    await this.run("DELETE FROM supervision_surprise WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+    await this.run("DELETE FROM supervision_roster WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+    await this.run("DELETE FROM supervision_meetings WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+    await this.run("DELETE FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+    return {
+      success: true,
+      deletedCounts: before,
+      message: `सफलतापूर्वक ${before.total} टेस्ट/डमी रिकॉर्ड्स हटाए गए। मूल वास्तविक रिकॉर्ड सुरक्षित हैं।`
+    };
+  }
+
+  /**
+   * Seed comprehensive realistic test dataset covering all 5 modules and edge cases
+   */
+  async seedComprehensiveTestData() {
+    console.log('🧪 Seeding comprehensive dummy test dataset for Supervision Portal...');
+    const inserted = { inspections: 0, surprise: 0, roster: 0, meetings: 0, rice: 0 };
+
+    // 1. Detailed Inspections (5 records covering varied ICs, scores, and defect scenarios)
+    const testInspections = [
+      {
+        id: 'TEST_INSP_001',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Betul',
+        inspectionMonth: 'September',
+        inspectionDate: '2026-09-22',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        officerMobile: '9425000000',
+        inchargeName: 'R. K. Sharma',
+        inchargeMobile: '9826100001',
+        branchManager: 'A. K. Verma (MPWLC)',
+        branchManagerMobile: '9425100002',
+        godownsCount: 4,
+        complianceScore: 96,
+        deficienciesCount: 0,
+        payload: {
+          reservation: { wheat: 3500, rice: 1800, sugar: 120, salt: 95, other: 0 },
+          stock: [
+            { commodity: 'गेहूं (Wheat)', soundBags: 6800, soundQty: 3400.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 12, sweepageQty: 5.40 },
+            { commodity: 'चावल (Rice)', soundBags: 3550, soundQty: 1775.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 8, sweepageQty: 3.60 },
+            { commodity: 'शक्कर (Sugar)', soundBags: 230, soundQty: 115.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 0, sweepageQty: 0.00 },
+            { commodity: 'नमक (Salt)', soundBags: 190, soundQty: 95.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 0, sweepageQty: 0.00 }
+          ],
+          gunnyBags: {
+            juteNew: { usableBales: 15, usableBags: 7500, unusableBags: 20 },
+            hdpe: { usableBales: 22, usableBags: 11000, unusableBags: 45 },
+            juteOld: { usableBales: 5, usableBags: 2500, unusableBags: 110 }
+          },
+          doorstepDelivery: {
+            wheatLifted: 3380.00, riceLifted: 1750.00, sugarLifted: 112.50, saltLifted: 94.00,
+            fpsDeliveredCount: 84, transporterReceiptDate: '2026-09-20', receiptSentToDO: '2026-09-21', enteredInSoftwareDate: '2026-09-22'
+          },
+          checkpoints: {
+            chk_1_computer: true, chk_2_printer: true, chk_3_ups: true, chk_4_internet: true,
+            chk_5_deo_format: true, chk_6_doorstep_receipts: true, chk_7_stock_quality: true, chk_8_stack_criteria: true,
+            chk_9_stack_cards: true, chk_10_sweepage_handling: true, chk_11_records_reconciliation: true, chk_12_stack_killing: true,
+            chk_13_loss_gain_cert: true, chk_14_damaged_dcc: true, chk_15_transport_order: true, chk_16_fumigation_schedule: true
+          },
+          issuesAndSuggestions: [],
+          remarks: 'टेस्ट डेटा - उत्कृष्ट व्यवस्था, शत-प्रतिशत मानक अनुपालन।'
+        }
+      },
+      {
+        id: 'TEST_INSP_002',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Multai',
+        inspectionMonth: 'August',
+        inspectionDate: '2026-08-20',
+        officerName: 'Suresh Patil',
+        officerDesignation: 'Quality Control Officer',
+        officerMobile: '9425112233',
+        inchargeName: 'M. P. Rao',
+        inchargeMobile: '9826223344',
+        branchManager: 'S. N. Sen (CWC)',
+        branchManagerMobile: '9425334455',
+        godownsCount: 3,
+        complianceScore: 75,
+        deficienciesCount: 4,
+        payload: {
+          reservation: { wheat: 2800, rice: 1400, sugar: 90, salt: 70, other: 0 },
+          stock: [
+            { commodity: 'गेहूं (Wheat)', soundBags: 5200, soundQty: 2600.00, damagedBags: 15, damagedQty: 7.50, sweepageBags: 25, sweepageQty: 11.25 },
+            { commodity: 'चावल (Rice)', soundBags: 2600, soundQty: 1300.00, damagedBags: 8, damagedQty: 4.00, sweepageBags: 14, sweepageQty: 6.30 }
+          ],
+          gunnyBags: {
+            juteNew: { usableBales: 10, usableBags: 5000, unusableBags: 50 },
+            hdpe: { usableBales: 15, usableBags: 7500, unusableBags: 80 },
+            juteOld: { usableBales: 4, usableBags: 2000, unusableBags: 220 }
+          },
+          doorstepDelivery: {
+            wheatLifted: 2450.00, riceLifted: 1220.00, sugarLifted: 85.00, saltLifted: 68.00,
+            fpsDeliveredCount: 65, transporterReceiptDate: '2026-08-15', receiptSentToDO: '2026-08-18', enteredInSoftwareDate: '2026-08-19'
+          },
+          checkpoints: {
+            chk_1_computer: true, chk_2_printer: true, chk_3_ups: false, chk_4_internet: true,
+            chk_5_deo_format: true, chk_6_doorstep_receipts: false, chk_7_stock_quality: true, chk_8_stack_criteria: true,
+            chk_9_stack_cards: false, chk_10_sweepage_handling: false, chk_11_records_reconciliation: true, chk_12_stack_killing: true,
+            chk_13_loss_gain_cert: true, chk_14_damaged_dcc: true, chk_15_transport_order: true, chk_16_fumigation_schedule: true
+          },
+          issuesAndSuggestions: [
+            { issue: 'स्वीपेज एवं आंशिक क्षतिग्रस्त स्कंध पृथक स्टेक में व्यवस्थित नहीं।', suggestion: '48 घंटे में छंटाई एवं पृथक्करण पूर्ण करें।' },
+            { issue: 'स्टेक कार्ड्स अद्यतन नहीं पाए गए।', suggestion: 'वर्तमान स्कंध अनुसार प्रविष्टि कर सील लगाएं।' }
+          ],
+          remarks: 'टेस्ट डेटा - मध्यम स्तर का अनुपालन, सुधार निर्देश जारी किए गए।'
+        }
+      },
+      {
+        id: 'TEST_INSP_003',
+        is_test: 1,
+        mode: 'rm',
+        issueCenter: 'Bhainsdehi',
+        inspectionMonth: 'July',
+        inspectionDate: '2026-07-15',
+        officerName: 'Alok Kumar Shrivastava',
+        officerDesignation: 'Regional Manager (Bhopal)',
+        officerMobile: '9425998877',
+        inchargeName: 'K. L. Vishwakarma',
+        inchargeMobile: '9826334455',
+        branchManager: 'R. K. Mishra (MPWLC)',
+        branchManagerMobile: '9425445566',
+        godownsCount: 5,
+        complianceScore: 100,
+        deficienciesCount: 0,
+        payload: {
+          reservation: { wheat: 4200, rice: 2100, sugar: 150, salt: 110, other: 0 },
+          stock: [
+            { commodity: 'गेहूं (Wheat)', soundBags: 8400, soundQty: 4200.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 0, sweepageQty: 0.00 },
+            { commodity: 'चावल (Rice)', soundBags: 4200, soundQty: 2100.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 0, sweepageQty: 0.00 }
+          ],
+          gunnyBags: {
+            juteNew: { usableBales: 20, usableBags: 10000, unusableBags: 10 },
+            hdpe: { usableBales: 30, usableBags: 15000, unusableBags: 20 },
+            juteOld: { usableBales: 8, usableBags: 4000, unusableBags: 50 }
+          },
+          doorstepDelivery: {
+            wheatLifted: 4180.00, riceLifted: 2090.00, sugarLifted: 148.00, saltLifted: 109.00,
+            fpsDeliveredCount: 112, transporterReceiptDate: '2026-07-12', receiptSentToDO: '2026-07-13', enteredInSoftwareDate: '2026-07-14'
+          },
+          checkpoints: {
+            chk_1_computer: true, chk_2_printer: true, chk_3_ups: true, chk_4_internet: true,
+            chk_5_deo_format: true, chk_6_doorstep_receipts: true, chk_7_stock_quality: true, chk_8_stack_criteria: true,
+            chk_9_stack_cards: true, chk_10_sweepage_handling: true, chk_11_records_reconciliation: true, chk_12_stack_killing: true,
+            chk_13_loss_gain_cert: true, chk_14_damaged_dcc: true, chk_15_transport_order: true, chk_16_fumigation_schedule: true
+          },
+          issuesAndSuggestions: [],
+          remarks: 'टेस्ट डेटा - संभागीय प्रबंधक महोदय द्वारा किया गया आदर्श त्रैमासिक निरीक्षण।'
+        }
+      },
+      {
+        id: 'TEST_INSP_004',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Shahpur',
+        inspectionMonth: 'June',
+        inspectionDate: '2026-06-10',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        officerMobile: '9425000000',
+        inchargeName: 'G. P. Tiwari',
+        inchargeMobile: '9826556677',
+        branchManager: 'T. R. Yadav (MPWLC)',
+        branchManagerMobile: '9425667788',
+        godownsCount: 2,
+        complianceScore: 62,
+        deficienciesCount: 6,
+        payload: {
+          reservation: { wheat: 1800, rice: 900, sugar: 60, salt: 45, other: 0 },
+          stock: [
+            { commodity: 'गेहूं (Wheat)', soundBags: 3200, soundQty: 1600.00, damagedBags: 45, damagedQty: 22.50, sweepageBags: 35, sweepageQty: 15.75 },
+            { commodity: 'चावल (Rice)', soundBags: 1600, soundQty: 800.00, damagedBags: 20, damagedQty: 10.00, sweepageBags: 18, sweepageQty: 8.10 }
+          ],
+          gunnyBags: {
+            juteNew: { usableBales: 5, usableBags: 2500, unusableBags: 120 },
+            hdpe: { usableBales: 8, usableBags: 4000, unusableBags: 180 },
+            juteOld: { usableBales: 2, usableBags: 1000, unusableBags: 350 }
+          },
+          doorstepDelivery: {
+            wheatLifted: 1500.00, riceLifted: 750.00, sugarLifted: 52.00, saltLifted: 40.00,
+            fpsDeliveredCount: 42, transporterReceiptDate: '2026-06-05', receiptSentToDO: '2026-06-08', enteredInSoftwareDate: '2026-06-09'
+          },
+          checkpoints: {
+            chk_1_computer: false, chk_2_printer: true, chk_3_ups: false, chk_4_internet: false,
+            chk_5_deo_format: true, chk_6_doorstep_receipts: false, chk_7_stock_quality: true, chk_8_stack_criteria: true,
+            chk_9_stack_cards: false, chk_10_sweepage_handling: false, chk_11_records_reconciliation: true, chk_12_stack_killing: true,
+            chk_13_loss_gain_cert: false, chk_14_damaged_dcc: true, chk_15_transport_order: true, chk_16_fumigation_schedule: true
+          },
+          issuesAndSuggestions: [
+            { issue: 'कंप्यूटर एवं इंटरनेट कनेक्टिविटी बाधित होने से CSMS प्रविष्टि में विलंब।', suggestion: 'स्थानीय ब्रॉडबैंड कनेक्शन तुरंत दुरुस्त कराएं।' },
+            { issue: 'स्वीपेज की अधिकता (35 बोरे गेहूं + 18 बोरे चावल)।', suggestion: 'वेयरहाउस प्रबंधन के साथ संयुक्त पंचनामा बनाकर अपग्रेडेशन कराएं।' }
+          ],
+          remarks: 'टेस्ट डेटा - गंभीर कमियां परिलक्षित, कारण बताओ नोटिस जारी करने की अनुशंसा।'
+        }
+      },
+      {
+        id: 'TEST_INSP_005',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Ghoradongri',
+        inspectionMonth: 'October',
+        inspectionDate: '2026-10-02',
+        officerName: 'Praveen Saxena',
+        officerDesignation: 'Assistant Manager (PDS)',
+        officerMobile: '9425778899',
+        inchargeName: 'S. K. Jain',
+        inchargeMobile: '9826778899',
+        branchManager: 'V. K. Dubey (MPWLC)',
+        branchManagerMobile: '9425889900',
+        godownsCount: 3,
+        complianceScore: 88,
+        deficienciesCount: 2,
+        payload: {
+          reservation: { wheat: 2400, rice: 1200, sugar: 80, salt: 60, other: 0 },
+          stock: [
+            { commodity: 'गेहूं (Wheat)', soundBags: 4600, soundQty: 2300.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 8, sweepageQty: 3.60 },
+            { commodity: 'चावल (Rice)', soundBags: 2300, soundQty: 1150.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 5, sweepageQty: 2.25 }
+          ],
+          gunnyBags: {
+            juteNew: { usableBales: 8, usableBags: 4000, unusableBags: 15 },
+            hdpe: { usableBales: 12, usableBags: 6000, unusableBags: 30 },
+            juteOld: { usableBales: 3, usableBags: 1500, unusableBags: 80 }
+          },
+          doorstepDelivery: {
+            wheatLifted: 2280.00, riceLifted: 1140.00, sugarLifted: 76.00, saltLifted: 58.00,
+            fpsDeliveredCount: 58, transporterReceiptDate: '2026-09-28', receiptSentToDO: '2026-09-29', enteredInSoftwareDate: '2026-09-30'
+          },
+          checkpoints: {
+            chk_1_computer: true, chk_2_printer: true, chk_3_ups: true, chk_4_internet: true,
+            chk_5_deo_format: true, chk_6_doorstep_receipts: true, chk_7_stock_quality: true, chk_8_stack_criteria: true,
+            chk_9_stack_cards: true, chk_10_sweepage_handling: true, chk_11_records_reconciliation: true, chk_12_stack_killing: false,
+            chk_13_loss_gain_cert: false, chk_14_damaged_dcc: true, chk_15_transport_order: true, chk_16_fumigation_schedule: true
+          },
+          issuesAndSuggestions: [
+            { issue: '2 स्टेकों का स्टेक-किलिंग निराकरण 1 माह से लंबित।', suggestion: 'वेयरहाउस शाखा प्रबंधक से समन्वय कर तत्काल सर्टिफिकेट प्राप्त करें।' }
+          ],
+          remarks: 'टेस्ट डेटा - सामान्य व्यवस्था संतोषप्रद।'
+        }
+      }
+    ];
+
+    for (const insp of testInspections) {
+      await this.saveSupervisionInspection(insp);
+      inserted.inspections++;
+    }
+
+    // 2. Surprise Inspections (5 records with varied pass/defect scores)
+    const testSurprise = [
+      {
+        id: 'TEST_SURP_001',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Amla',
+        inspectionDate: '2026-10-01',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        score: 100,
+        defectsCount: 0,
+        payload: {
+          points: [
+            { id: 1, label: 'आवंटन के मान से विभिन्न जिंस की उपलब्धता', compliant: true, remark: 'मानक अनुसार' },
+            { id: 2, label: 'स्थान उपलब्धता की स्थिति', compliant: true, remark: 'मानक अनुसार' },
+            { id: 3, label: 'हार्डवेयर / सॉफ्टवेयर संचालन एवं प्रविष्टि स्थिति', compliant: true, remark: 'मानक अनुसार' },
+            { id: 4, label: 'भंडारित स्कंध के रख-रखाव की स्थिति', compliant: true, remark: 'मानक अनुसार' },
+            { id: 5, label: 'स्वीपेज / क्षतिग्रस्त स्टाक की समीक्षा', compliant: true, remark: 'मानक अनुसार' },
+            { id: 6, label: 'स्टेकों का कीटोपचार / धूमीकरण निर्धारित समय पर', compliant: true, remark: 'मानक अनुसार' },
+            { id: 7, label: 'द्वार प्रदाय योजना पावतियों की सॉफ्टवेयर में प्रविष्टि', compliant: true, remark: 'मानक अनुसार' },
+            { id: 8, label: 'केन्द्रवार डीडी / देयक जिला कार्यालय प्रेषित स्थिति', compliant: true, remark: 'मानक अनुसार' },
+            { id: 9, label: 'FIFO (प्रथम आगम प्रथम निर्गम) पद्धति पालन', compliant: true, remark: 'मानक अनुसार' },
+            { id: 10, label: 'केन्द्र प्रभारी / ऑपरेटर की उपस्थिति', compliant: true, remark: 'मानक अनुसार' }
+          ],
+          overallRemark: 'टेस्ट डेटा - आमला केन्द्र पर औचक निरीक्षण में संपूर्ण व्यवस्थाएं 100% सही पाई गईं।'
+        }
+      },
+      {
+        id: 'TEST_SURP_002',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Athner',
+        inspectionDate: '2026-09-15',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        score: 80,
+        defectsCount: 2,
+        payload: {
+          points: [
+            { id: 1, label: 'आवंटन के मान से विभिन्न जिंस की उपलब्धता', compliant: true, remark: 'उपलब्ध' },
+            { id: 2, label: 'स्थान उपलब्धता की स्थिति', compliant: false, remark: 'रिक्त स्थान का अभाव' },
+            { id: 3, label: 'हार्डवेयर / सॉफ्टवेयर संचालन एवं प्रविष्टि स्थिति', compliant: true, remark: 'चालू' },
+            { id: 4, label: 'भंडारित स्कंध के रख-रखाव की स्थिति', compliant: true, remark: 'दुरुस्त' },
+            { id: 5, label: 'स्वीपेज / क्षतिग्रस्त स्टाक की समीक्षा', compliant: true, remark: 'नगण्य' },
+            { id: 6, label: 'स्टेकों का कीटोपचार / धूमीकरण निर्धारित समय पर', compliant: true, remark: 'समय पर' },
+            { id: 7, label: 'द्वार प्रदाय योजना पावतियों की सॉफ्टवेयर में प्रविष्टि', compliant: true, remark: 'अद्यतन' },
+            { id: 8, label: 'केन्द्रवार डीडी / देयक जिला कार्यालय प्रेषित स्थिति', compliant: true, remark: 'प्रेषित' },
+            { id: 9, label: 'FIFO (प्रथम आगम प्रथम निर्गम) पद्धति पालन', compliant: false, remark: 'नवीन स्टेक से निकासी पाई गई' },
+            { id: 10, label: 'केन्द्र प्रभारी / ऑपरेटर की उपस्थिति', compliant: true, remark: 'उपस्थित' }
+          ],
+          overallRemark: 'टेस्ट डेटा - FIFO उल्लंघन पर प्रभारी को सचेत किया गया।'
+        }
+      },
+      {
+        id: 'TEST_SURP_003',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Chicholi',
+        inspectionDate: '2026-08-20',
+        officerName: 'Praveen Saxena',
+        officerDesignation: 'Assistant Manager (PDS)',
+        score: 60,
+        defectsCount: 4,
+        payload: {
+          points: [
+            { id: 1, label: 'आवंटन के मान से विभिन्न जिंस की उपलब्धता', compliant: true, remark: 'पर्याप्त' },
+            { id: 2, label: 'स्थान उपलब्धता की स्थिति', compliant: true, remark: 'स्थान रिक्त' },
+            { id: 3, label: 'हार्डवेयर / सॉफ्टवेयर संचालन एवं प्रविष्टि स्थिति', compliant: false, remark: 'प्रिंटर खराब' },
+            { id: 4, label: 'भंडारित स्कंध के रख-रखाव की स्थिति', compliant: true, remark: 'ठीक' },
+            { id: 5, label: 'स्वीपेज / क्षतिग्रस्त स्टाक की समीक्षा', compliant: false, remark: '18 बोरे स्वीपेज खुले पड़े' },
+            { id: 6, label: 'स्टेकों का कीटोपचार / धूमीकरण निर्धारित समय पर', compliant: false, remark: 'धूमीकरण अवधि पार' },
+            { id: 7, label: 'द्वार प्रदाय योजना पावतियों की सॉफ्टवेयर में प्रविष्टि', compliant: true, remark: 'सही' },
+            { id: 8, label: 'केन्द्रवार डीडी / देयक जिला कार्यालय प्रेषित स्थिति', compliant: true, remark: 'सही' },
+            { id: 9, label: 'FIFO (प्रथम आगम प्रथम निर्गम) पद्धति पालन', compliant: true, remark: 'पालन' },
+            { id: 10, label: 'केन्द्र प्रभारी / ऑपरेटर की उपस्थिति', compliant: false, remark: 'ऑपरेटर अनाधिकृत अनुपस्थित' }
+          ],
+          overallRemark: 'टेस्ट डेटा - ऑपरेटर की अनुपस्थिति एवं कीटोपचार में देरी पर नोटिस जारी।'
+        }
+      },
+      {
+        id: 'TEST_SURP_004',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Pattan',
+        inspectionDate: '2026-07-10',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        score: 90,
+        defectsCount: 1,
+        payload: {
+          points: [
+            { id: 1, label: 'आवंटन के मान से विभिन्न जिंस की उपलब्धता', compliant: true, remark: 'सही' },
+            { id: 2, label: 'स्थान उपलब्धता की स्थिति', compliant: true, remark: 'सही' },
+            { id: 3, label: 'हार्डवेयर / सॉफ्टवेयर संचालन एवं प्रविष्टि स्थिति', compliant: true, remark: 'सही' },
+            { id: 4, label: 'भंडारित स्कंध के रख-रखाव की स्थिति', compliant: true, remark: 'सही' },
+            { id: 5, label: 'स्वीपेज / क्षतिग्रस्त स्टाक की समीक्षा', compliant: true, remark: 'सही' },
+            { id: 6, label: 'स्टेकों का कीटोपचार / धूमीकरण निर्धारित समय पर', compliant: true, remark: 'सही' },
+            { id: 7, label: 'द्वार प्रदाय योजना पावतियों की सॉफ्टवेयर में प्रविष्टि', compliant: true, remark: 'सही' },
+            { id: 8, label: 'केन्द्रवार डीडी / देयक जिला कार्यालय प्रेषित स्थिति', compliant: false, remark: '2 देयक प्रेषण शेष' },
+            { id: 9, label: 'FIFO (प्रथम आगम प्रथम निर्गम) पद्धति पालन', compliant: true, remark: 'सही' },
+            { id: 10, label: 'केन्द्र प्रभारी / ऑपरेटर की उपस्थिति', compliant: true, remark: 'उपस्थित' }
+          ],
+          overallRemark: 'टेस्ट डेटा - 2 लंबित देयकों को आज ही भेजने के निर्देश दिए गए।'
+        }
+      },
+      {
+        id: 'TEST_SURP_005',
+        is_test: 1,
+        mode: 'dm',
+        issueCenter: 'Bhimpur',
+        inspectionDate: '2026-06-05',
+        officerName: 'Suresh Patil',
+        officerDesignation: 'Quality Control Officer',
+        score: 70,
+        defectsCount: 3,
+        payload: {
+          points: [
+            { id: 1, label: 'आवंटन के मान से विभिन्न जिंस की उपलब्धता', compliant: false, remark: 'नमक बफर स्टॉक कम' },
+            { id: 2, label: 'स्थान उपलब्धता की स्थिति', compliant: true, remark: 'सही' },
+            { id: 3, label: 'हार्डवेयर / सॉफ्टवेयर संचालन एवं प्रविष्टि स्थिति', compliant: true, remark: 'सही' },
+            { id: 4, label: 'भंडारित स्कंध के रख-रखाव की स्थिति', compliant: false, remark: 'स्टेक स्टेबिलिटी में कमी' },
+            { id: 5, label: 'स्वीपेज / क्षतिग्रस्त स्टाक की समीक्षा', compliant: true, remark: 'सही' },
+            { id: 6, label: 'स्टेकों का कीटोपचार / धूमीकरण निर्धारित समय पर', compliant: false, remark: 'धूमीकरण चार्ट अधूरा' },
+            { id: 7, label: 'द्वार प्रदाय योजना पावतियों की सॉफ्टवेयर में प्रविष्टि', compliant: true, remark: 'सही' },
+            { id: 8, label: 'केन्द्रवार डीडी / देयक जिला कार्यालय प्रेषित स्थिति', compliant: true, remark: 'सही' },
+            { id: 9, label: 'FIFO (प्रथम आगम प्रथम निर्गम) पद्धति पालन', compliant: true, remark: 'सही' },
+            { id: 10, label: 'केन्द्र प्रभारी / ऑपरेटर की उपस्थिति', compliant: true, remark: 'उपस्थित' }
+          ],
+          overallRemark: 'टेस्ट डेटा - नमक अतिरिक्त प्रदाय तत्काल सुनिश्चित करने के निर्देश।'
+        }
+      }
+    ];
+
+    for (const surp of testSurprise) {
+      await this.saveSurpriseInspection(surp);
+      inserted.surprise++;
+    }
+
+    // 3. Annual Roster (5 test records for varied months and statuses)
+    const testRoster = [
+      { id: 'TEST_ROST_001', is_test: 1, year: 2026, month: 'October', issueCenter: 'Betul', targetGodowns: 4, plannedDate: '2026-10-15', status: 'pending', officerName: 'District Manager (DM)', remarks: 'टेस्ट डेटा - आगामी रोस्टर निरीक्षण' },
+      { id: 'TEST_ROST_002', is_test: 1, year: 2026, month: 'October', issueCenter: 'Multai', targetGodowns: 3, plannedDate: '2026-10-22', status: 'pending', officerName: 'Quality Control Officer', remarks: 'टेस्ट डेटा - आगामी रोस्टर निरीक्षण' },
+      { id: 'TEST_ROST_003', is_test: 1, year: 2026, month: 'November', issueCenter: 'Shahpur', targetGodowns: 2, plannedDate: '2026-11-10', status: 'rescheduled', officerName: 'Assistant Manager (PDS)', remarks: 'टेस्ट डेटा - प्रशासनिक कारणों से पुनर्निर्धारित' },
+      { id: 'TEST_ROST_004', is_test: 1, year: 2026, month: 'November', issueCenter: 'Amla', targetGodowns: 3, plannedDate: '2026-11-20', completedDate: '2026-11-19', status: 'completed', officerName: 'Manager (Finance)', remarks: 'टेस्ट डेटा - समय से पूर्व संपन्न' },
+      { id: 'TEST_ROST_005', is_test: 1, year: 2026, month: 'December', issueCenter: 'Bhimpur', targetGodowns: 2, plannedDate: '2026-12-15', status: 'pending', officerName: 'District Manager (DM)', remarks: 'टेस्ट डेटा - शीतकालीन रोस्टर निरीक्षण' }
+    ];
+
+    for (const rost of testRoster) {
+      await this.saveRosterItem(rost);
+      inserted.roster++;
+    }
+
+    // 4. Meetings (3 records covering Coordination, Review, and Transporter)
+    const testMeetings = [
+      {
+        id: 'TEST_MEET_001',
+        is_test: 1,
+        meetingType: 'coordination',
+        agency: 'MPWLC',
+        meetingDate: '2026-09-30',
+        chairperson: 'Regional Manager (Bhopal)',
+        attendees: 'Branch Managers MPWLC Betul, Multai, Athner; DM MPSCSC Betul',
+        agendaItems: ['भंडारण शुल्क मिलान', 'स्थान आरक्षण', 'स्टेक किलिंग प्रमाणपत्र'],
+        minutes: 'टेस्ट डेटा - एमपीडब्ल्यूएलसी के साथ समन्वय बैठक संपन्न। शत-प्रतिशत देयक मिलान पूर्ण करने का निर्णय।',
+        actionPoints: ['10 अक्टूबर तक संयुक्त सत्यापन प्रतिवेदन प्रस्तुत करें।']
+      },
+      {
+        id: 'TEST_MEET_002',
+        is_test: 1,
+        meetingType: 'review',
+        agency: 'Internal MPSCSC',
+        meetingDate: '2026-10-02',
+        chairperson: 'District Manager Betul',
+        attendees: 'All 10 Issue Center Incharges, AM (Storage), Quality Controller',
+        agendaItems: ['द्वार प्रदाय योजना उठाव प्रगति', 'CSMS/IRRS ऑनलाइन प्रविष्टि', 'स्वीपेज अपग्रेडेशन'],
+        minutes: 'टेस्ट डेटा - मासिक आंतरिक समीक्षा बैठक। 100% उठाव समयसीमा में पूर्ण करने के सख्त निर्देश।',
+        actionPoints: ['प्रत्येक केंद्र प्रभारी प्रतिदिन सायं 6 बजे दैनिक उठाव रिपोर्ट साझा करेगा।']
+      },
+      {
+        id: 'TEST_MEET_003',
+        is_test: 1,
+        meetingType: 'transporter',
+        agency: 'Doorstep Transporters',
+        meetingDate: '2026-09-10',
+        chairperson: 'District Manager & AM (Storage)',
+        attendees: 'Lead Transporters Sector A, B, C; Route Supervisors',
+        agendaItems: ['जीपीएस ट्रैकिंग सक्रियता', 'उचित मूल्य दुकान स्तर पर तौल सत्यापन', 'पावती वापसी समय'],
+        minutes: 'टेस्ट डेटा - परिवहनकर्ताओं के साथ समीक्षा बैठक। वाहन ट्रैकिंग एवं 48 घंटे में पावती जमा कराने का निर्णय।',
+        actionPoints: ['मार्ग में वाहन खराब होने की दशा में 2 घंटे में बैकअप वाहन उपलब्ध कराना अनिवार्य होगा।']
+      }
+    ];
+
+    for (const meet of testMeetings) {
+      await this.saveSupervisionMeeting(meet);
+      inserted.meetings++;
+    }
+
+    // 5. Rice Quality Inspections (4 sheets covering all scenarios and edge cases)
+    const testRice = [
+      {
+        id: 'TEST_RICE_001',
+        is_test: 1,
+        warehouseName: 'MPWLC Warehouse Betul (Kosmi)',
+        analysisDate: '2026-10-02',
+        branchManager: 'MPWLC Betul',
+        centreIncharge: 'MPSCSC Betul',
+        districtManager: 'MPSCSC बैतूल',
+        lots: [
+          { sno: 1, millerName: 'M/s Betul Modern Rice Mill', stackNo: 'S-04', lotNo: 'LOT-25/101', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-10-01', brokenSmall: 0.80, brokenBig: 18.20, brokenTotal: 19.00, fmInorg: 0.10, fmOrg: 0.20, fmTotal: 0.30, damaged: 2.10, admixture: 3.50, redKernels: 1.20, chalky: 3.00, discoloured: 2.00, dehusked: 8.50, frk: 1.02, testResult: 'Positive (1.02% FRK)', result: 'Within Specification' },
+          { sno: 2, millerName: 'M/s Satpura Agro Mills, Shahpur', stackNo: 'S-05', lotNo: 'LOT-25/102', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-10-01', brokenSmall: 0.90, brokenBig: 19.10, brokenTotal: 20.00, fmInorg: 0.15, fmOrg: 0.25, fmTotal: 0.40, damaged: 2.50, admixture: 4.00, redKernels: 1.50, chalky: 3.80, discoloured: 2.20, dehusked: 9.20, frk: 0.98, testResult: 'Positive (0.98% FRK)', result: 'Within Specification' },
+          { sno: 3, millerName: 'M/s Narmada Grain Processing, Multai', stackNo: 'S-06', lotNo: 'LOT-25/103', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-10-02', brokenSmall: 0.65, brokenBig: 17.80, brokenTotal: 18.45, fmInorg: 0.08, fmOrg: 0.18, fmTotal: 0.26, damaged: 1.90, admixture: 3.10, redKernels: 1.10, chalky: 2.90, discoloured: 1.70, dehusked: 8.00, frk: 1.05, testResult: 'Positive (1.05% FRK)', result: 'Within Specification' },
+          { sno: 4, millerName: 'M/s Betul Modern Rice Mill', stackNo: 'S-07', lotNo: 'LOT-25/104', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-10-02', brokenSmall: 0.70, brokenBig: 17.50, brokenTotal: 18.20, fmInorg: 0.08, fmOrg: 0.15, fmTotal: 0.23, damaged: 1.80, admixture: 3.00, redKernels: 1.00, chalky: 2.50, discoloured: 1.50, dehusked: 7.80, frk: 1.00, testResult: 'Positive (1.0% FRK)', result: 'Within Specification' },
+          { sno: 5, millerName: 'M/s Satpura Agro Mills, Shahpur', stackNo: 'S-08', lotNo: 'LOT-25/105', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-10-02', brokenSmall: 0.85, brokenBig: 19.00, brokenTotal: 19.85, fmInorg: 0.12, fmOrg: 0.22, fmTotal: 0.34, damaged: 2.40, admixture: 3.80, redKernels: 1.40, chalky: 3.20, discoloured: 2.10, dehusked: 8.90, frk: 1.05, testResult: 'Positive (1.05% FRK)', result: 'Within Specification' },
+          { sno: 6, millerName: 'M/s Narmada Grain Processing, Multai', stackNo: 'S-09', lotNo: 'LOT-25/106', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-10-02', brokenSmall: 0.75, brokenBig: 18.00, brokenTotal: 18.75, fmInorg: 0.10, fmOrg: 0.18, fmTotal: 0.28, damaged: 2.00, admixture: 3.20, redKernels: 1.10, chalky: 2.80, discoloured: 1.80, dehusked: 8.10, frk: 1.00, testResult: 'Positive (1.0% FRK)', result: 'Within Specification' }
+        ]
+      },
+      {
+        id: 'TEST_RICE_002',
+        is_test: 1,
+        warehouseName: 'CWC Warehouse Multai',
+        analysisDate: '2026-09-25',
+        branchManager: 'CWC Multai',
+        centreIncharge: 'MPSCSC Multai',
+        districtManager: 'MPSCSC बैतूल',
+        lots: [
+          { sno: 1, millerName: 'M/s Mahaveer Food Products, Amla', stackNo: 'S-01', lotNo: 'LOT-25/201', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-24', brokenSmall: 1.20, brokenBig: 23.30, brokenTotal: 24.50, fmInorg: 0.18, fmOrg: 0.28, fmTotal: 0.46, damaged: 3.80, admixture: 5.20, redKernels: 2.40, chalky: 4.60, discoloured: 3.10, dehusked: 10.80, frk: 0.95, testResult: 'Positive (0.95% FRK)', result: 'BRL' },
+          { sno: 2, millerName: 'M/s Shri Ram Agro, Multai', stackNo: 'S-02', lotNo: 'LOT-25/202', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-24', brokenSmall: 0.85, brokenBig: 18.50, brokenTotal: 19.35, fmInorg: 0.10, fmOrg: 0.20, fmTotal: 0.30, damaged: 2.20, admixture: 3.60, redKernels: 1.30, chalky: 3.10, discoloured: 1.90, dehusked: 8.40, frk: 1.01, testResult: 'Positive (1.01% FRK)', result: 'Within Specification' },
+          { sno: 3, millerName: 'M/s Jai Kisan Rice Mill, Betul', stackNo: 'S-03', lotNo: 'LOT-25/203', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-25', brokenSmall: 0.70, brokenBig: 17.20, brokenTotal: 17.90, fmInorg: 0.08, fmOrg: 0.15, fmTotal: 0.23, damaged: 1.90, admixture: 3.20, redKernels: 1.10, chalky: 2.80, discoloured: 1.60, dehusked: 7.90, frk: 1.03, testResult: 'Positive (1.03% FRK)', result: 'Within Specification' },
+          { sno: 4, millerName: 'M/s Shri Ram Agro, Multai', stackNo: 'S-04', lotNo: 'LOT-25/204', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-25', brokenSmall: 0.90, brokenBig: 18.80, brokenTotal: 19.70, fmInorg: 0.12, fmOrg: 0.22, fmTotal: 0.34, damaged: 2.40, admixture: 3.70, redKernels: 1.40, chalky: 3.30, discoloured: 2.00, dehusked: 8.80, frk: 0.99, testResult: 'Positive (0.99% FRK)', result: 'Within Specification' }
+        ]
+      },
+      {
+        id: 'TEST_RICE_003',
+        is_test: 1,
+        warehouseName: 'MPWLC Warehouse Shahpur',
+        analysisDate: '2026-09-12',
+        branchManager: 'MPWLC Shahpur',
+        centreIncharge: 'MPSCSC Shahpur',
+        districtManager: 'MPSCSC बैतूल',
+        lots: [
+          { sno: 1, millerName: 'M/s Satpura Agro Mills', stackNo: 'S-01', lotNo: 'LOT-25/301', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-11', brokenSmall: 0.80, brokenBig: 18.00, brokenTotal: 18.80, fmInorg: 0.10, fmOrg: 0.20, fmTotal: 0.30, damaged: 2.10, admixture: 3.40, redKernels: 1.20, chalky: 3.00, discoloured: 1.80, dehusked: 8.20, frk: 1.02, testResult: 'Positive (1.02% FRK)', result: 'Within Specification' },
+          { sno: 2, millerName: 'M/s Satpura Agro Mills', stackNo: 'S-02', lotNo: 'LOT-25/302', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-11', brokenSmall: 0.75, brokenBig: 18.25, brokenTotal: 19.00, fmInorg: 0.09, fmOrg: 0.19, fmTotal: 0.28, damaged: 2.00, admixture: 3.30, redKernels: 1.15, chalky: 2.90, discoloured: 1.75, dehusked: 8.10, frk: 1.04, testResult: 'Positive (1.04% FRK)', result: 'Within Specification' },
+          { sno: 3, millerName: 'M/s Satpura Agro Mills', stackNo: 'S-03', lotNo: 'LOT-25/303', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-12', brokenSmall: 0.82, brokenBig: 18.18, brokenTotal: 19.00, fmInorg: 0.11, fmOrg: 0.21, fmTotal: 0.32, damaged: 2.20, admixture: 3.50, redKernels: 1.25, chalky: 3.10, discoloured: 1.85, dehusked: 8.30, frk: 1.01, testResult: 'Positive (1.01% FRK)', result: 'Within Specification' },
+          { sno: 4, millerName: 'M/s Satpura Agro Mills', stackNo: 'S-04', lotNo: 'LOT-25/304', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-12', brokenSmall: 0.88, brokenBig: 18.92, brokenTotal: 19.80, fmInorg: 0.12, fmOrg: 0.24, fmTotal: 0.36, damaged: 2.30, admixture: 3.60, redKernels: 1.30, chalky: 3.20, discoloured: 1.95, dehusked: 8.50, frk: 1.00, testResult: 'Positive (1.00% FRK)', result: 'Within Specification' },
+          { sno: 5, millerName: 'M/s Satpura Agro Mills', stackNo: 'S-05', lotNo: 'LOT-25/305', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-09-12', brokenSmall: 0.90, brokenBig: 19.10, brokenTotal: 20.00, fmInorg: 0.14, fmOrg: 0.25, fmTotal: 0.39, damaged: 2.45, admixture: 3.80, redKernels: 1.40, chalky: 3.40, discoloured: 2.10, dehusked: 8.90, frk: 1.03, testResult: 'Positive (1.03% FRK)', result: 'Within Specification' }
+        ]
+      },
+      {
+        id: 'TEST_RICE_004',
+        is_test: 1,
+        warehouseName: 'MPWLC Warehouse Amla',
+        analysisDate: '2026-08-28',
+        branchManager: 'MPWLC Amla',
+        centreIncharge: 'MPSCSC Amla',
+        districtManager: 'MPSCSC बैतूल',
+        lots: [
+          { sno: 1, millerName: 'M/s Mahaveer Food Products', stackNo: 'S-01', lotNo: 'LOT-25/401', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-08-27', brokenSmall: 0.50, brokenBig: 15.00, brokenTotal: 15.50, fmInorg: 0.05, fmOrg: 0.12, fmTotal: 0.17, damaged: 1.50, admixture: 2.50, redKernels: 0.80, chalky: 2.00, discoloured: 1.20, dehusked: 6.50, frk: 1.00, testResult: 'Positive (1.00% FRK)', result: 'Within Specification' },
+          { sno: 2, millerName: 'M/s Mahaveer Food Products', stackNo: 'S-02', lotNo: 'LOT-25/402', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-08-27', brokenSmall: 1.10, brokenBig: 23.80, brokenTotal: 24.90, fmInorg: 0.19, fmOrg: 0.29, fmTotal: 0.48, damaged: 3.90, admixture: 5.40, redKernels: 2.45, chalky: 4.90, discoloured: 3.20, dehusked: 11.20, frk: 0.92, testResult: 'Positive (0.92% FRK)', result: 'BRL' },
+          { sno: 3, millerName: 'M/s Mahaveer Food Products', stackNo: 'S-03', lotNo: 'LOT-25/403', quantityMt: 29.00, noOfBags: 580, receiptDate: '2026-08-28', brokenSmall: 0.80, brokenBig: 18.40, brokenTotal: 19.20, fmInorg: 0.10, fmOrg: 0.20, fmTotal: 0.30, damaged: 2.10, admixture: 3.30, redKernels: 1.20, chalky: 3.00, discoloured: 1.80, dehusked: 8.00, frk: 1.01, testResult: 'Positive (1.01% FRK)', result: 'Within Specification' }
+        ]
+      }
+    ];
+
+    for (const rice of testRice) {
+      await this.saveRiceInspection(rice);
+      inserted.rice++;
+    }
+
+    const total = inserted.inspections + inserted.surprise + inserted.roster + inserted.meetings + inserted.rice;
+    console.log(`✅ Seeded ${total} test/dummy records successfully:`, inserted);
+    return { success: true, inserted, total };
+  }
+
   /**
    * Close database connection (Async Promise-based)
    */
