@@ -612,14 +612,15 @@ function renderSurpriseChecklist() {
     if (!container) return;
 
     container.innerHTML = SupervState.surprisePoints.map(p => `
-        <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;" data-sp-id="${p.id}">
-            <span style="font-size:12px; color:var(--text-main); flex:1;"><strong>${p.id}.</strong> ${p.text}</span>
-            <div class="toggle-btn-group">
+        <div class="surprise-checklist-row" style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;" data-sp-id="${p.id}">
+            <span style="font-size:12px; color:var(--text-main); flex:1; line-height:1.35;"><strong>${p.id}.</strong> ${p.text}</span>
+            <div class="toggle-btn-group" style="flex-shrink:0;">
                 <button type="button" class="toggle-opt yes active" onclick="toggleSurpriseItem(${p.id}, true)">मानक अनुरूप (Pass)</button>
                 <button type="button" class="toggle-opt no" onclick="toggleSurpriseItem(${p.id}, false)">कमी (Defect)</button>
             </div>
         </div>
     `).join('');
+    updateSurpriseLiveScore();
 }
 
 function toggleSurpriseItem(id, isPass) {
@@ -634,10 +635,64 @@ function toggleSurpriseItem(id, isPass) {
         btnN.classList.add('active');
         btnY.classList.remove('active');
     }
+    updateSurpriseLiveScore();
+}
+
+function setAllSurpriseItems(isPass) {
+    SupervState.surprisePoints.forEach(p => {
+        const row = document.querySelector(`[data-sp-id="${p.id}"]`);
+        if (!row) return;
+        const btnY = row.querySelector('.toggle-opt.yes');
+        const btnN = row.querySelector('.toggle-opt.no');
+        if (isPass) {
+            btnY.classList.add('active');
+            btnN.classList.remove('active');
+        } else {
+            btnN.classList.add('active');
+            btnY.classList.remove('active');
+        }
+    });
+    updateSurpriseLiveScore();
+}
+
+function updateSurpriseLiveScore() {
+    let passCount = 0;
+    const total = SupervState.surprisePoints.length;
+    SupervState.surprisePoints.forEach(p => {
+        const row = document.querySelector(`[data-sp-id="${p.id}"]`);
+        if (row && row.querySelector('.toggle-opt.yes')?.classList.contains('active')) {
+            passCount++;
+        }
+    });
+    const percent = Math.round((passCount / total) * 100);
+    const badge = document.getElementById('surpLiveScorePill');
+    if (badge) {
+        if (percent === 100) {
+            badge.style.background = 'rgba(34,197,94,0.15)';
+            badge.style.color = '#22c55e';
+            badge.style.border = '1px solid rgba(34,197,94,0.3)';
+            badge.innerHTML = `🟢 अनुपालन: ${percent}% (${passCount}/${total} पास)`;
+        } else if (percent >= 70) {
+            badge.style.background = 'rgba(234,179,8,0.15)';
+            badge.style.color = '#eab308';
+            badge.style.border = '1px solid rgba(234,179,8,0.3)';
+            badge.innerHTML = `🟡 अनुपालन: ${percent}% (${passCount}/${total} पास, ${total - passCount} कमी)`;
+        } else {
+            badge.style.background = 'rgba(239,68,68,0.15)';
+            badge.style.color = '#ef4444';
+            badge.style.border = '1px solid rgba(239,68,68,0.3)';
+            badge.innerHTML = `🔴 अनुपालन: ${percent}% (${passCount}/${total} पास, ${total - passCount} कमियां)`;
+        }
+    }
 }
 
 function openSurpriseModal() {
     initDefaultDates();
+    const officerInput = document.getElementById('surpOfficer');
+    if (officerInput && !officerInput.value) {
+        officerInput.value = SupervState.mode === 'dm' ? 'District Manager, MPSCSC Betul' : 'Regional Manager, MPSCSC Bhopal';
+    }
+    updateSurpriseLiveScore();
     openModal('modalSurprise');
 }
 
