@@ -1116,10 +1116,256 @@ class DatabaseManager {
         ]
       });
 
+      // Seed Rice Quality Inspection (KMS 2025-26) Demo Record
+      await this.saveRiceInspection({
+        id: 'INSP_RICE_KMS_2025_26_01',
+        warehouseName: 'MPWLC Warehouse Betul (Kosmi)',
+        analysisDate: '2026-09-28',
+        branchManager: 'MPWLC Betul',
+        centreIncharge: 'MPSCSC Betul',
+        districtManager: 'MPSCSC बैतूल',
+        lots: [
+          {
+            sno: 1,
+            millerName: 'M/s Jai Kisan Rice Mill, Betul',
+            stackNo: 'S-04',
+            lotNo: 'LOT-25/101',
+            quantityMt: 29.00,
+            noOfBags: 580,
+            receiptDate: '2026-09-26',
+            brokenSmall: 0.80,
+            brokenBig: 18.20,
+            brokenTotal: 19.00,
+            fmInorg: 0.10,
+            fmOrg: 0.20,
+            fmTotal: 0.30,
+            damaged: 2.10,
+            admixture: 3.50,
+            redKernels: 1.20,
+            chalky: 3.00,
+            discoloured: 2.00,
+            dehusked: 8.50,
+            frk: 0.98,
+            testResult: 'Positive (1.0% FRK)',
+            result: 'Within Specification'
+          },
+          {
+            sno: 2,
+            millerName: 'M/s Shri Ram Agro Industries, Multai',
+            stackNo: 'S-05',
+            lotNo: 'LOT-25/102',
+            quantityMt: 29.00,
+            noOfBags: 580,
+            receiptDate: '2026-09-26',
+            brokenSmall: 0.90,
+            brokenBig: 20.10,
+            brokenTotal: 21.00,
+            fmInorg: 0.15,
+            fmOrg: 0.25,
+            fmTotal: 0.40,
+            damaged: 2.80,
+            admixture: 4.20,
+            redKernels: 1.80,
+            chalky: 3.80,
+            discoloured: 2.50,
+            dehusked: 9.20,
+            frk: 1.02,
+            testResult: 'Positive (1.0% FRK)',
+            result: 'Within Specification'
+          },
+          {
+            sno: 3,
+            millerName: 'M/s Mahaveer Food Products, Amla',
+            stackNo: 'S-06',
+            lotNo: 'LOT-25/103',
+            quantityMt: 29.00,
+            noOfBags: 580,
+            receiptDate: '2026-09-27',
+            brokenSmall: 1.20,
+            brokenBig: 23.50,
+            brokenTotal: 24.70,
+            fmInorg: 0.18,
+            fmOrg: 0.30,
+            fmTotal: 0.48,
+            damaged: 3.90,
+            admixture: 5.50,
+            redKernels: 2.50,
+            chalky: 4.80,
+            discoloured: 3.20,
+            dehusked: 11.00,
+            frk: 0.95,
+            testResult: 'Positive (0.95% FRK)',
+            result: 'BRL'
+          },
+          {
+            sno: 4,
+            millerName: 'M/s Betul Modern Rice Mill',
+            stackNo: 'S-07',
+            lotNo: 'LOT-25/104',
+            quantityMt: 29.00,
+            noOfBags: 580,
+            receiptDate: '2026-09-27',
+            brokenSmall: 0.70,
+            brokenBig: 17.50,
+            brokenTotal: 18.20,
+            fmInorg: 0.08,
+            fmOrg: 0.15,
+            fmTotal: 0.23,
+            damaged: 1.80,
+            admixture: 3.00,
+            redKernels: 1.00,
+            chalky: 2.50,
+            discoloured: 1.50,
+            dehusked: 7.80,
+            frk: 1.00,
+            testResult: 'Positive (1.0% FRK)',
+            result: 'Within Specification'
+          },
+          {
+            sno: 5,
+            millerName: 'M/s Satpura Agro Mills, Shahpur',
+            stackNo: 'S-08',
+            lotNo: 'LOT-25/105',
+            quantityMt: 29.00,
+            noOfBags: 580,
+            receiptDate: '2026-09-28',
+            brokenSmall: 0.85,
+            brokenBig: 19.00,
+            brokenTotal: 19.85,
+            fmInorg: 0.12,
+            fmOrg: 0.22,
+            fmTotal: 0.34,
+            damaged: 2.40,
+            admixture: 3.80,
+            redKernels: 1.40,
+            chalky: 3.20,
+            discoloured: 2.10,
+            dehusked: 8.90,
+            frk: 1.05,
+            testResult: 'Positive (1.05% FRK)',
+            result: 'Within Specification'
+          },
+          {
+            sno: 6,
+            millerName: 'M/s Narmada Grain Processing, Multai',
+            stackNo: 'S-09',
+            lotNo: 'LOT-25/106',
+            quantityMt: 29.00,
+            noOfBags: 580,
+            receiptDate: '2026-09-28',
+            brokenSmall: 0.75,
+            brokenBig: 18.00,
+            brokenTotal: 18.75,
+            fmInorg: 0.10,
+            fmOrg: 0.18,
+            fmTotal: 0.28,
+            damaged: 2.00,
+            admixture: 3.20,
+            redKernels: 1.10,
+            chalky: 2.80,
+            discoloured: 1.80,
+            dehusked: 8.10,
+            frk: 1.00,
+            testResult: 'Positive (1.0% FRK)',
+            result: 'Within Specification'
+          }
+        ]
+      });
+
       console.log('✅ Supervision initial data seeded successfully.');
     } catch (err) {
       console.warn('⚠️ Supervision seed failed:', err.message);
     }
+  }
+
+  /* ═════════════════════════════════════════════════════════
+   * RICE QUALITY INSPECTION (KMS 2025-26) METHODS
+   * ═════════════════════════════════════════════════════════ */
+
+  /**
+   * Save or Update Rice Quality Inspection Sheet
+   */
+  async saveRiceInspection(data) {
+    const id = data.id || ('RICE_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const warehouseName = data.warehouseName || data.warehouse_name || '';
+    const analysisDate = data.analysisDate || data.analysis_date || new Date().toISOString().split('T')[0];
+    const branchManager = data.branchManager || data.branch_manager || 'MPWLC ....................';
+    const centreIncharge = data.centreIncharge || data.centre_incharge || 'MPSCSC ....................';
+    const districtManager = data.districtManager || data.district_manager || 'MPSCSC बैतूल';
+
+    const lots = data.lots || data.payload?.lots || [];
+    const totalLots = lots.length;
+    let totalQty = 0;
+    let totalBags = 0;
+
+    lots.forEach(l => {
+      totalQty += parseFloat(l.quantityMt || l.quantity_mt || 0);
+      totalBags += parseInt(l.noOfBags || l.no_of_bags || 0, 10);
+    });
+
+    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify({
+      warehouseName,
+      analysisDate,
+      branchManager,
+      centreIncharge,
+      districtManager,
+      lots
+    });
+
+    await this.run(`
+      INSERT INTO supervision_rice_inspections (
+        id, warehouse_name, analysis_date, total_lots, total_quantity_mt, total_bags,
+        branch_manager, centre_incharge, district_manager, payload, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        warehouse_name = excluded.warehouse_name,
+        analysis_date = excluded.analysis_date,
+        total_lots = excluded.total_lots,
+        total_quantity_mt = excluded.total_quantity_mt,
+        total_bags = excluded.total_bags,
+        branch_manager = excluded.branch_manager,
+        centre_incharge = excluded.centre_incharge,
+        district_manager = excluded.district_manager,
+        payload = excluded.payload,
+        updated_at = CURRENT_TIMESTAMP
+    `, [id, warehouseName, analysisDate, totalLots, totalQty, totalBags, branchManager, centreIncharge, districtManager, payload]);
+
+    return { success: true, id };
+  }
+
+  /**
+   * Get all Rice Quality Inspection Sheets
+   */
+  async getRiceInspections(limit = 50) {
+    const rows = await this.all(`
+      SELECT * FROM supervision_rice_inspections
+      ORDER BY analysis_date DESC, created_at DESC
+      LIMIT ?
+    `, [parseInt(limit, 10) || 50]);
+
+    return rows.map(r => ({
+      ...r,
+      payload: JSON.parse(r.payload || '{}')
+    }));
+  }
+
+  /**
+   * Get single Rice Quality Inspection Sheet by ID
+   */
+  async getRiceInspectionById(id) {
+    const row = await this.get('SELECT * FROM supervision_rice_inspections WHERE id = ?', [id]);
+    if (!row) return null;
+    return {
+      ...row,
+      payload: JSON.parse(row.payload || '{}')
+    };
+  }
+
+  /**
+   * Delete Rice Quality Inspection Sheet by ID
+   */
+  async deleteRiceInspection(id) {
+    return await this.run('DELETE FROM supervision_rice_inspections WHERE id = ?', [id]);
   }
 
   /**
