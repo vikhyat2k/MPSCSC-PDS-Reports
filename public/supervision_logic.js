@@ -17,6 +17,8 @@ const SupervState = {
     meetings: [],
     issueCentersDirectory: [],
     branchesDirectory: [],
+    riceInspections: [],
+    currentRiceSheetId: null,
     checkpoints: [
         { id: 'chk_1_computer', num: '01', text: 'कंप्यूटर कार्यरत अवस्था में है?' },
         { id: 'chk_2_printer', num: '02', text: 'प्रिंटर कार्यरत अवस्था में है?' },
@@ -69,19 +71,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     selectProtocolDay('mon');
     selectCoordAgency('MPWLC');
     selectReviewCategory('ic_operators');
+    initDefaultRiceSheet();
     
     await Promise.all([
         fetchDirectoryData(),
         fetchSupervisionStats(),
         fetchInspections(),
         fetchSurpriseVisits(),
-        fetchRoster()
+        fetchRoster(),
+        fetchRiceInspections()
     ]);
 
     renderDashboard();
     renderRosterTable();
     renderArchivesTable();
     renderSurpriseTable();
+    renderRiceSavedSheetsTable();
 });
 
 function initDefaultDates() {
@@ -89,9 +94,11 @@ function initDefaultDates() {
     const formDate = document.getElementById('formInspectionDate');
     const surpDate = document.getElementById('surpDate');
     const meetDate = document.getElementById('meetingDate');
+    const riceDate = document.getElementById('riceAnalysisDate');
     if (formDate) formDate.value = today;
     if (surpDate) surpDate.value = today;
     if (meetDate) meetDate.value = today;
+    if (riceDate) riceDate.value = today;
 }
 
 // ── Mode Switcher (DM vs RM) ──────────────────────────────
