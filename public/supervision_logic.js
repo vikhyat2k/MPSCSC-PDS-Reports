@@ -2158,8 +2158,106 @@ function viewRiceInspectionPrint(id) {
     }
 }
 
+function printElementDirectly(elementId, title = 'Official Report', orientation = 'landscape') {
+    const el = document.getElementById(elementId);
+    if (!el) {
+        window.print();
+        return;
+    }
+
+    let iframe = document.getElementById('superv-print-iframe');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'superv-print-iframe';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.visibility = 'hidden';
+        document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>${escapeHtml(title)}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 ${orientation};
+            margin: 5mm 6mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #fff !important;
+            color: #000 !important;
+            font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.3;
+        }
+        .official-print-document {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 2mm 3mm !important;
+            margin: 0 !important;
+        }
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        table, th, td {
+            border: 1px solid #0f2e5a;
+        }
+        th, td {
+            padding: 3.5px 2px;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group;
+        }
+        tr {
+            page-break-inside: avoid;
+        }
+        .signatures-section, .official-sig-block {
+            page-break-inside: avoid !important;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+    ${el.innerHTML}
+</body>
+</html>`);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch (e) {
+            console.warn('Iframe print fallback to window.print():', e);
+            window.print();
+        }
+    }, 350);
+}
+
 function printOfficialRiceDocument() {
-    window.print();
+    printElementDirectly('printableRiceSheetArea', 'INSPECTION OF RICE (KMS 2025-26) - MPSCSC Betul', 'landscape');
 }
 
 // ── Generic Modal Helpers ─────────────────────────────────
