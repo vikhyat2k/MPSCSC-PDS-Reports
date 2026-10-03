@@ -1329,6 +1329,7 @@ class DatabaseManager {
    */
   async saveRiceInspection(data) {
     const id = data.id || ('RICE_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const isTest = (data.is_test || data.isTest || (id && (id.startsWith('TEST_') || id.startsWith('DUMMY_')))) ? 1 : 0;
     const warehouseName = data.warehouseName || data.warehouse_name || '';
     const analysisDate = data.analysisDate || data.analysis_date || new Date().toISOString().split('T')[0];
     const branchManager = data.branchManager || data.branch_manager || 'MPWLC ....................';
@@ -1357,8 +1358,8 @@ class DatabaseManager {
     await this.run(`
       INSERT INTO supervision_rice_inspections (
         id, warehouse_name, analysis_date, total_lots, total_quantity_mt, total_bags,
-        branch_manager, centre_incharge, district_manager, payload, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        branch_manager, centre_incharge, district_manager, payload, is_test, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         warehouse_name = excluded.warehouse_name,
         analysis_date = excluded.analysis_date,
@@ -1369,8 +1370,9 @@ class DatabaseManager {
         centre_incharge = excluded.centre_incharge,
         district_manager = excluded.district_manager,
         payload = excluded.payload,
+        is_test = excluded.is_test,
         updated_at = CURRENT_TIMESTAMP
-    `, [id, warehouseName, analysisDate, totalLots, totalQty, totalBags, branchManager, centreIncharge, districtManager, payload]);
+    `, [id, warehouseName, analysisDate, totalLots, totalQty, totalBags, branchManager, centreIncharge, districtManager, payload, isTest]);
 
     return { success: true, id };
   }
