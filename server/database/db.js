@@ -1983,7 +1983,7 @@ class DatabaseManager {
 
     const total = inserted.inspections + inserted.surprise + inserted.roster + inserted.meetings + inserted.rice;
     console.log(`✅ Seeded ${total} test/dummy records successfully:`, inserted);
-    return { success: true, inserted, total };
+    return { success: true, inserted, total, seededCount: total };
   }
 
   /**

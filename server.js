@@ -4130,6 +4130,17 @@ app.get('/api/supervision/surprise', async (req, res) => {
     }
 });
 
+app.get('/api/supervision/surprise/:id', async (req, res) => {
+    try {
+        const surprise = await db.getSurpriseInspectionById(req.params.id);
+        if (!surprise) return res.status(404).json({ error: 'Surprise inspection not found' });
+        res.json(surprise);
+    } catch (err) {
+        console.error('Error fetching surprise inspection by id:', err);
+        res.status(500).json({ error: 'Failed to fetch surprise inspection' });
+    }
+});
+
 app.post('/api/supervision/surprise', async (req, res) => {
     try {
         const result = await db.saveSurpriseInspection(req.body);
@@ -4256,6 +4267,37 @@ app.post('/api/supervision/rice', async (req, res) => {
 });
 
 app.delete('/api/supervision/rice/:id', async (req, res) => {
+    try {
+        await db.deleteRiceInspection(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting rice inspection:', err);
+        res.status(500).json({ error: 'Failed to delete rice inspection' });
+    }
+});
+
+// Aliases for /api/supervision/rice-inspections
+app.get('/api/supervision/rice-inspections', (req, res) => res.redirect(307, '/api/supervision/rice' + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '')));
+app.get('/api/supervision/rice-inspections/:id', async (req, res) => {
+    try {
+        const inspection = await db.getRiceInspectionById(req.params.id);
+        if (!inspection) return res.status(404).json({ error: 'Rice inspection sheet not found' });
+        res.json(inspection);
+    } catch (err) {
+        console.error('Error fetching rice inspection by id:', err);
+        res.status(500).json({ error: 'Failed to fetch rice inspection' });
+    }
+});
+app.post('/api/supervision/rice-inspections', async (req, res) => {
+    try {
+        const result = await db.saveRiceInspection(req.body);
+        res.json(result);
+    } catch (err) {
+        console.error('Error saving rice inspection:', err);
+        res.status(500).json({ error: 'Failed to save rice inspection' });
+    }
+});
+app.delete('/api/supervision/rice-inspections/:id', async (req, res) => {
     try {
         await db.deleteRiceInspection(req.params.id);
         res.json({ success: true });
