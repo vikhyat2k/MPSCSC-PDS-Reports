@@ -1738,17 +1738,17 @@ function addRiceLotRow(lot = null, snoOverride = null) {
         <td><input type="number" step="0.01" class="superv-input rice-fm-org" value="${d.fmOrg !== '' ? d.fmOrg : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
         <td><input type="number" step="0.01" class="superv-input rice-fm-total" value="${d.fmTotal !== '' ? d.fmTotal : ''}" placeholder="0.00" readonly style="width:100%; min-width:65px; background:rgba(15,46,90,0.08); font-weight:700;"></td>
         <td><input type="number" step="0.01" class="superv-input rice-damaged" value="${d.damaged !== '' ? d.damaged : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-admixture" value="${d.admixture !== '' ? d.admixture : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-red" value="${d.redKernels !== '' ? d.redKernels : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-chalky" value="${d.chalky !== '' ? d.chalky : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-discoloured" value="${d.discoloured !== '' ? d.discoloured : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-dehusked" value="${d.dehusked !== '' ? d.dehusked : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-frk" value="${d.frk !== '' ? d.frk : ''}" placeholder="1.00" style="width:100%; min-width:60px;"></td>
+        <td><input type="text" class="superv-input rice-admixture" value="${d.admixture !== '' ? d.admixture : ''}" placeholder="NA" title="Common चावल हेतु अधोवर्ग अपमिश्रण लागू नहीं (NA)" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
+        <td><input type="number" step="0.01" class="superv-input rice-red" value="${d.redKernels !== '' ? d.redKernels : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
+        <td><input type="number" step="0.01" class="superv-input rice-chalky" value="${d.chalky !== '' ? d.chalky : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
+        <td><input type="number" step="0.01" class="superv-input rice-discoloured" value="${d.discoloured !== '' ? d.discoloured : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
+        <td><input type="number" step="0.01" class="superv-input rice-dehusked" value="${d.dehusked !== '' ? d.dehusked : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
+        <td><input type="number" step="0.01" class="superv-input rice-frk" value="${d.frk !== '' ? d.frk : ''}" placeholder="1.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
         <td><input type="text" class="superv-input rice-test-result" value="${escapeHtml(d.testResult || 'Positive')}" placeholder="Positive" style="width:100%; min-width:85px;"></td>
         <td>
             <select class="superv-select rice-result" style="width:100%; min-width:130px; font-size:11px; padding:4px;">
                 <option value="Within Specification" ${d.result === 'Within Specification' ? 'selected' : ''}>Within Specification</option>
-                <option value="BRL" ${d.result === 'BRL' ? 'selected' : ''}>BRL (Below Rejection Limit)</option>
+                <option value="BRL" ${d.result === 'BRL' ? 'selected' : ''}>BRL (Beyond Rejection Limit)</option>
                 <option value="Beyond FSSAI" ${d.result === 'Beyond FSSAI' ? 'selected' : ''}>Beyond FSSAI (Rejected)</option>
             </select>
         </td>
@@ -1776,35 +1776,124 @@ function removeRiceLotRow(btn) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────
+// UNIFORM SPECIFICATION SCHEDULE FOR COMMON RICE (KMS 2025-26)
+// Official Government Prescribed Maximum Limits
+// ─────────────────────────────────────────────────────────────
+const COMMON_RICE_SPEC_2025_26 = {
+    brokenTotalMax: 25.0,    // Item 1: Broken Total Max 25.0% (Raw Common Rice)
+    brokenSmallMax: 1.0,     // Footnote (*): Small broken shall not exceed 1% by weight
+    fmTotalMax: 0.50,        // Item 2: Foreign Matter Total Max 0.5%
+    fmInorgMax: 0.20,        // Footnote (**): Mineral/inorganic matter max 0.20% by weight
+    damagedMax: 3.0,         // Item 3: Damaged/Slightly Damaged Max 3.0% (Raw Common, incl. pinpoint)
+    discolouredMax: 3.0,     // Item 4: Discolored Grains Max 3.0% (Raw Common Rice)
+    chalkyMax: 5.0,          // Item 5: Chalky Grains Max 5.0% (Raw Common Rice)
+    redKernelsMax: 3.0,      // Item 6: Red Grains Max 3.0%
+    admixtureLowerClass: 'NA', // Item 7: Admixture of lower class is NA for Common Rice
+    dehuskedMax: 13.0,       // Item 8: Dehusked Grains Max 13.0%
+    moistureStandardMax: 14.0, // Item 9: Moisture Max 14.0% without cut (up to 15.0% with full value cut)
+    frkBlendingTarget: 1.0,  // Item 10: 1% FRK (w/w)
+    frkMin: 0.90,            // Footnote (@@): Permissible blending range 0.90% to 1.20%
+    frkMax: 1.20
+};
+
+function markSpecCellStatus(inputEl, isViolation, limitNote) {
+    if (!inputEl) return;
+    if (isViolation) {
+        inputEl.classList.add('spec-violation');
+        inputEl.title = `⚠️ सीमा उल्लंघन: विनिर्देश अनुसार अधिकतम सीमा ${limitNote} (Uniform Spec KMS 2025-26 Common Rice)`;
+    } else {
+        inputEl.classList.remove('spec-violation');
+        inputEl.title = '';
+    }
+}
+
 function recalculateRiceRow(tr) {
     if (!tr) return;
-    const small = parseFloat(tr.querySelector('.rice-broken-small')?.value) || 0;
-    const big = parseFloat(tr.querySelector('.rice-broken-big')?.value) || 0;
+
+    // 1. Broken Calculations
+    const smallInput = tr.querySelector('.rice-broken-small');
+    const bigInput = tr.querySelector('.rice-broken-big');
     const totBrokenInput = tr.querySelector('.rice-broken-total');
+    const small = parseFloat(smallInput?.value) || 0;
+    const big = parseFloat(bigInput?.value) || 0;
+    const totalBroken = small + big;
     if (totBrokenInput) {
-        const total = small + big;
-        totBrokenInput.value = total > 0 ? total.toFixed(2) : '';
+        totBrokenInput.value = (smallInput?.value !== '' || bigInput?.value !== '') && totalBroken > 0 ? totalBroken.toFixed(2) : (totalBroken > 0 ? totalBroken.toFixed(2) : '');
     }
 
-    const inorg = parseFloat(tr.querySelector('.rice-fm-inorg')?.value) || 0;
-    const org = parseFloat(tr.querySelector('.rice-fm-org')?.value) || 0;
+    // 2. Foreign Matter Calculations
+    const inorgInput = tr.querySelector('.rice-fm-inorg');
+    const orgInput = tr.querySelector('.rice-fm-org');
     const totFmInput = tr.querySelector('.rice-fm-total');
+    const inorg = parseFloat(inorgInput?.value) || 0;
+    const org = parseFloat(orgInput?.value) || 0;
+    const totalFm = inorg + org;
     if (totFmInput) {
-        const totalFm = inorg + org;
-        totFmInput.value = totalFm > 0 ? totalFm.toFixed(2) : '';
+        totFmInput.value = (inorgInput?.value !== '' || orgInput?.value !== '') && totalFm > 0 ? totalFm.toFixed(2) : (totalFm > 0 ? totalFm.toFixed(2) : '');
     }
 
-    // Auto Quality Specification Validation Check
-    const brokenTotal = parseFloat(totBrokenInput?.value) || 0;
-    const fmTotal = parseFloat(totFmInput?.value) || 0;
-    const damaged = parseFloat(tr.querySelector('.rice-damaged')?.value) || 0;
-    const resultSelect = tr.querySelector('.rice-result');
+    // 3. Additional Refractions
+    const damagedInput = tr.querySelector('.rice-damaged');
+    const damaged = parseFloat(damagedInput?.value) || 0;
 
+    const discolouredInput = tr.querySelector('.rice-discoloured');
+    const discoloured = parseFloat(discolouredInput?.value) || 0;
+
+    const chalkyInput = tr.querySelector('.rice-chalky');
+    const chalky = parseFloat(chalkyInput?.value) || 0;
+
+    const redInput = tr.querySelector('.rice-red');
+    const redKernels = parseFloat(redInput?.value) || 0;
+
+    const dehuskedInput = tr.querySelector('.rice-dehusked');
+    const dehusked = parseFloat(dehuskedInput?.value) || 0;
+
+    const frkInput = tr.querySelector('.rice-frk');
+    const frkVal = frkInput?.value !== '' ? parseFloat(frkInput?.value) : null;
+
+    // 4. Strict Validation against Official KMS 2025-26 Common Rice Limits
+    const smallBrokenViolated = small > COMMON_RICE_SPEC_2025_26.brokenSmallMax;
+    const totalBrokenViolated = totalBroken > COMMON_RICE_SPEC_2025_26.brokenTotalMax;
+    const inorgFmViolated = inorg > COMMON_RICE_SPEC_2025_26.fmInorgMax;
+    const totalFmViolated = totalFm > COMMON_RICE_SPEC_2025_26.fmTotalMax;
+    const damagedViolated = damaged > COMMON_RICE_SPEC_2025_26.damagedMax;
+    const discolouredViolated = discoloured > COMMON_RICE_SPEC_2025_26.discolouredMax;
+    const chalkyViolated = chalky > COMMON_RICE_SPEC_2025_26.chalkyMax;
+    const redKernelsViolated = redKernels > COMMON_RICE_SPEC_2025_26.redKernelsMax;
+    const dehuskedViolated = dehusked > COMMON_RICE_SPEC_2025_26.dehuskedMax;
+    const frkViolated = frkVal !== null && !isNaN(frkVal) && (frkVal < COMMON_RICE_SPEC_2025_26.frkMin || frkVal > COMMON_RICE_SPEC_2025_26.frkMax);
+
+    // Apply visual violation highlights to specific input elements
+    markSpecCellStatus(smallInput, smallBrokenViolated, '1.0% (Small Broken)');
+    markSpecCellStatus(totBrokenInput, totalBrokenViolated, '25.0% (Total Broken)');
+    markSpecCellStatus(inorgInput, inorgFmViolated, '0.20% (Inorganic FM)');
+    markSpecCellStatus(totFmInput, totalFmViolated, '0.50% (Total FM)');
+    markSpecCellStatus(damagedInput, damagedViolated, '3.0% (Damaged)');
+    markSpecCellStatus(discolouredInput, discolouredViolated, '3.0% (Discoloured)');
+    markSpecCellStatus(chalkyInput, chalkyViolated, '5.0% (Chalky)');
+    markSpecCellStatus(redInput, redKernelsViolated, '3.0% (Red Kernels)');
+    markSpecCellStatus(dehuskedInput, dehuskedViolated, '13.0% (Dehusked)');
+    markSpecCellStatus(frkInput, frkViolated, '0.90% - 1.20% (FRK Blending)');
+
+    // 5. Automatic Quality Status Determination (BRL vs Within Specification)
+    const resultSelect = tr.querySelector('.rice-result');
     if (resultSelect && !resultSelect.dataset.userOverridden) {
-        if (brokenTotal > 25.0 || fmTotal > 0.5 || damaged > 4.0) {
+        const hasViolations = smallBrokenViolated || totalBrokenViolated || inorgFmViolated || totalFmViolated ||
+                              damagedViolated || discolouredViolated || chalkyViolated || redKernelsViolated ||
+                              dehuskedViolated || frkViolated;
+
+        const hasAnyData = totalBroken > 0 || totalFm > 0 || damaged > 0 || discoloured > 0 ||
+                           chalky > 0 || redKernels > 0 || dehusked > 0 || (frkVal !== null && !isNaN(frkVal));
+
+        if (hasViolations) {
             resultSelect.value = 'BRL';
-        } else if (brokenTotal > 0 || fmTotal > 0 || damaged > 0) {
+            resultSelect.style.color = '#ef4444';
+            resultSelect.style.fontWeight = '700';
+        } else if (hasAnyData) {
             resultSelect.value = 'Within Specification';
+            resultSelect.style.color = '#10b981';
+            resultSelect.style.fontWeight = '600';
         }
     }
 }
