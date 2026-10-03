@@ -1243,6 +1243,95 @@
     </div>
 </div>
 
+<!-- 6. Test & Dummy Data Sandbox Modal -->
+<div class="superv-modal-overlay" id="modalTestData">
+    <div class="superv-modal-box" style="max-width:850px;">
+        <div class="superv-modal-header" style="border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:20px;">🧪</span>
+                <h3 style="margin:0; font-size:16px; color:var(--text-main);">डमी व टेस्ट डेटा प्रबंधन (Test Data Sandbox)</h3>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalTestData')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body" style="padding:16px 20px; max-height:75vh; overflow-y:auto;">
+            <!-- Safety Guarantee Notice -->
+            <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:var(--text-main); display:flex; gap:10px; align-items:flex-start;">
+                <span style="font-size:18px; line-height:1;">🛡️</span>
+                <div>
+                    <strong>डेटा सुरक्षा आश्वासन (Strict Zero-Data-Loss Guarantee):</strong>
+                    यह टूल केवल <code>is_test = 1</code> अथवा <code>TEST_</code> प्रीफ़िक्स वाले डमी परीक्षण रिकॉर्ड्स को प्रबंधित करता है। वास्तविक विभागीय डेटा, लाइव रिपोर्ट एवं मूल प्रविष्टियां पूर्णतः सुरक्षित हैं।
+                </div>
+            </div>
+
+            <!-- Test Stats Counter Grid -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-bottom:16px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">सघन निरीक्षण</div>
+                    <div style="font-size:18px; font-weight:700; color:var(--primary); margin-top:2px;" id="cntTestInspections">0</div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">औचक निरीक्षण</div>
+                    <div style="font-size:18px; font-weight:700; color:var(--superv-warning); margin-top:2px;" id="cntTestSurprise">0</div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">वार्षिक रोस्टर</div>
+                    <div style="font-size:18px; font-weight:700; color:#3b82f6; margin-top:2px;" id="cntTestRoster">0</div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">समन्वय बैठकें</div>
+                    <div style="font-size:18px; font-weight:700; color:#a855f7; margin-top:2px;" id="cntTestMeetings">0</div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">चावल परीक्षण</div>
+                    <div style="font-size:18px; font-weight:700; color:#10b981; margin-top:2px;" id="cntTestRice">0</div>
+                </div>
+                <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:8px; padding:10px; text-align:center;">
+                    <div style="font-size:11px; color:#818cf8; font-weight:700;">सक्रिय टेस्ट रिकॉर्ड्स</div>
+                    <div style="font-size:18px; font-weight:800; color:#6366f1; margin-top:2px;" id="cntTestTotal">0</div>
+                </div>
+            </div>
+
+            <!-- Test Records Preview Section -->
+            <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px;">
+                <div style="padding:8px 12px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-main);">📋 वर्तमान टेस्ट डेटा सूची (Test Records In Database)</span>
+                    <button class="btn btn-secondary btn-sm" onclick="loadTestDataStatus()" style="font-size:11px; padding:2px 8px;">🔄 रीफ्रेश</button>
+                </div>
+                <div style="max-height:220px; overflow-y:auto;">
+                    <table class="superv-table" style="font-size:12px;">
+                        <thead>
+                            <tr>
+                                <th>मॉड्यूल</th>
+                                <th>रिकॉर्ड आईडी</th>
+                                <th>प्रदाय केन्द्र / विषय</th>
+                                <th>दिनांक</th>
+                                <th>स्थिति</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testDataRecordsTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">डेटा लोड हो रहा है...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="superv-modal-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px;">
+            <button class="btn btn-secondary" onclick="closeModal('modalTestData')">बंद करें</button>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" onclick="seedTestDataFromUI()" style="background:var(--primary); color:#fff; font-size:12.5px;">
+                    🚀 22 टेस्ट रिकॉर्ड्स पुनः लोड करें
+                </button>
+                <button class="btn" onclick="cleanupTestDataFromUI()" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); font-size:12.5px;">
+                    🧹 केवल टेस्ट डेटा हटाएं (Safe Purge)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="./supervision_logic.js"></script>
 </body>
 </html>
