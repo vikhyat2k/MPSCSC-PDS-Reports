@@ -1,0 +1,79 @@
+const DatabaseManager = require('../server/database/db.js');
+const assert = require('assert');
+
+async function testSupervisionModule() {
+    console.log('🧪 Starting Supervision & Inspection Module Tests...');
+    const db = new DatabaseManager();
+    await db.init();
+
+    // Test 1: Get Stats
+    const stats = await db.getSupervisionStats();
+    console.log('✅ Test 1: Stats fetched successfully ->', stats);
+    assert(stats.activeDistrict === 'Betul', 'Expected Betul as active district');
+    assert(stats.totalRosterPlanned > 0, 'Expected positive roster targets');
+
+    // Test 2: Save Detailed Inspection
+    const testInspId = 'INSP_TEST_' + Date.now();
+    const saveRes = await db.saveSupervisionInspection({
+        id: testInspId,
+        mode: 'dm',
+        issueCenter: 'Chicholi',
+        inspectionMonth: 'October',
+        inspectionDate: '2026-10-03',
+        officerName: 'Test Inspector',
+        officerDesignation: 'District Manager',
+        complianceScore: 88,
+        deficienciesCount: 2,
+        godownsCount: 2,
+        payload: {
+            reservation: { wheat: 1000, rice: 500 },
+            stock: [{ commodity: 'गेहूं (Wheat)', soundBags: 2000, soundQty: 1000.00 }],
+            checkpoints: { chk_1_computer: true, chk_2_printer: false },
+            issuesAndSuggestions: [{ issue: 'प्रिंटर खराब', suggestion: 'मरम्मत कराएं' }]
+        }
+    });
+    assert(saveRes.success === true, 'Inspection save failed');
+    console.log('✅ Test 2: Saved inspection report ->', testInspId);
+
+    // Test 3: Retrieve Inspection by ID
+    const retrieved = await db.getSupervisionInspectionById(testInspId);
+    assert(retrieved !== null, 'Failed to fetch saved inspection');
+    assert(retrieved.issue_center === 'Chicholi', 'Issue center mismatch');
+    assert(retrieved.compliance_score === 88, 'Score mismatch');
+    console.log('✅ Test 3: Retrieved inspection by ID ->', retrieved.id);
+
+    // Test 4: Surprise Inspection
+    const testSurpId = 'SURP_TEST_' + Date.now();
+    const surpRes = await db.saveSurpriseInspection({
+        id: testSurpId,
+        mode: 'dm',
+        issueCenter: 'Amla',
+        inspectionDate: '2026-10-03',
+        officerName: 'Test Officer',
+        score: 100,
+        defectsCount: 0,
+        payload: { remark: 'All good' }
+    });
+    assert(surpRes.success === true, 'Surprise inspection save failed');
+    const surpriseList = await db.getSurpriseInspections(10);
+    assert(surpriseList.some(s => s.id === testSurpId), 'Surprise item not found in list');
+    console.log('✅ Test 4: Surprise inspection saved & listed ->', testSurpId);
+
+    // Test 5: Roster Operations
+    const roster = await db.getRoster(2026);
+    assert(Array.isArray(roster) && roster.length >= 24, 'Roster count incorrect');
+    console.log(`✅ Test 5: Annual Roster loaded with ${roster.length} entries for KMS 2026-27`);
+
+    // Clean up test entries
+    await db.deleteSupervisionInspection(testInspId);
+    await db.deleteSurpriseInspection(testSurpId);
+    console.log('🧹 Cleaned up temporary test entries.');
+
+    await db.close();
+    console.log('🎉 All Supervision Module Tests PASSED!');
+}
+
+testSupervisionModule().catch(err => {
+    console.error('❌ Test failed:', err);
+    process.exit(1);
+});

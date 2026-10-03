@@ -4060,6 +4060,148 @@ app.delete('/api/directory/:type/:id', async (req, res) => {
     }
 });
 
+// ─────────────────────────────────────────────
+// SUPERVISION & INSPECTION MODULE API (Orders 3/1 & 3/2)
+// ─────────────────────────────────────────────
+
+app.get('/supervision', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'supervision.html'));
+});
+
+app.get('/api/supervision/stats', async (req, res) => {
+    try {
+        const stats = await db.getSupervisionStats();
+        res.json(stats);
+    } catch (err) {
+        console.error('Error fetching supervision stats:', err);
+        res.status(500).json({ error: 'Failed to fetch supervision stats' });
+    }
+});
+
+app.get('/api/supervision/inspections', async (req, res) => {
+    try {
+        const inspections = await db.getSupervisionInspections(req.query);
+        res.json(inspections);
+    } catch (err) {
+        console.error('Error fetching supervision inspections:', err);
+        res.status(500).json({ error: 'Failed to fetch inspections' });
+    }
+});
+
+app.get('/api/supervision/inspections/:id', async (req, res) => {
+    try {
+        const inspection = await db.getSupervisionInspectionById(req.params.id);
+        if (!inspection) return res.status(404).json({ error: 'Inspection not found' });
+        res.json(inspection);
+    } catch (err) {
+        console.error('Error fetching inspection by id:', err);
+        res.status(500).json({ error: 'Failed to fetch inspection' });
+    }
+});
+
+app.post('/api/supervision/inspections', async (req, res) => {
+    try {
+        const result = await db.saveSupervisionInspection(req.body);
+        res.json(result);
+    } catch (err) {
+        console.error('Error saving supervision inspection:', err);
+        res.status(500).json({ error: 'Failed to save inspection' });
+    }
+});
+
+app.delete('/api/supervision/inspections/:id', async (req, res) => {
+    try {
+        await db.deleteSupervisionInspection(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting inspection:', err);
+        res.status(500).json({ error: 'Failed to delete inspection' });
+    }
+});
+
+app.get('/api/supervision/surprise', async (req, res) => {
+    try {
+        const limit = req.query.limit || 50;
+        const surprise = await db.getSurpriseInspections(limit);
+        res.json(surprise);
+    } catch (err) {
+        console.error('Error fetching surprise inspections:', err);
+        res.status(500).json({ error: 'Failed to fetch surprise inspections' });
+    }
+});
+
+app.post('/api/supervision/surprise', async (req, res) => {
+    try {
+        const result = await db.saveSurpriseInspection(req.body);
+        res.json(result);
+    } catch (err) {
+        console.error('Error saving surprise inspection:', err);
+        res.status(500).json({ error: 'Failed to save surprise inspection' });
+    }
+});
+
+app.delete('/api/supervision/surprise/:id', async (req, res) => {
+    try {
+        await db.deleteSurpriseInspection(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting surprise inspection:', err);
+        res.status(500).json({ error: 'Failed to delete surprise inspection' });
+    }
+});
+
+app.get('/api/supervision/roster', async (req, res) => {
+    try {
+        const year = req.query.year || 2026;
+        const roster = await db.getRoster(year);
+        res.json(roster);
+    } catch (err) {
+        console.error('Error fetching roster:', err);
+        res.status(500).json({ error: 'Failed to fetch roster' });
+    }
+});
+
+app.post('/api/supervision/roster', async (req, res) => {
+    try {
+        const result = await db.saveRosterItem(req.body);
+        res.json(result);
+    } catch (err) {
+        console.error('Error saving roster item:', err);
+        res.status(500).json({ error: 'Failed to save roster item' });
+    }
+});
+
+app.delete('/api/supervision/roster/:id', async (req, res) => {
+    try {
+        await db.deleteRosterItem(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting roster item:', err);
+        res.status(500).json({ error: 'Failed to delete roster item' });
+    }
+});
+
+app.get('/api/supervision/meetings', async (req, res) => {
+    try {
+        const type = req.query.type || null;
+        const meetings = await db.getSupervisionMeetings(type);
+        res.json(meetings);
+    } catch (err) {
+        console.error('Error fetching meetings:', err);
+        res.status(500).json({ error: 'Failed to fetch meetings' });
+    }
+});
+
+app.post('/api/supervision/meetings', async (req, res) => {
+    try {
+        const result = await db.saveSupervisionMeeting(req.body);
+        res.json(result);
+    } catch (err) {
+        console.error('Error saving meeting:', err);
+        res.status(500).json({ error: 'Failed to save meeting' });
+    }
+});
+
 // Serve index page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));

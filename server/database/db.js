@@ -72,6 +72,7 @@ class DatabaseManager {
     this.all = promisify(this.db.all.bind(this.db));
 
     await this.initializeTables();
+    await this.seedSupervisionDataIfEmpty();
     this.initialized = true;
     console.log('✅ Database initialized and tables ready');
   }
@@ -183,6 +184,101 @@ class DatabaseManager {
         ic_data TEXT
       )
     `);
+
+    // Supervision & Inspection module tables (Orders 3/1 & 3/2)
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS supervision_inspections (
+        id TEXT PRIMARY KEY,
+        mode TEXT DEFAULT 'dm',
+        issue_center TEXT NOT NULL,
+        inspection_month TEXT,
+        inspection_date TEXT NOT NULL,
+        officer_name TEXT,
+        officer_designation TEXT,
+        officer_mobile TEXT,
+        incharge_name TEXT,
+        incharge_mobile TEXT,
+        branch_manager TEXT,
+        branch_manager_mobile TEXT,
+        godowns_count INTEGER DEFAULT 0,
+        compliance_score INTEGER DEFAULT 0,
+        deficiencies_count INTEGER DEFAULT 0,
+        payload TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS supervision_surprise (
+        id TEXT PRIMARY KEY,
+        mode TEXT DEFAULT 'dm',
+        issue_center TEXT NOT NULL,
+        inspection_date TEXT NOT NULL,
+        officer_name TEXT,
+        officer_designation TEXT,
+        score INTEGER DEFAULT 0,
+        defects_count INTEGER DEFAULT 0,
+        payload TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS supervision_roster (
+        id TEXT PRIMARY KEY,
+        year INTEGER NOT NULL,
+        month TEXT NOT NULL,
+        issue_center TEXT NOT NULL,
+        target_godowns INTEGER DEFAULT 1,
+        planned_date TEXT,
+        completed_date TEXT,
+        status TEXT DEFAULT 'pending',
+        officer_name TEXT,
+        remarks TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS supervision_meetings (
+        id TEXT PRIMARY KEY,
+        meeting_type TEXT NOT NULL,
+        agency TEXT,
+        meeting_date TEXT NOT NULL,
+        chairperson TEXT,
+        attendees TEXT,
+        agenda_items TEXT,
+        minutes TEXT,
+        action_points TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Rice Quality Analysis & Inspection (KMS 2025-26)
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS supervision_rice_inspections (
+        id TEXT PRIMARY KEY,
+        warehouse_name TEXT NOT NULL,
+        analysis_date TEXT NOT NULL,
+        total_lots INTEGER DEFAULT 0,
+        total_quantity_mt REAL DEFAULT 0,
+        total_bags INTEGER DEFAULT 0,
+        branch_manager TEXT,
+        centre_incharge TEXT,
+        district_manager TEXT,
+        payload TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_insp_date ON supervision_inspections(inspection_date DESC)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_insp_ic ON supervision_inspections(issue_center)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_roster_ym ON supervision_roster(year, month)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_rice_date ON supervision_rice_inspections(analysis_date DESC)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_rice_wh ON supervision_rice_inspections(warehouse_name)`);
 
     // Migration: add scheme and insights columns if they don't exist
     try {
@@ -522,6 +618,508 @@ class DatabaseManager {
       LIMIT ?
     `, [lim]);
     return rows || [];
+  }
+
+  /* ═════════════════════════════════════════════════════════
+   * SUPERVISION & INSPECTION MODULE METHODS (Orders 3/1 & 3/2)
+   * ═════════════════════════════════════════════════════════ */
+
+  /**
+   * Save detailed inspection report (Insert or Upsert)
+   */
+  async saveSupervisionInspection(data) {
+    const id = data.id || ('INSP_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const mode = data.mode || 'dm';
+    const issueCenter = data.issueCenter || data.issue_center || '';
+    const inspectionMonth = data.inspectionMonth || data.inspection_month || '';
+    const inspectionDate = data.inspectionDate || data.inspection_date || new Date().toISOString().split('T')[0];
+    const officerName = data.officerName || data.officer_name || '';
+    const officerDesignation = data.officerDesignation || data.officer_designation || '';
+    const officerMobile = data.officerMobile || data.officer_mobile || '';
+    const inchargeName = data.inchargeName || data.incharge_name || '';
+    const inchargeMobile = data.inchargeMobile || data.incharge_mobile || '';
+    const branchManager = data.branchManager || data.branch_manager || '';
+    const branchManagerMobile = data.branchManagerMobile || data.branch_manager_mobile || '';
+    const godownsCount = parseInt(data.godownsCount || data.godowns_count || 0, 10);
+    const complianceScore = parseInt(data.complianceScore || data.compliance_score || 0, 10);
+    const deficienciesCount = parseInt(data.deficienciesCount || data.deficiencies_count || 0, 10);
+    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify(data);
+
+    await this.run(`
+      INSERT INTO supervision_inspections (
+        id, mode, issue_center, inspection_month, inspection_date,
+        officer_name, officer_designation, officer_mobile,
+        incharge_name, incharge_mobile, branch_manager, branch_manager_mobile,
+        godowns_count, compliance_score, deficiencies_count, payload, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        mode = excluded.mode,
+        issue_center = excluded.issue_center,
+        inspection_month = excluded.inspection_month,
+        inspection_date = excluded.inspection_date,
+        officer_name = excluded.officer_name,
+        officer_designation = excluded.officer_designation,
+        officer_mobile = excluded.officer_mobile,
+        incharge_name = excluded.incharge_name,
+        incharge_mobile = excluded.incharge_mobile,
+        branch_manager = excluded.branch_manager,
+        branch_manager_mobile = excluded.branch_manager_mobile,
+        godowns_count = excluded.godowns_count,
+        compliance_score = excluded.compliance_score,
+        deficiencies_count = excluded.deficiencies_count,
+        payload = excluded.payload,
+        updated_at = CURRENT_TIMESTAMP
+    `, [
+      id, mode, issueCenter, inspectionMonth, inspectionDate,
+      officerName, officerDesignation, officerMobile,
+      inchargeName, inchargeMobile, branchManager, branchManagerMobile,
+      godownsCount, complianceScore, deficienciesCount, payload
+    ]);
+
+    return { success: true, id };
+  }
+
+  /**
+   * Get all detailed inspection reports
+   */
+  async getSupervisionInspections(options = {}) {
+    let sql = 'SELECT * FROM supervision_inspections WHERE 1=1';
+    const params = [];
+
+    if (options.mode) {
+      sql += ' AND mode = ?';
+      params.push(options.mode);
+    }
+    if (options.issueCenter) {
+      sql += ' AND issue_center = ?';
+      params.push(options.issueCenter);
+    }
+    if (options.month) {
+      sql += ' AND inspection_month = ?';
+      params.push(options.month);
+    }
+
+    sql += ' ORDER BY inspection_date DESC, created_at DESC';
+
+    if (options.limit) {
+      sql += ' LIMIT ?';
+      params.push(parseInt(options.limit, 10));
+    }
+
+    const rows = await this.all(sql, params);
+    return rows.map(r => ({
+      ...r,
+      payload: JSON.parse(r.payload || '{}')
+    }));
+  }
+
+  /**
+   * Get single inspection by ID
+   */
+  async getSupervisionInspectionById(id) {
+    const row = await this.get('SELECT * FROM supervision_inspections WHERE id = ?', [id]);
+    if (!row) return null;
+    return {
+      ...row,
+      payload: JSON.parse(row.payload || '{}')
+    };
+  }
+
+  /**
+   * Delete inspection by ID
+   */
+  async deleteSupervisionInspection(id) {
+    return await this.run('DELETE FROM supervision_inspections WHERE id = ?', [id]);
+  }
+
+  /**
+   * Save surprise inspection
+   */
+  async saveSurpriseInspection(data) {
+    const id = data.id || ('SURP_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const mode = data.mode || 'dm';
+    const issueCenter = data.issueCenter || data.issue_center || '';
+    const inspectionDate = data.inspectionDate || data.inspection_date || new Date().toISOString().split('T')[0];
+    const officerName = data.officerName || data.officer_name || '';
+    const officerDesignation = data.officerDesignation || data.officer_designation || '';
+    const score = parseInt(data.score || 0, 10);
+    const defectsCount = parseInt(data.defectsCount || data.defects_count || 0, 10);
+    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify(data);
+
+    await this.run(`
+      INSERT INTO supervision_surprise (
+        id, mode, issue_center, inspection_date, officer_name, officer_designation, score, defects_count, payload
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        mode = excluded.mode,
+        issue_center = excluded.issue_center,
+        inspection_date = excluded.inspection_date,
+        officer_name = excluded.officer_name,
+        officer_designation = excluded.officer_designation,
+        score = excluded.score,
+        defects_count = excluded.defects_count,
+        payload = excluded.payload
+    `, [id, mode, issueCenter, inspectionDate, officerName, officerDesignation, score, defectsCount, payload]);
+
+    return { success: true, id };
+  }
+
+  /**
+   * Get surprise inspections
+   */
+  async getSurpriseInspections(limit = 50) {
+    const rows = await this.all(`
+      SELECT * FROM supervision_surprise
+      ORDER BY inspection_date DESC, created_at DESC
+      LIMIT ?
+    `, [parseInt(limit, 10) || 50]);
+
+    return rows.map(r => ({
+      ...r,
+      payload: JSON.parse(r.payload || '{}')
+    }));
+  }
+
+  /**
+   * Delete surprise inspection
+   */
+  async deleteSurpriseInspection(id) {
+    return await this.run('DELETE FROM supervision_surprise WHERE id = ?', [id]);
+  }
+
+  /**
+   * Get Roster items by year
+   */
+  async getRoster(year = 2026) {
+    const rows = await this.all(`
+      SELECT * FROM supervision_roster
+      WHERE year = ?
+      ORDER BY 
+        CASE month
+          WHEN 'April' THEN 1 WHEN 'May' THEN 2 WHEN 'June' THEN 3
+          WHEN 'July' THEN 4 WHEN 'August' THEN 5 WHEN 'September' THEN 6
+          WHEN 'October' THEN 7 WHEN 'November' THEN 8 WHEN 'December' THEN 9
+          WHEN 'January' THEN 10 WHEN 'February' THEN 11 WHEN 'March' THEN 12
+          ELSE 13
+        END, issue_center ASC
+    `, [parseInt(year, 10) || 2026]);
+
+    return rows || [];
+  }
+
+  /**
+   * Save or Update Roster Item
+   */
+  async saveRosterItem(data) {
+    const id = data.id || ('ROST_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const year = parseInt(data.year, 10) || 2026;
+    const month = data.month || 'October';
+    const issueCenter = data.issueCenter || data.issue_center || '';
+    const targetGodowns = parseInt(data.targetGodowns || data.target_godowns || 1, 10);
+    const plannedDate = data.plannedDate || data.planned_date || '';
+    const completedDate = data.completedDate || data.completed_date || '';
+    const status = data.status || 'pending';
+    const officerName = data.officerName || data.officer_name || '';
+    const remarks = data.remarks || '';
+
+    await this.run(`
+      INSERT INTO supervision_roster (
+        id, year, month, issue_center, target_godowns, planned_date, completed_date, status, officer_name, remarks, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        year = excluded.year,
+        month = excluded.month,
+        issue_center = excluded.issue_center,
+        target_godowns = excluded.target_godowns,
+        planned_date = excluded.planned_date,
+        completed_date = excluded.completed_date,
+        status = excluded.status,
+        officer_name = excluded.officer_name,
+        remarks = excluded.remarks,
+        updated_at = CURRENT_TIMESTAMP
+    `, [id, year, month, issueCenter, targetGodowns, plannedDate, completedDate, status, officerName, remarks]);
+
+    return { success: true, id };
+  }
+
+  /**
+   * Delete Roster Item
+   */
+  async deleteRosterItem(id) {
+    return await this.run('DELETE FROM supervision_roster WHERE id = ?', [id]);
+  }
+
+  /**
+   * Get Supervision Meetings
+   */
+  async getSupervisionMeetings(type = null) {
+    let sql = 'SELECT * FROM supervision_meetings';
+    const params = [];
+    if (type) {
+      sql += ' WHERE meeting_type = ?';
+      params.push(type);
+    }
+    sql += ' ORDER BY meeting_date DESC, created_at DESC';
+
+    const rows = await this.all(sql, params);
+    return rows.map(r => ({
+      ...r,
+      agenda_items: JSON.parse(r.agenda_items || '[]'),
+      action_points: JSON.parse(r.action_points || '[]')
+    }));
+  }
+
+  /**
+   * Save Supervision Meeting
+   */
+  async saveSupervisionMeeting(data) {
+    const id = data.id || ('MEET_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const meetingType = data.meetingType || data.meeting_type || 'coordination';
+    const agency = data.agency || '';
+    const meetingDate = data.meetingDate || data.meeting_date || new Date().toISOString().split('T')[0];
+    const chairperson = data.chairperson || '';
+    const attendees = data.attendees || '';
+    const agendaItems = typeof data.agendaItems === 'string' ? data.agendaItems : JSON.stringify(data.agendaItems || data.agenda_items || []);
+    const minutes = data.minutes || '';
+    const actionPoints = typeof data.actionPoints === 'string' ? data.actionPoints : JSON.stringify(data.actionPoints || data.action_points || []);
+
+    await this.run(`
+      INSERT INTO supervision_meetings (
+        id, meeting_type, agency, meeting_date, chairperson, attendees, agenda_items, minutes, action_points
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        meeting_type = excluded.meeting_type,
+        agency = excluded.agency,
+        meeting_date = excluded.meeting_date,
+        chairperson = excluded.chairperson,
+        attendees = excluded.attendees,
+        agenda_items = excluded.agenda_items,
+        minutes = excluded.minutes,
+        action_points = excluded.action_points
+    `, [id, meetingType, agency, meetingDate, chairperson, attendees, agendaItems, minutes, actionPoints]);
+
+    return { success: true, id };
+  }
+
+  /**
+   * Get Supervision KPI Stats
+   */
+  async getSupervisionStats() {
+    try {
+      const now = new Date();
+      const currentMonth = now.toLocaleString('en-US', { month: 'long' });
+      const currentYear = now.getFullYear();
+
+      const inspTotal = await this.get('SELECT COUNT(*) as count, AVG(compliance_score) as avgScore FROM supervision_inspections');
+      const inspThisMonth = await this.get('SELECT COUNT(*) as count FROM supervision_inspections WHERE strftime("%Y-%m", inspection_date) = strftime("%Y-%m", "now")');
+      const surpTotal = await this.get('SELECT COUNT(*) as count FROM supervision_surprise');
+      const rosterStats = await this.get(`
+        SELECT 
+          COUNT(*) as totalRoster,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completedRoster,
+          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pendingRoster
+        FROM supervision_roster WHERE year = ?
+      `, [currentYear]);
+
+      const meetingsCount = await this.get('SELECT COUNT(*) as count FROM supervision_meetings');
+
+      return {
+        totalInspections: inspTotal?.count || 0,
+        averageComplianceScore: Math.round(inspTotal?.avgScore || 0),
+        inspectionsThisMonth: inspThisMonth?.count || 0,
+        totalSurpriseVisits: surpTotal?.count || 0,
+        totalRosterPlanned: rosterStats?.totalRoster || 0,
+        rosterCompleted: rosterStats?.completedRoster || 0,
+        rosterPending: rosterStats?.pendingRoster || 0,
+        totalMeetingsRecorded: meetingsCount?.count || 0,
+        activeDistrict: 'Betul',
+        headquartersOrder: 'Order 3/1 (DM) & 3/2 (RM)'
+      };
+    } catch (err) {
+      console.error('Supervision stats error:', err);
+      return { totalInspections: 0, averageComplianceScore: 0, rosterCompleted: 0, rosterPending: 0 };
+    }
+  }
+
+  /**
+   * Auto-seed supervision roster and demo data if empty
+   */
+  async seedSupervisionDataIfEmpty() {
+    try {
+      const countRow = await this.get('SELECT COUNT(*) as c FROM supervision_roster');
+      if (countRow && countRow.c > 0) return;
+
+      console.log('🌱 Seeding initial Supervision & Inspection Roster for Betul District (KMS 2025-26 / 2026-27)...');
+      const issueCenters = [
+        'Betul', 'Multai', 'Bhainsdehi', 'Athner', 'Shahpur', 
+        'Chicholi', 'Ghoradongri', 'Amla', 'Pattan', 'Bhimpur'
+      ];
+      const months = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'];
+      const officers = ['District Manager (DM)', 'Manager (Finance)', 'Quality Control Officer', 'Assistant Manager (PDS)'];
+
+      let idx = 0;
+      for (const m of months) {
+        // Schedule 2-3 issue centers per month as per Order 3/1 (at least 1 IC + all godowns, twice a year)
+        const ic1 = issueCenters[idx % issueCenters.length];
+        const ic2 = issueCenters[(idx + 1) % issueCenters.length];
+        idx = (idx + 2) % issueCenters.length;
+
+        const isPast = ['April', 'May', 'June', 'July', 'August', 'September'].includes(m);
+        const day1 = isPast ? '14' : '15';
+        const day2 = isPast ? '28' : '26';
+        const ym = (isPast ? '2026-' : '2026-') + (months.indexOf(m) + 1).toString().padStart(2, '0');
+
+        await this.saveRosterItem({
+          id: `ROST_2026_${m}_${ic1}`,
+          year: 2026,
+          month: m,
+          issueCenter: ic1,
+          targetGodowns: 3,
+          plannedDate: `${ym}-${day1}`,
+          completedDate: isPast ? `${ym}-${day1}` : '',
+          status: isPast ? 'completed' : 'pending',
+          officerName: officers[0],
+          remarks: isPast ? 'निरीक्षण संपन्न, प्रतिवेदन संधारित।' : 'वार्षिक कार्यक्रमानुसार प्रस्तावित।'
+        });
+
+        await this.saveRosterItem({
+          id: `ROST_2026_${m}_${ic2}`,
+          year: 2026,
+          month: m,
+          issueCenter: ic2,
+          targetGodowns: 2,
+          plannedDate: `${ym}-${day2}`,
+          completedDate: isPast ? `${ym}-${day2}` : '',
+          status: isPast ? 'completed' : 'pending',
+          officerName: officers[1],
+          remarks: isPast ? 'सत्यापन पूर्ण, स्कंध स्थिति संतोषप्रद।' : 'प्रस्तावित रोस्टर निरीक्षण।'
+        });
+      }
+
+      // Seed one realistic completed detailed inspection report
+      await this.saveSupervisionInspection({
+        id: 'INSP_BETUL_DEMO_01',
+        mode: 'dm',
+        issueCenter: 'Betul',
+        inspectionMonth: 'September',
+        inspectionDate: '2026-09-22',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        officerMobile: '9425000000',
+        inchargeName: 'R. K. Sharma',
+        inchargeMobile: '9826100001',
+        branchManager: 'A. K. Verma (MPWLC)',
+        branchManagerMobile: '9425100002',
+        godownsCount: 4,
+        complianceScore: 94,
+        deficienciesCount: 1,
+        payload: {
+          reservation: {
+            wheat: 3500,
+            rice: 1800,
+            sugar: 120,
+            salt: 95,
+            other: 0
+          },
+          stock: [
+            { commodity: 'गेहूं (Wheat)', soundBags: 6800, soundQty: 3400.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 12, sweepageQty: 5.40 },
+            { commodity: 'चावल (Rice)', soundBags: 3550, soundQty: 1775.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 8, sweepageQty: 3.60 },
+            { commodity: 'शक्कर (Sugar)', soundBags: 230, soundQty: 115.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 0, sweepageQty: 0.00 },
+            { commodity: 'नमक (Salt)', soundBags: 190, soundQty: 95.00, damagedBags: 0, damagedQty: 0.00, sweepageBags: 0, sweepageQty: 0.00 }
+          ],
+          gunnyBags: {
+            juteNew: { usableBales: 15, usableBags: 7500, unusableBags: 20 },
+            hdpe: { usableBales: 22, usableBags: 11000, unusableBags: 45 },
+            juteOld: { usableBales: 5, usableBags: 2500, unusableBags: 110 }
+          },
+          doorstepDelivery: {
+            wheatLifted: 3380.00,
+            riceLifted: 1750.00,
+            sugarLifted: 112.50,
+            saltLifted: 94.00,
+            fpsDeliveredCount: 84,
+            transporterReceiptDate: '2026-09-20',
+            receiptSentToDO: '2026-09-21',
+            enteredInSoftwareDate: '2026-09-22'
+          },
+          checkpoints: {
+            chk_1_computer: true,
+            chk_2_printer: true,
+            chk_3_ups: true,
+            chk_4_internet: true,
+            chk_5_deo_format: true,
+            chk_6_doorstep_receipts: true,
+            chk_7_stock_quality: true,
+            chk_8_stack_criteria: true,
+            chk_9_stack_cards: true,
+            chk_10_sweepage_handling: false, // 1 deficiency
+            chk_11_records_reconciliation: true,
+            chk_12_stack_killing: true,
+            chk_13_loss_gain_cert: true,
+            chk_14_damaged_dcc: true,
+            chk_15_transport_order: true,
+            chk_16_fumigation_schedule: true
+          },
+          issuesAndSuggestions: [
+            { issue: 'स्वीपेज स्कंध (12 बोरे गेहूं + 8 बोरे चावल) पृथक सुरक्षित रूप से विनिर्मित स्टेक में रखा गया है किंतु छंटाई एवं अपग्रेडेशन शेष है।', suggestion: '3 दिवस में छंटाई पूर्ण कर अपग्रेडेशन अथवा निस्तारण प्रस्ताव मुख्यालय को प्रेषित करें।' }
+          ],
+          remarks: 'प्रदाय केन्द्र का कार्य सुव्यवस्थित है। द्वार प्रदाय योजना का उठाव 98% पूर्ण।'
+        }
+      });
+
+      // Seed surprise visit
+      await this.saveSurpriseInspection({
+        id: 'SURP_BETUL_DEMO_01',
+        mode: 'dm',
+        issueCenter: 'Multai',
+        inspectionDate: '2026-09-25',
+        officerName: 'Vikhyat Hindoliya',
+        officerDesignation: 'District Manager (MPSCSC)',
+        score: 90,
+        defectsCount: 1,
+        payload: {
+          points: [
+            { id: 1, label: 'आवंटन के मान से विभिन्न जिंस की उपलब्धता', compliant: true, remark: 'पर्याप्त बफर उपलब्ध' },
+            { id: 2, label: 'स्थान उपलब्धता की स्थिति', compliant: true, remark: '350 MT अतिरिक्त रिक्त स्थान' },
+            { id: 3, label: 'हार्डवेयर / सॉफ्टवेयर संचालन एवं प्रविष्टि स्थिति', compliant: true, remark: 'CSMS अद्यतन' },
+            { id: 4, label: 'भंडारित स्कंध के रख-रखाव की स्थिति', compliant: true, remark: 'दिवारों से 1 मीटर अंतर मानक अनुसार' },
+            { id: 5, label: 'स्वीपेज / क्षतिग्रस्त स्टाक की समीक्षा', compliant: false, remark: '5 बोरे स्वीपेज पृथक किए जाने हेतु निर्देशित' },
+            { id: 6, label: 'स्टेकों का कीटोपचार / धूमीकरण निर्धारित समय पर', compliant: true, remark: 'गत धूमीकरण 12-09-2026' },
+            { id: 7, label: 'द्वार प्रदाय योजना पावतियों की सॉफ्टवेयर में प्रविष्टि', compliant: true, remark: 'शत-प्रतिशत प्रविष्ट' },
+            { id: 8, label: 'केन्द्रवार डीडी / देयक जिला कार्यालय प्रेषित स्थिति', compliant: true, remark: 'पावतियां प्रेषित' },
+            { id: 9, label: 'FIFO (प्रथम आगम प्रथम निर्गम) पद्धति पालन', compliant: true, remark: 'FIFO का पूर्ण पालन' },
+            { id: 10, label: 'केन्द्र प्रभारी / ऑपरेटर की उपस्थिति', compliant: true, remark: 'उपस्थित' }
+          ],
+          overallRemark: 'औचक निरीक्षण में व्यवस्थाएं संतोषप्रद पाई गईं।'
+        }
+      });
+
+      // Seed coordination meeting agenda
+      await this.saveSupervisionMeeting({
+        id: 'MEET_COORD_MPWLC_01',
+        meetingType: 'coordination',
+        agency: 'MPWLC',
+        meetingDate: '2026-09-18',
+        chairperson: 'District Manager, MPSCSC Betul',
+        attendees: 'Branch Managers MPWLC Betul, Multai, Athner, AM (Storage) MPSCSC',
+        agendaItems: [
+          'हार्डवेयर / आपरेटर्स के माध्यम से कम्प्यूटराईज्ड कार्य संपादन',
+          'साविप्र भण्डारण हेतु स्थान उपलब्धता एवं स्कंध निकासी क्रम',
+          'वैज्ञानिक भंडारण एवं गुणवत्ता स्थिति (धूमीकरण/कीटनाशक)',
+          'स्टेक किल करने में आ रही कठिनाईयां एवं 1% से कम आधिक्य/कमी दावों का निराकरण',
+          'भंडारण शुल्क देयकों का भुगतान एवं मिलान'
+        ],
+        minutes: 'म.प्र. वेयरहाउसिंग कार्पोरेशन के सभी शाखा प्रबंधकों के साथ विस्तृत समीक्षा की गई। धूमीकरण प्रमाण पत्र 25 तारीख तक अनिवार्य रूप से प्रस्तुत करने के निर्देश दिए गए।',
+        actionPoints: [
+          'मुलताई शाखा 3 दिन में स्टेक लॉस-गेन प्रमाण पत्र उपलब्ध कराएगी।',
+          'बैतूल शाखा रिक्त 500 MT क्षमता का आवंटन साविप्र चावल भंडारण हेतु सुरक्षित रखेगी।'
+        ]
+      });
+
+      console.log('✅ Supervision initial data seeded successfully.');
+    } catch (err) {
+      console.warn('⚠️ Supervision seed failed:', err.message);
+    }
   }
 
   /**

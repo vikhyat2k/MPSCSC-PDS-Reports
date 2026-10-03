@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>निगरानी एवं समीक्षा (Supervision & Review) — MPSCSC Betul</title>
+    <link rel="stylesheet" href="./theme.css">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./supervision.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function(){
+            var s = localStorage.getItem('pds-theme');
+            if (s === 'light') document.documentElement.setAttribute('data-theme','light');
+        })();
+    </script>
+</head>
+<body>
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+<div class="bg-blob blob-3"></div>
+
+<div class="app-wrapper" id="appWrapper">
+
+    <!-- ── SIDEBAR ────────────────────────────────────────── -->
+    <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-header">
+            <img src="./mpscsc_logo.png" alt="MPSCSC" class="sidebar-logo-img">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand-name">निगरानी एवं समीक्षा</span>
+                <span class="sidebar-brand-sub">Supervision Portal · Order 3/1 & 3/2</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">निगरानी एवं अनुश्रवण</div>
+
+            <a class="nav-item active" id="superv-nav-dashboard" onclick="showSupervView('dashboard', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span class="nav-label">डैशबोर्ड (Dashboard)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-protocol" onclick="showSupervView('protocol', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="nav-label">साप्ताहिक कार्ययोजना (Protocol)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-roster" onclick="showSupervView('roster', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <span class="nav-label">वार्षिक रोस्टर (परिशिष्ट 01)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-detailed" onclick="showSupervView('detailed', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span class="nav-label">प्रदाय केन्द्र निरीक्षण (परिशिष्ट 02)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-surprise" onclick="showSupervView('surprise', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span class="nav-label">औचक निरीक्षण (परिशिष्ट 03)</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+            <div class="nav-section-label">समीक्षा एवं समन्वय</div>
+
+            <a class="nav-item" id="superv-nav-compliance" onclick="showSupervView('compliance', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span class="nav-label">मासिक अनुपालन (परिशिष्ट 04)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-coordination" onclick="showSupervView('coordination', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                <span class="nav-label">संस्था समन्वय बैठक (परिशिष्ट 06)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-review" onclick="showSupervView('review', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="nav-label">आंतरिक समीक्षा (परिशिष्ट 05/07)</span>
+            </a>
+
+            <a class="nav-item" id="superv-nav-archives" onclick="showSupervView('archives', this)">
+                <svg class="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <span class="nav-label">निरीक्षण अभिलेख (Archives)</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+
+            <a class="nav-item" href="index.html">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <span class="nav-label">Back to PDS Portal</span>
+            </a>
+
+            <a class="nav-item" href="directory.html">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+                <span class="nav-label">IC Directory</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-system-pill">
+                <div class="pulse-dot"></div>
+                <span class="nav-label">Supervision Engine Online</span>
+            </div>
+            <div style="padding:10px 10px 4px; font-size:11px; color:var(--text-muted); text-align:center; border-top:1px solid var(--border); margin-top:10px;">
+                <div style="font-weight:600; color:var(--text-main);">म.प्र. स्टेट सिविल सप्लाईज़ कार्पो. लि.</div>
+                <div style="margin-top:2px;">Created by <strong style="color:var(--primary);">Vikhyat Hindoliya</strong></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── APP SHELL ──────────────────────────────────────── -->
+    <div class="app-shell">
+        <header class="app-header">
+            <button class="header-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+
+            <div class="header-breadcrumb">
+                <img src="./mpscsc_logo.png" alt="" class="header-logo-mini">
+                <div class="header-org-block">
+                    <span class="header-org">निगरानी एवं समीक्षा (अनुसरण एवं पर्यवेक्षण प्रणाली)</span>
+                    <span class="header-loc">📍 मध्य प्रदेश स्टेट सिविल सप्लाईज कार्पोरेशन लिमिटेड · जिला कार्यालय बैतूल</span>
+                </div>
+            </div>
+
+            <!-- Role / Mode Toggle -->
+            <div class="mode-toggle-pill" title="Switch Operating Level">
+                <button class="mode-btn active" id="btnModeDM" onclick="setSupervisionMode('dm')">🏢 जिला कार्यालय (DM 3/1)</button>
+                <button class="mode-btn" id="btnModeRM" onclick="setSupervisionMode('rm')">🏛️ क्षेत्रीय कार्यालय (RM 3/2)</button>
+            </div>
+
+            <div class="header-right">
+                <button class="header-btn" onclick="openNewInspectionForm()" title="New Detailed Inspection" style="background:var(--primary); color:#fff; border-color:transparent; gap:6px;">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>नया निरीक्षण</span>
+                </button>
+
+                <button class="header-btn" onclick="openSurpriseModal()" title="Record Surprise Inspection" style="background:rgba(245,158,11,0.15); color:var(--superv-warning); border-color:rgba(245,158,11,0.3); gap:6px;">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span>औचक दौरा</span>
+                </button>
+
+                <button class="header-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light">
+                    <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="app-main" style="padding:24px;">
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 1: DASHBOARD
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view active" id="view-dashboard">
+                <div class="superv-kpi-grid">
+                    <div class="superv-kpi-card">
+                        <div class="superv-kpi-header">
+                            <span class="superv-kpi-title">माहवार लक्ष्य पूर्ति</span>
+                            <div class="superv-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg></div>
+                        </div>
+                        <div class="superv-kpi-value" id="kpiMonthInspections">0</div>
+                        <div class="superv-kpi-sub">चालू माह में संपन्न निरीक्षण (लक्ष्य: 3-5 गोदाम)</div>
+                    </div>
+
+                    <div class="superv-kpi-card success">
+                        <div class="superv-kpi-header">
+                            <span class="superv-kpi-title">औसत अनुपालन स्कोर</span>
+                            <div class="superv-kpi-icon" style="color:var(--superv-success); background:rgba(16,185,129,0.12);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                        </div>
+                        <div class="superv-kpi-value" id="kpiAvgScore" style="color:var(--superv-success);">0%</div>
+                        <div class="superv-kpi-sub">16-17 बिंदु चेकलिस्ट अनुपालन स्तर</div>
+                    </div>
+
+                    <div class="superv-kpi-card warning">
+                        <div class="superv-kpi-header">
+                            <span class="superv-kpi-title">वार्षिक रोस्टर प्रगति</span>
+                            <div class="superv-kpi-icon" style="color:var(--superv-warning); background:rgba(245,158,11,0.12);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                        </div>
+                        <div class="superv-kpi-value" id="kpiRosterCompleted">0 / 0</div>
+                        <div class="superv-kpi-sub" id="kpiRosterSub">रोस्टर अनुसार पूर्ण / कुल प्रदाय केंद्र</div>
+                    </div>
+
+                    <div class="superv-kpi-card purple">
+                        <div class="superv-kpi-header">
+                            <span class="superv-kpi-title">औचक निरीक्षण एवं बैठकें</span>
+                            <div class="superv-kpi-icon" style="color:var(--superv-purple); background:rgba(139,92,246,0.12);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+                        </div>
+                        <div class="superv-kpi-value" id="kpiSurpriseAndMeetings">0 / 0</div>
+                        <div class="superv-kpi-sub">औचक दौरे / संस्थागत समन्वय बैठकें</div>
+                    </div>
+                </div>
+
+                <!-- Circular Banner Alert -->
+                <div style="background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.3); border-radius:12px; padding:16px 20px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <div style="font-size:24px;">📜</div>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:var(--text-main);">मुख्यालयीन स्थायी निर्देश क्र. समन्वय/2014-15/684 (3/1) एवं 705 (3/2)</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">प्रबंध संचालक महोदय के पत्र क्र. 179 दिनांक 05-01-2019 अनुसार समस्त प्रदाय केन्द्रों का 6 माह में कम से कम 2 बार विस्तृत सत्यापन एवं मासिक औचक निरीक्षण अनिवार्य है। प्रतिवेदन mdmpscsc@gmail.com पर प्रेषित करें।</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary btn-sm" onclick="showSupervView('protocol', document.getElementById('superv-nav-protocol'))">कार्ययोजना देखें</button>
+                        <button class="btn btn-primary btn-sm" onclick="showSupervView('compliance', document.getElementById('superv-nav-compliance'))">मासिक अनुपालन पत्र</button>
+                    </div>
+                </div>
+
+                <!-- Recent Inspections Table -->
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div class="superv-card-title">
+                            <span>हाल ही में संपन्न विस्तृत निरीक्षण (Recent Inspection Reports)</span>
+                            <span class="badge" id="inspCountBadge">0 Reports</span>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="showSupervView('archives', document.getElementById('superv-nav-archives'))">सभी अभिलेख देखें</button>
+                    </div>
+                    <div class="superv-table-wrapper">
+                        <table class="superv-table">
+                            <thead>
+                                <tr>
+                                    <th>निरीक्षण क्रमांक</th>
+                                    <th>प्रदाय केंद्र</th>
+                                    <th>निरीक्षण दिनांक</th>
+                                    <th>निरीक्षणकर्ता अधिकारी</th>
+                                    <th>संबद्ध गोदाम</th>
+                                    <th>अनुपालन स्कोर</th>
+                                    <th>कमियां/सुझाव</th>
+                                    <th>कार्यवाही</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardRecentInspTable">
+                                <tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Surprise Inspections & High Risk Deficiencies -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(400px, 1fr)); gap:20px;">
+                    <div class="superv-card">
+                        <div class="superv-card-header">
+                            <div class="superv-card-title">
+                                <span>⚡ औचक निरीक्षण डायरी (Surprise Visits Log)</span>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="openSurpriseModal()">+ औचक प्रविष्टि</button>
+                        </div>
+                        <div id="dashboardSurpriseList">
+                            <div style="text-align:center; padding:20px; color:var(--text-muted);">लोड हो रहा है...</div>
+                        </div>
+                    </div>
+
+                    <div class="superv-card">
+                        <div class="superv-card-header">
+                            <div class="superv-card-title">
+                                <span>⚠️ प्राथमिकता निराकरण बिंदु (Critical Action Flags)</span>
+                            </div>
+                        </div>
+                        <div id="dashboardActionFlags">
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <div style="background:var(--surface); border-left:4px solid var(--superv-warning); padding:12px 14px; border-radius:0 8px 8px 0; font-size:13px;">
+                                    <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">स्वीपेज स्कंध छंटाई एवं अपग्रेडेशन</div>
+                                    <div style="color:var(--text-muted);">बैतूल एवं मुलताई प्रदाय केंद्रों में शेष स्वीपेज स्कंध का त्वरित निस्तारण किया जाना है।</div>
+                                </div>
+                                <div style="background:var(--surface); border-left:4px solid var(--superv-accent); padding:12px 14px; border-radius:0 8px 8px 0; font-size:13px;">
+                                    <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">धूमीकरण एवं स्टेक कार्ड अद्यतन</div>
+                                    <div style="color:var(--text-muted);">समस्त संबद्ध MPWLC गोदामों में वर्षांत उपरांत कीटोपचार एवं स्टेक कार्ड सत्यापन सुनिश्चित करें।</div>
+                                </div>
+                                <div style="background:var(--surface); border-left:4px solid var(--superv-success); padding:12px 14px; border-radius:0 8px 8px 0; font-size:13px;">
+                                    <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">द्वार प्रदाय योजना पावती संकलन</div>
+                                    <div style="color:var(--text-muted);">परिवहनकर्ताओं से प्राप्त शत-प्रतिशत देयकों एवं उचित मूल्य दुकानों की पावतियों की CSMS में प्रविष्टि।</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 2: WEEKLY DAY-WISE ACTIVITY PROTOCOL
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-protocol">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">📅 साप्ताहिक कार्ययोजना एवं दिवसवार कार्य विभाजन (Weekly Supervision Protocol)</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">मुख्यालयीन स्थायी निर्देश क्रमांक 3/1 (DM) एवं 3/2 (RM) की कंडिका 3.1 अनुसार दिवसवार निश्चित दायित्व</div>
+                        </div>
+                    </div>
+
+                    <div class="days-nav-pills" id="daysNavPills">
+                        <div class="day-pill active" onclick="selectProtocolDay('mon', this)">
+                            <span class="day-title">सोमवार</span>
+                            <span class="day-sub">मुख्यालय व्यवस्था</span>
+                        </div>
+                        <div class="day-pill" onclick="selectProtocolDay('tue', this)">
+                            <span class="day-title">मंगलवार</span>
+                            <span class="day-sub">भ्रमण / वित्तीय कार्य</span>
+                        </div>
+                        <div class="day-pill" onclick="selectProtocolDay('wed', this)">
+                            <span class="day-title">बुधवार</span>
+                            <span class="day-sub">VC / द्वार प्रदाय</span>
+                        </div>
+                        <div class="day-pill" onclick="selectProtocolDay('thu', this)">
+                            <span class="day-title">गुरुवार</span>
+                            <span class="day-sub">पूर्ण दिवस निरीक्षण</span>
+                        </div>
+                        <div class="day-pill" onclick="selectProtocolDay('fri', this)">
+                            <span class="day-title">शुक्रवार</span>
+                            <span class="day-sub">समन्वय बैठकें / समीक्षा</span>
+                        </div>
+                        <div class="day-pill" onclick="selectProtocolDay('sat', this)">
+                            <span class="day-title">शनिवार</span>
+                            <span class="day-sub">मासिक बैठक / निरीक्षण</span>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Day Details Container -->
+                    <div id="protocolDayContent">
+                        <!-- Loaded dynamically via supervision_logic.js -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 3: ANNUAL ROSTER (परिशिष्ट 01)
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-roster">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">
+                                <span>📋 जिला कार्यालय एवं प्रदाय केन्द्रों का सत्यापन निरीक्षण कार्यक्रम (परिशिष्ट — 01)</span>
+                                <span class="badge" id="rosterYearBadge">KMS 2026-27</span>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">वर्ष भर में प्रत्येक प्रदाय केंद्र व उससे संबद्ध समस्त गोदामों का कम से कम 2 बार विस्तृत सत्यापन निरीक्षण अनिवार्य है।</div>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <select class="superv-select" id="rosterFilterMonth" onchange="filterRosterTable()" style="padding:6px 12px; font-size:12px;">
+                                <option value="ALL">सभी माह (April — March)</option>
+                                <option value="April">अप्रैल</option><option value="May">मई</option><option value="June">जून</option>
+                                <option value="July">जुलाई</option><option value="August">अगस्त</option><option value="September">सितम्बर</option>
+                                <option value="October">अक्टूबर</option><option value="November">नवम्बर</option><option value="December">दिसम्बर</option>
+                                <option value="January">जनवरी</option><option value="February">फ़रवरी</option><option value="March">मार्च</option>
+                            </select>
+                            <button class="btn btn-primary btn-sm" onclick="openAddRosterModal()">+ नया रोस्टर लक्ष्य</button>
+                        </div>
+                    </div>
+
+                    <div class="superv-table-wrapper">
+                        <table class="superv-table" id="rosterTable">
+                            <thead>
+                                <tr>
+                                    <th>माह (Month)</th>
+                                    <th>प्रदाय केन्द्र का नाम</th>
+                                    <th>संबद्ध गोदामों की संख्या</th>
+                                    <th>प्रस्तावित निरीक्षण दिनांक</th>
+                                    <th>वास्तविक पूर्ण दिनांक</th>
+                                    <th>निरीक्षणकर्ता अधिकारी</th>
+                                    <th>स्थिति (Status)</th>
+                                    <th>टिप्पणी</th>
+                                    <th>कार्यवाही</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterTableBody">
+                                <tr><td colspan="9" style="text-align:center; padding:24px; color:var(--text-muted);">लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 4: DETAILED INSPECTION FORM (परिशिष्ट 02 / 03)
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-detailed">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">
+                                <span>📝 प्रदाय केन्द्र / भंडारगृह विस्तृत निरीक्षण प्रतिवेदन (Inspection Form)</span>
+                                <span class="badge" id="inspFormModeBadge">परिशिष्ट-02 (DM)</span>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">स्थायी निर्देश 3/1 एवं 3/2 अनुसार अधिकृत प्रारूप — स्कंध, बारदाना, द्वार प्रदाय एवं 16-17 बिंदु चेकलिस्ट</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-secondary btn-sm" onclick="prefillInspectionWithDirectoryData()">📂 निर्देशिका से विवरण भरें</button>
+                            <button class="btn btn-secondary btn-sm" onclick="resetInspectionForm()">🔄 रीसेट करें</button>
+                        </div>
+                    </div>
+
+                    <form id="detailedInspectionForm" onsubmit="handleSaveInspection(event)">
+                        <!-- Section A: General Info -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <h4 style="margin:0 0 14px; font-size:14px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                1. सामान्य जानकारियां (General Information)
+                            </h4>
+                            <div class="superv-form-grid">
+                                <div class="superv-form-group">
+                                    <label class="superv-label required">प्रदाय केन्द्र का नाम (Issue Center)</label>
+                                    <select class="superv-select" id="formIssueCenter" onchange="onIssueCenterChanged(this.value)" required>
+                                        <option value="">-- प्रदाय केंद्र चुनें --</option>
+                                        <option value="Betul">Betul (बैतूल)</option>
+                                        <option value="Multai">Multai (मुलताई)</option>
+                                        <option value="Bhainsdehi">Bhainsdehi (भैंसदेही)</option>
+                                        <option value="Athner">Athner (आठनेर)</option>
+                                        <option value="Shahpur">Shahpur (शाहपुर)</option>
+                                        <option value="Chicholi">Chicholi (चिचोली)</option>
+                                        <option value="Ghoradongri">Ghoradongri (घोड़ाडोंगरी)</option>
+                                        <option value="Amla">Amla (आमला)</option>
+                                        <option value="Pattan">Pattan (पट्टन)</option>
+                                        <option value="Bhimpur">Bhimpur (भीमपुर)</option>
+                                    </select>
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label required">निरीक्षण दिनांक (Date of Inspection)</label>
+                                    <input type="date" class="superv-input" id="formInspectionDate" required>
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label required">निरीक्षण माह (Month)</label>
+                                    <select class="superv-select" id="formInspectionMonth" required>
+                                        <option value="October">October (अक्टूबर)</option>
+                                        <option value="November">November (नवम्बर)</option>
+                                        <option value="December">December (दिसम्बर)</option>
+                                        <option value="January">January (जनवरी)</option>
+                                        <option value="February">February (फ़रवरी)</option>
+                                        <option value="March">March (मार्च)</option>
+                                        <option value="April">April (अप्रैल)</option>
+                                        <option value="May">May (मई)</option>
+                                        <option value="June">June (जून)</option>
+                                        <option value="July">July (जुलाई)</option>
+                                        <option value="August">August (अगस्त)</option>
+                                        <option value="September">September (सितम्बर)</option>
+                                    </select>
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label required">निरीक्षणकर्ता का नाम एवं पद</label>
+                                    <input type="text" class="superv-input" id="formOfficerName" placeholder="उदा. Vikhyat Hindoliya, DM" required>
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">निरीक्षणकर्ता मोबाइल क्रमांक</label>
+                                    <input type="text" class="superv-input" id="formOfficerMobile" placeholder="उदा. 9425000000">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">प्रदाय केन्द्र प्रभारी का नाम एवं संवर्ग</label>
+                                    <input type="text" class="superv-input" id="formInchargeName" placeholder="प्रभारी का नाम">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">प्रदाय केन्द्र प्रभारी मोबाइल</label>
+                                    <input type="text" class="superv-input" id="formInchargeMobile" placeholder="मोबाइल नं.">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">MPWLC शाखा प्रबंधक का नाम व मोबाइल</label>
+                                    <input type="text" class="superv-input" id="formBranchManager" placeholder="शाखा प्रबंधक नाम व फोन">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">संबद्ध गोदामों की संख्या (Godowns Count)</label>
+                                    <input type="number" class="superv-input" id="formGodownsCount" min="1" value="3">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section B: Godown Reservation Status -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <h4 style="margin:0 0 14px; font-size:14px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                2. गोदाम में आरक्षण की स्थिति (Reservation Status in MT)
+                            </h4>
+                            <div class="superv-form-grid">
+                                <div class="superv-form-group">
+                                    <label class="superv-label">गेहूं आरक्षित मात्रा (MT)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="resWheat" placeholder="0.00" value="3500">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">चावल आरक्षित मात्रा (MT)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="resRice" placeholder="0.00" value="1800">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">शक्कर आरक्षित मात्रा (MT)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="resSugar" placeholder="0.00" value="120">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">नमक आरक्षित मात्रा (MT)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="resSalt" placeholder="0.00" value="95">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section C: Physical Stock Balance -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                <h4 style="margin:0; font-size:14px; color:var(--text-main);">
+                                    3. निरीक्षण दिनांक को गोदाम पर शेष अंतिम स्कंध की मात्रा (Physical Stock Balance)
+                                </h4>
+                                <span style="font-size:11px; color:var(--text-muted);">मात्रा क्विंटल में (Qty in Quintals)</span>
+                            </div>
+                            
+                            <div class="superv-table-wrapper">
+                                <table class="superv-table" id="stockVerifyTable">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2">कमोडिटी (Commodity)</th>
+                                            <th colspan="2" style="text-align:center;">प्रदाय योग्य (Issuable)</th>
+                                            <th colspan="2" style="text-align:center;">क्षतिग्रस्त (Damaged)</th>
+                                            <th colspan="2" style="text-align:center;">स्वीपेज (Sweepage)</th>
+                                            <th colspan="2" style="text-align:center; background:rgba(14,165,233,0.15);">कुल योग (Total)</th>
+                                        </tr>
+                                        <tr>
+                                            <th>बोरे (Bags)</th><th>मात्रा (Qtl)</th>
+                                            <th>बोरे (Bags)</th><th>मात्रा (Qtl)</th>
+                                            <th>बोरे (Bags)</th><th>मात्रा (Qtl)</th>
+                                            <th style="background:rgba(14,165,233,0.15);">बोरे (Bags)</th><th style="background:rgba(14,165,233,0.15);">मात्रा (Qtl)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stockVerifyTableBody">
+                                        <!-- Commodities rendered via logic.js with live totals -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background:var(--surface-light); font-weight:700;">
+                                            <td>कुल योग (District Total)</td>
+                                            <td id="totSoundBags">0</td><td id="totSoundQty">0.00</td>
+                                            <td id="totDamBags">0</td><td id="totDamQty">0.00</td>
+                                            <td id="totSwpBags">0</td><td id="totSwpQty">0.00</td>
+                                            <td id="grandTotalBags" style="color:var(--superv-accent);">0</td>
+                                            <td id="grandTotalQty" style="color:var(--superv-accent);">0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Section D: Gunny Bags Inventory -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <h4 style="margin:0 0 14px; font-size:14px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                4. बारदाने का प्रकार एवं स्थिति (Gunny Bags Inventory)
+                            </h4>
+                            <div class="superv-table-wrapper">
+                                <table class="superv-table">
+                                    <thead>
+                                        <tr>
+                                            <th>बारदाने का प्रकार</th>
+                                            <th>उपयोगी (बेल्स)</th>
+                                            <th>उपयोगी (नग)</th>
+                                            <th>अनुपयोगी (नग)</th>
+                                            <th>कुल बारदाना (नग)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>जूट नए (New Jute)</td>
+                                            <td><input type="number" class="superv-input" id="gbJuteNewBales" value="10" oninput="recalcGunnyBags()" style="width:100px;"></td>
+                                            <td><input type="number" class="superv-input" id="gbJuteNewBags" value="5000" oninput="recalcGunnyBags()" style="width:120px;"></td>
+                                            <td><input type="number" class="superv-input" id="gbJuteNewUnusable" value="15" oninput="recalcGunnyBags()" style="width:100px;"></td>
+                                            <td id="gbJuteNewTotal">5015</td>
+                                        </tr>
+                                        <tr>
+                                            <td>एच.डी.पी.ई. / पी०पी० (HDPE)</td>
+                                            <td><input type="number" class="superv-input" id="gbHdpeBales" value="15" oninput="recalcGunnyBags()" style="width:100px;"></td>
+                                            <td><input type="number" class="superv-input" id="gbHdpeBags" value="7500" oninput="recalcGunnyBags()" style="width:120px;"></td>
+                                            <td><input type="number" class="superv-input" id="gbHdpeUnusable" value="30" oninput="recalcGunnyBags()" style="width:100px;"></td>
+                                            <td id="gbHdpeTotal">7530</td>
+                                        </tr>
+                                        <tr>
+                                            <td>पुराने जूट (Old Jute)</td>
+                                            <td><input type="number" class="superv-input" id="gbJuteOldBales" value="4" oninput="recalcGunnyBags()" style="width:100px;"></td>
+                                            <td><input type="number" class="superv-input" id="gbJuteOldBags" value="2000" oninput="recalcGunnyBags()" style="width:120px;"></td>
+                                            <td><input type="number" class="superv-input" id="gbJuteOldUnusable" value="85" oninput="recalcGunnyBags()" style="width:100px;"></td>
+                                            <td id="gbJuteOldTotal">2085</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Section E: Doorstep Delivery Lifting Status -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <h4 style="margin:0 0 14px; font-size:14px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                5. द्वार प्रदाय योजनान्तर्गत गोदाम से इस माह खाद्यान्न उठाव (Doorstep Delivery Status)
+                            </h4>
+                            <div class="superv-form-grid">
+                                <div class="superv-form-group">
+                                    <label class="superv-label">गेहूं उठाव मात्रा (Qtl)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="ddWheat" placeholder="0.00" value="3240.00">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">चावल उठाव मात्रा (Qtl)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="ddRice" placeholder="0.00" value="1650.00">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">शक्कर उठाव मात्रा (Qtl)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="ddSugar" placeholder="0.00" value="110.00">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">नमक उठाव मात्रा (Qtl)</label>
+                                    <input type="number" step="0.01" class="superv-input" id="ddSalt" placeholder="0.00" value="92.00">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">खाद्यान्न प्रदाय की गई उ०मू०दु० (FPS Count)</label>
+                                    <input type="number" class="superv-input" id="ddFpsCount" value="78">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">परिवहनकर्ता पावती प्रस्तुति दिनांक</label>
+                                    <input type="date" class="superv-input" id="ddTransDate">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">जिला कार्यालय पावती प्रेषण दिनांक</label>
+                                    <input type="date" class="superv-input" id="ddDoDate">
+                                </div>
+                                <div class="superv-form-group">
+                                    <label class="superv-label">सॉफ्टवेयर में आवक/जावक प्रविष्टि दिनांक</label>
+                                    <input type="date" class="superv-input" id="ddSoftwareDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section F: 16-17 Checklist Checkpoints -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                <div>
+                                    <h4 style="margin:0; font-size:14px; color:var(--text-main);">
+                                        6. अन्य जानकारियां एवं 16-17 बिंदु निरीक्षण चैकलिस्ट (Operational Compliance)
+                                    </h4>
+                                    <span style="font-size:11px; color:var(--text-muted);">निर्देश अनुसार प्रत्येक बिंदु का भौतिक सत्यापन कर हाँ/नहीं अंकित करें।</span>
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllCheckpoints(true)">✅ सभी में हाँ (Compliant)</button>
+                                </div>
+                            </div>
+
+                            <div class="checklist-grid" id="inspectionChecklistContainer">
+                                <!-- Rendered dynamically with toggle buttons -->
+                            </div>
+                        </div>
+
+                        <!-- Section G: Issues & Actionable Suggestions -->
+                        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                                <h4 style="margin:0; font-size:14px; color:var(--text-main);">
+                                    7. अन्य समस्याएं, कमियां एवं सुधारात्मक सुझाव (Identified Issues & Recommendations)
+                                </h4>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addIssueRow()">+ समस्या/सुझाव पंक्ति जोड़ें</button>
+                            </div>
+
+                            <div class="superv-table-wrapper">
+                                <table class="superv-table" id="issuesTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:45%;">निरीक्षण में पाई गई समस्या / कमी (Issue Observed)</th>
+                                            <th style="width:45%;">सुझाव / निराकरण हेतु दिए गए निर्देश (Corrective Recommendation)</th>
+                                            <th style="width:10%;">हटाएं</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="issuesTableBody">
+                                        <tr>
+                                            <td><textarea class="superv-textarea" rows="2" style="width:100%;" placeholder="कमी का विवरण..."></textarea></td>
+                                            <td><textarea class="superv-textarea" rows="2" style="width:100%;" placeholder="सुझाव एवं समय सीमा..."></textarea></td>
+                                            <td><button type="button" class="btn btn-danger btn-sm" onclick="removeIssueRow(this)">✕</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="superv-form-group" style="margin-top:14px;">
+                                <label class="superv-label">निरीक्षणकर्ता अधिकारी की समग्र टिप्पणी (Overall Remarks)</label>
+                                <textarea class="superv-textarea" id="formOverallRemarks" rows="3" placeholder="प्रदाय केंद्र की समग्र व्यवस्था, स्टॉक रखरखाव एवं संचालन पर विशेष टीप..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Form Submission Block -->
+                        <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:24px;">
+                            <button type="button" class="btn btn-secondary" onclick="resetInspectionForm()">रद्द करें</button>
+                            <button type="button" class="btn btn-secondary" onclick="previewCurrentFormPrint()">🖨️ प्रिंट प्रारूप पूर्वावलोकन</button>
+                            <button type="submit" class="btn btn-primary" style="padding:10px 24px;">💾 निरीक्षण प्रतिवेदन सुरक्षित करें (Save)</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 5: SURPRISE INSPECTION (परिशिष्ट 03/04)
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-surprise">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">⚡ प्रदाय केन्द्र के औचक निरीक्षण की चैक लिस्ट (Surprise Visit Form)</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">स्थायी निर्देश अनुसार माह में कम से कम 3-5 गोदामों का औचक निरीक्षण एवं 10 प्रमुख बिंदुओं की तत्काल जांच</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openSurpriseModal()">+ नई औचक जांच भरें</button>
+                    </div>
+
+                    <div class="superv-table-wrapper">
+                        <table class="superv-table">
+                            <thead>
+                                <tr>
+                                    <th>दिनांक</th>
+                                    <th>प्रदाय केंद्र</th>
+                                    <th>निरीक्षणकर्ता अधिकारी</th>
+                                    <th>कमियां (Defects)</th>
+                                    <th>अनुपालन (%)</th>
+                                    <th>मुख्य निष्कर्ष</th>
+                                    <th>कार्यवाही</th>
+                                </tr>
+                            </thead>
+                            <tbody id="surpriseFullTableBody">
+                                <tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-muted);">लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 6: MONTHLY COMPLIANCE REPORT (परिशिष्ट 04/05)
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-compliance">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">📊 विगत माह के दौरे एवं बैठकों का विवरण तथा आगामी माह का प्रस्तावित कार्यक्रम</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">मुख्यालय भोपाल (mdmpscsc@gmail.com) को प्रेषित किए जाने वाला मासिक अधिकृत अनुपालन पत्र</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="printMonthlyComplianceLetter()">🖨️ अधिकृत पत्र प्रिंट करें</button>
+                    </div>
+
+                    <div id="complianceLetterPreviewArea" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:24px;">
+                        <!-- Generated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 7: INTER-AGENCY COORDINATION MEETINGS
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-coordination">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">🤝 उपार्जन / वितरण कार्य में संलग्न विभिन्न संस्थाओं के साथ समन्वय बैठक (परिशिष्ट — 06)</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">म.प्र. वेयरहाउसिंग कार्पोरेशन (MPWLC), मार्कफेड, भारतीय खाद्य निगम (FCI) एवं जिला सहकारी बैंक (DCCB) समन्वय</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openMeetingModal('coordination')">+ समन्वय बैठक कार्यवृत्त जोड़ें</button>
+                    </div>
+
+                    <div class="days-nav-pills" id="coordAgencyPills">
+                        <div class="day-pill active" onclick="selectCoordAgency('MPWLC', this)">
+                            <span class="day-title">MPWLC / SWC</span>
+                            <span class="day-sub">10 स्थायी विचारणीय बिंदु</span>
+                        </div>
+                        <div class="day-pill" onclick="selectCoordAgency('Markfed', this)">
+                            <span class="day-title">मार्कफेड (Markfed)</span>
+                            <span class="day-sub">धान, मिलिंग, बारदाना</span>
+                        </div>
+                        <div class="day-pill" onclick="selectCoordAgency('FCI', this)">
+                            <span class="day-title">भा.खा.नि. (FCI)</span>
+                            <span class="day-sub">केंद्रीय पूल परिदान / क्लेम</span>
+                        </div>
+                        <div class="day-pill" onclick="selectCoordAgency('DCCB', this)">
+                            <span class="day-title">सहकारी बैंक (DCCB)</span>
+                            <span class="day-sub">समिति देयक व समायोजन</span>
+                        </div>
+                    </div>
+
+                    <div id="coordAgencyContent">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 8: INTERNAL MONTHLY REVIEW AGENDAS
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-review">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">🏛️ मासिक आंतरिक समीक्षा बैठक एजेंडा (परिशिष्ट — 05 / 07)</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">केन्द्र प्रभारियों, ऑपरेटरों एवं जिला कार्यालय कक्ष प्रभारियों (साविप्र, लेखा/वित्त, उपार्जन, परिवहन) की स्थायी समीक्षा</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="openMeetingModal('internal_review')">+ समीक्षा बैठक विवरण दर्ज करें</button>
+                    </div>
+
+                    <div class="days-nav-pills" id="reviewPills">
+                        <div class="day-pill active" onclick="selectReviewCategory('ic_operators', this)">
+                            <span class="day-title">केन्द्र प्रभारी व ऑपरेटर</span>
+                            <span class="day-sub">12 स्थायी कार्य बिंदु</span>
+                        </div>
+                        <div class="day-pill" onclick="selectReviewCategory('finance_admin', this)">
+                            <span class="day-title">लेखा, वित्त एवं कक्ष प्रभारी</span>
+                            <span class="day-sub">11 विभागीय बिंदु</span>
+                        </div>
+                    </div>
+
+                    <div id="reviewCategoryContent">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
+                 VIEW 9: ARCHIVES & RECORDS
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-archives">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">📂 निरीक्षण अभिलेख एवं प्रतिवेदन संचिका (Archives)</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">जिला बैतूल के समस्त पूर्ण किए गए विस्तृत एवं औचक निरीक्षणों की डिजिटल संचिका</div>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" class="superv-input" id="archiveSearchInput" oninput="filterArchivesTable()" placeholder="प्रदाय केंद्र या अधिकारी खोजें..." style="width:220px; padding:6px 12px; font-size:12px;">
+                        </div>
+                    </div>
+
+                    <div class="superv-table-wrapper">
+                        <table class="superv-table">
+                            <thead>
+                                <tr>
+                                    <th>आईडी</th>
+                                    <th>प्रकार (Type)</th>
+                                    <th>प्रदाय केंद्र</th>
+                                    <th>दिनांक</th>
+                                    <th>निरीक्षणकर्ता अधिकारी</th>
+                                    <th>संबद्ध गोदाम</th>
+                                    <th>स्कोर</th>
+                                    <th>कार्यवाही</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archivesTableBody">
+                                <tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-muted);">लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     MODALS
+     ════════════════════════════════════════════════════ -->
+
+<!-- 1. Detailed Inspection View Modal (Official Print Format) -->
+<div class="superv-modal-overlay" id="modalInspectionView">
+    <div class="superv-modal-box" style="max-width:960px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);">निरीक्षण प्रतिवेदन पूर्वावलोकन (Official Report View)</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalInspectionView')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body" id="printableReportArea">
+            <!-- Rendered dynamically -->
+        </div>
+        <div class="superv-modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('modalInspectionView')">बंद करें</button>
+            <button class="btn btn-primary" onclick="printOfficialReport()">🖨️ प्रिंट करें (Print Official A4)</button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Surprise Inspection Modal -->
+<div class="superv-modal-overlay" id="modalSurprise">
+    <div class="superv-modal-box" style="max-width:760px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);">⚡ प्रदाय केन्द्र औचक निरीक्षण प्रविष्टि (परिशिष्ट 03/04)</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalSurprise')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body">
+            <form id="surpriseAuditForm" onsubmit="handleSaveSurprise(event)">
+                <div class="superv-form-grid" style="margin-bottom:16px;">
+                    <div class="superv-form-group">
+                        <label class="superv-label required">प्रदाय केन्द्र (Issue Center)</label>
+                        <select class="superv-select" id="surpIssueCenter" required>
+                            <option value="">-- चुनें --</option>
+                            <option value="Betul">Betul (बैतूल)</option>
+                            <option value="Multai">Multai (मुलताई)</option>
+                            <option value="Bhainsdehi">Bhainsdehi (भैंसदेही)</option>
+                            <option value="Athner">Athner (आठनेर)</option>
+                            <option value="Shahpur">Shahpur (शाहपुर)</option>
+                            <option value="Chicholi">Chicholi (चिचोली)</option>
+                            <option value="Ghoradongri">Ghoradongri (घोड़ाडोंगरी)</option>
+                            <option value="Amla">Amla (आमला)</option>
+                            <option value="Pattan">Pattan (पट्टन)</option>
+                            <option value="Bhimpur">Bhimpur (भीमपुर)</option>
+                        </select>
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label required">निरीक्षण दिनांक</label>
+                        <input type="date" class="superv-input" id="surpDate" required>
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label required">निरीक्षणकर्ता अधिकारी</label>
+                        <input type="text" class="superv-input" id="surpOfficer" placeholder="नाम व पद" required>
+                    </div>
+                </div>
+
+                <h4 style="margin:16px 0 10px; font-size:13px; color:var(--text-main); border-bottom:1px solid var(--border); padding-bottom:6px;">
+                    औचक निरीक्षण 10 बिंदु जांच (Pass / Deficient)
+                </h4>
+                <div id="surpriseChecklistGrid" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Rendered by logic.js -->
+                </div>
+
+                <div class="superv-form-group" style="margin-top:16px;">
+                    <label class="superv-label">समग्र टीप / दिए गए निर्देश</label>
+                    <textarea class="superv-textarea" id="surpOverallRemark" rows="2" placeholder="औचक निरीक्षण के दौरान दिए गए त्वरित निर्देश..."></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalSurprise')">रद्द करें</button>
+                    <button type="submit" class="btn btn-primary">सुरक्षित करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Roster Add/Edit Modal -->
+<div class="superv-modal-overlay" id="modalRoster">
+    <div class="superv-modal-box" style="max-width:560px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);">📋 रोस्टर निरीक्षण लक्ष्य जोड़ें/संशोधित करें</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalRoster')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body">
+            <form id="rosterItemForm" onsubmit="handleSaveRosterItem(event)">
+                <input type="hidden" id="rosterEditId">
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label required">माह (Month)</label>
+                    <select class="superv-select" id="rosterMonth" required>
+                        <option value="April">अप्रैल (April)</option>
+                        <option value="May">मई (May)</option>
+                        <option value="June">जून (June)</option>
+                        <option value="July">जुलाई (July)</option>
+                        <option value="August">अगस्त (August)</option>
+                        <option value="September">सितम्बर (September)</option>
+                        <option value="October">अक्टूबर (October)</option>
+                        <option value="November">नवम्बर (November)</option>
+                        <option value="December">दिसम्बर (December)</option>
+                        <option value="January">जनवरी (January)</option>
+                        <option value="February">फ़रवरी (February)</option>
+                        <option value="March">मार्च (March)</option>
+                    </select>
+                </div>
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label required">प्रदाय केंद्र (Issue Center)</label>
+                    <select class="superv-select" id="rosterIC" required>
+                        <option value="Betul">Betul (बैतूल)</option>
+                        <option value="Multai">Multai (मुलताई)</option>
+                        <option value="Bhainsdehi">Bhainsdehi (भैंसदेही)</option>
+                        <option value="Athner">Athner (आठनेर)</option>
+                        <option value="Shahpur">Shahpur (शाहपुर)</option>
+                        <option value="Chicholi">Chicholi (चिचोली)</option>
+                        <option value="Ghoradongri">Ghoradongri (घोड़ाडोंगरी)</option>
+                        <option value="Amla">Amla (आमला)</option>
+                        <option value="Pattan">Pattan (पट्टन)</option>
+                        <option value="Bhimpur">Bhimpur (भीमपुर)</option>
+                    </select>
+                </div>
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label">संबद्ध गोदामों की संख्या</label>
+                    <input type="number" class="superv-input" id="rosterGodowns" value="3" min="1">
+                </div>
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label">प्रस्तावित निरीक्षण दिनांक</label>
+                    <input type="date" class="superv-input" id="rosterPlannedDate">
+                </div>
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label">वास्तविक पूर्ण दिनांक (यदि पूर्ण हो चुका है)</label>
+                    <input type="date" class="superv-input" id="rosterCompletedDate">
+                </div>
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label required">स्थिति (Status)</label>
+                    <select class="superv-select" id="rosterStatus" required>
+                        <option value="pending">प्रस्तावित / लंबित (Pending)</option>
+                        <option value="completed">संपन्न (Completed)</option>
+                        <option value="rescheduled">पुनर्निर्धारित (Rescheduled)</option>
+                    </select>
+                </div>
+                <div class="superv-form-group" style="margin-bottom:16px;">
+                    <label class="superv-label">निरीक्षणकर्ता अधिकारी</label>
+                    <input type="text" class="superv-input" id="rosterOfficer" value="District Manager (MPSCSC)">
+                </div>
+                <div class="superv-form-group" style="margin-bottom:16px;">
+                    <label class="superv-label">टिप्पणी</label>
+                    <input type="text" class="superv-input" id="rosterRemarks" placeholder="विशेष टीप...">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalRoster')">रद्द करें</button>
+                    <button type="submit" class="btn btn-primary">सुरक्षित करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Meeting Notes Editor Modal -->
+<div class="superv-modal-overlay" id="modalMeeting">
+    <div class="superv-modal-box" style="max-width:700px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);" id="modalMeetingTitle">बैठक कार्यवृत्त दर्ज करें</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalMeeting')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body">
+            <form id="meetingForm" onsubmit="handleSaveMeeting(event)">
+                <input type="hidden" id="meetingTypeHidden" value="coordination">
+                <div class="superv-form-grid" style="margin-bottom:14px;">
+                    <div class="superv-form-group">
+                        <label class="superv-label required">संस्था / बैठक प्रकार</label>
+                        <select class="superv-select" id="meetingAgency" required>
+                            <option value="MPWLC">MPWLC (वेयरहाउसिंग कार्पोरेशन)</option>
+                            <option value="Markfed">मार्कफेड (Markfed)</option>
+                            <option value="FCI">भारतीय खाद्य निगम (FCI)</option>
+                            <option value="DCCB">सहकारी बैंक (DCCB)</option>
+                            <option value="IC_Incharges">केन्द्र प्रभारी व कम्प्यूटर ऑपरेटर बैठक</option>
+                            <option value="Sectional">जिला कार्यालय कक्ष प्रभारी बैठक</option>
+                        </select>
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label required">बैठक दिनांक</label>
+                        <input type="date" class="superv-input" id="meetingDate" required>
+                    </div>
+                </div>
+                <div class="superv-form-group" style="margin-bottom:14px;">
+                    <label class="superv-label">बैठक अध्यक्षता / अध्यक्ष</label>
+                    <input type="text" class="superv-input" id="meetingChairperson" value="District Manager, MPSCSC Betul">
+                </div>
+                <div class="superv-form-group" style="margin-bottom:14px;">
+                    <label class="superv-label">उपस्थित अधिकारी / प्रतिभागी</label>
+                    <input type="text" class="superv-input" id="meetingAttendees" placeholder="उपस्थित अधिकारियों के नाम व पद...">
+                </div>
+                <div class="superv-form-group" style="margin-bottom:14px;">
+                    <label class="superv-label">विचार-विमर्श एवं मुख्य निर्णय (Minutes of Meeting)</label>
+                    <textarea class="superv-textarea" id="meetingMinutes" rows="4" placeholder="बैठक में लिए गए निर्णय व विचारणीय बिंदुओं की स्थिति..."></textarea>
+                </div>
+                <div class="superv-form-group" style="margin-bottom:14px;">
+                    <label class="superv-label">अनुपालन बिंदु / समय सीमा (Action Points)</label>
+                    <textarea class="superv-textarea" id="meetingActionPoints" rows="3" placeholder="समयबद्ध दायित्व एवं संबंधित अधिकारी..."></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalMeeting')">रद्द करें</button>
+                    <button type="submit" class="btn btn-primary">सुरक्षित करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="./supervision_logic.js"></script>
+</body>
+</html>

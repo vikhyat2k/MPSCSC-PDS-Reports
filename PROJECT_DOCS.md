@@ -25,11 +25,12 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 17 |
+| Completed Milestones | 18 |
 | Pending Milestones | 0 |
-| Last Code Change | 24 Sep 2026 — Fix Welfare Scheme Dispatch vs Received Inversion & Portal Zero-Dispatch Anomaly (ISSUE-042) |
+| Last Code Change | 03 Oct 2026 — Supervision & Inspection Module (MPSCSC Head Office Orders 3/1 & 3/2) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
+| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1 & 3/2) |
 
 ---
 
@@ -615,6 +616,7 @@ Tracks implementation status of all major features.
 | HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
+| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM): Weekly Protocol, Annual Roster, Detailed Inspection (17 Checkpoints), Surprise Audit, Monthly Compliance & Inter-Agency Coordination (MPWLC, Markfed, FCI, DCCB) |
 
 ---
 
@@ -641,6 +643,7 @@ Tracks implementation status of all major features.
 | M17 | Process Hygiene, Input Validation & Defensive Headers | 19 Sep 2026 | Phase 3 operational hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03) |
 | M15 | History lazy-loading (exclude raw_data from list query) | 19 Sep 2026 | getAllReports() queries summary columns only |
 | M18 | Executive Analytics Report Redesign (Crisp 5-Page Dashboard) | 19 Sep 2026 | Replaced 9-page unformatted dump with strictly 5-page actionable dashboard: Exec Dashboard, Priority Interventions, Block & Transporters, POS Integrity Audit, Full 22-Sector Appendix |
+| M19 | Supervision & Inspection Module (Orders 3/1 & 3/2) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 |
 
 ### Upcoming Milestones
 
@@ -768,6 +771,7 @@ Tracks what has been tested and confirmed working.
 | Codespaces SQLite3 Native Rebuild | Database & GLIBC Compatibility | VERIFIED | 20 Sep 2026 | Added npm rebuild sqlite3 --build-from-source to resolve GLIBC_2.38 mismatch on Debian 12 containers |
 | Cloud Database Synchronization & Seed Mtime Check | Database & Data Persistence | VERIFIED | 20 Sep 2026 | WAL-checkpointed and synchronized pds-seed.db with Report 573 (October 2026); added mtime auto-update in db.js |
 | Welfare Scheme Dispatch Reconciliation & Portal Verification | Scraping & Verification | VERIFIED | 24 Sep 2026 | Enforced physical invariant (dispatched >= received), captured official #depotreport summary totals, updated loading spinner hooks, synchronized pds-seed.db, and corrected June 2026 reports (#579, #580) |
+| Supervision & Inspection Module (Orders 3/1 & 3/2) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified SQLite tables (supervision_inspections, supervision_surprise, supervision_roster, supervision_meetings), API endpoints, weekly protocol, 17-point inspection form, surprise visit engine, and official print formatting |
 
 ---
 
@@ -819,6 +823,66 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-03 | Supervision & Inspection Module (Orders 3/1 & 3/2 Implementation)
+
+Files: server/database/db.js, server.js, public/supervision.html, public/supervision.css, public/supervision_logic.js, public/index.html, public/directory.html, tests/test-supervision-module.js, PROJECT_DOCS.md
+Type: Feature / New Module / Governance & Compliance Automation
+Closes: N/A
+
+- REQUIREMENT & CONTEXT:
+  1. Developed a comprehensive, state-of-the-art **Supervision & Inspection Portal ("निगरानी एवं समीक्षा — अनुसरण एवं पर्यवेक्षण प्रणाली")** within the PDS Lifting Intelligence project, strictly adhering to Madhya Pradesh State Civil Supplies Corporation (MPSCSC) Head Office orders:
+     - **स्थायी निर्देश क्रमांक 3/1** (क्र. समन्वय/2014-15/684): जिला स्तरीय अनुश्रवण एवं पर्यवेक्षण (District Manager / DM Office Betul).
+     - **स्थायी निर्देश क्रमांक 3/2** (क्र. समन्वय/2014-15/705): क्षेत्रीय कार्यालय अनुश्रवण एवं पर्यवेक्षण (Regional Manager / RM Office).
+     - **प्रबंध संचालक निर्देश** (क्र. समन्वय/18-19/179 दिनांक 05-01-2019): कड़ाई से अनुपालन, नियमित निरीक्षण एवं mdmpscsc@gmail.com पर प्रतिवेदन प्रेषण।
+
+- FEATURES IMPLEMENTED:
+  1. **Executive Surveillance Dashboard**:
+     - Monthly inspection target fulfillment gauge (target: 3-5 godowns/month).
+     - Average compliance health score meter (% compliance across 17 checkpoints).
+     - Annual roster fulfillment tracker for Betul district (10 Issue Centers: Betul, Multai, Bhainsdehi, Athner, Shahpur, Chicholi, Ghoradongri, Amla, Pattan, Bhimpur).
+     - Surprise inspection diary and critical action flags (fumigation schedule, sweepage handling, doorstep delivery receipts).
+  2. **साप्ताहिक कार्ययोजना एवं दिवसवार कार्य विभाजन (Weekly Day-wise Activity Protocol)**:
+     - Day-by-day protocol planner (Monday to Saturday) as mandated by Orders 3/1 & 3/2:
+       - Monday: HQ management, PDS stock availability & distribution (CSMS), surplus milling/FCI plan, weekly targets.
+       - Tuesday: Half-day field visit, half-day financial/claims review, DEO issues, VC prep.
+       - Wednesday: Video Conference with HQ, doorstep delivery transport review, sales proceeds confirmation.
+       - Thursday: Full-day issue center & godown inspection (at least 3-5 godowns, records, IRRS/CSMS, doorstep delivery).
+       - Friday: Half-day coordination meetings (FCI, MPWLC, Markfed, DCCB Bank); Half-day management review.
+       - Saturday: Monthly meeting of Issue Center In-charges (1st week) / field inspections (4th week).
+     - Interactive task checklist for the current day.
+  3. **वार्षिक रोस्टर (Annual Roster - परिशिष्ट 01)**:
+     - Month-by-month calendar (April to March) covering all 10 Issue Centers with planned vs completed dates, target godowns count, officer assigned, and status badges.
+     - Add/edit/reschedule roster targets via modal.
+  4. **प्रदाय केन्द्र / भंडारगृह विस्तृत निरीक्षण प्रतिवेदन (Detailed Inspection Form - परिशिष्ट 02 / 03)**:
+     - Operating mode switcher: District Manager (DM Betul) mode vs Regional Manager (RM) mode.
+     - General details with one-click auto-fill from existing Issue Center Directory.
+     - Warehouse Reservation Status in MT (Wheat, Rice, Sugar, Salt).
+     - Physical Stock Verification table for 8 commodities (Wheat, Rice, Paddy, Sugar, Maize, Salt, Jowar, Bajra) with automatic live calculation of bags and quintals across Issuable, Damaged, and Sweepage categories.
+     - Gunny Bags Inventory (New Jute, HDPE, Old Jute - Bales & Loose Bags).
+     - Doorstep Delivery Lifting Status & Receipt tracking dates.
+     - 17 Operational Checkpoints with instant Pass/Fail toggles.
+     - Problems & Actionable Suggestions table.
+  5. **औचक निरीक्षण (Surprise Audit - परिशिष्ट 03 / 04)**:
+     - Rapid 10-point checklist for field surprise visits with immediate defect tracking and score calculation.
+  6. **मासिक अनुपालन प्रतिवेदन (Monthly Tour & Meeting Compliance - परिशिष्ट 04 / 05)**:
+     - Automated generation of the monthly compliance letter addressed to Managing Director, MPSCSC Bhopal (`mdmpscsc@gmail.com`).
+  7. **संस्था समन्वय बैठक एजेंडा (Inter-Agency Coordination - परिशिष्ट 06)**:
+     - Standard standing agendas and Minutes of Meeting (MoM) recorder for MPWLC (10 points), Markfed (5 points), FCI (5 points), and DCCB Bank (3 points).
+  8. **आंतरिक समीक्षा बैठक (Internal Review Agenda - परिशिष्ट 05 / 07)**:
+     - Monthly meeting agenda for Issue Center In-charges & Computer Operators (12 operational points) and Sectional Review (11 departmental points).
+  9. **Official A4 Print Format**:
+     - Perfectly formatted print layout matching government letterheads, including official header, tables, and 3 signature blocks (Centre In-charge, Branch Manager MPWLC, Inspecting Officer DM/RM).
+  10. **Backend API & Database Persistence**:
+     - Added SQLite tables (`supervision_inspections`, `supervision_surprise`, `supervision_roster`, `supervision_meetings`) in `server/database/db.js` with auto-seeding for Betul district.
+     - Added REST endpoints in `server.js` (`/supervision`, `/api/supervision/*`).
+     - Added sidebar navigation link in `public/index.html` and `public/directory.html`.
+
+- VERIFICATION:
+  - Created automated test suite `tests/test-supervision-module.js` testing stats retrieval, detailed inspection creation, ID lookup, surprise inspection saving, roster querying, and database cleanup. All tests PASSED.
+  - Verified dark and light theme consistency, responsive layout, and clean official print preview.
+
+---
 
 ### 2026-09-24 | Fix Welfare Scheme Dispatch vs Received Inversion and Portal Zero-Dispatch Anomaly (ISSUE-042)
 
