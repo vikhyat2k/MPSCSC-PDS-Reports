@@ -658,7 +658,7 @@ class DatabaseManager {
     const godownsCount = parseInt(data.godownsCount || data.godowns_count || 0, 10);
     const complianceScore = parseInt(data.complianceScore || data.compliance_score || 0, 10);
     const deficienciesCount = parseInt(data.deficienciesCount || data.deficiencies_count || 0, 10);
-    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify(data);
+    const payload = typeof data.payload === 'string' ? data.payload : JSON.stringify(data.payload || data);
 
     await this.run(`
       INSERT INTO supervision_inspections (
@@ -1440,22 +1440,46 @@ class DatabaseManager {
       rice: 0,
       total: 0
     };
+    const records = {
+      inspections: [],
+      surprise: [],
+      roster: [],
+      meetings: [],
+      rice: []
+    };
     try {
       const i = await this.get("SELECT COUNT(*) as c FROM supervision_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
       counts.inspections = i ? i.c : 0;
+      records.inspections = await this.all("SELECT id, issue_center as issue_center_name, inspection_date, compliance_score as compliance_percentage FROM supervision_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' ORDER BY inspection_date DESC LIMIT 10");
+
       const s = await this.get("SELECT COUNT(*) as c FROM supervision_surprise WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
       counts.surprise = s ? s.c : 0;
+      records.surprise = await this.all("SELECT id, issue_center as issue_center_name, inspection_date, (10 - defects_count) as passed_points, 10 as total_points FROM supervision_surprise WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' ORDER BY inspection_date DESC LIMIT 10");
+
       const r = await this.get("SELECT COUNT(*) as c FROM supervision_roster WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
       counts.roster = r ? r.c : 0;
+      records.roster = await this.all("SELECT id, issue_center as issue_center_name, month, planned_date as target_date, status FROM supervision_roster WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' ORDER BY planned_date DESC LIMIT 10");
+
       const m = await this.get("SELECT COUNT(*) as c FROM supervision_meetings WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
       counts.meetings = m ? m.c : 0;
+      records.meetings = await this.all("SELECT id, agency as agency_name, meeting_date FROM supervision_meetings WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' ORDER BY meeting_date DESC LIMIT 10");
+
       const rc = await this.get("SELECT COUNT(*) as c FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
       counts.rice = rc ? rc.c : 0;
+      records.rice = await this.all("SELECT id, warehouse_name as center_name, '' as mill_name, analysis_date as inspection_date, 'PASSED' as overall_result FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' ORDER BY analysis_date DESC LIMIT 10");
+
       counts.total = counts.inspections + counts.surprise + counts.roster + counts.meetings + counts.rice;
     } catch (e) {
       console.error('Error fetching test data counts:', e.message);
     }
-    return counts;
+    return {
+      success: true,
+      total: counts.total,
+      totalTestRecords: counts.total,
+      counts,
+      records,
+      ...counts
+    };
   }
 
   /**

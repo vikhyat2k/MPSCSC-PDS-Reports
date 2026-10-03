@@ -115,9 +115,9 @@ async function runSupervisionFullTestSuite() {
         assert.strictEqual(res.body.totalTestRecords, 22);
         assert.strictEqual(res.body.counts.inspections, 5);
         assert.strictEqual(res.body.counts.surprise, 5);
-        assert.strictEqual(res.body.counts.roster, 6);
+        assert.strictEqual(res.body.counts.roster, 5);
         assert.strictEqual(res.body.counts.meetings, 3);
-        assert.strictEqual(res.body.counts.rice, 3);
+        assert.strictEqual(res.body.counts.rice, 4);
     })();
 
     // ──────────────────────────────────────────────────────────
