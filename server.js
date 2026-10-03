@@ -4202,6 +4202,48 @@ app.post('/api/supervision/meetings', async (req, res) => {
     }
 });
 
+app.get('/api/supervision/rice', async (req, res) => {
+    try {
+        const limit = req.query.limit || 50;
+        const riceInspections = await db.getRiceInspections(limit);
+        res.json(riceInspections);
+    } catch (err) {
+        console.error('Error fetching rice inspections:', err);
+        res.status(500).json({ error: 'Failed to fetch rice inspections' });
+    }
+});
+
+app.get('/api/supervision/rice/:id', async (req, res) => {
+    try {
+        const inspection = await db.getRiceInspectionById(req.params.id);
+        if (!inspection) return res.status(404).json({ error: 'Rice inspection sheet not found' });
+        res.json(inspection);
+    } catch (err) {
+        console.error('Error fetching rice inspection by id:', err);
+        res.status(500).json({ error: 'Failed to fetch rice inspection' });
+    }
+});
+
+app.post('/api/supervision/rice', async (req, res) => {
+    try {
+        const result = await db.saveRiceInspection(req.body);
+        res.json(result);
+    } catch (err) {
+        console.error('Error saving rice inspection:', err);
+        res.status(500).json({ error: 'Failed to save rice inspection' });
+    }
+});
+
+app.delete('/api/supervision/rice/:id', async (req, res) => {
+    try {
+        await db.deleteRiceInspection(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting rice inspection:', err);
+        res.status(500).json({ error: 'Failed to delete rice inspection' });
+    }
+});
+
 // Serve index page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
