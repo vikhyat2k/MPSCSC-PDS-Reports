@@ -300,6 +300,20 @@ class DatabaseManager {
       await this.run(`ALTER TABLE reports ADD COLUMN to_date TEXT`);
       console.log('✅ DB Migration: added to_date column');
     } catch (e) {}
+
+    // Migration: add is_test column to all supervision tables
+    const supervTables = [
+      'supervision_inspections',
+      'supervision_surprise',
+      'supervision_roster',
+      'supervision_meetings',
+      'supervision_rice_inspections'
+    ];
+    for (const tbl of supervTables) {
+      try {
+        await this.run(`ALTER TABLE ${tbl} ADD COLUMN is_test INTEGER DEFAULT 0`);
+      } catch (e) {}
+    }
   }
 
   /**

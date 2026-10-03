@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 19 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Oct 2026 — A4 Landscape Default Print Setting & Full Report Direct Print Engine (ISSUE-044) |
+| Last Code Change | 04 Oct 2026 — Surprise Inspection Modal Opaque Solid Surfaces & High-Contrast Typography (ISSUE-045) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Rice KMS 2025-26) |
@@ -616,7 +616,7 @@ Tracks implementation status of all major features.
 | HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
-| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape default direct print engine fitting entire 18-col report & signatures onto single page (ISSUE-044) |
+| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape direct print engine (ISSUE-044) + Solid opaque surfaces & high-contrast typography eliminating background bleed-through (ISSUE-045) |
 
 ---
 
@@ -775,6 +775,7 @@ Tracks what has been tested and confirmed working.
 | Rice Quality Inspection Sheet (KMS 2025-26) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified 18-column CMR rice analysis sheet, auto-calculations (Broken/FM/Totals), database CRUD (supervision_rice_inspections), API routes (/api/supervision/rice), and official A4 print format with 3 signature blocks |
 | Supervision Modals Responsive Layout & Sticky Action Footers | UI & Usability Verification | VERIFIED | 03 Oct 2026 | Re-architected modal box, scrollable body container, and pinned footer across all supervision modals (modalSurprise, modalRoster, modalMeeting). Pinned Save/Cancel buttons, added live compliance score pill and quick bulk toggles |
 | A4 Landscape Default Print Engine & Single-Page Fitting | UI, CSS & PDF Print Verification | VERIFIED | 03 Oct 2026 | Verified default @page { size: A4 landscape; margin: 5mm 6mm; }, isolated iframe printing via printElementDirectly(), modal unconstraining in @media print, and strict single-page (1 of 1) rendering with all 18 columns, totals, and 3 official signatures intact |
+| Supervision Surprise Modal Solid Opaque Surfaces & Contrast | UI, CSS & Visual Screenshot Audit | VERIFIED | 04 Oct 2026 | Verified solid opaque surfaces (--surface, --surface-light, --surface-input), elimination of transparent background bleed-through, 3-column input header layout, prominent blue scrollbar, and crystal-clear contrast in both dark and light modes (ISSUE-045) |
 
 ---
 
@@ -824,10 +825,48 @@ Tracks what has been tested and confirmed working.
 | ISSUE-042 | Welfare scheme reports showed intermittent dispatch deficits and dispatch % lower than received % (e.g. June 2026 showing 80.73% vs 90.09% vs 93.13% received) due to portal zero-dispatch anomalies and lack of logical dispatch reconciliation | HIGH | RESOLVED | server/services/welfareDataProcessor.js, server/automation/welfare_scraper.js, database/pds-reports.db, database/pds-seed.db | 24 Sep 2026 |
 | ISSUE-043 | Supervision modals vertically overflowed on standard 768px laptop viewports, pushing action buttons ('सुरक्षित करें', 'रद्द करें') and checkpoints off-screen | HIGH | RESOLVED | public/supervision.html, public/supervision.css, public/supervision_logic.js | 03 Oct 2026 |
 | ISSUE-044 | Rice Quality Inspection printout defaulted to portrait, clipping 30% of quality columns, cutting off lower lot rows and signatures due to modal container height overflow and app shell print leakage | HIGH | RESOLVED | public/supervision.css, public/supervision_logic.js, public/supervision.html | 03 Oct 2026 |
+| ISSUE-045 | Surprise Inspection modal was translucent/unreadable due to undefined --surface token falling back to transparent, causing underlying dashboard and protocol table text to bleed through | HIGH | RESOLVED | public/supervision.css, public/supervision.html, public/supervision_logic.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Surprise Inspection Modal Opaque Solid Surfaces & High-Contrast Typography
+
+Files: public/supervision.css, public/supervision.html, public/supervision_logic.js, PROJECT_DOCS.md
+Type: Bug Fix / UI & Readability Overhaul
+Closes: ISSUE-045
+
+- BUG & ROOT CAUSE:
+  When users opened the **"⚡ प्रदाय केन्द्र औचक निरीक्षण प्रविष्टि (परिशिष्ट 03/04)"** (Surprise Inspection Modal) from either the Dashboard or the Weekly Protocol tab:
+  1. The CSS variable `--surface` was referenced 12+ times across `.superv-modal-box`, `.superv-modal-header`, `.superv-modal-footer`, `.superv-input`, `.superv-select`, `.superv-textarea`, and `.surprise-checklist-row`, but was **never defined** in `:root` or `theme.css`.
+  2. Because `--surface` was undefined, browsers fell back to `transparent`. The modal box, header, footer, input elements, and checklist rows had **zero background color (100% transparent)**.
+  3. Consequently, the entire underlying page content (such as the high-contrast Weekly Protocol duty table or Dashboard KPI numbers) bled directly through the modal window, causing double-printed, ghosted, blurry text where modal text overlapped background page text.
+  4. Form labels were styled with `var(--text-muted)` (`#4a6283`), resulting in poor contrast against dark backgrounds.
+  5. The form inputs (Issue Center, Inspection Date, Officer) wrapped across two rows due to narrow flex wrapping, consuming ~60px of vertical space and burying checkpoints under the fold.
+  6. The modal body scrollbar thumb was faint (`rgba(140, 140, 140, 0.35)`), making it hard to see that additional checklist points existed below the fold.
+
+- FIXES & ARCHITECTURAL ENHANCEMENTS:
+  1. **Solid Opaque Surface Design Tokens**:
+     - Defined `--surface: #0e1726;` (deep opaque navy slate), `--surface-light: #162238;`, `--surface-hover: #1d2d4a;`, and `--surface-input: #131d31;` in `:root`.
+     - Defined matching clean white/slate tokens in `[data-theme="light"]`: `--surface: #ffffff;`, `--surface-light: #f8fafc;`, `--surface-hover: #f1f5f9;`.
+     - Explicitly forced `.superv-modal-box`, `.superv-modal-header`, `.superv-modal-body`, and `.superv-modal-footer` to `background: var(--surface) !important;` with 100% opacity.
+  2. **Zero Bleed-Through Deep Overlay**:
+     - Increased `.superv-modal-overlay` dimming to `background: rgba(4, 8, 15, 0.88); backdrop-filter: blur(10px);`, completely subduing background text.
+  3. **High-Contrast Input & Label Styling**:
+     - Updated `.superv-label` to `font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 2px;`.
+     - Styled `.superv-input`, `.superv-select`, and `.superv-textarea` with solid `background: var(--surface-input) !important; color: var(--text-main) !important; border: 1px solid var(--surface-border) !important;`.
+  4. **Single-Row Compact Header Grid**:
+     - Replaced the multi-row form grid in `#modalSurprise` with `grid-template-columns: 1fr 1fr 1.3fr; gap: 14px;`, cleanly seating Issue Center, Date, and Officer in a single horizontal row and freeing 60px of vertical height.
+  5. **Checklist Rows & Distinct Toggle States**:
+     - Standardized `.surprise-checklist-row` with solid background (`var(--surface-light)`), subtle borders, sky-blue checkpoint badges (`.sp-num`), and crisp white text (`.sp-text`).
+     - Added prominent hover feedback and solid active pill styling for `मानक अनुरूप (Pass)` (emerald green with glow) and `कमी (Defect)` (ruby red with glow).
+  6. **Prominent Modal Scrollbar**:
+     - Increased scrollbar width to `8px` and styled the thumb with vibrant sky-blue `rgba(14, 165, 233, 0.45)` with full-opacity hover, making pagination immediately obvious.
+  7. **Visual Screenshot Audit**:
+     - Verified across dark and light modes with Puppeteer screenshots: `surprise_modal_fixed_preview.png`, `surprise_modal_scrolled_preview.png`, and `surprise_modal_light_preview.png`. Zero ghosting, crystal-clear typography, and perfect contrast.
+
+---
 
 ### 2026-10-03 | A4 Landscape Default Print Setting & Isolated Direct Print Engine
 
