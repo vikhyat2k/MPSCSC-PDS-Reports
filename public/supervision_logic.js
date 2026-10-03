@@ -2024,21 +2024,21 @@ function generateRiceOfficialPrintHtml(data) {
     }).join('');
 
     return `
-        <div class="official-print-document" style="padding:20px; font-family:'Inter', 'Noto Sans Devanagari', sans-serif; background:#fff; color:#000;">
+        <div class="official-print-document" style="padding:10px 15px; font-family:'Inter', 'Noto Sans Devanagari', sans-serif; background:#fff; color:#000;">
             <!-- Top Subtitle -->
-            <div style="font-size:11px; color:#444; margin-bottom:4px;">
+            <div style="font-size:10px; color:#444; margin-bottom:3px;">
                 MPSCSC District Office Betul | Inspection of Rice (KMS 2025-26)
             </div>
 
             <!-- Main Heading Banner -->
-            <div style="text-align:center; border-bottom:2px solid #0f2e5a; padding-bottom:8px; margin-bottom:14px;">
-                <h2 style="font-size:18px; font-weight:800; color:#0f2e5a; margin:0 0 2px; letter-spacing:0.5px;">
+            <div style="text-align:center; border-bottom:2px solid #0f2e5a; padding-bottom:5px; margin-bottom:10px;">
+                <h2 style="font-size:16px; font-weight:800; color:#0f2e5a; margin:0 0 2px; letter-spacing:0.5px;">
                     MADHYA PRADESH STATE CIVIL SUPPLIES CORPORATION
                 </h2>
-                <div style="font-size:13px; font-weight:600; color:#333; margin-bottom:4px;">
+                <div style="font-size:12px; font-weight:600; color:#333; margin-bottom:3px;">
                     District Office Betul
                 </div>
-                <div style="display:inline-block; font-size:14px; font-weight:800; color:#0f2e5a; border-top:1.5px solid #0f2e5a; border-bottom:1.5px solid #0f2e5a; padding:3px 24px; letter-spacing:1px; text-transform:uppercase;">
+                <div style="display:inline-block; font-size:13px; font-weight:800; color:#0f2e5a; border-top:1.5px solid #0f2e5a; border-bottom:1.5px solid #0f2e5a; padding:2px 20px; letter-spacing:0.8px; text-transform:uppercase;">
                     INSPECTION OF RICE (KMS 2025-26)
                 </div>
             </div>
