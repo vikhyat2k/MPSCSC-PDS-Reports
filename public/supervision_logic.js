@@ -612,9 +612,12 @@ function renderSurpriseChecklist() {
     if (!container) return;
 
     container.innerHTML = SupervState.surprisePoints.map(p => `
-        <div class="surprise-checklist-row" style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;" data-sp-id="${p.id}">
-            <span style="font-size:12px; color:var(--text-main); flex:1; line-height:1.35;"><strong>${p.id}.</strong> ${p.text}</span>
-            <div class="toggle-btn-group" style="flex-shrink:0;">
+        <div class="surprise-checklist-row" data-sp-id="${p.id}">
+            <div class="sp-text-wrapper">
+                <span class="sp-num">${p.id}</span>
+                <span class="sp-text">${p.text}</span>
+            </div>
+            <div class="toggle-btn-group">
                 <button type="button" class="toggle-opt yes active" onclick="toggleSurpriseItem(${p.id}, true)">मानक अनुरूप (Pass)</button>
                 <button type="button" class="toggle-opt no" onclick="toggleSurpriseItem(${p.id}, false)">कमी (Defect)</button>
             </div>
