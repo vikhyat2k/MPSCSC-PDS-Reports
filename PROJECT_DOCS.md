@@ -25,12 +25,12 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 18 |
+| Completed Milestones | 19 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Oct 2026 — Supervision & Inspection Module (MPSCSC Head Office Orders 3/1 & 3/2) |
+| Last Code Change | 03 Oct 2026 — Rice Quality Inspection Sheet (KMS 2025-26) added to Supervision Module |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
-| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1 & 3/2) |
+| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Rice KMS 2025-26) |
 
 ---
 
@@ -616,7 +616,7 @@ Tracks implementation status of all major features.
 | HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
-| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM): Weekly Protocol, Annual Roster, Detailed Inspection (17 Checkpoints), Surprise Audit, Monthly Compliance & Inter-Agency Coordination (MPWLC, Markfed, FCI, DCCB) |
+| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis, 18-col table, auto-calc & official A4 print) |
 
 ---
 
@@ -643,7 +643,7 @@ Tracks implementation status of all major features.
 | M17 | Process Hygiene, Input Validation & Defensive Headers | 19 Sep 2026 | Phase 3 operational hardening (OPS-03, OPS-04, VAL-01, SEC-04, UX-03) |
 | M15 | History lazy-loading (exclude raw_data from list query) | 19 Sep 2026 | getAllReports() queries summary columns only |
 | M18 | Executive Analytics Report Redesign (Crisp 5-Page Dashboard) | 19 Sep 2026 | Replaced 9-page unformatted dump with strictly 5-page actionable dashboard: Exec Dashboard, Priority Interventions, Block & Transporters, POS Integrity Audit, Full 22-Sector Appendix |
-| M19 | Supervision & Inspection Module (Orders 3/1 & 3/2) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 |
+| M19 | Supervision & Inspection Module (Orders 3/1, 3/2 & Rice KMS 2025-26) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 + Rice Quality Analysis Sheet (KMS 2025-26) |
 
 ### Upcoming Milestones
 
@@ -772,6 +772,7 @@ Tracks what has been tested and confirmed working.
 | Cloud Database Synchronization & Seed Mtime Check | Database & Data Persistence | VERIFIED | 20 Sep 2026 | WAL-checkpointed and synchronized pds-seed.db with Report 573 (October 2026); added mtime auto-update in db.js |
 | Welfare Scheme Dispatch Reconciliation & Portal Verification | Scraping & Verification | VERIFIED | 24 Sep 2026 | Enforced physical invariant (dispatched >= received), captured official #depotreport summary totals, updated loading spinner hooks, synchronized pds-seed.db, and corrected June 2026 reports (#579, #580) |
 | Supervision & Inspection Module (Orders 3/1 & 3/2) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified SQLite tables (supervision_inspections, supervision_surprise, supervision_roster, supervision_meetings), API endpoints, weekly protocol, 17-point inspection form, surprise visit engine, and official print formatting |
+| Rice Quality Inspection Sheet (KMS 2025-26) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified 18-column CMR rice analysis sheet, auto-calculations (Broken/FM/Totals), database CRUD (supervision_rice_inspections), API routes (/api/supervision/rice), and official A4 print format with 3 signature blocks |
 
 ---
 
@@ -823,6 +824,53 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-03 | Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis Format)
+
+Files: server/database/db.js, server.js, public/supervision.html, public/supervision.css, public/supervision_logic.js, tests/test-supervision-module.js, PROJECT_DOCS.md
+Type: Feature / Quality Control / Official Compliance Form
+Closes: N/A
+
+- REQUIREMENT & CONTEXT:
+  Integrated the official **"INSPECTION OF RICE (KMS 2025-26)"** quality analysis sheet from Madhya Pradesh State Civil Supplies Corporation (MPSCSC) District Office Betul directly into the newly created Supervision & Inspection Portal (`supervision.html`).
+
+- FEATURES IMPLEMENTED:
+  1. **Official 18-Column Interactive Quality Analysis Table**:
+     - Columns: Sl. No., Name of Miller, Stack No., Lot No., Quantity (MT), No. of Bags, Date of Receipt, Broken (%) [Small, Big, Total], Foreign Matter (%) [Inorg., Org., Total], Damaged (%), Admixture (%), Red Kernels (%), Chalky (%), Discoloured (%), Dehusked (%), FRK (%), Test Result (Mix Ind.), and Result (Within Specification / BRL / Beyond FSSAI).
+     - Pre-populated with standard 6-row layout matching the official government sheet format.
+     - Dynamic row addition (`+ लॉट पंक्ति जोड़ें`) and deletion with automatic Sl. No. renumbering.
+  2. **Automated Live Quality Calculations & Specifications**:
+     - Instant auto-calculation of Broken Total (`Small + Big`) and Foreign Matter Total (`Inorganic + Organic`).
+     - Automatic evaluation against CMR KMS 2025-26 specification standards:
+       - Broken Total: Max 25% (Small max 1%).
+       - Foreign Matter Total: Max 0.5% (Inorganic max 0.2%).
+       - Damaged: Max 4.0%.
+       - Admixture: Max 6.0%.
+       - FRK: 0.90% to 1.10% (Positive test result).
+     - Auto-summation of Total Quantity (MT) and Total No. of Bags across all analyzed lots in the table footer.
+  3. **Official A4 Print Layout Matching Government Template**:
+     - Built exact print replica matching the user's provided PDF format:
+       - Header: "MADHYA PRADESH STATE CIVIL SUPPLIES CORPORATION · District Office Betul · INSPECTION OF RICE (KMS 2025-26)".
+       - Warehouse Name and Date of Analysis metadata lines.
+       - Official dark navy blue (`#0f2e5a`) two-tier table header.
+       - 3 official signature blocks:
+         * शाखा प्रबंधक (MPWLC Branch Manager)
+         * केंद्र प्रभारी (MPSCSC Centre In-charge)
+         * जिला प्रबंधक (MPSCSC District Manager Betul)
+     - Responsive print stylesheet (`@media print`) isolating `#printableRiceSheetArea` for clean physical or PDF printing.
+  4. **Database & API Integration**:
+     - Created SQLite table `supervision_rice_inspections` with indexes on `analysis_date` and `warehouse_name`.
+     - Seeded initial Betul district data (MPWLC Kosmi warehouse sheet with 6 millers: Betul Modern Rice Mill, Satpura Agro Mills, Narmada Grain Processing).
+     - Added CRUD methods in `db.js` (`saveRiceInspection`, `getRiceInspections`, `getRiceInspectionById`, `deleteRiceInspection`).
+     - Added REST API routes in `server.js` (`GET /api/supervision/rice`, `GET /api/supervision/rice/:id`, `POST /api/supervision/rice`, `DELETE /api/supervision/rice/:id`).
+  5. **Archive & Sheet Management**:
+     - Saved sheets table displaying ID, warehouse name, analysis date, lot count, total MT, total bags, with actions to View/Print, Load into Editor, or Delete.
+
+- VERIFICATION:
+  - Added automated test cases in `tests/test-supervision-module.js` testing saving, fetching, listing, and cleaning up rice inspection sheets.
+  - Verified JavaScript syntax with `node -c` on all modified files with 0 errors.
+
+---
 
 ### 2026-10-03 | Supervision & Inspection Module (Orders 3/1 & 3/2 Implementation)
 

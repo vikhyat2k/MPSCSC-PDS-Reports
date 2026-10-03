@@ -64,13 +64,61 @@ async function testSupervisionModule() {
     assert(Array.isArray(roster) && roster.length >= 24, 'Roster count incorrect');
     console.log(`✅ Test 5: Annual Roster loaded with ${roster.length} entries for KMS 2026-27`);
 
+    // Test 6: Rice Quality Inspection (KMS 2025-26)
+    const testRiceId = 'RICE_TEST_' + Date.now();
+    const riceSaveRes = await db.saveRiceInspection({
+        id: testRiceId,
+        warehouseName: 'MPWLC Kosmi Betul',
+        analysisDate: '2026-10-03',
+        branchManager: 'MPWLC Betul Branch',
+        centreIncharge: 'MPSCSC Kosmi Center',
+        districtManager: 'MPSCSC Betul',
+        lots: [
+            {
+                sno: 1,
+                millerName: 'Test Miller A',
+                stackNo: 'S-01',
+                lotNo: 'LOT-TEST-01',
+                quantityMt: 29.0,
+                noOfBags: 580,
+                receiptDate: '2026-10-03',
+                brokenSmall: 0.5,
+                brokenBig: 18.0,
+                brokenTotal: 18.5,
+                fmInorg: 0.1,
+                fmOrg: 0.2,
+                fmTotal: 0.3,
+                damaged: 2.0,
+                admixture: 3.0,
+                redKernels: 1.0,
+                chalky: 2.5,
+                discoloured: 1.5,
+                dehusked: 8.0,
+                frk: 1.0,
+                testResult: 'Positive (1.0% FRK)',
+                result: 'Within Specification'
+            }
+        ]
+    });
+    assert(riceSaveRes.success === true, 'Rice inspection save failed');
+    const retrievedRice = await db.getRiceInspectionById(testRiceId);
+    assert(retrievedRice !== null, 'Failed to fetch saved rice inspection');
+    assert(retrievedRice.warehouse_name === 'MPWLC Kosmi Betul', 'Warehouse name mismatch');
+    assert(retrievedRice.total_lots === 1, 'Lot count mismatch');
+    assert(retrievedRice.total_quantity_mt === 29.0, 'Total MT mismatch');
+    assert(retrievedRice.payload.lots.length === 1, 'Payload lots mismatch');
+    const riceList = await db.getRiceInspections(10);
+    assert(riceList.length >= 1, 'Rice list empty');
+    console.log(`✅ Test 6: Rice Inspection (KMS 2025-26) save, fetch & list verified successfully!`);
+
     // Clean up test entries
     await db.deleteSupervisionInspection(testInspId);
     await db.deleteSurpriseInspection(testSurpId);
+    await db.deleteRiceInspection(testRiceId);
     console.log('🧹 Cleaned up temporary test entries.');
 
     await db.close();
-    console.log('🎉 All Supervision Module Tests PASSED!');
+    console.log('🎉 All Supervision Module Tests (including Rice Quality Analysis) PASSED!');
 }
 
 testSupervisionModule().catch(err => {
