@@ -1731,26 +1731,166 @@ function addRiceLotRow(lot = null, snoOverride = null) {
         <td><input type="number" step="0.01" class="superv-input rice-broken-small" value="${d.brokenSmall !== '' ? d.brokenSmall : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
         <td><input type="number" step="0.01" class="superv-input rice-broken-big" value="${d.brokenBig !== '' ? d.brokenBig : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
         <td><input type="number" step="0.01" class="superv-input rice-broken-total" value="${d.brokenTotal !== '' ? d.brokenTotal : ''}" placeholder="0.00" readonly style="width:100%; min-width:65px; background:rgba(15,46,90,0.08); font-weight:700;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-fm-inorg" value="${d.fmInorg !== '' ? d.fmInorg : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-fm-org" value="${d.fmOrg !== '' ? d.fmOrg : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-fm-total" value="${d.fmTotal !== '' ? d.fmTotal : ''}" placeholder="0.00" readonly style="width:100%; min-width:65px; background:rgba(15,46,90,0.08); font-weight:700;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-damaged" value="${d.damaged !== '' ? d.damaged : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-admixture" value="${d.admixture !== '' ? d.admixture : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-red" value="${d.redKernels !== '' ? d.redKernels : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-chalky" value="${d.chalky !== '' ? d.chalky : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-discoloured" value="${d.discoloured !== '' ? d.discoloured : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-dehusked" value="${d.dehusked !== '' ? d.dehusked : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-frk" value="${d.frk !== '' ? d.frk : ''}" placeholder="1.00" style="width:100%; min-width:60px;"></td>
-        <td><input type="text" class="superv-input rice-test-result" value="${escapeHtml(d.testResult || 'Positive')}" placeholder="Positive" style="width:100%; min-width:85px;"></td>
-        <td>
-            <select class="superv-select rice-result" style="width:100%; min-width:130px; font-size:11px; padding:4px;">
-                <option value="Within Specification" ${d.result === 'Within Specification' ? 'selected' : ''}>Within Specification</option>
-                <option value="BRL" ${d.result === 'BRL' ? 'selected' : ''}>BRL (Below Rejection Limit)</option>
-                <option value="Beyond FSSAI" ${d.result === 'Beyond FSSAI' ? 'selected' : ''}>Beyond FSSAI (Rejected)</option>
-            </select>
-        </td>
-        <td style="text-align:center;">
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeRiceLotRow(this)" title="Delete Row" style="padding:2px 6px; font-size:11px;">✕</button>
+        <td><input type="number" step="0.01" class="superv-input rice-fm-inorg" value="${d.fmInorg !== '' ? d.fmInorg : ''}" placeholder="0.00" oninput="recalcu            <!-- Signatures Section matching PDF -->
+            <div class="signatures-section official-sig-block" style="display:flex; justify-content:space-around; align-items:flex-end; margin-top:28px; text-align:center; page-break-inside:avoid;">
+                <div style="width:28%;">
+                    <div style="font-weight:700; font-size:12px; color:#111;">शाखा प्रबंधक</div>
+                    <div style="margin-top:2px; font-size:11px; color:#444;">MPWLC ${bm}</div>
+                    <div style="font-size:10px; color:#666;">Branch Manager</div>
+                </div>
+                <div style="width:28%;">
+                    <div style="font-weight:700; font-size:12px; color:#111;">केंद्र प्रभारी</div>
+                    <div style="margin-top:2px; font-size:11px; color:#444;">MPSCSC ${ci}</div>
+                    <div style="font-size:10px; color:#666;">Centre In-charge</div>
+                </div>
+                <div style="width:28%;">
+                    <div style="font-weight:700; font-size:12px; color:#111;">जिला प्रबंधक</div>
+                    <div style="margin-top:2px; font-size:11px; color:#444;">${dm}</div>
+                    <div style="font-size:10px; color:#666;">District Manager</div>
+                </div>
+            </div>
+
+            <!-- Footer note matching PDF -->
+            <div style="text-align:center; margin-top:20px; font-size:9.5px; color:#777; border-top:1px solid #ddd; padding-top:6px;">
+                MPSCSC District Office Betul | Inspection of Rice (KMS 2025-26)
+            </div>
+        </div>
+    `;
+}
+
+function printCurrentRiceSheet() {
+    const sheetData = collectRiceSheetData();
+    const html = generateRiceOfficialPrintHtml(sheetData);
+
+    const printArea = document.getElementById('printableRiceSheetArea');
+    if (printArea) {
+        printArea.innerHTML = html;
+        openModal('modalRicePrintView');
+    }
+}
+
+function viewRiceInspectionPrint(id) {
+    const sheet = (SupervState.riceInspections || []).find(s => s.id === id);
+    if (!sheet) return;
+
+    const p = sheet.payload || {};
+    const sheetData = {
+        warehouseName: sheet.warehouse_name || p.warehouseName,
+        analysisDate: sheet.analysis_date || p.analysisDate,
+        branchManager: sheet.branch_manager || p.branchManager,
+        centreIncharge: sheet.centre_incharge || p.centreIncharge,
+        districtManager: sheet.district_manager || p.districtManager,
+        lots: p.lots || []
+    };
+
+    const html = generateRiceOfficialPrintHtml(sheetData);
+    const printArea = document.getElementById('printableRiceSheetArea');
+    if (printArea) {
+        printArea.innerHTML = html;
+        openModal('modalRicePrintView');
+    }
+}
+
+function printElementDirectly(elementId, title = 'Official Report', orientation = 'landscape') {
+    const el = document.getElementById(elementId);
+    if (!el) {
+        window.print();
+        return;
+    }
+
+    let iframe = document.getElementById('superv-print-iframe');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'superv-print-iframe';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.visibility = 'hidden';
+        document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>${escapeHtml(title)}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 ${orientation};
+            margin: 5mm 6mm;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #fff !important;
+            color: #000 !important;
+            font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.3;
+        }
+        .official-print-document {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 2mm 3mm !important;
+            margin: 0 !important;
+        }
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        table, th, td {
+            border: 1px solid #0f2e5a;
+        }
+        th, td {
+            padding: 3.5px 2px;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group;
+        }
+        tr {
+            page-break-inside: avoid;
+        }
+        .signatures-section, .official-sig-block {
+            page-break-inside: avoid !important;
+        }
+    </style>
+</head>
+<body>
+    ${el.innerHTML}
+</body>
+</html>`);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch (e) {
+            console.warn('Iframe print fallback to window.print():', e);
+            window.print();
+        }
+    }, 350);
+}
+
+function printOfficialRiceDocument() {
+    printElementDirectly('printableRiceSheetArea', 'INSPECTION OF RICE (KMS 2025-26) - MPSCSC Betul', 'landscape');
+}r btn-sm" onclick="removeRiceLotRow(this)" title="Delete Row" style="padding:2px 6px; font-size:11px;">✕</button>
         </td>
     `;
 
