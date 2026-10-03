@@ -215,25 +215,27 @@
 }
 
 .superv-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-main);
+  margin-bottom: 2px;
 }
 
 .superv-label.required::after {
   content: ' *';
   color: var(--superv-danger);
+  font-weight: 700;
 }
 
 .superv-input,
 .superv-select,
 .superv-textarea {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-input) !important;
+  border: 1px solid var(--surface-border) !important;
   border-radius: 8px;
   padding: 10px 12px;
-  font-size: 13px;
-  color: var(--text-main);
+  font-size: 13.5px;
+  color: var(--text-main) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
 }
