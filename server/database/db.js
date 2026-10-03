@@ -830,6 +830,7 @@ class DatabaseManager {
    */
   async saveRosterItem(data) {
     const id = data.id || ('ROST_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const isTest = (data.is_test || data.isTest || (id && (id.startsWith('TEST_') || id.startsWith('DUMMY_')))) ? 1 : 0;
     const year = parseInt(data.year, 10) || 2026;
     const month = data.month || 'October';
     const issueCenter = data.issueCenter || data.issue_center || '';
@@ -842,8 +843,8 @@ class DatabaseManager {
 
     await this.run(`
       INSERT INTO supervision_roster (
-        id, year, month, issue_center, target_godowns, planned_date, completed_date, status, officer_name, remarks, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        id, year, month, issue_center, target_godowns, planned_date, completed_date, status, officer_name, remarks, is_test, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         year = excluded.year,
         month = excluded.month,
@@ -854,8 +855,9 @@ class DatabaseManager {
         status = excluded.status,
         officer_name = excluded.officer_name,
         remarks = excluded.remarks,
+        is_test = excluded.is_test,
         updated_at = CURRENT_TIMESTAMP
-    `, [id, year, month, issueCenter, targetGodowns, plannedDate, completedDate, status, officerName, remarks]);
+    `, [id, year, month, issueCenter, targetGodowns, plannedDate, completedDate, status, officerName, remarks, isTest]);
 
     return { success: true, id };
   }
