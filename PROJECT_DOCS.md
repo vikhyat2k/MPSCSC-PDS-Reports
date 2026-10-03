@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 19 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Oct 2026 — Rice Quality Inspection Sheet (KMS 2025-26) added to Supervision Module |
+| Last Code Change | 03 Oct 2026 — Supervision Modals Responsive Layout & Sticky Action Footers (ISSUE-043) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Rice KMS 2025-26) |
@@ -616,7 +616,7 @@ Tracks implementation status of all major features.
 | HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
-| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis, 18-col table, auto-calc & official A4 print) |
+| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals with sticky footers & live compliance indicators (ISSUE-043) |
 
 ---
 
@@ -773,6 +773,7 @@ Tracks what has been tested and confirmed working.
 | Welfare Scheme Dispatch Reconciliation & Portal Verification | Scraping & Verification | VERIFIED | 24 Sep 2026 | Enforced physical invariant (dispatched >= received), captured official #depotreport summary totals, updated loading spinner hooks, synchronized pds-seed.db, and corrected June 2026 reports (#579, #580) |
 | Supervision & Inspection Module (Orders 3/1 & 3/2) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified SQLite tables (supervision_inspections, supervision_surprise, supervision_roster, supervision_meetings), API endpoints, weekly protocol, 17-point inspection form, surprise visit engine, and official print formatting |
 | Rice Quality Inspection Sheet (KMS 2025-26) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified 18-column CMR rice analysis sheet, auto-calculations (Broken/FM/Totals), database CRUD (supervision_rice_inspections), API routes (/api/supervision/rice), and official A4 print format with 3 signature blocks |
+| Supervision Modals Responsive Layout & Sticky Action Footers | UI & Usability Verification | VERIFIED | 03 Oct 2026 | Re-architected modal box, scrollable body container, and pinned footer across all supervision modals (modalSurprise, modalRoster, modalMeeting). Pinned Save/Cancel buttons, added live compliance score pill and quick bulk toggles |
 
 ---
 
@@ -820,10 +821,39 @@ Tracks what has been tested and confirmed working.
 | ISSUE-040 | HTTP responses lacked defensive security headers (nosniff, SAMEORIGIN, Referrer-Policy) (SEC-04) | LOW | RESOLVED | server.js | 19 Sep 2026 |
 | ISSUE-041 | Advanced analytics executive PDF spilled into 9 unformatted pages with 22-row identical 48h action plan | HIGH | RESOLVED | server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server/services/advancedAnalytics/advancedAnalyticsCompute.js | 19 Sep 2026 |
 | ISSUE-042 | Welfare scheme reports showed intermittent dispatch deficits and dispatch % lower than received % (e.g. June 2026 showing 80.73% vs 90.09% vs 93.13% received) due to portal zero-dispatch anomalies and lack of logical dispatch reconciliation | HIGH | RESOLVED | server/services/welfareDataProcessor.js, server/automation/welfare_scraper.js, database/pds-reports.db, database/pds-seed.db | 24 Sep 2026 |
+| ISSUE-043 | Supervision modals vertically overflowed on standard 768px laptop viewports, pushing action buttons ('सुरक्षित करें', 'रद्द करें') and checkpoints off-screen | HIGH | RESOLVED | public/supervision.html, public/supervision.css, public/supervision_logic.js | 03 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-03 | Supervision Modals Responsive Layout Overhaul & Sticky Action Footers
+
+Files: public/supervision.html, public/supervision.css, public/supervision_logic.js, PROJECT_DOCS.md
+Type: Bug Fix / UI & Usability Overhaul
+Closes: ISSUE-043
+
+- BUG & ROOT CAUSE:
+  In the Supervision & Inspection module (`supervision.html`), opening the **"⚡ प्रदाय केन्द्र औचक निरीक्षण प्रविष्टि (परिशिष्ट 03/04)"** (Surprise Inspection Modal) on standard laptop screen resolutions (1366x768 or 1080p with browser toolbars) caused the modal box to vertically overflow off the bottom of the screen. Because the form action buttons ("रद्द करें" and "सुरक्षित करें") were placed at the very bottom inside the scrollable form body, they were pushed off-screen and completely invisible without manually scrolling the entire page/modal. A similar issue existed in `modalRoster` and `modalMeeting`.
+
+- FIXES & ARCHITECTURAL ENHANCEMENTS:
+  1. **Strict Sticky Header & Pinned Action Footer**:
+     - Upgraded `.superv-modal-box` to `display: flex; flex-direction: column; max-height: 88vh; overflow: hidden; position: relative;`.
+     - Added `.superv-modal-form` flex wrapper (`flex: 1 1 auto; min-height: 0; overflow: hidden;`) wrapping both `.superv-modal-body` and `.superv-modal-footer`.
+     - Pinned `.superv-modal-header` (`flex-shrink: 0; z-index: 10;`) at the top and `.superv-modal-footer` (`flex-shrink: 0; z-index: 10;`) at the bottom.
+     - `.superv-modal-body` now has independent scrolling (`overflow-y: auto; flex: 1 1 auto; min-height: 0;`) with custom sleek scrollbars (`width: 7px; thumb: rgba(140, 140, 140, 0.35)`).
+     - Save and Cancel buttons are now **100% visible and accessible at all times** regardless of screen height or resolution.
+  2. **Surprise Checklist Compactness & Usability**:
+     - Reduced surprise checklist item row height (`padding: 6px 12px; line-height: 1.35; gap: 6px;`) so 7 to 8 points fit directly within the viewport.
+     - Added top quick-action bulk toggles: `✓ सभी पास (All Pass)` and `✗ सभी में कमी (All Defect)` for fast 1-click evaluation.
+  3. **Live Compliance Score Indicator**:
+     - Added real-time compliance score pill in the pinned footer: `🟢 अनुपालन: 100% (10/10 पास)` / `🟡 अनुपालन: X%` / `🔴 अनुपालन: X%`, updating instantly whenever any point is toggled.
+  4. **Pre-populated Officer & Auto-Focus**:
+     - In `openSurpriseModal()`, automatically prefilled the required `surpOfficer` field with `"District Manager, MPSCSC Betul"` (or Regional Manager based on active mode) and initialized live score.
+  5. **Universal Consistency Across Modals**:
+     - Applied the same pinned footer and independent scroll architecture to `modalRoster` (Roster Entry) and `modalMeeting` (Meeting Minutes), as well as `modalInspectionView` and `modalRicePrintView`.
+
+---
 
 ### 2026-10-03 | Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis Format)
 

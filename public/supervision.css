@@ -630,27 +630,147 @@
   text-align: left;
 }
 
-/* ── Print Media Rules ───────────────────────────────── */
+/* ── Print Media Rules (Default A4 Landscape) ───────────────── */
 @media print {
   @page {
-    size: auto;
-    margin: 8mm;
+    size: A4 landscape;
+    margin: 5mm 6mm;
   }
-  body * {
-    visibility: hidden;
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
-  #printableReportArea, #printableReportArea *,
-  #printableRiceSheetArea, #printableRiceSheetArea * {
-    visibility: visible;
-  }
-  #printableReportArea, #printableRiceSheetArea {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #fff !important;
     color: #000 !important;
+    font-size: 8.5pt !important;
+  }
+
+  /* Hide app navigation, headers, footers, sidebars and non-print UI */
+  .superv-sidebar,
+  .superv-app-header,
+  .superv-main-content,
+  .superv-tabs-nav,
+  .superv-action-bar,
+  .superv-modal-header,
+  .superv-modal-footer,
+  .no-print,
+  button,
+  .btn {
+    display: none !important;
+  }
+
+  /* Unconstrain modals completely so they flow across all pages without clipping */
+  .superv-modal-overlay {
+    position: static !important;
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+  }
+
+  .superv-modal-overlay:not(.open) {
+    display: none !important;
+  }
+
+  .superv-modal-box {
+    position: static !important;
+    display: block !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .superv-modal-form,
+  .superv-modal-body {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  #printableReportArea,
+  #printableRiceSheetArea {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .official-print-document {
+    padding: 2mm 4mm !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .official-table,
+  .rice-sheet-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    page-break-inside: auto !important;
+    border-collapse: collapse !important;
+  }
+
+  .official-table tr,
+  .rice-sheet-table tr {
+    page-break-inside: avoid !important;
+  }
+
+  .official-table thead,
+  .rice-sheet-table thead {
+    display: table-header-group !important;
+  }
+
+  .official-table tfoot,
+  .rice-sheet-table tfoot {
+    display: table-footer-group !important;
+  }
+
+  .official-sig-block,
+  .signatures-section {
+    page-break-inside: avoid !important;
   }
 }
