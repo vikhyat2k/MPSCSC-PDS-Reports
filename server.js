@@ -4202,6 +4202,27 @@ app.post('/api/supervision/meetings', async (req, res) => {
     }
 });
 
+app.get('/api/supervision/meetings/:id', async (req, res) => {
+    try {
+        const meeting = await db.getSupervisionMeetingById(req.params.id);
+        if (!meeting) return res.status(404).json({ error: 'Meeting not found' });
+        res.json(meeting);
+    } catch (err) {
+        console.error('Error fetching meeting by id:', err);
+        res.status(500).json({ error: 'Failed to fetch meeting' });
+    }
+});
+
+app.delete('/api/supervision/meetings/:id', async (req, res) => {
+    try {
+        await db.deleteSupervisionMeeting(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting meeting:', err);
+        res.status(500).json({ error: 'Failed to delete meeting' });
+    }
+});
+
 app.get('/api/supervision/rice', async (req, res) => {
     try {
         const limit = req.query.limit || 50;
@@ -4241,6 +4262,37 @@ app.delete('/api/supervision/rice/:id', async (req, res) => {
     } catch (err) {
         console.error('Error deleting rice inspection:', err);
         res.status(500).json({ error: 'Failed to delete rice inspection' });
+    }
+});
+
+// Test Data Management & One-Click Cleanup Endpoints
+app.get('/api/supervision/test-data/status', async (req, res) => {
+    try {
+        const counts = await db.getSupervisionTestDataCounts();
+        res.json(counts);
+    } catch (err) {
+        console.error('Error fetching test data status:', err);
+        res.status(500).json({ error: 'Failed to fetch test data status' });
+    }
+});
+
+app.post('/api/supervision/test-data/seed', async (req, res) => {
+    try {
+        const result = await db.seedComprehensiveTestData();
+        res.json(result);
+    } catch (err) {
+        console.error('Error seeding test data:', err);
+        res.status(500).json({ error: 'Failed to seed test data: ' + err.message });
+    }
+});
+
+app.post('/api/supervision/test-data/cleanup', async (req, res) => {
+    try {
+        const result = await db.cleanupSupervisionTestData();
+        res.json(result);
+    } catch (err) {
+        console.error('Error cleaning up test data:', err);
+        res.status(500).json({ error: 'Failed to clean up test data: ' + err.message });
     }
 });
 
