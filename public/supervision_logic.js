@@ -2158,23 +2158,23 @@ function generateRiceOfficialPrintHtml(data) {
                         <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Date of<br>Receipt</th>
                         <th colspan="3" style="background:#133c70; color:#fff; text-align:center; padding:3px 2px;">Broken (%)</th>
                         <th colspan="3" style="background:#133c70; color:#fff; text-align:center; padding:3px 2px;">Foreign Matter (%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Damaged<br>(%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Admixture<br>(%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Red<br>Kernels<br>(%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Chalky<br>(%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Discoloured<br>(%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Dehusked<br>(%)</th>
-                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">FRK<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Damaged<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤3%)</span></th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Admixture<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(NA)</span></th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Red<br>Kernels<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤3%)</span></th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Chalky<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤5%)</span></th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Discoloured<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤3%)</span></th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Dehusked<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤13%)</span></th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">FRK<br>(%)<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(0.9-1.2%)</span></th>
                         <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px;">Test Result<br>(Mix Ind.)</th>
                         <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:4px 2px; min-width:110px;">Result<br>(Within Specification /<br>BRL / Beyond FSSAI)</th>
                     </tr>
                     <tr style="background:#133c70; color:#fff;">
-                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Small</th>
+                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Small<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤1%)</span></th>
                         <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Big</th>
-                        <th style="background:#1b4a85; color:#fff; text-align:center; padding:2px; font-weight:700;">Total</th>
-                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Inorg.</th>
+                        <th style="background:#1b4a85; color:#fff; text-align:center; padding:2px; font-weight:700;">Total<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤25%)</span></th>
+                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Inorg.<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤0.2%)</span></th>
                         <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Org.</th>
-                        <th style="background:#1b4a85; color:#fff; text-align:center; padding:2px; font-weight:700;">Total</th>
+                        <th style="background:#1b4a85; color:#fff; text-align:center; padding:2px; font-weight:700;">Total<br><span style="font-size:7.5pt; font-weight:normal; opacity:0.85;">(≤0.5%)</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2190,8 +2190,27 @@ function generateRiceOfficialPrintHtml(data) {
                 </tfoot>
             </table>
 
+            <!-- Uniform Specification Schedule for Common Rice (KMS 2025-2026) -->
+            <div style="margin-top:8px; margin-bottom:18px; border:1px solid #0f2e5a; border-radius:4px; padding:6px 8px; font-size:7pt; background:#f8fafc; line-height:1.35; page-break-inside:avoid;">
+                <div style="font-weight:700; color:#0f2e5a; margin-bottom:3px; font-size:7.5pt;">
+                    📌 विनिर्देश अनुसूची — Uniform Specification for Common Rice (KMS 2025-2026) Maximum Limits:
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:3px 8px; color:#111;">
+                    <div><strong>1. Broken (खंडित):</strong> Max 25.0% <br><span style="color:#555;">(Small broken: Max 1.0%)</span></div>
+                    <div><strong>2. Foreign Matter:</strong> Max 0.5% <br><span style="color:#555;">(Inorganic: Max 0.20%)</span></div>
+                    <div><strong>3. Damaged:</strong> Max 3.0% <br><span style="color:#555;">(Raw Common, incl. pinpoint)</span></div>
+                    <div><strong>4. Discolored:</strong> Max 3.0% <br><span style="color:#555;">(Raw Common Rice limit)</span></div>
+                    <div><strong>5. Chalky:</strong> Max 5.0% <br><span style="color:#555;">(Raw Common Rice limit)</span></div>
+                    <div><strong>6. Red Grains:</strong> Max 3.0%</div>
+                    <div><strong>7. Admixture:</strong> NA <br><span style="color:#555;">(अधोवर्ग अपमिश्रण लागू नहीं)</span></div>
+                    <div><strong>8. Dehusked:</strong> Max 13.0%</div>
+                    <div><strong>9. Moisture Content:</strong> Max 14.0% <br><span style="color:#555;">(14-15% मान कटौती सहित)</span></div>
+                    <div><strong>10. FRK Blending:</strong> 1.0% <br><span style="color:#555;">(अनुमेय परास: 0.90% - 1.20%)</span></div>
+                </div>
+            </div>
+
             <!-- Signatures Section matching PDF -->
-            <div style="display:flex; justify-content:space-around; align-items:flex-end; margin-top:45px; text-align:center; page-break-inside:avoid;">
+            <div style="display:flex; justify-content:space-around; align-items:flex-end; margin-top:30px; text-align:center; page-break-inside:avoid;">
                 <div style="width:28%;">
                     <div style="font-weight:700; font-size:13px; color:#111;">शाखा प्रबंधक</div>
                     <div style="margin-top:2px; font-size:11px; color:#444;">MPWLC ${bm}</div>
