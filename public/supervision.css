@@ -709,6 +709,14 @@
   text-align: left;
 }
 
+.rice-sheet-table input.superv-input.spec-violation {
+  border-color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+  outline: 1px solid #ef4444 !important;
+}
+
 /* ── Print Media Rules (Default A4 Landscape) ───────────────── */
 @media print {
   @page {
