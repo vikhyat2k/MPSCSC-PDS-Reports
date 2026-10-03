@@ -10,13 +10,32 @@
   --superv-warning: #f59e0b;
   --superv-danger: #ef4444;
   --superv-purple: #8b5cf6;
-  --card-bg: rgba(22, 27, 34, 0.7);
-  --card-border: rgba(255, 255, 255, 0.08);
+  --card-bg: #0d1526;
+  --card-border: rgba(255, 255, 255, 0.1);
+
+  /* Solid opaque surfaces for 100% clarity and zero bleed-through */
+  --surface: #0e1726;
+  --surface-light: #162238;
+  --surface-hover: #1d2d4a;
+  --surface-input: #131d31;
+  --surface-border: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.14);
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
 }
 
 [data-theme="light"] {
-  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.08);
+
+  --surface: #ffffff;
+  --surface-light: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --surface-input: #ffffff;
+  --surface-border: rgba(0, 0, 0, 0.14);
+  --border: rgba(0, 0, 0, 0.14);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
 }
 
 /* ── KPI Grid ────────────────────────────────────────── */
