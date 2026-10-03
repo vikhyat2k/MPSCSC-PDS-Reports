@@ -716,6 +716,141 @@
             </section>
 
             <!-- ════════════════════════════════════════════════
+                 VIEW: RICE QUALITY INSPECTION (KMS 2025-26)
+                 ════════════════════════════════════════════════ -->
+            <section class="superv-view" id="view-rice">
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div>
+                            <div class="superv-card-title">
+                                <span>🌾 INSPECTION OF RICE (KMS 2025-26) — District Office Betul</span>
+                                <span class="badge" style="background:rgba(15,46,90,0.2); color:#38bdf8;">CMR Quality Analysis</span>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">मध्य प्रदेश स्टेट सिविल सप्लाईज कार्पोरेशन लिमिटेड · भंडारगृह में चावल लॉट विश्लेषण एवं विनिर्देश सत्यापन प्रपत्र</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addRiceLotRow()">+ लॉट पंक्ति जोड़ें</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="printCurrentRiceSheet()">🖨️ अधिकृत प्रपत्र प्रिंट करें</button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="saveCurrentRiceSheet()">💾 पत्रक सुरक्षित करें</button>
+                        </div>
+                    </div>
+
+                    <!-- Warehouse & Date Meta Controls -->
+                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:18px;">
+                        <div class="superv-form-grid" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+                            <div class="superv-form-group">
+                                <label class="superv-label required">Name of the Warehouse (भंडारगृह का नाम)</label>
+                                <input type="text" class="superv-input" id="riceWarehouseName" placeholder="उदा. MPWLC Warehouse Betul (Kosmi)" value="MPWLC Warehouse Betul (Kosmi)" required>
+                            </div>
+                            <div class="superv-form-group">
+                                <label class="superv-label required">Date of Analysis (विश्लेषण दिनांक)</label>
+                                <input type="date" class="superv-input" id="riceAnalysisDate" required>
+                            </div>
+                            <div class="superv-form-group">
+                                <label class="superv-label">शाखा प्रबंधक (MPWLC Branch Manager)</label>
+                                <input type="text" class="superv-input" id="riceBranchManager" placeholder="MPWLC Betul" value="MPWLC Betul">
+                            </div>
+                            <div class="superv-form-group">
+                                <label class="superv-label">केंद्र प्रभारी (MPSCSC Centre In-charge)</label>
+                                <input type="text" class="superv-input" id="riceCentreIncharge" placeholder="MPSCSC Betul" value="MPSCSC Betul">
+                            </div>
+                            <div class="superv-form-group">
+                                <label class="superv-label">जिला प्रबंधक (District Manager MPSCSC)</label>
+                                <input type="text" class="superv-input" id="riceDistrictManager" value="MPSCSC बैतूल">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rice Analysis Interactive Table -->
+                    <div class="superv-table-wrapper" style="max-height:600px; overflow-y:auto;">
+                        <table class="superv-table rice-sheet-table" id="riceLotsTable">
+                            <thead>
+                                <tr style="background:#0f2e5a; color:#fff;">
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; min-width:40px;">Sl.<br>No.</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:180px;">Name of Miller</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:70px;">Stack<br>No.</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:90px;">Lot<br>No.</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:85px;">Quantity<br>(MT)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:75px;">No. of<br>Bags</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:105px;">Date of<br>Receipt</th>
+                                    <th colspan="3" style="background:#133c70; color:#fff; text-align:center;">Broken (%)</th>
+                                    <th colspan="3" style="background:#133c70; color:#fff; text-align:center;">Foreign Matter (%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:75px;">Damaged<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:75px;">Admixture<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:75px;">Red<br>Kernels<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:75px;">Chalky<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:80px;">Discoloured<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:75px;">Dehusked<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:70px;">FRK<br>(%)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:100px;">Test Result<br>(Mix Ind.)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:140px;">Result<br>(Within Spec /<br>BRL / Beyond FSSAI)</th>
+                                    <th rowspan="2" style="background:#0f2e5a; color:#fff; min-width:40px;">कार्य</th>
+                                </tr>
+                                <tr style="background:#133c70; color:#fff;">
+                                    <th style="background:#133c70; color:#fff; min-width:65px;">Small</th>
+                                    <th style="background:#133c70; color:#fff; min-width:65px;">Big</th>
+                                    <th style="background:#1b4a85; color:#f0f9ff; font-weight:700; min-width:70px;">Total</th>
+                                    <th style="background:#133c70; color:#fff; min-width:65px;">Inorg.</th>
+                                    <th style="background:#133c70; color:#fff; min-width:65px;">Org.</th>
+                                    <th style="background:#1b4a85; color:#f0f9ff; font-weight:700; min-width:70px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riceLotsTableBody">
+                                <!-- Rendered dynamically with 6 default rows -->
+                            </tbody>
+                            <tfoot>
+                                <tr style="background:var(--surface-light); font-weight:700;">
+                                    <td colspan="4" style="text-align:right;">कुल योग (Total):</td>
+                                    <td id="riceTotQuantity" style="color:var(--superv-accent); font-weight:700;">0.00 MT</td>
+                                    <td id="riceTotBags" style="color:var(--superv-accent); font-weight:700;">0</td>
+                                    <td colspan="15"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Quality Standards & Guidelines Note -->
+                    <div style="background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.25); border-radius:8px; padding:12px 16px; margin-top:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--text-muted);">
+                        <div>
+                            <strong>📊 मानक विनिर्देश (Standard Limits - CMR KMS 2025-26):</strong>
+                            Broken Total: Max 25% (Small max 1%) · Foreign Matter Total: Max 0.5% (Inorg max 0.2%) · Damaged: Max 4% · Admixture: Max 6% · FRK: 0.9% - 1.1%
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addRiceLotRow()">+ पंक्ति जोड़ें</button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="saveCurrentRiceSheet()">💾 सुरक्षित करें</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Past Saved Rice Analysis Sheets -->
+                <div class="superv-card">
+                    <div class="superv-card-header">
+                        <div class="superv-card-title">
+                            <span>📂 सहेजे गए चावल गुणवत्ता परीक्षण पत्रक (Saved Rice Quality Sheets)</span>
+                        </div>
+                    </div>
+                    <div class="superv-table-wrapper">
+                        <table class="superv-table">
+                            <thead>
+                                <tr>
+                                    <th>आईडी</th>
+                                    <th>भंडारगृह (Warehouse)</th>
+                                    <th>विश्लेषण दिनांक</th>
+                                    <th>कुल लॉट संख्या</th>
+                                    <th>कुल मात्रा (MT)</th>
+                                    <th>कुल बोरे</th>
+                                    <th>कार्यवाही</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riceSavedSheetsTableBody">
+                                <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ════════════════════════════════════════════════
                  VIEW 6: MONTHLY COMPLIANCE REPORT (परिशिष्ट 04/05)
                  ════════════════════════════════════════════════ -->
             <section class="superv-view" id="view-compliance">
