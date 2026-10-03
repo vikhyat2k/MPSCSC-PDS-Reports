@@ -1638,110 +1638,86 @@ function initDefaultRiceSheet() {
             fmTotal: 0.34,
             damaged: 2.40,
             admixture: 3.80,
-            redKernels: 1.40,
-            chalky: 3.20,
-            discoloured: 2.10,
-            dehusked: 8.90,
-            frk: 1.05,
-            testResult: 'Positive (1.05% FRK)',
-            result: 'Within Specification'
-        },
-        {
-            sno: 6,
-            millerName: 'M/s Narmada Grain Processing, Multai',
-            stackNo: 'S-09',
-            lotNo: 'LOT-25/106',
-            quantityMt: 29.00,
-            noOfBags: 580,
-            receiptDate: new Date().toISOString().split('T')[0],
-            brokenSmall: 0.75,
-            brokenBig: 18.00,
-            brokenTotal: 18.75,
-            fmInorg: 0.10,
-            fmOrg: 0.18,
-            fmTotal: 0.28,
-            damaged: 2.00,
-            admixture: 3.20,
-            redKernels: 1.10,
-            chalky: 2.80,
-            discoloured: 1.80,
-            dehusked: 8.10,
-            frk: 1.00,
-            testResult: 'Positive (1.0% FRK)',
-            result: 'Within Specification'
-        }
-    ];
+                 <!-- Metadata Row -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:11px;">
+                <div>
+                    <strong>Name of the Warehouse:</strong> <u>&nbsp;${wh}&nbsp;</u>
+                </div>
+                <div>
+                    <strong>Date of Analysis:</strong> <u>&nbsp;${dt}&nbsp;</u>
+                </div>
+            </div>
 
-    renderRiceLotsTable(defaultLots);
-}
+            <!-- Table Layout matching PDF -->
+            <table class="official-table" style="font-size:9px; width:100%; border-collapse:collapse; margin-bottom:12px; border:1px solid #0f2e5a;">
+                <thead>
+                    <tr style="background:#0f2e5a; color:#fff;">
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px; width:25px;">Sl.<br>No.</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 4px; min-width:140px;">Name of Miller</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Stack<br>No.</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Lot No.</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Quantity<br>(MT)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">No. of<br>Bags</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Date of<br>Receipt</th>
+                        <th colspan="3" style="background:#133c70; color:#fff; text-align:center; padding:2px;">Broken (%)</th>
+                        <th colspan="3" style="background:#133c70; color:#fff; text-align:center; padding:2px;">Foreign Matter (%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Damaged<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Admixture<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Red<br>Kernels<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Chalky<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Discoloured<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Dehusked<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">FRK<br>(%)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px;">Test Result<br>(Mix Ind.)</th>
+                        <th rowspan="2" style="background:#0f2e5a; color:#fff; text-align:center; padding:3px 2px; min-width:110px;">Result<br>(Within Specification /<br>BRL / Beyond FSSAI)</th>
+                    </tr>
+                    <tr style="background:#133c70; color:#fff;">
+                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Small</th>
+                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Big</th>
+                        <th style="background:#1b4a85; color:#fff; text-align:center; padding:2px; font-weight:700;">Total</th>
+                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Inorg.</th>
+                        <th style="background:#133c70; color:#fff; text-align:center; padding:2px;">Org.</th>
+                        <th style="background:#1b4a85; color:#fff; text-align:center; padding:2px; font-weight:700;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f4f6f9; font-weight:700;">
+                        <td colspan="4" style="text-align:right; padding:5px 8px;">कुल योग (Total):</td>
+                        <td style="text-align:center; padding:5px 2px; color:#0f2e5a;">${totQty.toFixed(2)}</td>
+                        <td style="text-align:center; padding:5px 2px; color:#0f2e5a;">${totBags.toLocaleString('en-IN')}</td>
+                        <td colspan="15"></td>
+                    </tr>
+                </tfoot>
+            </table>
 
-function renderRiceLotsTable(lots) {
-    const tbody = document.getElementById('riceLotsTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    (lots || []).forEach((lot, idx) => {
-        addRiceLotRow(lot, idx + 1);
-    });
-    recalculateRiceTotals();
-}
+            <!-- Signatures Section matching PDF -->
+            <div class="signatures-section official-sig-block" style="display:flex; justify-content:space-around; align-items:flex-end; margin-top:18px; text-align:center; page-break-inside:avoid;">
+                <div style="width:28%;">
+                    <div style="font-weight:700; font-size:12px; color:#111;">शाखा प्रबंधक</div>
+                    <div style="margin-top:2px; font-size:11px; color:#444;">MPWLC ${bm}</div>
+                    <div style="font-size:10px; color:#666;">Branch Manager</div>
+                </div>
+                <div style="width:28%;">
+                    <div style="font-weight:700; font-size:12px; color:#111;">केंद्र प्रभारी</div>
+                    <div style="margin-top:2px; font-size:11px; color:#444;">MPSCSC ${ci}</div>
+                    <div style="font-size:10px; color:#666;">Centre In-charge</div>
+                </div>
+                <div style="width:28%;">
+                    <div style="font-weight:700; font-size:12px; color:#111;">जिला प्रबंधक</div>
+                    <div style="margin-top:2px; font-size:11px; color:#444;">${dm}</div>
+                    <div style="font-size:10px; color:#666;">District Manager</div>
+                </div>
+            </div>
 
-function addRiceLotRow(lot = null, snoOverride = null) {
-    const tbody = document.getElementById('riceLotsTableBody');
-    if (!tbody) return;
-
-    const rowCount = tbody.querySelectorAll('tr').length;
-    const sno = snoOverride || (rowCount + 1);
-    const today = new Date().toISOString().split('T')[0];
-
-    const d = lot || {
-        sno: sno,
-        millerName: '',
-        stackNo: '',
-        lotNo: '',
-        quantityMt: '',
-        noOfBags: '',
-        receiptDate: today,
-        brokenSmall: '',
-        brokenBig: '',
-        brokenTotal: '',
-        fmInorg: '',
-        fmOrg: '',
-        fmTotal: '',
-        damaged: '',
-        admixture: '',
-        redKernels: '',
-        chalky: '',
-        discoloured: '',
-        dehusked: '',
-        frk: '',
-        testResult: 'Positive',
-        result: 'Within Specification'
-    };
-
-    const tr = document.createElement('tr');
-    tr.className = 'rice-lot-row';
-    tr.innerHTML = `
-        <td class="rice-sno" style="font-weight:700; text-align:center;">${sno}</td>
-        <td><input type="text" class="superv-input miller-name-input rice-miller" value="${escapeHtml(d.millerName)}" placeholder="Miller Name" style="width:100%; min-width:160px; text-align:left;"></td>
-        <td><input type="text" class="superv-input rice-stack" value="${escapeHtml(d.stackNo)}" placeholder="S-01" style="width:100%; min-width:60px;"></td>
-        <td><input type="text" class="superv-input rice-lot" value="${escapeHtml(d.lotNo)}" placeholder="LOT-01" style="width:100%; min-width:80px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-qty" value="${d.quantityMt !== '' ? d.quantityMt : ''}" placeholder="29.00" oninput="recalculateRiceTotals()" style="width:100%; min-width:75px;"></td>
-        <td><input type="number" step="1" class="superv-input rice-bags" value="${d.noOfBags !== '' ? d.noOfBags : ''}" placeholder="580" oninput="recalculateRiceTotals()" style="width:100%; min-width:65px;"></td>
-        <td><input type="date" class="superv-input rice-receipt-date" value="${d.receiptDate || today}" style="width:100%; min-width:100px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-broken-small" value="${d.brokenSmall !== '' ? d.brokenSmall : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-broken-big" value="${d.brokenBig !== '' ? d.brokenBig : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-broken-total" value="${d.brokenTotal !== '' ? d.brokenTotal : ''}" placeholder="0.00" readonly style="width:100%; min-width:65px; background:rgba(15,46,90,0.08); font-weight:700;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-fm-inorg" value="${d.fmInorg !== '' ? d.fmInorg : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-fm-org" value="${d.fmOrg !== '' ? d.fmOrg : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:60px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-fm-total" value="${d.fmTotal !== '' ? d.fmTotal : ''}" placeholder="0.00" readonly style="width:100%; min-width:65px; background:rgba(15,46,90,0.08); font-weight:700;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-damaged" value="${d.damaged !== '' ? d.damaged : ''}" placeholder="0.00" oninput="recalculateRiceRow(this.closest('tr'))" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-admixture" value="${d.admixture !== '' ? d.admixture : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-red" value="${d.redKernels !== '' ? d.redKernels : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-chalky" value="${d.chalky !== '' ? d.chalky : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-discoloured" value="${d.discoloured !== '' ? d.discoloured : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-dehusked" value="${d.dehusked !== '' ? d.dehusked : ''}" placeholder="0.00" style="width:100%; min-width:65px;"></td>
-        <td><input type="number" step="0.01" class="superv-input rice-frk" value="${d.frk !== '' ? d.frk : ''}" placeholder="1.00" style="width:100%; min-width:60px;"></td>
-        <td><input type="text" class="superv-input rice-test-result" value="${escapeHtml(d.testResult || 'Positive')}" placeholder="Positive" style="width:100%; min-width:85px;"></td>
+            <!-- Footer note matching PDF -->
+            <div style="text-align:center; margin-top:12px; font-size:8.5px; color:#777; border-top:1px solid #ddd; padding-top:4px;">
+                MPSCSC District Office Betul | Inspection of Rice (KMS 2025-26)
+            </div>
+        </div>
+    `; class="superv-input rice-test-result" value="${escapeHtml(d.testResult || 'Positive')}" placeholder="Positive" style="width:100%; min-width:85px;"></td>
         <td>
             <select class="superv-select rice-result" style="width:100%; min-width:130px; font-size:11px; padding:4px;">
                 <option value="Within Specification" ${d.result === 'Within Specification' ? 'selected' : ''}>Within Specification</option>
