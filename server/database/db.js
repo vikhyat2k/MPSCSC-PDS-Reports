@@ -643,6 +643,7 @@ class DatabaseManager {
    */
   async saveSupervisionInspection(data) {
     const id = data.id || ('INSP_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6));
+    const isTest = (data.is_test || data.isTest || (id && (id.startsWith('TEST_') || id.startsWith('DUMMY_')))) ? 1 : 0;
     const mode = data.mode || 'dm';
     const issueCenter = data.issueCenter || data.issue_center || '';
     const inspectionMonth = data.inspectionMonth || data.inspection_month || '';
@@ -664,8 +665,8 @@ class DatabaseManager {
         id, mode, issue_center, inspection_month, inspection_date,
         officer_name, officer_designation, officer_mobile,
         incharge_name, incharge_mobile, branch_manager, branch_manager_mobile,
-        godowns_count, compliance_score, deficiencies_count, payload, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        godowns_count, compliance_score, deficiencies_count, payload, is_test, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         mode = excluded.mode,
         issue_center = excluded.issue_center,
@@ -682,12 +683,13 @@ class DatabaseManager {
         compliance_score = excluded.compliance_score,
         deficiencies_count = excluded.deficiencies_count,
         payload = excluded.payload,
+        is_test = excluded.is_test,
         updated_at = CURRENT_TIMESTAMP
     `, [
       id, mode, issueCenter, inspectionMonth, inspectionDate,
       officerName, officerDesignation, officerMobile,
       inchargeName, inchargeMobile, branchManager, branchManagerMobile,
-      godownsCount, complianceScore, deficienciesCount, payload
+      godownsCount, complianceScore, deficienciesCount, payload, isTest
     ]);
 
     return { success: true, id };
