@@ -799,6 +799,18 @@ class DatabaseManager {
   }
 
   /**
+   * Get single surprise inspection by ID
+   */
+  async getSurpriseInspectionById(id) {
+    const row = await this.get('SELECT * FROM supervision_surprise WHERE id = ?', [id]);
+    if (!row) return null;
+    return {
+      ...row,
+      payload: JSON.parse(row.payload || '{}')
+    };
+  }
+
+  /**
    * Delete surprise inspection
    */
   async deleteSurpriseInspection(id) {
