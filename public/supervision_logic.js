@@ -1464,7 +1464,7 @@ function previewCurrentFormPrint() {
 }
 
 function printOfficialReport() {
-    window.print();
+    printElementDirectly('printableReportArea', 'Supervision Inspection Report - MPSCSC Betul', 'landscape');
 }
 
 // ── Archives View & Table ─────────────────────────────────
