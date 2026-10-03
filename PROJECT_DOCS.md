@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 19 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Oct 2026 — Supervision Modals Responsive Layout & Sticky Action Footers (ISSUE-043) |
+| Last Code Change | 03 Oct 2026 — A4 Landscape Default Print Setting & Full Report Direct Print Engine (ISSUE-044) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Rice KMS 2025-26) |
@@ -616,7 +616,7 @@ Tracks implementation status of all major features.
 | HTTP Security Defensive Headers | COMPLETE | YES | nosniff, SAMEORIGIN, Referrer-Policy headers (SEC-04) |
 | raw_data Lazy Loading | COMPLETE | YES | getAllReports() explicitly selects summary columns and excludes raw_data |
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
-| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals with sticky footers & live compliance indicators (ISSUE-043) |
+| Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape default direct print engine fitting entire 18-col report & signatures onto single page (ISSUE-044) |
 
 ---
 
@@ -774,6 +774,7 @@ Tracks what has been tested and confirmed working.
 | Supervision & Inspection Module (Orders 3/1 & 3/2) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified SQLite tables (supervision_inspections, supervision_surprise, supervision_roster, supervision_meetings), API endpoints, weekly protocol, 17-point inspection form, surprise visit engine, and official print formatting |
 | Rice Quality Inspection Sheet (KMS 2025-26) | Unit, Database & UI Verification | VERIFIED | 03 Oct 2026 | Verified 18-column CMR rice analysis sheet, auto-calculations (Broken/FM/Totals), database CRUD (supervision_rice_inspections), API routes (/api/supervision/rice), and official A4 print format with 3 signature blocks |
 | Supervision Modals Responsive Layout & Sticky Action Footers | UI & Usability Verification | VERIFIED | 03 Oct 2026 | Re-architected modal box, scrollable body container, and pinned footer across all supervision modals (modalSurprise, modalRoster, modalMeeting). Pinned Save/Cancel buttons, added live compliance score pill and quick bulk toggles |
+| A4 Landscape Default Print Engine & Single-Page Fitting | UI, CSS & PDF Print Verification | VERIFIED | 03 Oct 2026 | Verified default @page { size: A4 landscape; margin: 5mm 6mm; }, isolated iframe printing via printElementDirectly(), modal unconstraining in @media print, and strict single-page (1 of 1) rendering with all 18 columns, totals, and 3 official signatures intact |
 
 ---
 
@@ -822,10 +823,42 @@ Tracks what has been tested and confirmed working.
 | ISSUE-041 | Advanced analytics executive PDF spilled into 9 unformatted pages with 22-row identical 48h action plan | HIGH | RESOLVED | server/services/advancedAnalytics/advancedAnalyticsPdfGenerator.js, server/services/advancedAnalytics/advancedAnalyticsCompute.js | 19 Sep 2026 |
 | ISSUE-042 | Welfare scheme reports showed intermittent dispatch deficits and dispatch % lower than received % (e.g. June 2026 showing 80.73% vs 90.09% vs 93.13% received) due to portal zero-dispatch anomalies and lack of logical dispatch reconciliation | HIGH | RESOLVED | server/services/welfareDataProcessor.js, server/automation/welfare_scraper.js, database/pds-reports.db, database/pds-seed.db | 24 Sep 2026 |
 | ISSUE-043 | Supervision modals vertically overflowed on standard 768px laptop viewports, pushing action buttons ('सुरक्षित करें', 'रद्द करें') and checkpoints off-screen | HIGH | RESOLVED | public/supervision.html, public/supervision.css, public/supervision_logic.js | 03 Oct 2026 |
+| ISSUE-044 | Rice Quality Inspection printout defaulted to portrait, clipping 30% of quality columns, cutting off lower lot rows and signatures due to modal container height overflow and app shell print leakage | HIGH | RESOLVED | public/supervision.css, public/supervision_logic.js, public/supervision.html | 03 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-03 | A4 Landscape Default Print Setting & Isolated Direct Print Engine
+
+Files: public/supervision.css, public/supervision_logic.js, public/supervision.html, PROJECT_DOCS.md
+Type: Bug Fix / Print Layout Optimization
+Closes: ISSUE-044
+
+- BUG & ROOT CAUSE:
+  When printing official inspection documents (such as the 18-column CMR Rice Quality Inspection Sheet in `#modalRicePrintView` or the Inspection View in `#modalInspectionView`):
+  1. The browser's native print dialog defaulted to **Portrait** (`@page { size: auto; }`). The 18-column quality analysis table requires ~1030px minimum width, whereas standard A4 portrait printable width is ~733px. Consequently, ~30% of the columns on the right were clipped off.
+  2. Modal containers (`.superv-modal-box`, `.superv-modal-overlay`) had fixed positioning, `max-height: 88vh`, and `overflow: hidden`. In `@media print`, Chromium strictly clipped content exceeding the container height, truncating lower lot rows and the three official signature blocks (शाखा प्रबंधक, केंद्र प्रभारी, जिला प्रबंधक).
+  3. The main application layout (`.superv-layout`, `.app-shell`, `.app-main`) was not hidden during print, causing 2 irrelevant dashboard pages to print before the modal appeared on Page 3.
+
+- FIXES & ARCHITECTURAL ENHANCEMENTS:
+  1. **Strict Default A4 Landscape in Print CSS**:
+     - Configured `@page { size: A4 landscape; margin: 5mm 6mm; }` in `public/supervision.css`.
+     - Explicitly enforced `-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;` to ensure official table header fills, status borders, and crisp borders print accurately.
+  2. **Isolated Direct Print Engine (`printElementDirectly`)**:
+     - Developed a standalone direct printing engine in `public/supervision_logic.js`.
+     - Dynamically generates an isolated hidden iframe containing only the target document HTML, styled with embedded `@page { size: A4 landscape; margin: 5mm 6mm; }`, clean 8pt typography, tight 3px cell padding, and high-contrast black borders.
+     - Automatically cleans up the iframe after execution, preventing modal clipping, backdrop bleeding, or extraneous pages.
+  3. **Modal Unconstraining & App Shell Suppression in Print CSS**:
+     - Added comprehensive print rules hiding `.superv-layout, .app-shell, .app-header, .app-main, .superv-sidebar, .superv-tabs-nav, .superv-action-bar, .superv-modal-header, .superv-modal-footer, button, .btn`.
+     - Set `.superv-modal-overlay`, `.superv-modal-box`, and `.superv-modal-body` to `position: static !important; overflow: visible !important; max-height: none !important; width: 100% !important;` so standard `Ctrl+P` also formats cleanly without clipping.
+  4. **Single-Page Landscape Fit Verified**:
+     - Verified with headless Chromium and `pdf-parse`: the entire Rice Quality Inspection sheet (all 18 columns, header metadata, all miller lots, total row, and all 3 official signatures) fits flawlessly on **exactly 1 page (Page 1 of 1)** with zero clipping.
+  5. **UI Button & Footer Updating**:
+     - Updated button labels in `public/supervision.html` to `🖨️ प्रिंट करें (Print A4 Landscape)`.
+     - Updated modal footer labels to explicitly indicate "A4 लैंडस्केप शासकीय प्रारूप (Default A4 Landscape)".
+
+---
 
 ### 2026-10-03 | Supervision Modals Responsive Layout Overhaul & Sticky Action Footers
 
