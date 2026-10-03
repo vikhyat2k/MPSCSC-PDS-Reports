@@ -657,7 +657,11 @@
     font-size: 8.5pt !important;
   }
 
-  /* Hide app navigation, headers, footers, sidebars and non-print UI */
+  /* Hide app navigation, headers, footers, sidebars, main layout and non-print UI */
+  .superv-layout,
+  .app-shell,
+  .app-header,
+  .app-main,
   .superv-sidebar,
   .superv-app-header,
   .superv-main-content,
