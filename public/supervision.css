@@ -356,28 +356,81 @@
   display: inline-flex;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-input);
+  flex-shrink: 0;
 }
 
 .toggle-opt {
   border: none;
-  background: var(--surface);
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
+  background: var(--surface-input);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   color: var(--text-muted);
   transition: all 0.15s ease;
 }
 
+.toggle-opt:hover:not(.active) {
+  background: var(--surface-hover);
+  color: var(--text-main);
+}
+
 .toggle-opt.yes.active {
-  background: var(--superv-success);
-  color: #fff;
+  background: var(--superv-success) !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
 .toggle-opt.no.active {
-  background: var(--superv-danger);
-  color: #fff;
+  background: var(--superv-danger) !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+/* ── Surprise Inspection Checklist Rows ──────────────── */
+.surprise-checklist-row {
+  background: var(--surface-light) !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.surprise-checklist-row:hover {
+  background: var(--surface-hover) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
+}
+
+.surprise-checklist-row .sp-text-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+}
+
+.surprise-checklist-row .sp-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--superv-accent);
+  background: rgba(14, 165, 233, 0.12);
+  border-radius: 4px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+
+.surprise-checklist-row .sp-text {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.4;
+  font-weight: 500;
 }
 
 /* ── Weekly Day-wise Protocol Cards ──────────────────── */
