@@ -1182,7 +1182,19 @@
                     <button type="button" class="btn btn-secondary" onclick="closeModal('modalMeeting')">रद्द करें</button>
                     <button type="submit" class="btn btn-primary">सुरक्षित करें</button>
                 </div>
-            </form>
+<!-- 5. Rice Quality Inspection Official Print Modal -->
+<div class="superv-modal-overlay" id="modalRicePrintView">
+    <div class="superv-modal-box" style="max-width:1150px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);">INSPECTION OF RICE (KMS 2025-26) — Official Sheet</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalRicePrintView')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body" id="printableRiceSheetArea">
+            <!-- Rendered dynamically -->
+        </div>
+        <div class="superv-modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('modalRicePrintView')">बंद करें</button>
+            <button class="btn btn-primary" onclick="printOfficialRiceDocument()">🖨️ प्रिंट करें (Print Official A4)</button>
         </div>
     </div>
 </div>
