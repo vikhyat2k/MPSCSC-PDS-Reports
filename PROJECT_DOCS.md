@@ -25,12 +25,13 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 20 |
+| Completed Milestones | 21 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Uniform Specification Alignment for Common Rice (KMS 2025-26) Maximum Limits (ISSUE-047) |
+| Last Code Change | 04 Oct 2026 — Official Gmail Integration & Actionable Tasks Monitoring Subsystem (ISSUE-048) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
-| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Common Rice KMS 2025-26) |
+| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
+
 
 ---
 
@@ -619,6 +620,7 @@ Tracks implementation status of all major features.
 | Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape direct print engine (ISSUE-044) + Solid opaque surfaces & high-contrast typography eliminating background bleed-through (ISSUE-045) |
 | Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
+| Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048) |
 
 ---
 
@@ -647,6 +649,8 @@ Tracks implementation status of all major features.
 | M18 | Executive Analytics Report Redesign (Crisp 5-Page Dashboard) | 19 Sep 2026 | Replaced 9-page unformatted dump with strictly 5-page actionable dashboard: Exec Dashboard, Priority Interventions, Block & Transporters, POS Integrity Audit, Full 22-Sector Appendix |
 | M19 | Supervision & Inspection Module (Orders 3/1, 3/2 & Rice KMS 2025-26) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 + Rice Quality Analysis Sheet (KMS 2025-26) |
 | M20 | Comprehensive Supervision Testing, Realistic Dummy Dataset & 1-Click Safe Purge | 04 Oct 2026 | Full functional testing, CRUD verification across all 5 modules, input validation, 22-record multi-scenario dummy dataset, dedicated Sandbox UI modal with 1-click safe purge strictly preserving genuine production records, 33 automated tests verified (100% pass) |
+| M21 | Official Gmail Integration & Actionable Task Automation Subsystem | 04 Oct 2026 | Google OAuth 2.0 least-privilege integration, AES-256-GCM token security, official government order parser with timeline distinction, SQLite task persistence, interactive Supervision Portal task matrix & aging dashboard, and 100% verified test suite (ISSUE-048) |
+
 
 ### Upcoming Milestones
 
@@ -781,8 +785,10 @@ Tracks what has been tested and confirmed working.
 | Supervision Surprise Modal Solid Opaque Surfaces & Contrast | UI, CSS & Visual Screenshot Audit | VERIFIED | 04 Oct 2026 | Verified solid opaque surfaces (--surface, --surface-light, --surface-input), elimination of transparent background bleed-through, 3-column input header layout, prominent blue scrollbar, and crystal-clear contrast in both dark and light modes (ISSUE-045) |
 | Supervision Full Functional Testing & Dummy Data Sandbox | End-to-End, CRUD & Data Safety | VERIFIED | 04 Oct 2026 | Verified 33/33 automated tests covering CRUD, boundary tests, input validation, search/filter, stats sync, 22 multi-scenario dummy records, and 100% data safety preservation of original records (ISSUE-046) |
 | Rice Quality Common Limits (KMS 2025-26) Specification | Unit, UI & Print Verification | VERIFIED | 04 Oct 2026 | Verified 10-point Common Rice maximum limits validation, interactive spec-violation class highlighting, automatic BRL result selection on out-of-spec parameters, NA handling for Admixture, and official schedule box in A4 print layout (ISSUE-047) |
+| Official Gmail Integration & Actionable Tasks Module | Unit, Crypto, Parsing & Integration Verification | VERIFIED | 04 Oct 2026 | Verified AES-256-GCM token encryption, triage rules, Hindi order parsing, explicit vs AI-suggested timeline determination, database CRUD, metric aggregations, and 100% automated test suite passing (ISSUE-048) |
 
 ---
+
 
 ## 19. KNOWN ISSUES REGISTER
 
@@ -833,12 +839,52 @@ Tracks what has been tested and confirmed working.
 | ISSUE-045 | Surprise Inspection modal was translucent/unreadable due to undefined --surface token falling back to transparent, causing underlying dashboard and protocol table text to bleed through | HIGH | RESOLVED | public/supervision.css, public/supervision.html, public/supervision_logic.js | 04 Oct 2026 |
 | ISSUE-046 | Supervision Portal lacked dedicated multi-scenario dummy test datasets, 1-click safe cleanup mechanism, and full CRUD automated test coverage | HIGH | RESOLVED | server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-supervision-full-suite.js | 04 Oct 2026 |
 | ISSUE-047 | Rice Quality Inspection (KMS 2025-26) schedule limits used generic/loose thresholds (e.g. Damaged 4%, FRK 1.1%) instead of official GOI Uniform Specification for Common Rice maximum limits | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, public/supervision.css, tests/test-supervision-full-suite.js, tests/test-rice-common-spec.js | 04 Oct 2026 |
+| ISSUE-048 | Supervision Portal lacked direct official Gmail integration, automatic government order parsing, and actionable task tracking with timeline determination | HIGH | RESOLVED | server/services/gmail/*, server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-gmail-tasks-module.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
 
+### 2026-10-04 | Official Gmail Integration & Actionable Tasks Monitoring Subsystem
+
+Files: server/services/gmail/crypto.js, server/services/gmail/auth.js, server/services/gmail/rules.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server/services/gmail/escalation.js, server/services/gmail/index.js, server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-gmail-tasks-module.js, PROJECT_DOCS.md
+Type: Major Feature / Automation & Task Intelligence
+Closes: ISSUE-048
+
+- USER REQUIREMENT & OPERATIONAL CONTEXT:
+  The user requested integration of their official Gmail account with the Supervision Portal to automatically monitor incoming official orders (from Head Office, Collectorate, Regional Office, other departments), extract references/memos/instructions, and convert them into trackable tasks with accurate timelines while adhering to the highest security standards (Google OAuth 2.0, least-privilege readonly scopes, no password scraping).
+
+- ARCHITECTURAL & IMPLEMENTATION DETAILS:
+  1. **Google OAuth 2.0 & Token Security (`server/services/gmail/crypto.js`, `auth.js`)**:
+     - Strict least-privilege scopes: `https://www.googleapis.com/auth/gmail.readonly`. Zero send, write, or permanent deletion rights.
+     - AES-256-GCM encryption at rest for refresh tokens with IV and auth-tag verification.
+     - Fully compliant with Google Workspace ("Internal" app, zero Google CASA verification needed) and standard Gmail ("External Testing" mode).
+     - Endpoints: `GET /api/gmail/status`, `GET /api/gmail/oauth/url`, `GET /api/gmail/oauth/callback`, `POST /api/gmail/disconnect`.
+  2. **Intelligent Ingestion & Triage Rules (`server/services/gmail/rules.js`, `ingestion.js`)**:
+     - Incremental delta polling engine via `node-cron` every 5 minutes using Gmail `users.messages.list`/`history.list` consuming minimal quota (2 units/poll).
+     - 3-tier triage funnel: filters noise/automated bounces/newsletters, checks sender whitelist against HO (`@mpscsc.mp.gov.in`, `ho.mpscsc@gmail.com`), Collectorate (`collbetul@mp.gov.in`, `foodbetul@...`), and Regional Office (`rm.bhopal@...`).
+     - Multipart MIME decoder with attachment buffering and local sandboxing.
+  3. **Bilingual Government Order Parser & Timeline Engine (`server/services/gmail/parser.js`)**:
+     - Extracts official letter references (`क्रमांक`, `फा.क्र.`, `जावक क्र.`), printed dates, and issuing authorities.
+     - Robust timeline engine supporting both Hindi prepositions and postpositions (e.g. `दिनांक 15/10/2026 तक`, `3 दिवस के भीतर`).
+     - Strict timeline distinction: marks explicit calendar dates as `OFFICIAL_EXPLICIT` (requires_confirmation = 0), and relative/urgency offsets as `AI_SUGGESTED` (requires_confirmation = 1) without hallucinating dates for ambiguous correspondence.
+  4. **Database Persistence & Escalation (`server/database/db.js`, `server/services/gmail/escalation.js`)**:
+     - DDL tables: `official_email_accounts`, `email_sync_logs`, `supervision_tasks`, `task_attachments`, `email_triage_rules` with comprehensive indexes.
+     - Full CRUD methods: `getSupervisionTasks`, `getSupervisionTaskById`, `saveSupervisionTask`, `updateSupervisionTask`, `deleteSupervisionTask`.
+     - Escalation engine computing Aging, Due Today, Due in 3 Days, and Overdue (TL) states.
+  5. **Supervision Portal Dashboard UI (`public/supervision.html`, `public/supervision_logic.js`)**:
+     - New interactive navigation view: `आदेश एवं कार्य (Orders & Tasks)`.
+     - 6 top metric counters (Total, Overdue, Due Today, Due 3 Days, Requires Confirmation, Completed).
+     - Department authority filter pills (`HO`, `Collectorate TL`, `RO`, `All`) and local search.
+     - Direct 1-click deep links opening original messages in Gmail (`mail.google.com/mail/u/0/#inbox/<message_id>`).
+     - Modals for Gmail connection status, task detail view with attachments, and task editor.
+  6. **Automated Verification (`tests/test-gmail-tasks-module.js`)**:
+     - Verified AES-256-GCM token encryption, triage rules, Hindi order parsing, timeline classification, database persistence, and task lifecycle. 100% test pass.
+
+---
+
 ### 2026-10-04 | Uniform Specification Alignment for Common Rice (KMS 2025-26) Maximum Limits
+
 
 Files: public/supervision.html, public/supervision_logic.js, public/supervision.css, tests/test-supervision-full-suite.js, tests/test-rice-common-spec.js, PROJECT_DOCS.md
 Type: Feature / Regulatory Compliance / Quality Inspection Logic
