@@ -985,6 +985,17 @@
                         </div>
 
                         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                            <select id="taskSectionFilter" class="superv-select" style="font-size:12px; padding:6px 10px; width:auto;" onchange="loadSupervisionTasks()">
+                                <option value="">समस्त शाखाएं (All Sections)</option>
+                                <option value="PDS">PDS (उठाव एवं वितरण)</option>
+                                <option value="Milling">मिलिंग (Milling)</option>
+                                <option value="Procurement">उपार्जन (Procurement)</option>
+                                <option value="Storage">भंडारण (Storage)</option>
+                                <option value="Quality">गुणवत्ता नियंत्रण (QC)</option>
+                                <option value="Finance">वित्त एवं लेखा</option>
+                                <option value="Admin">सामान्य प्रशासन</option>
+                            </select>
+
                             <select id="taskStatusFilter" class="superv-select" style="font-size:12px; padding:6px 10px; width:auto;" onchange="loadSupervisionTasks()">
                                 <option value="">समस्त स्थितियां (All Status)</option>
                                 <option value="NEW">नवीन (New)</option>
@@ -1806,6 +1817,8 @@
                         <label class="superv-label">प्रभारी शाखा (Section)</label>
                         <select class="superv-select" id="taskFormSection">
                             <option value="PDS">PDS (उठाव एवं वितरण)</option>
+                            <option value="Milling">मिलिंग (Milling)</option>
+                            <option value="Procurement">उपार्जन (Procurement)</option>
                             <option value="Storage">भंडारण एवं वेयरहाउसिंग</option>
                             <option value="Quality">गुणवत्ता नियंत्रण (QC)</option>
                             <option value="Finance">वित्त एवं लेखा</option>
