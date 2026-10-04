@@ -4534,7 +4534,20 @@ app.post('/api/gmail/sync', async (req, res) => {
         if (!activeAccount) {
             return res.status(400).json({ error: 'No active Gmail account connected' });
         }
-        const syncResult = await gmailService.syncOfficialEmails(db, req.body || {});
+
+        // Use caller-provided values or fall back to DB-stored settings
+        let syncOptions = { ...(req.body || {}) };
+        if (!syncOptions.maxResults) {
+            const manLimitVal = await db.getSetting('sync_limit_manual').catch(() => null);
+            syncOptions.maxResults = Math.min(parseInt(manLimitVal) || 20, 500);
+        }
+        if (!syncOptions.query) {
+            const timeWindowVal = await db.getSetting('sync_time_window_days').catch(() => null);
+            const days = Math.min(parseInt(timeWindowVal) || 14, 365);
+            syncOptions.query = `newer_than:${days}d`;
+        }
+
+        const syncResult = await gmailService.syncOfficialEmails(db, syncOptions);
         res.json({ success: true, result: syncResult });
     } catch (err) {
         console.error('Manual Gmail sync failed:', err);
