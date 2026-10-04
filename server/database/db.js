@@ -1114,10 +1114,216 @@ class DatabaseManager {
   }
 
   /**
+   * SUPERVISION OFFICIAL TASKS METHODS
+   */
+  async getSupervisionTasks(filters = {}) {
+    let sql = 'SELECT * FROM supervision_tasks WHERE 1=1';
+    const params = [];
+
+    if (filters.status) {
+      sql += ' AND status = ?';
+      params.push(filters.status);
+    }
+    if (filters.department) {
+      sql += ' AND department_category = ?';
+      params.push(filters.department);
+    }
+    if (filters.priority) {
+      sql += ' AND priority = ?';
+      params.push(filters.priority);
+    }
+    if (filters.requires_confirmation !== undefined) {
+      sql += ' AND requires_confirmation = ?';
+      params.push(filters.requires_confirmation ? 1 : 0);
+    }
+
+    sql += ' ORDER BY CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC, created_at DESC';
+    return await this.all(sql, params);
+  }
+
+  async getSupervisionTaskById(id) {
+    const task = await this.get('SELECT * FROM supervision_tasks WHERE id = ?', [id]);
+    if (!task) return null;
+    const attachments = await this.all('SELECT * FROM task_attachments WHERE task_id = ?', [id]);
+    return { ...task, attachments };
+  }
+
+  async saveSupervisionTask(task) {
+    const sql = `
+      INSERT INTO supervision_tasks (
+        id, sync_log_id, gmail_message_id, gmail_thread_id,
+        letter_ref_no, letter_date, issuing_authority, department_category,
+        subject, task_description, assigned_section, responsible_person,
+        priority, due_date, suggested_timeline, deadline_type,
+        requires_confirmation, status, reporting_required, reporting_details,
+        source_email_url, is_test, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        letter_ref_no = excluded.letter_ref_no,
+        letter_date = excluded.letter_date,
+        issuing_authority = excluded.issuing_authority,
+        department_category = excluded.department_category,
+        subject = excluded.subject,
+        task_description = excluded.task_description,
+        assigned_section = excluded.assigned_section,
+        responsible_person = excluded.responsible_person,
+        priority = excluded.priority,
+        due_date = excluded.due_date,
+        suggested_timeline = excluded.suggested_timeline,
+        deadline_type = excluded.deadline_type,
+        requires_confirmation = excluded.requires_confirmation,
+        status = excluded.status,
+        reporting_required = excluded.reporting_required,
+        reporting_details = excluded.reporting_details,
+        compliance_remarks = excluded.compliance_remarks,
+        completion_date = excluded.completion_date,
+        updated_at = CURRENT_TIMESTAMP
+    `;
+    return await this.run(sql, [
+      task.id,
+      task.sync_log_id || null,
+      task.gmail_message_id || 'MANUAL_' + Date.now(),
+      task.gmail_thread_id || 'THREAD_MANUAL',
+      task.letter_ref_no || null,
+      task.letter_date || null,
+      task.issuing_authority || 'कार्यालयीन आदेश',
+      task.department_category || 'HO',
+      task.subject || 'निर्देश / आदेश',
+      task.task_description || '',
+      task.assigned_section || 'PDS',
+      task.responsible_person || null,
+      task.priority || 'MEDIUM',
+      task.due_date || null,
+      task.suggested_timeline || null,
+      task.deadline_type || 'OFFICIAL_EXPLICIT',
+      task.requires_confirmation ? 1 : 0,
+      task.status || 'NEW',
+      task.reporting_required ? 1 : 0,
+      task.reporting_details || null,
+      task.source_email_url || '#',
+      task.is_test ? 1 : 0
+    ]);
+  }
+
+  async updateSupervisionTask(id, fields = {}) {
+    const allowed = [
+      'status', 'due_date', 'suggested_timeline', 'deadline_type',
+      'requires_confirmation', 'responsible_person', 'assigned_section',
+      'priority', 'compliance_remarks', 'completion_date', 'reporting_details'
+    ];
+    const updates = [];
+    const params = [];
+
+    for (const key of allowed) {
+      if (fields[key] !== undefined) {
+        updates.push(`${key} = ?`);
+        params.push(fields[key]);
+      }
+    }
+
+    if (updates.length === 0) return { changes: 0 };
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(id);
+
+    const sql = `UPDATE supervision_tasks SET ${updates.join(', ')} WHERE id = ?`;
+    return await this.run(sql, params);
+  }
+
+  async deleteSupervisionTask(id) {
+    await this.run('DELETE FROM task_attachments WHERE task_id = ?', [id]);
+    return await this.run('DELETE FROM supervision_tasks WHERE id = ?', [id]);
+  }
+
+  async seedOfficialTasksIfEmpty() {
+    try {
+      const row = await this.get('SELECT COUNT(*) as c FROM supervision_tasks');
+      if (row && row.c > 0) return;
+
+      console.log('🌱 Seeding initial Official Actionable Tasks for Betul District Office...');
+      const demoTasks = [
+        {
+          id: 'TASK-2026-10-001',
+          gmail_message_id: '19253f8a001',
+          gmail_thread_id: '19253f8a001',
+          letter_ref_no: 'मुख्या./पीडीएस/2026/4182',
+          letter_date: '2026-10-02',
+          issuing_authority: 'प्रबंध संचालक, म.प्र. स्टेट सिविल सप्लाईज कार्पोरेशन, भोपाल',
+          department_category: 'HO',
+          subject: 'माह अक्टूबर 2026 में रैक अनलोडिंग एवं उचित मूल्य दुकानों को खाद्यान्न प्रदाय की समय-सीमा बाबत',
+          task_description: 'जिले के समस्त प्रदाय केन्द्रों में 10 अक्टूबर तक न्यूनतम 50% खाद्यान्न उठाव सुनिश्चित करें एवं 15 अक्टूबर तक शत-प्रतिशत उठाव पूर्ण कर दैनिक पालन प्रतिवेदन मुख्यालय प्रेषित करें।',
+          assigned_section: 'PDS',
+          responsible_person: 'जिला प्रबंधक / उप प्रबंधक (संचालन)',
+          priority: 'HIGH',
+          due_date: '2026-10-15T18:00:00.000Z',
+          suggested_timeline: 'राजकीय समय-सीमा: 15/10/2026',
+          deadline_type: 'OFFICIAL_EXPLICIT',
+          requires_confirmation: 0,
+          status: 'IN_PROGRESS',
+          reporting_required: 1,
+          reporting_details: 'दैनिक प्रगति रिपोर्ट ईमेल द्वारा प्रेषित करना',
+          source_email_url: 'https://mail.google.com/mail/u/0/#inbox/19253f8a001'
+        },
+        {
+          id: 'TASK-2026-10-002',
+          gmail_message_id: '19253f8a002',
+          gmail_thread_id: '19253f8a002',
+          letter_ref_no: 'खाद्य/टी.एल./2026/894',
+          letter_date: '2026-10-03',
+          issuing_authority: 'कलेक्टर एवं जिला दण्डाधिकारी, जिला बैतूल (खाद्य शाखा)',
+          department_category: 'DISTRICT_ADMIN',
+          subject: 'टी.एल. समय-सीमा पत्र — वर्षा प्रभावित उपार्जन केन्द्रों में सुरक्षित भंडारण एवं भौतिक सत्यापन',
+          task_description: 'आगामी समय-सीमा बैठक (TL) हेतु वर्षा प्रभावित गोदामों में स्कंध सुरक्षा एवं डैमेज रोकथाम बाबत विस्तृत प्रतिवेदन 3 दिवस के भीतर अनिवार्य रूप से प्रस्तुत करें।',
+          assigned_section: 'Storage',
+          responsible_person: 'गुणवत्ता नियंत्रण अधिकारी / प्रभारी',
+          priority: 'CRITICAL',
+          due_date: '2026-10-06T18:00:00.000Z',
+          suggested_timeline: '3 दिवस के भीतर (पत्र प्राप्ति से)',
+          deadline_type: 'AI_SUGGESTED',
+          requires_confirmation: 1,
+          status: 'NEW',
+          reporting_required: 1,
+          reporting_details: 'कलेक्टर कार्यालय को समय-सीमा नस्ती प्रस्तुत करना',
+          source_email_url: 'https://mail.google.com/mail/u/0/#inbox/19253f8a002'
+        },
+        {
+          id: 'TASK-2026-10-003',
+          gmail_message_id: '19253f8a003',
+          gmail_thread_id: '19253f8a003',
+          letter_ref_no: 'क्षेत्रीय/स्टॉक/2026/561',
+          letter_date: '2026-10-01',
+          issuing_authority: 'क्षेत्रीय प्रबंधक, म.प्र. स्टेट सिविल सप्लाईज कार्पोरेशन, भोपाल संभाग',
+          department_category: 'RO',
+          subject: 'परिशिष्ट 02 एवं 03 अनुसार माह सितंबर 2026 के निरीक्षण प्रतिवेदनों का संकलन',
+          task_description: 'मुख्यालय आदेश 3/1 एवं 3/2 के परिपालन में माह सितंबर 2026 के समस्त प्रदाय केन्द्र निरीक्षण एवं औचक निरीक्षण के प्रमाणित प्रतिवेदन क्षेत्रीय कार्यालय को प्रेषित करें।',
+          assigned_section: 'PDS',
+          responsible_person: 'सहायक प्रबंधक (प्रशासन)',
+          priority: 'MEDIUM',
+          due_date: '2026-10-08T18:00:00.000Z',
+          suggested_timeline: 'राजकीय समय-सीमा: 08/10/2026',
+          deadline_type: 'OFFICIAL_EXPLICIT',
+          requires_confirmation: 0,
+          status: 'NEW',
+          reporting_required: 1,
+          reporting_details: 'प्रमाणित प्रपत्र ईमेल द्वारा क्षेत्रीय कार्यालय को प्रेषित करना',
+          source_email_url: 'https://mail.google.com/mail/u/0/#inbox/19253f8a003'
+        }
+      ];
+
+      for (const t of demoTasks) {
+        await this.saveSupervisionTask(t);
+      }
+      console.log(`✅ Seeded ${demoTasks.length} initial official tasks.`);
+    } catch (e) {
+      console.warn('Could not seed initial tasks:', e.message);
+    }
+  }
+
+  /**
    * Auto-seed supervision roster and demo data if empty
    */
   async seedSupervisionDataIfEmpty() {
     try {
+      await this.seedOfficialTasksIfEmpty();
       const countRow = await this.get('SELECT COUNT(*) as c FROM supervision_roster');
       if (countRow && countRow.c > 0) return;
 
