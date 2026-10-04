@@ -3665,6 +3665,24 @@ async function updateGeminiBadges() {
                 sarvamBadge.textContent = 'असंरचित (Setup Required)';
             }
         }
+
+        // Update modal Tab 4 Mini Badge
+        const tabBadge = document.getElementById('tabGeminiBadge');
+        if (tabBadge) {
+            if (isGeminiActive) {
+                tabBadge.style.background = '#10b981';
+                tabBadge.textContent = 'Active';
+            } else if (isSarvamActive) {
+                tabBadge.style.background = '#059669';
+                tabBadge.textContent = 'Sarvam';
+            } else if (aiData.rateLimited) {
+                tabBadge.style.background = '#ef4444';
+                tabBadge.textContent = isSarvamQuota ? '429 / 0 Cr' : '429 Limit';
+            } else {
+                tabBadge.style.background = 'var(--text-muted)';
+                tabBadge.textContent = 'Setup';
+            }
+        }
     } catch (e) {}
 }
 
