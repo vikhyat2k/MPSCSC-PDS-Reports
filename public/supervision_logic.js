@@ -3189,6 +3189,32 @@ async function viewTaskDetails(taskId) {
                 ${attachHtml}
             </div>
 
+            ${task.ai_priority_reason ? `
+            <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:8px; padding:12px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; font-weight:700; color:#818cf8;">🤖 Gemini AI प्रशासनिक विश्लेषण (AI Priority Assessment)</span>
+                    <span class="superv-badge" style="background:rgba(99,102,241,0.2); color:#818cf8; font-size:10.5px; border:1px solid rgba(99,102,241,0.3);">प्राथमिकता: ${task.priority}</span>
+                </div>
+                <div style="font-size:12px; color:var(--text-main); margin-top:5px; line-height:1.5;">${task.ai_priority_reason}</div>
+            </div>
+            ` : ''}
+
+            ${task.draft_compliance_response ? `
+            <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:14px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; font-weight:700; color:#10b981;">📝 एआई स्वतः जनरेटेड पालन प्रतिवेदन प्रारूप (Draft Compliance Note)</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyDraftCompliance('${task.id}')" id="btnCopyCompliance_${task.id}" style="font-size:11px; padding:3px 8px;">📋 कॉपी करें</button>
+                </div>
+                <pre id="textDraftCompliance_${task.id}" style="font-size:11.5px; color:var(--text-main); background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; white-space:pre-wrap; font-family:inherit; line-height:1.6; margin:0;">${task.draft_compliance_response}</pre>
+            </div>
+            ` : `
+            <div style="margin-bottom:16px; text-align:right;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="generateDraftCompliance('${task.id}')" id="btnGenDraft_${task.id}" style="font-size:11.5px;">
+                    🤖 Gemini AI से पालन प्रतिवेदन ड्राफ्ट तैयार करवाएं
+                </button>
+            </div>
+            `}
+
             ${task.compliance_remarks ? `
             <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:12px;">
                 <div style="font-size:11px; font-weight:600; color:#10b981;">अनुपालन टिप्पणी / पालन प्रतिवेदन स्थिति:</div>
@@ -3210,19 +3236,62 @@ async function viewTaskDetails(taskId) {
     }
 }
 
+async function copyDraftCompliance(taskId) {
+    const el = document.getElementById(`textDraftCompliance_${taskId}`);
+    const btn = document.getElementById(`btnCopyCompliance_${taskId}`);
+    if (!el) return;
+    try {
+        await navigator.clipboard.writeText(el.innerText || el.textContent);
+        if (btn) {
+            const orig = btn.innerText;
+            btn.innerText = '✓ कॉपी हो गया!';
+            btn.style.color = '#10b981';
+            setTimeout(() => {
+                btn.innerText = orig;
+                btn.style.color = '';
+            }, 2000);
+        }
+    } catch (e) {
+        alert('टेक्स्ट का चयन करके कॉपी करें।');
+    }
+}
+
+async function generateDraftCompliance(taskId) {
+    const btn = document.getElementById(`btnGenDraft_${taskId}`);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ AI द्वारा तैयार हो रहा है...';
+    }
+    try {
+        const res = await fetch(`/api/tasks/${taskId}/draft-compliance`);
+        const data = await res.json();
+        if (data.success && data.task) {
+            await openTaskDetailModal(taskId);
+        } else {
+            alert('ड्राफ्ट तैयार करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+            if (btn) btn.disabled = false;
+        }
+    } catch (e) {
+        alert('त्रुटि: ' + e.message);
+        if (btn) btn.disabled = false;
+    }
+}
+
 // ── Gmail Account Management & Sync ──────────────────────────
 
 function switchGmailLinkTab(tabName) {
-    const tabs = ['quick', 'oauth', 'apppw'];
+    const tabs = ['quick', 'oauth', 'apppw', 'gemini'];
     const tabBtns = {
         quick: document.getElementById('btnTabQuickLink'),
         oauth: document.getElementById('btnTabOAuth'),
-        apppw: document.getElementById('btnTabAppPassword')
+        apppw: document.getElementById('btnTabAppPassword'),
+        gemini: document.getElementById('btnTabGemini')
     };
     const tabPanels = {
         quick: document.getElementById('panelGmailQuickLink'),
         oauth: document.getElementById('panelGmailOAuth'),
-        apppw: document.getElementById('panelGmailAppPassword')
+        apppw: document.getElementById('panelGmailAppPassword'),
+        gemini: document.getElementById('panelGmailGemini')
     };
 
     tabs.forEach(t => {
@@ -3307,10 +3376,11 @@ async function openGmailStatusModal() {
     }
 
     try {
-        // 1. Fetch current Gmail linkage status
-        const [statusRes, oauthRes] = await Promise.allSettled([
+        // 1. Fetch current Gmail linkage status and Gemini status
+        const [statusRes, oauthRes, geminiRes] = await Promise.allSettled([
             fetch('/api/gmail/status'),
-            fetch('/api/gmail/oauth/config')
+            fetch('/api/gmail/oauth/config'),
+            fetch('/api/gemini/status')
         ]);
 
         let data = {};
@@ -3321,6 +3391,30 @@ async function openGmailStatusModal() {
         let oauthConfig = {};
         if (oauthRes.status === 'fulfilled') {
             oauthConfig = await oauthRes.value.json();
+        }
+
+        // Configure Gemini AI tab badge & key
+        if (geminiRes.status === 'fulfilled') {
+            try {
+                const geminiData = await geminiRes.value.json();
+                const badge = document.getElementById('geminiStatusBadge');
+                const txtKey = document.getElementById('txtGeminiApiKey');
+                if (badge) {
+                    if (geminiData.active) {
+                        badge.className = 'superv-badge badge-success';
+                        badge.textContent = `सक्रिय (Active: ${geminiData.model || 'Gemini 3.5'})`;
+                    } else if (geminiData.configured) {
+                        badge.className = 'superv-badge badge-warning';
+                        badge.textContent = `अपुष्ट (Unverified)`;
+                    } else {
+                        badge.className = 'superv-badge';
+                        badge.textContent = `असंरचित (Setup Required)`;
+                    }
+                }
+                if (txtKey && !txtKey.value && geminiData.maskedKey) {
+                    txtKey.value = geminiData.maskedKey;
+                }
+            } catch (e) {}
         }
 
         // Configure OAuth UI tab
@@ -3597,5 +3691,71 @@ async function syncGmailOrders() {
         if (spinner) spinner.style.display = 'none';
     }
 }
+
+// ── Gemini AI Administrative Intelligence Handlers ────────────
+
+async function testGeminiConnectionUI() {
+    const btn = document.getElementById('btnTestGemini');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ टेस्ट हो रहा है...';
+    }
+
+    try {
+        const res = await fetch('/api/gemini/status');
+        const data = await res.json();
+        if (data.active) {
+            alert(`✅ Gemini AI कनेक्शन सफल एवं सक्रिय है!\n\n• मॉडल: ${data.model}\n• स्थिति: ऑनलाइन एवं शासकीय विश्लेषण हेतु तैयार`);
+        } else {
+            alert(`⚠️ Gemini AI कनेक्शन चेतावनी: ${data.error || 'सत्यापन विफल'}`);
+        }
+    } catch (e) {
+        alert('सर्वर त्रुटि: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '⚡ कनेक्शन टेस्ट करें';
+        }
+    }
+}
+
+async function saveGeminiApiKeyUI() {
+    const input = document.getElementById('txtGeminiApiKey');
+    const apiKey = input ? input.value.trim() : '';
+    if (!apiKey) {
+        alert('कृपया वैध Gemini API Key प्रविष्ट करें।');
+        if (input) input.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnSaveGeminiKey');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ सुरक्षित हो रहा है...';
+    }
+
+    try {
+        const res = await fetch('/api/gemini/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`🎉 ${data.message}\n\nसक्रिय मॉडल: ${data.model}\nअब आने वाले सभी शासकीय ईमेल का विश्लेषण Gemini AI द्वारा स्वचालित होगा!`);
+            await openGmailStatusModal();
+        } else {
+            alert('सुरक्षित करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (e) {
+        alert('सर्वर त्रुटि: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '💾 सुरक्षित करें';
+        }
+    }
+}
+
 
 

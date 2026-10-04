@@ -4578,6 +4578,87 @@ app.post('/api/gmail/link', async (req, res) => {
     }
 });
 
+// GEMINI AI ADMINISTRATIVE INTELLIGENCE API
+// ─────────────────────────────────────────────
+const geminiAnalyzer = require('./server/services/gmail/geminiAnalyzer');
+
+app.get('/api/gemini/status', async (req, res) => {
+    try {
+        const configured = geminiAnalyzer.isConfigured();
+        let pingResult = { ok: false };
+        if (configured) {
+            pingResult = await geminiAnalyzer.testConnection();
+        }
+        const rawKey = process.env.GEMINI_API_KEY || '';
+        const maskedKey = rawKey.length > 8 ? `${rawKey.substring(0, 6)}...${rawKey.substring(rawKey.length - 4)}` : '';
+        res.json({
+            configured,
+            active: pingResult.ok,
+            model: pingResult.model || 'gemini-flash-latest',
+            maskedKey,
+            error: pingResult.error || null
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/gemini/config', async (req, res) => {
+    try {
+        const { apiKey } = req.body || {};
+        const cleanKey = String(apiKey || '').trim();
+        if (!cleanKey) {
+            return res.status(400).json({ error: 'Gemini API Key अनिवार्य है।' });
+        }
+        const testRes = await geminiAnalyzer.testConnection(cleanKey);
+        if (!testRes.ok) {
+            return res.status(400).json({ error: 'Gemini API Key अमान्य है: ' + (testRes.error || 'Connection failed') });
+        }
+        updateEnvFile({ GEMINI_API_KEY: cleanKey });
+        console.log(`🤖 Gemini API Key configured and verified via UI (Model: ${testRes.model})`);
+        res.json({
+            success: true,
+            message: 'Gemini AI इंजन सफलतापूर्वक सक्रिय हो गया है!',
+            model: testRes.model
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to save Gemini key: ' + err.message });
+    }
+});
+
+app.get('/api/tasks/:id/draft-compliance', async (req, res) => {
+    try {
+        const task = await db.get('SELECT id, letter_ref_no, letter_date, issuing_authority, subject, task_description, draft_compliance_response, ai_priority_reason, ai_powered FROM supervision_tasks WHERE id = ?', [req.params.id]);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+        
+        // If not pre-computed, compute on the fly
+        if (!task.draft_compliance_response && geminiAnalyzer.isConfigured()) {
+            const aiAnalysis = await geminiAnalyzer.analyzeOfficialEmail({
+                subject: task.subject,
+                sender: task.issuing_authority,
+                date: task.letter_date,
+                body: task.task_description
+            });
+            if (aiAnalysis && aiAnalysis.draftComplianceResponse) {
+                await db.run('UPDATE supervision_tasks SET draft_compliance_response = ?, ai_priority_reason = ?, ai_powered = 1 WHERE id = ?', [
+                    aiAnalysis.draftComplianceResponse,
+                    aiAnalysis.priorityReason || '',
+                    task.id
+                ]);
+                task.draft_compliance_response = aiAnalysis.draftComplianceResponse;
+                task.ai_priority_reason = aiAnalysis.priorityReason;
+                task.ai_powered = 1;
+            }
+        }
+        res.json({
+            success: true,
+            task
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Periodic background polling worker for official orders (every 5 minutes)
 cron.schedule('*/5 * * * *', async () => {
     try {

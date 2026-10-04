@@ -298,11 +298,13 @@ async function parseOfficialEmail({ messageId, threadId, subject, sender, date, 
   let combinedText = `${subject || ''}\n${body || ''}`;
   let attachmentSummaries = [];
 
+  let combinedPdfText = '';
   // Parse attached documents
   for (const att of attachments) {
     if (att.mimeType === 'application/pdf' && att.buffer) {
       const pdfText = await extractPdfText(att.buffer);
       if (pdfText) {
+        combinedPdfText += `\n--- [Attachment: ${att.filename}] ---\n${pdfText}`;
         combinedText += `\n--- [Attachment: ${att.filename}] ---\n${pdfText}`;
         attachmentSummaries.push({
           filename: att.filename,
@@ -314,13 +316,45 @@ async function parseOfficialEmail({ messageId, threadId, subject, sender, date, 
   }
 
   const receivedDate = date ? new Date(date) : new Date();
-  const letterRef = extractLetterReference(combinedText);
-  const letterDate = extractLetterDate(combinedText);
-  const issuingAuthority = extractIssuingAuthority(combinedText, sender);
+
+  // Try Gemini AI Contextual Administrative Analysis first
+  const geminiAnalyzer = require('./geminiAnalyzer');
+  let aiAnalysis = null;
+  if (geminiAnalyzer.isConfigured()) {
+    try {
+      aiAnalysis = await geminiAnalyzer.analyzeOfficialEmail({
+        subject,
+        sender,
+        date: receivedDate,
+        body,
+        pdfText: combinedPdfText,
+        attachments
+      });
+      if (aiAnalysis) {
+        console.log(`🤖 [Gemini AI Engine] Successfully analyzed official order: "${subject.substring(0, 45)}..." (Priority: ${aiAnalysis.priority}, Model: ${aiAnalysis.modelUsed})`);
+      }
+    } catch (aiErr) {
+      console.warn('⚠️ [Gemini AI Engine] Falling back to rule-based parser:', aiErr.message);
+    }
+  }
+
+  // Fallback to Rule-Based & Regex Parser if AI is unavailable or unconfigured
+  const letterRef = aiAnalysis?.letterRefNo || extractLetterReference(combinedText);
+  const letterDate = aiAnalysis?.letterDate || extractLetterDate(combinedText);
+  const issuingAuthority = aiAnalysis?.issuingAuthority || extractIssuingAuthority(combinedText, sender);
   const timeline = determineTimeline(combinedText, receivedDate);
-  const priority = determinePriority(combinedText);
-  const taskDescription = extractActionInstructions(combinedText, subject);
-  const reportingRequired = /(?:प्रतिवेदन|पालन\s*प्रतिवेदन|compliance\s*report|रिपोर्ट\s*भेजें)/i.test(combinedText) ? 1 : 0;
+  const priority = aiAnalysis?.priority || determinePriority(combinedText);
+  
+  let taskDescription;
+  if (aiAnalysis?.taskDescription) {
+    taskDescription = Array.isArray(aiAnalysis.taskDescription)
+      ? aiAnalysis.taskDescription.join('\n')
+      : aiAnalysis.taskDescription;
+  } else {
+    taskDescription = extractActionInstructions(combinedText, subject);
+  }
+
+  const reportingRequired = aiAnalysis?.reportingRequired ?? (/(?:प्रतिवेदन|पालन\s*प्रतिवेदन|compliance\s*report|रिपोर्ट\s*भेजें)/i.test(combinedText) ? 1 : 0);
 
   // Direct permanent web link to open in Gmail
   const sourceEmailUrl = `https://mail.google.com/mail/u/0/#inbox/${messageId}`;
@@ -334,13 +368,17 @@ async function parseOfficialEmail({ messageId, threadId, subject, sender, date, 
     subject: subject || 'शासकीय निर्देश / पत्राचार',
     taskDescription,
     priority,
-    dueDate: timeline.dueDate,
-    suggestedTimeline: timeline.suggestedTimeline,
-    deadlineType: timeline.deadlineType,
-    requiresConfirmation: timeline.requiresConfirmation,
+    dueDate: aiAnalysis?.dueDate || timeline.dueDate,
+    suggestedTimeline: aiAnalysis?.suggestedTimeline || timeline.suggestedTimeline,
+    deadlineType: aiAnalysis?.deadlineType || timeline.deadlineType,
+    requiresConfirmation: aiAnalysis?.requiresConfirmation ?? timeline.requiresConfirmation,
     reportingRequired,
     sourceEmailUrl,
-    extractedAttachments: attachmentSummaries
+    extractedAttachments: attachmentSummaries,
+    aiPowered: aiAnalysis ? 1 : 0,
+    aiPriorityReason: aiAnalysis?.priorityReason || 'शासकीय नियम आधारित ट्राइएज',
+    draftComplianceResponse: aiAnalysis?.draftComplianceResponse || '',
+    category: aiAnalysis?.category || 'GENERAL'
   };
 }
 

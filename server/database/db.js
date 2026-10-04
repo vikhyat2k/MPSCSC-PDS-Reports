@@ -412,6 +412,12 @@ class DatabaseManager {
         await this.run(`ALTER TABLE ${tbl} ADD COLUMN is_test INTEGER DEFAULT 0`);
       } catch (e) {}
     }
+
+    // Migration: add Gemini AI intelligence columns to supervision_tasks
+    try { await this.run(`ALTER TABLE supervision_tasks ADD COLUMN ai_powered INTEGER DEFAULT 0`); } catch (e) {}
+    try { await this.run(`ALTER TABLE supervision_tasks ADD COLUMN ai_priority_reason TEXT`); } catch (e) {}
+    try { await this.run(`ALTER TABLE supervision_tasks ADD COLUMN draft_compliance_response TEXT`); } catch (e) {}
+    try { await this.run(`ALTER TABLE supervision_tasks ADD COLUMN category TEXT DEFAULT 'GENERAL'`); } catch (e) {}
   }
 
   /**

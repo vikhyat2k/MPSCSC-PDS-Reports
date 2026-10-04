@@ -293,8 +293,9 @@ async function syncOfficialEmails(db, options = {}) {
             letter_ref_no, letter_date, issuing_authority, department_category,
             subject, task_description, assigned_section, priority,
             due_date, suggested_timeline, deadline_type, requires_confirmation,
-            status, reporting_required, source_email_url
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'NEW', ?, ?)
+            status, reporting_required, source_email_url,
+            ai_powered, ai_priority_reason, draft_compliance_response, category
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'NEW', ?, ?, ?, ?, ?, ?)
         `, [
           taskId,
           syncLogId,
@@ -313,7 +314,11 @@ async function syncOfficialEmails(db, options = {}) {
           parsed.deadlineType,
           parsed.requiresConfirmation,
           parsed.reportingRequired,
-          parsed.sourceEmailUrl
+          parsed.sourceEmailUrl,
+          parsed.aiPowered ? 1 : 0,
+          parsed.aiPriorityReason || '',
+          parsed.draftComplianceResponse || '',
+          parsed.category || 'GENERAL'
         ]);
 
         // Save downloaded attachments to disk and record in task_attachments
