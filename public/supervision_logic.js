@@ -19,7 +19,11 @@ const SupervState = {
     branchesDirectory: [],
     riceInspections: [],
     currentRiceSheetId: null,
+    tasks: [],
+    taskSummary: {},
+    taskFilterDept: '',
     checkpoints: [
+
         { id: 'chk_1_computer', num: '01', text: 'कंप्यूटर कार्यरत अवस्था में है?' },
         { id: 'chk_2_printer', num: '02', text: 'प्रिंटर कार्यरत अवस्था में है?' },
         { id: 'chk_3_ups', num: '03', text: 'यूपीएस कार्यरत अवस्था में है?' },
