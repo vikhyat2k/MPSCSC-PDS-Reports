@@ -4215,11 +4215,35 @@ document.addEventListener('DOMContentLoaded', function () {
     if (icon)  icon.textContent  = isLight ? '\uD83C\uDF19' : '\u2600\uFE0F';
     if (label) label.textContent = isLight ? 'Night' : 'Day';
 
-    /* Restore sidebar collapse */
-    if (localStorage.getItem('sidebar-collapsed') === '1') {
+    /* Restore sidebar collapse & auto-shrink */
+    var scPref = localStorage.getItem('sidebar-collapsed');
+    if (scPref === '1' || (scPref === null && window.innerWidth > 768 && window.innerWidth <= 1100)) {
         var w = document.getElementById('appWrapper');
         if (w) w.classList.add('sidebar-collapsed');
+        var sb = document.getElementById('appSidebar');
+        if (sb) sb.classList.add('collapsed');
     }
+
+    /* Auto-shrink / auto-collapse on window resize */
+    window.addEventListener('resize', function () {
+        var w = document.getElementById('appWrapper');
+        var sb = document.getElementById('appSidebar');
+        if (!w) return;
+        if (window.innerWidth <= 768) {
+            w.classList.remove('sidebar-collapsed');
+            if (sb) sb.classList.remove('collapsed');
+        } else {
+            w.classList.remove('sidebar-open');
+            var p = localStorage.getItem('sidebar-collapsed');
+            if (p === '1' || (p === null && window.innerWidth <= 1100)) {
+                w.classList.add('sidebar-collapsed');
+                if (sb) sb.classList.add('collapsed');
+            } else if (p === '0') {
+                w.classList.remove('sidebar-collapsed');
+                if (sb) sb.classList.remove('collapsed');
+            }
+        }
+    });
 
     /* Ensure dashboard is the home view on every load */
     var dash = document.getElementById('dashboardSection');
