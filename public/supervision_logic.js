@@ -3093,11 +3093,38 @@ async function openGmailStatusModal() {
         const res = await fetch('/api/gmail/status');
         const data = await res.json();
 
+        if (data.connected && data.account) {
+            if (dot) dot.style.background = '#10b981';
+            if (heading) heading.textContent = `सक्रिय एवं अधिकृत: ${data.account.displayName || data.account.email}`;
+            if (emailEl) emailEl.innerHTML = `<strong>${data.account.email}</strong> (${data.account.accountType === 'gmail_workspace' ? 'Google Workspace' : 'Standard Gmail'})<br><span style="color:#10b981; font-weight:600;">● शासकीय ईमेल संबद्ध एवं सक्रिय</span> · कनेक्टेड: ${new Date(data.account.connectedAt).toLocaleDateString('hi-IN')}`;
+            if (btnConnect) btnConnect.style.display = 'none';
+            if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+
+            if (alertBox) {
+                if (!data.configured) {
+                    alertBox.style.display = 'block';
+                    alertBox.style.background = 'rgba(59,130,246,0.08)';
+                    alertBox.style.borderColor = 'rgba(59,130,246,0.25)';
+                    alertBox.style.color = 'var(--text-main)';
+                    alertBox.innerHTML = `ℹ️ शासकीय खाता <strong>${data.account.email}</strong> संबद्ध है। 24/7 पृष्ठभूमि ऑटो-सिंक के लिए Google Cloud OAuth क्रेडेंशियल (.env में GOOGLE_CLIENT_ID) वैकल्पिक रूप से जोड़े जा सकते हैं।`;
+                } else {
+                    alertBox.style.display = 'none';
+                }
+            }
+            return;
+        }
+
         if (!data.configured) {
             if (dot) dot.style.background = '#ef4444';
             if (heading) heading.textContent = 'Google OAuth क्रेडेंशियल अनुपलब्ध';
             if (emailEl) emailEl.textContent = 'सर्वर पर .env फाइल में GOOGLE_CLIENT_ID जोड़ें';
-            if (alertBox) alertBox.style.display = 'block';
+            if (alertBox) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(239,68,68,0.08)';
+                alertBox.style.borderColor = 'rgba(239,68,68,0.25)';
+                alertBox.style.color = '#ef4444';
+                alertBox.innerHTML = '⚠️ <code>GOOGLE_CLIENT_ID</code> एवं <code>GOOGLE_CLIENT_SECRET</code> .env में अनुपलब्ध हैं। कृपया Google Cloud Console से क्रेडेंशियल कॉन्फ़िगर करें।';
+            }
             if (btnConnect) btnConnect.style.display = 'none';
             if (btnDisconnect) btnDisconnect.style.display = 'none';
             return;
@@ -3105,19 +3132,11 @@ async function openGmailStatusModal() {
 
         if (alertBox) alertBox.style.display = 'none';
 
-        if (data.connected && data.account) {
-            if (dot) dot.style.background = '#10b981';
-            if (heading) heading.textContent = `सक्रिय एवं अधिकृत: ${data.account.displayName || 'Official Account'}`;
-            if (emailEl) emailEl.innerHTML = `<strong>${data.account.email}</strong> (${data.account.accountType === 'gmail_workspace' ? 'Google Workspace' : 'Standard Gmail'})<br>कनेक्टेड: ${new Date(data.account.connectedAt).toLocaleDateString('hi-IN')}`;
-            if (btnConnect) btnConnect.style.display = 'none';
-            if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
-        } else {
-            if (dot) dot.style.background = '#f59e0b';
-            if (heading) heading.textContent = 'कोई शासकीय खाता कनेक्टेड नहीं है';
-            if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए Google से अधिकृत करें';
-            if (btnConnect) btnConnect.style.display = 'inline-block';
-            if (btnDisconnect) btnDisconnect.style.display = 'none';
-        }
+        if (dot) dot.style.background = '#f59e0b';
+        if (heading) heading.textContent = 'कोई शासकीय खाता कनेक्टेड नहीं है';
+        if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए Google से अधिकृत करें';
+        if (btnConnect) btnConnect.style.display = 'inline-block';
+        if (btnDisconnect) btnDisconnect.style.display = 'none';
     } catch (err) {
         console.warn('Failed to check Gmail status:', err);
     }
