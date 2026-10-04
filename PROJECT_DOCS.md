@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 25 |
+| Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Gemini AI 429 Rate Limit Error: Fixed silent auth failure, added 429 detection & caching in geminiAnalyzer.js + server.js |
+| Last Code Change | 04 Oct 2026 — Dual-Engine AI Integration: Integrated Sarvam AI (sarvam-105b) as automatic failover engine for Gemini rate limits / quota exhaustion across analyzer, server API, and supervision UI |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -621,6 +621,7 @@ Tracks implementation status of all major features.
 | Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048, ISSUE-049) |
+| Dual-Engine Administrative AI (Gemini + Sarvam AI) | COMPLETE | YES | Automatic failover to Indian Sovereign AI Sarvam (sarvam-105b) when Gemini hits 429 rate limit or quota exhaustion; full UI key configuration, status badges, and test coverage (ISSUE-060) |
 
 ---
 
@@ -650,6 +651,7 @@ Tracks implementation status of all major features.
 | M19 | Supervision & Inspection Module (Orders 3/1, 3/2 & Rice KMS 2025-26) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 + Rice Quality Analysis Sheet (KMS 2025-26) |
 | M20 | Comprehensive Supervision Testing, Realistic Dummy Dataset & 1-Click Safe Purge | 04 Oct 2026 | Full functional testing, CRUD verification across all 5 modules, input validation, 22-record multi-scenario dummy dataset, dedicated Sandbox UI modal with 1-click safe purge strictly preserving genuine production records, 33 automated tests verified (100% pass) |
 | M21 | Official Gmail Integration & Actionable Task Automation Subsystem | 04 Oct 2026 | Google OAuth 2.0 least-privilege integration, AES-256-GCM token security, official government order parser with timeline distinction, SQLite task persistence, interactive Supervision Portal task matrix & aging dashboard, and 100% verified test suite (ISSUE-048) |
+| M26 | Dual-Engine Administrative AI Integration (Gemini + Sarvam AI Failover) | 04 Oct 2026 | Resilient dual AI architecture integrating Google Gemini as primary and Sarvam AI (sarvam-105b) as sovereign zero-downtime failover for official government email analysis |
 
 
 ### Upcoming Milestones
@@ -796,6 +798,7 @@ Tracks what has been tested and confirmed working.
 | Gemini AI Administrative Order Intelligence Engine | End-to-End AI, Database & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified Gemini Generative AI (gemini-3.5-flash / gemini-flash-latest) integration, bilingual administrative Hindi order parsing, automatic letter ref & date extraction, smart priority assessment, due date calculation, draft compliance note generation, in-app API key management, and 100% automated test pass (ISSUE-056) |
 | Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
+| Dual-Engine AI (Gemini + Sarvam Fallback) | Automated Integration Test | VERIFIED | 04 Oct 2026 | tests/test-dual-ai-integration.js verifies Gemini ping, Sarvam ping, 429 rate-limit failover, and graceful fallback |
 
 ---
 
@@ -861,10 +864,39 @@ Tracks what has been tested and confirmed working.
 | ISSUE-057 | Supervision Orders & Tasks module lacked dedicated support for Milling (मिलिंग) and Procurement (उपार्जन) under प्रभारी शाखा (Section), missing dropdown options, UI section filtering, and automated rule/AI triage | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server/services/gmail/rules.js, server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server/database/db.js, tests/test-sections-milling-procurement.js | 04 Oct 2026 |
 | ISSUE-058 | Gemini AI Management tab was hidden inside the official Gmail account modal without top-level sidebar navigation, view header controls, or status banner, making it difficult for users to find or configure | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-gemini-management-tab.js | 04 Oct 2026 |
 | ISSUE-059 | Gemini AI testConnection() silently swallowed 429 Rate Limit HTTP errors, returning generic "Failed to authenticate" message. Cache was not saved on failure so every page reload hammered the API further. | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js | 04 Oct 2026 |
+| ISSUE-060 | Gemini AI rate limits (429 Too Many Requests) or quota exhaustions halted official government email analysis; required an alternate Indian Sovereign AI engine (Sarvam AI sarvam-105b) as an automatic, seamless failover | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-dual-ai-integration.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Dual-Engine Administrative AI Integration (Sarvam AI Sovereign Failover)
+
+Files: server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-dual-ai-integration.js, .env
+Type: Feature / Resilience Enhancement
+Closes: ISSUE-060
+
+- USER REQUIREMENT:
+  Include alternate API of Sarvam AI in case the limit of Gemini AI exhausts (`sk_nnugpbyv_v3URITsZCUObkT8Z0K1fmfOZ`).
+
+- ROOT CAUSE / MOTIVATION:
+  When Google Gemini API hits HTTP 429 (Rate Limit) or quota exhaustion, automatic AI triage and administrative compliance drafting were unavailable, requiring manual rule-based parsing. An alternate, robust LLM engine was required to provide zero-downtime failover.
+
+- IMPLEMENTATION (FIX & ARCHITECTURE):
+  1. `geminiAnalyzer.js` (Dual-Engine Administrative AI Module):
+     - Integrated Sarvam AI (`https://api.sarvam.ai/v1/chat/completions`, model `sarvam-105b`) using the `api-subscription-key` header.
+     - Implemented automatic zero-downtime failover in `analyzeOfficialEmail()`: calls Gemini first; if HTTP 429 rate limit or timeout is encountered, automatically routes the request to Sarvam AI.
+     - Added `testSarvamConnection()` to validate Sarvam keys, detect HTTP 402 ("No credits available" / quota exhaustion), HTTP 401/403, and HTTP 429.
+     - Ensured complete schema mapping including `assignedSection` ('Milling', 'Procurement', etc.) and `draftComplianceResponse`.
+  2. `server.js`:
+     - Enhanced `GET /api/gemini/status` to return dual engine status (`sarvam: { configured, active, quotaExhausted, rateLimited, model, maskedKey, error }`, `activeProvider`).
+     - Added `POST /api/sarvam/config` and `GET /api/sarvam/status` with `.env` persistence and cache management.
+  3. Supervision Portal UI (`public/supervision.html` & `public/supervision_logic.js`):
+     - Redesigned Panel 4 into a Dual-Engine AI Management Hub displaying both Google Gemini AI (Primary) and Sarvam AI (Indian Sovereign AI Failover).
+     - Added dedicated Sarvam key input, show/hide toggle, live status badge, and test/save buttons (`testSarvamConnectionUI`, `saveSarvamApiKeyUI`).
+     - Enhanced header pill and status badges to indicate active failover states.
+  4. Automated Test Suite:
+     - Created `tests/test-dual-ai-integration.js` verifying dual configuration, ping endpoints, rate limit detection, and graceful failover.
 
 ### 2026-10-04 | Fix Gemini AI 429 Rate Limit — Silent Auth Failure
 
