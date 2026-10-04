@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 25 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Email Sync Configurable Settings Panel (⚙️ Sync सेटिंग्स Tab in Gmail Modal) |
+| Last Code Change | 04 Oct 2026 — Gemini AI 429 Rate Limit Error: Fixed silent auth failure, added 429 detection & caching in geminiAnalyzer.js + server.js |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -860,10 +860,27 @@ Tracks what has been tested and confirmed working.
 | ISSUE-056 | Official government email analysis relied solely on keyword regex without nuanced contextual understanding, semantic priority determination, or automatic compliance note drafting; required deep LLM administrative intelligence via Google Gemini API | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server.js, server/database/db.js, public/supervision.html, public/supervision_logic.js, tests/test-gemini-integration.js, tests/test-gemini-ui.js | 04 Oct 2026 |
 | ISSUE-057 | Supervision Orders & Tasks module lacked dedicated support for Milling (मिलिंग) and Procurement (उपार्जन) under प्रभारी शाखा (Section), missing dropdown options, UI section filtering, and automated rule/AI triage | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server/services/gmail/rules.js, server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server/database/db.js, tests/test-sections-milling-procurement.js | 04 Oct 2026 |
 | ISSUE-058 | Gemini AI Management tab was hidden inside the official Gmail account modal without top-level sidebar navigation, view header controls, or status banner, making it difficult for users to find or configure | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-gemini-management-tab.js | 04 Oct 2026 |
+| ISSUE-059 | Gemini AI testConnection() silently swallowed 429 Rate Limit HTTP errors, returning generic "Failed to authenticate" message. Cache was not saved on failure so every page reload hammered the API further. | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Fix Gemini AI 429 Rate Limit — Silent Auth Failure
+
+Files: server/services/gmail/geminiAnalyzer.js, server.js
+Type: Bug Fix
+Closes: ISSUE-059
+
+- ROOT CAUSE:
+  The `testConnection()` function in geminiAnalyzer.js used a `try/catch` that silently skipped all errors including HTTP 429 (Too Many Requests). After exhausting all 3 candidate models, it returned the generic "Failed to authenticate with Gemini API models" error — even though the real reason was a rate limit, not an invalid key.
+  Additionally, the `/api/gemini/status` route only cached successful ping results, meaning every page reload triggered fresh API calls and compounded the rate-limit problem.
+
+- FIX:
+  1. `geminiAnalyzer.js` → `testConnection()`: Added explicit 429/401/403 HTTP status detection. Returns `{ rateLimited: true }` with a clear Hindi message for 429. Breaks early on 401/403 (no point retrying with a bad key). Added 500ms delay between model retries. Improved error logging.
+  2. `server.js` → `/api/gemini/status`: Now caches rate-limited results for 2 minutes (vs 5 min for success) to prevent API hammering. Forwards `rateLimited` flag to the frontend in the JSON response.
+
+- IMPACT: Users now see "Gemini API दर सीमा पहुँच गई (Rate Limit)" instead of "Failed to authenticate" when the API is temporarily rate-limited. Eliminates cascading 429 storms on page reload.
 
 ### 2026-10-04 | Email Sync Configurable Settings Panel (⚙️ Sync सेटिंग्स)
 
