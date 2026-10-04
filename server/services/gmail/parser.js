@@ -162,11 +162,19 @@ function extractActionInstructions(text, subject = '') {
 function determineTimeline(text, receivedDate = new Date()) {
   const baseDate = receivedDate instanceof Date && !isNaN(receivedDate) ? receivedDate : new Date();
 
-  // 1. Search for Explicit Deadlines: e.g. "15/10/2026 तक", "दिनांक 20.10.2026 पूर्व", "by 15 October 2026"
+  // 1. Search for Explicit Deadlines:
+  // e.g. "दिनांक 15/10/2026 तक", "15.10.2026 पूर्व", "by 15 October 2026", "तक 20/10/2026"
   const explicitPatterns = [
+    // Preposition: e.g. "by 15/10/2026", "तक 15/10/2026", "अंतिम तिथि 15/10/2026"
     /(?:तक|पूर्व|अंतिम\s*(?:तिथि|दिनांक)|by|before|due\s*(?:on|by)|deadline\s*(?:is|on)?)\s*[:/-]?\s*(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/i,
+    // Postposition (standard Hindi): e.g. "दिनांक 15/10/2026 तक", "15.10.2026 पूर्व"
+    /(?:दिनांक|दि\.)?\s*(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\s*(?:तक|पूर्व|के\s*पूर्व|से\s*पहले)/i,
+    // Hindi month with postposition: e.g. "15 अक्टूबर 2026 तक"
+    /(\d{1,2})\s+([A-Za-z\u0900-\u097F]+)\s+(\d{4})\s*(?:तक|पूर्व|के\s*पूर्व)/i,
+    // Hindi month with preposition: e.g. "तक 15 अक्टूबर 2026", "before 15 October 2026"
     /(?:तक|पूर्व|by|before)\s*[:/-]?\s*(\d{1,2})\s+([A-Za-z\u0900-\u097F]+)\s+(\d{4})/i
   ];
+
 
   for (const pat of explicitPatterns) {
     const match = text.match(pat);
