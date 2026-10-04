@@ -1571,18 +1571,35 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Dual Engine Pipeline Status Bar (Transport + Gemini AI) -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-muted);">एकीकृत पाइपलाइन:</span>
+                        <span id="headerPillTransport" class="superv-badge" style="font-size:10.5px; padding:2px 8px; background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.25);">
+                            📥 इनबॉक्स: जांच जारी...
+                        </span>
+                        <span style="color:var(--text-muted); font-size:11px;">➔</span>
+                        <span id="headerPillGemini" class="superv-badge badge-success" style="font-size:10.5px; padding:2px 8px; display:inline-flex; align-items:center; gap:4px;">
+                            🤖 Gemini AI: सक्रिय (gemini-3.5-flash)
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="switchGmailLinkTab('gemini')" style="font-size:10.5px; padding:3px 9px;" title="Gemini AI प्रबंधन एवं विन्यास देखें">
+                        ⚙️ AI सेटिंग्स / की बदलें
+                    </button>
+                </div>
             </div>
 
             <!-- Segmented Method Switcher Tabs -->
             <div style="display:flex; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; padding:3px; gap:4px; margin-bottom:16px;">
                 <button type="button" class="btn btn-sm" id="btnTabQuickLink" onclick="switchGmailLinkTab('quick')" style="flex:1; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:var(--primary); color:#fff; transition:all 0.2s;">
-                    ⚡ 1-क्लिक त्वरित लिंक
+                    ⚡ 1-क्लिक लिंक
                 </button>
-                <button type="button" class="btn btn-sm" id="btnTabOAuth" onclick="switchGmailLinkTab('oauth')" style="flex:1; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
-                    🌐 Google OAuth 2.0
+                <button type="button" class="btn btn-sm" id="btnTabOAuth" onclick="switchGmailLinkTab('oauth')" style="flex:1.2; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
+                    🌐 Google OAuth + 🤖 AI
                 </button>
-                <button type="button" class="btn btn-sm" id="btnTabAppPassword" onclick="switchGmailLinkTab('apppw')" style="flex:1; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
-                    🔑 ऐप पासवर्ड (App PW)
+                <button type="button" class="btn btn-sm" id="btnTabAppPassword" onclick="switchGmailLinkTab('apppw')" style="flex:1.2; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
+                    🔑 App Password + 🤖 AI
                 </button>
                 <button type="button" class="btn btn-sm" id="btnTabGemini" onclick="switchGmailLinkTab('gemini')" style="flex:1.2; border:1px solid rgba(99,102,241,0.35); padding:8px 10px; font-size:12px; font-weight:700; border-radius:6px; background:rgba(99,102,241,0.12); color:#818cf8; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px;">
                     <span>🤖 Gemini AI प्रबंधन</span>
