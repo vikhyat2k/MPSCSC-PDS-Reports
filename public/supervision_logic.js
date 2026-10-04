@@ -3479,28 +3479,80 @@ async function openGmailStatusModal() {
             oauthConfig = await oauthRes.value.json();
         }
 
-        // Configure Gemini AI tab badge & key
+        // Configure Gemini AI indicators across Header, OAuth panel, App PW panel, and Gemini tab
+        let geminiData = {};
         if (geminiRes.status === 'fulfilled') {
             try {
-                const geminiData = await geminiRes.value.json();
-                const badge = document.getElementById('geminiStatusBadge');
-                const txtKey = document.getElementById('txtGeminiApiKey');
-                if (badge) {
-                    if (geminiData.active) {
-                        badge.className = 'superv-badge badge-success';
-                        badge.textContent = `सक्रिय (Active: ${geminiData.model || 'Gemini 3.5'})`;
-                    } else if (geminiData.configured) {
-                        badge.className = 'superv-badge badge-warning';
-                        badge.textContent = `अपुष्ट (Unverified)`;
-                    } else {
-                        badge.className = 'superv-badge';
-                        badge.textContent = `असंरचित (Setup Required)`;
-                    }
-                }
-                if (txtKey && !txtKey.value && geminiData.maskedKey) {
-                    txtKey.value = geminiData.maskedKey;
-                }
+                geminiData = await geminiRes.value.json();
             } catch (e) {}
+        }
+
+        const isGeminiActive = Boolean(geminiData && geminiData.active);
+        const isGeminiConfigured = Boolean(geminiData && geminiData.configured);
+        const geminiModel = (geminiData && geminiData.model) || 'gemini-3.5-flash';
+        const maskedKey = (geminiData && geminiData.maskedKey) || (isGeminiConfigured ? '••••••••••••' : 'असंरचित (Setup Required)');
+
+        // 1. Gemini AI Tab badge & key input
+        const badge = document.getElementById('geminiStatusBadge');
+        const txtKey = document.getElementById('txtGeminiApiKey');
+        if (badge) {
+            if (isGeminiActive) {
+                badge.className = 'superv-badge badge-success';
+                badge.textContent = `सक्रिय (Active: ${geminiModel})`;
+            } else if (isGeminiConfigured) {
+                badge.className = 'superv-badge badge-warning';
+                badge.textContent = `अपुष्ट (Unverified)`;
+            } else {
+                badge.className = 'superv-badge';
+                badge.textContent = `असंरचित (Setup Required)`;
+            }
+        }
+        if (txtKey && !txtKey.value && geminiData.maskedKey) {
+            txtKey.value = geminiData.maskedKey;
+        }
+
+        // 2. Dual Pipeline Header Pill for Gemini AI
+        const pillGemini = document.getElementById('headerPillGemini');
+        if (pillGemini) {
+            if (isGeminiActive) {
+                pillGemini.className = 'superv-badge badge-success';
+                pillGemini.textContent = `🤖 Gemini AI: सक्रिय (${geminiModel})`;
+            } else {
+                pillGemini.className = 'superv-badge badge-warning';
+                pillGemini.textContent = `🤖 Gemini AI: असंरचित`;
+            }
+        }
+
+        // 3. OAuth Tab Integrated Gemini Card
+        const oauthGeminiBadge = document.getElementById('oauthGeminiStatusBadge');
+        const oauthGeminiKeyMasked = document.getElementById('oauthGeminiKeyMasked');
+        if (oauthGeminiBadge) {
+            if (isGeminiActive) {
+                oauthGeminiBadge.className = 'superv-badge badge-success';
+                oauthGeminiBadge.textContent = `✓ Gemini AI सक्रिय (${geminiModel})`;
+            } else {
+                oauthGeminiBadge.className = 'superv-badge badge-warning';
+                oauthGeminiBadge.textContent = `⚠️ Gemini AI असंरचित`;
+            }
+        }
+        if (oauthGeminiKeyMasked) {
+            oauthGeminiKeyMasked.textContent = maskedKey;
+        }
+
+        // 4. App Password Tab Integrated Gemini Card
+        const appPwGeminiBadge = document.getElementById('appPwGeminiStatusBadge');
+        const appPwGeminiKeyMasked = document.getElementById('appPwGeminiKeyMasked');
+        if (appPwGeminiBadge) {
+            if (isGeminiActive) {
+                appPwGeminiBadge.className = 'superv-badge badge-success';
+                appPwGeminiBadge.textContent = `✓ Gemini AI सक्रिय (${geminiModel})`;
+            } else {
+                appPwGeminiBadge.className = 'superv-badge badge-warning';
+                appPwGeminiBadge.textContent = `⚠️ Gemini AI असंरचित`;
+            }
+        }
+        if (appPwGeminiKeyMasked) {
+            appPwGeminiKeyMasked.textContent = maskedKey;
         }
 
         // Configure OAuth UI tab
@@ -3530,7 +3582,8 @@ async function openGmailStatusModal() {
             btnConnect.style.display = 'flex';
         }
 
-        // Configure Linked Account Header
+        // Configure Linked Account Header & Pipeline Transport Pill
+        const pillTransport = document.getElementById('headerPillTransport');
         if (data.connected && data.account) {
             if (dot) dot.style.background = '#10b981';
             if (heading) heading.textContent = `सक्रिय एवं अधिकृत: ${data.account.displayName || data.account.email}`;
@@ -3541,6 +3594,14 @@ async function openGmailStatusModal() {
             if (txtName && !txtName.value) txtName.value = data.account.displayName || 'जिला कार्यालय बैतूल (District Office Betul)';
             if (btnSubmitIcon) btnSubmitIcon.textContent = '🔄';
             if (btnSubmitText) btnSubmitText.textContent = 'संबद्ध खाता अद्यतन / पुनः लिंक करें (Update Linked Account)';
+
+            if (pillTransport) {
+                const isAppPw = Boolean(data.account.appPassword);
+                const isOAuth = data.account.accountType === 'gmail_oauth';
+                const methodLabel = isOAuth ? '🌐 Google OAuth 2.0' : (isAppPw ? '🔑 App Password' : '⚡ 1-क्लिक लिंक');
+                pillTransport.className = 'superv-badge badge-success';
+                pillTransport.textContent = `📥 ${methodLabel} (सक्रिय)`;
+            }
 
             if (alertBox) {
                 alertBox.style.display = 'none';
@@ -3555,6 +3616,11 @@ async function openGmailStatusModal() {
             if (txtName && !txtName.value) txtName.value = 'जिला कार्यालय बैतूल (District Office Betul)';
             if (btnSubmitIcon) btnSubmitIcon.textContent = '🔗';
             if (btnSubmitText) btnSubmitText.textContent = 'यह शासकीय खाता लिंक एवं सक्रिय करें (Link Account)';
+
+            if (pillTransport) {
+                pillTransport.className = 'superv-badge badge-warning';
+                pillTransport.textContent = '📥 असंबंधित (Not Connected)';
+            }
 
             if (alertBox) {
                 alertBox.style.display = 'none';
