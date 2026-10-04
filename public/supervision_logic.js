@@ -83,7 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetchInspections(),
         fetchSurpriseVisits(),
         fetchRoster(),
-        fetchRiceInspections()
+        fetchRiceInspections(),
+        loadSupervisionTasks()
     ]);
 
     renderDashboard();
@@ -91,7 +92,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderArchivesTable();
     renderSurpriseTable();
     renderRiceSavedSheetsTable();
+
+    if (window.location.search.includes('gmail=connected')) {
+        showSupervView('tasks', document.getElementById('superv-nav-tasks'));
+        alert('🎉 शासकीय Gmail खाता सफलतापूर्वक अधिकृत एवं कनेक्ट कर लिया गया है!');
+        history.replaceState(null, '', window.location.pathname);
+    }
 });
+
 
 function initDefaultDates() {
     const today = new Date().toISOString().split('T')[0];
