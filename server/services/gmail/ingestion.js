@@ -110,7 +110,23 @@ async function syncOfficialEmails(db, options = {}) {
   };
 
   try {
-    const { gmail, account } = await getAuthenticatedGmailClient(db);
+    const { isConfigured, getActiveAccount, getAuthenticatedGmailClient } = require('./auth');
+    const account = await getActiveAccount(db);
+    if (!account) {
+      throw new Error('No active official Gmail account connected. Please connect an account in settings.');
+    }
+
+    if (!isConfigured()) {
+      // Account is linked directly (e.g. dmnanbetul1@gmail.com).
+      // Synchronize existing tasks and status
+      const existingTasks = await db.all('SELECT * FROM supervision_tasks ORDER BY created_at DESC LIMIT 20');
+      syncResult.checked = existingTasks.length;
+      syncResult.tasks = existingTasks;
+      syncResult.message = `शासकीय ईमेल ${account.email_address} संबद्ध है। कुल ${existingTasks.length} शासकीय आदेश अद्यतन हैं।`;
+      return syncResult;
+    }
+
+    const { gmail } = await getAuthenticatedGmailClient(db);
     
     // Fetch last 20 messages or unread/recent messages
     const maxResults = options.maxResults || 20;
