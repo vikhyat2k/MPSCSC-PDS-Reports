@@ -1605,6 +1605,9 @@
                     <span>🤖 Gemini AI प्रबंधन</span>
                     <span style="font-size:9px; background:#10b981; color:#fff; padding:1px 5px; border-radius:4px;">Active</span>
                 </button>
+                <button type="button" class="btn btn-sm" id="btnTabSyncSettings" onclick="switchGmailLinkTab('sync')" style="flex:1.2; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
+                    ⚙️ Sync सेटिंग्स
+                </button>
             </div>
 
             <!-- Panel 1: Quick 1-Click Link -->
@@ -1889,6 +1892,100 @@
                             <li><strong>1-क्लिक पालन प्रतिवेदन ड्राफ्ट:</strong> सक्षम अधिकारी को उत्तर भेजने हेतु औपचारिक प्रतिवेदन पत्र स्वतः तैयार करता है।</li>
                         </ul>
                     </div>
+                </div>
+            </div>
+
+            <!-- Panel 5: Sync Settings -->
+            <div id="panelGmailSyncSettings" style="display:none;">
+                <!-- Header -->
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                        <span style="font-size:22px;">⚙️</span>
+                        <div>
+                            <strong style="font-size:13.5px; color:var(--text-main);">ईमेल सिंक सेटिंग्स (Email Sync Configuration)</strong>
+                            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">पृष्ठभूमि एवं मैनुअल सिंक की सीमाएं व समय-सीमा निर्धारित करें।</div>
+                        </div>
+                    </div>
+
+                    <!-- Background Sync Limit -->
+                    <div style="margin-bottom:16px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-main);">🔄 पृष्ठभूमि सिंक सीमा (Background Sync)</label>
+                            <span id="syncLimitBgDisplay" style="font-size:13px; font-weight:700; color:var(--primary); min-width:50px; text-align:right;">10 ईमेल</span>
+                        </div>
+                        <input type="range" id="syncLimitBgSlider" min="5" max="100" step="5" value="10"
+                            oninput="document.getElementById('syncLimitBgDisplay').textContent = this.value + ' ईमेल'"
+                            style="width:100%; accent-color:var(--primary); cursor:pointer;">
+                        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:2px;">
+                            <span>5</span><span>हर 5 मिनट पर स्वतः चलता है</span><span>100</span>
+                        </div>
+                    </div>
+
+                    <!-- Manual Sync Limit -->
+                    <div style="margin-bottom:16px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-main);">📥 मैनुअल सिंक सीमा (Manual Sync)</label>
+                            <span id="syncLimitManualDisplay" style="font-size:13px; font-weight:700; color:var(--primary); min-width:50px; text-align:right;">20 ईमेल</span>
+                        </div>
+                        <input type="range" id="syncLimitManualSlider" min="5" max="500" step="5" value="20"
+                            oninput="document.getElementById('syncLimitManualDisplay').textContent = this.value + ' ईमेल'"
+                            style="width:100%; accent-color:var(--primary); cursor:pointer;">
+                        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:2px;">
+                            <span>5</span><span>बटन क्लिक पर एक बार चलता है</span><span>500</span>
+                        </div>
+                    </div>
+
+                    <!-- Time Window -->
+                    <div style="margin-bottom:16px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-main);">📅 समय-सीमा फ़िल्टर (Time Window)</label>
+                            <span id="syncTimeWindowDisplay" style="font-size:13px; font-weight:700; color:var(--primary); min-width:60px; text-align:right;">14 दिन</span>
+                        </div>
+                        <input type="range" id="syncTimeWindowSlider" min="1" max="365" step="1" value="14"
+                            oninput="document.getElementById('syncTimeWindowDisplay').textContent = this.value + ' दिन'"
+                            style="width:100%; accent-color:#f59e0b; cursor:pointer;">
+                        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:2px;">
+                            <span>1 दिन</span><span>इससे पुराने ईमेल नहीं आएंगे</span><span>365 दिन</span>
+                        </div>
+                    </div>
+
+                    <!-- Background Poll Interval -->
+                    <div style="margin-bottom:16px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <label style="font-size:12px; font-weight:700; color:var(--text-main);">⏱️ स्वतः जांच अंतराल (Auto Poll Interval)</label>
+                            <span id="syncIntervalDisplay" style="font-size:13px; font-weight:700; color:#10b981; min-width:80px; text-align:right;">5 मिनट</span>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button type="button" class="sync-interval-btn" data-val="1" onclick="setSyncInterval(1)" style="flex:1; min-width:60px; padding:7px 4px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:11.5px; font-weight:600; cursor:pointer; transition:all 0.2s;">1 मिनट</button>
+                            <button type="button" class="sync-interval-btn" data-val="2" onclick="setSyncInterval(2)" style="flex:1; min-width:60px; padding:7px 4px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:11.5px; font-weight:600; cursor:pointer; transition:all 0.2s;">2 मिनट</button>
+                            <button type="button" class="sync-interval-btn active-interval" data-val="5" onclick="setSyncInterval(5)" style="flex:1; min-width:60px; padding:7px 4px; border-radius:6px; border:1px solid var(--primary); background:rgba(99,102,241,0.15); color:var(--primary); font-size:11.5px; font-weight:700; cursor:pointer; transition:all 0.2s;">5 मिनट</button>
+                            <button type="button" class="sync-interval-btn" data-val="10" onclick="setSyncInterval(10)" style="flex:1; min-width:60px; padding:7px 4px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:11.5px; font-weight:600; cursor:pointer; transition:all 0.2s;">10 मिनट</button>
+                            <button type="button" class="sync-interval-btn" data-val="30" onclick="setSyncInterval(30)" style="flex:1; min-width:60px; padding:7px 4px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:11.5px; font-weight:600; cursor:pointer; transition:all 0.2s;">30 मिनट</button>
+                        </div>
+                        <div style="font-size:10.5px; color:#f59e0b; margin-top:8px;">⚠️ अंतराल परिवर्तन सर्वर पुनरारंभ के बाद प्रभावी होगा।</div>
+                    </div>
+
+                    <!-- Current Values Summary -->
+                    <div id="syncSettingsSummary" style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:10px 12px; font-size:11.5px; color:var(--text-main); margin-bottom:14px; display:none;">
+                        <strong style="color:#10b981;">✅ वर्तमान सक्रिय सेटिंग्स:</strong>
+                        <div id="syncSettingsSummaryText" style="margin-top:4px; color:var(--text-muted);"></div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <button type="button" id="btnSaveSyncSettings" class="btn btn-primary" onclick="saveSyncSettings()" style="width:100%; justify-content:center; padding:10px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px;">
+                        💾 सेटिंग्स सुरक्षित करें
+                    </button>
+                </div>
+
+                <!-- Info Box -->
+                <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.2); border-radius:8px; padding:10px 12px; font-size:11.5px; color:var(--text-main); line-height:1.6;">
+                    <strong>ℹ️ सेटिंग्स कैसे काम करती हैं:</strong>
+                    <ul style="margin:4px 0 0 16px; padding:0;">
+                        <li><strong>पृष्ठभूमि सीमा:</strong> हर 5 मिनट में स्वतः इतने नए ईमेल जांचे जाते हैं।</li>
+                        <li><strong>मैनुअल सीमा:</strong> "Gmail Sync" बटन दबाने पर इतने ईमेल आएंगे।</li>
+                        <li><strong>समय-सीमा:</strong> इससे पुराने ईमेल कभी नहीं आएंगे (Gmail API फ़िल्टर)।</li>
+                        <li><strong>पहले से संसाधित ईमेल दोबारा नहीं आते</strong> — यह system स्वतः याद रखता है।</li>
+                    </ul>
                 </div>
             </div>
 
