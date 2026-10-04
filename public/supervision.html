@@ -1493,40 +1493,85 @@
 
 <!-- 6. Official Gmail Account Status & Configuration Modal -->
 <div class="superv-modal-overlay" id="modalGmailStatus">
-    <div class="superv-modal-box" style="max-width:620px;">
-        <div class="superv-modal-header">
-            <h3 style="margin:0; font-size:16px; color:var(--text-main);">📧 शासकीय जीमेल खाता स्थिति (Official Gmail Account)</h3>
+    <div class="superv-modal-box" style="max-width:640px;">
+        <div class="superv-modal-header" style="border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:18px;">📧</span>
+                <h3 style="margin:0; font-size:16px; color:var(--text-main);">शासकीय जीमेल खाता प्रबंधन (Official Gmail Account)</h3>
+            </div>
             <button class="btn btn-secondary btn-sm" onclick="closeModal('modalGmailStatus')">✕ बंद करें</button>
         </div>
-        <div class="superv-modal-body" style="padding:20px;">
-            <div id="gmailAccountStatusCard" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div id="gmailStatusDot" style="width:12px; height:12px; border-radius:50%; background:#94a3b8;"></div>
-                    <div>
-                        <div id="gmailStatusHeading" style="font-weight:700; font-size:14px; color:var(--text-main);">जांच हो रही है...</div>
-                        <div id="gmailAccountEmail" style="font-size:12px; color:var(--text-muted); margin-top:2px;">खाता विवरण लोड हो रहा है...</div>
+        <div class="superv-modal-body" style="padding:18px 20px; max-height:78vh; overflow-y:auto;">
+            <!-- Current Account Status Card -->
+            <div id="gmailAccountStatusCard" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div id="gmailStatusDot" style="width:12px; height:12px; border-radius:50%; background:#94a3b8; flex-shrink:0;"></div>
+                        <div>
+                            <div id="gmailStatusHeading" style="font-weight:700; font-size:13.5px; color:var(--text-main);">जांच हो रही है...</div>
+                            <div id="gmailAccountEmail" style="font-size:12px; color:var(--text-muted); margin-top:3px;">खाता विवरण लोड हो रहा है...</div>
+                        </div>
                     </div>
+                    <button type="button" id="btnDisconnectGmail" class="btn btn-sm" onclick="disconnectGmailAccount()" style="display:none; background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.25); font-size:11.5px; padding:4px 10px; flex-shrink:0;">
+                        विच्छेद करें
+                    </button>
                 </div>
             </div>
 
-            <div style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:12px; font-size:12px; color:var(--text-main); margin-bottom:16px; line-height:1.6;">
-                <strong>💡 Google OAuth 2.0 सुरक्षा मानक (Security Standards):</strong><br>
-                यह प्रणाली बिना पासवर्ड के Google OAuth 2.0 (Least Privilege Read-Only) के माध्यम से शासकीय ईमेल से सीधे आदेश व परिपत्र स्वतः ट्रेक करती है। कोई भी ईमेल हटाया या भेजा नहीं जाता है।
+            <!-- Option 1: Direct Link / Update Account Form (ALWAYS AVAILABLE) -->
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                    <span style="font-size:16px;">🔗</span>
+                    <strong style="font-size:13px; color:var(--text-main);">शासकीय ईमेल खाता लिंक / अपडेट करें (Link Official Account)</strong>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:14px;">
+                    <div>
+                        <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                            शासकीय जीमेल पता (Official Gmail Address) <span style="color:#ef4444;">*</span>
+                        </label>
+                        <input type="email" id="txtLinkGmailEmail" class="superv-input" placeholder="उदा. dmnanbetul1@gmail.com" value="dmnanbetul1@gmail.com" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                            कार्यालय / पदनाम (Office / Designation)
+                        </label>
+                        <input type="text" id="txtLinkGmailName" class="superv-input" placeholder="उदा. जिला कार्यालय बैतूल (District Office Betul)" value="जिला कार्यालय बैतूल (District Office Betul)" style="width:100%; box-sizing:border-box;">
+                    </div>
+                </div>
+                <button type="button" id="btnSubmitLinkDirect" class="btn btn-primary" onclick="linkGmailAccountDirect()" style="width:100%; justify-content:center; padding:9px 16px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                    <span>🔗</span> <span id="btnSubmitLinkDirectText">यह शासकीय खाता लिंक करें (Link Account)</span>
+                </button>
             </div>
 
-            <div id="gmailConfigAlert" style="display:none; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:12px; font-size:12px; color:#ef4444; margin-bottom:16px;">
-                ⚠️ <code>GOOGLE_CLIENT_ID</code> एवं <code>GOOGLE_CLIENT_SECRET</code> .env में अनुपलब्ध हैं। कृपया Google Cloud Console से क्रेडेंशियल कॉन्फ़िगर करें।
+            <!-- Option 2: Google OAuth 2.0 Authorization -->
+            <div style="background:rgba(99,102,241,0.04); border:1px solid rgba(99,102,241,0.18); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:15px;">🌐</span>
+                        <strong style="font-size:12.5px; color:var(--text-main);">Google Cloud OAuth 2.0 प्रमाणीकरण (Sign in with Google)</strong>
+                    </div>
+                    <span id="oauthStatusBadge" class="superv-badge" style="font-size:10.5px;">वैकल्पिक (Optional)</span>
+                </div>
+                <div style="font-size:11.5px; color:var(--text-muted); line-height:1.5; margin-bottom:10px;">
+                    Google Cloud Console द्वारा 24/7 स्वचालित पृष्ठभूमि ईमेल पोलिंग एवं आधिकारिक Google OAuth 2.0 टोकन अधिकृत करने के लिए:
+                </div>
+                <button type="button" id="btnConnectGmail" class="btn btn-secondary btn-sm" onclick="initiateGmailConnect()" style="width:100%; justify-content:center; padding:8px 12px; font-size:12px; display:flex; align-items:center; gap:8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.54 0 2.94.54 4.04 1.44l3.03-3.03C17.21 1.71 14.77 1 12 1 7.42 1 3.55 3.6 1.7 7.35l3.66 2.84C6.24 7.27 8.87 5 12 5z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.7 2.87c2.16-2 3.72-4.94 3.72-8.69z"/><path fill="#FBBC05" d="M5.36 14.81c-.24-.71-.38-1.47-.38-2.26s.14-1.55.38-2.26L1.7 7.45C.62 9.61 0 12.02 0 14.55s.62 4.94 1.7 7.1l3.66-2.84z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.7-2.87c-1.08.72-2.45 1.16-4.23 1.16-3.13 0-5.76-2.27-6.64-5.19L1.7 17.03C3.55 20.78 7.42 24 12 24z"/></svg>
+                    Google OAuth द्वारा अधिकृत करें (Sign-in via Google)
+                </button>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modalGmailStatus')">बंद करें</button>
-                <button type="button" id="btnConnectGmail" class="btn btn-primary" onclick="initiateGmailConnect()" style="display:none;">
-                    🔗 Google से अधिकृत करें (Connect Gmail)
-                </button>
-                <button type="button" id="btnDisconnectGmail" class="btn" onclick="disconnectGmailAccount()" style="display:none; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">
-                    विच्छेद करें (Disconnect)
-                </button>
+            <!-- Security & Notice Banner -->
+            <div style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:10px 12px; font-size:11.5px; color:var(--text-main); line-height:1.5;">
+                <strong>💡 सुरक्षा आश्वासन:</strong> यह प्रणाली बिना पासवर्ड के Google Read-Only मानकों पर कार्य करती है। ईमेल से केवल पत्र क्रमांक, दिनांक एवं निर्देश निष्कर्षित किए जाते हैं।
             </div>
+
+            <div id="gmailConfigAlert" style="display:none; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:10px 12px; font-size:11.5px; color:#ef4444; margin-top:12px;">
+                ⚠️ <code>GOOGLE_CLIENT_ID</code> .env में अनुपलब्ध है। आप ऊपर दिए गए सीधे लिंकेज फॉर्म से बिना Google API क्रेडेंशियल के खाता लिंक कर सकते हैं।
+            </div>
+        </div>
+        <div class="superv-modal-footer" style="border-top:1px solid var(--border); padding:10px 20px; display:flex; justify-content:flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('modalGmailStatus')">बंद करें</button>
         </div>
     </div>
 </div>

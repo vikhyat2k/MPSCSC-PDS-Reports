@@ -2457,6 +2457,7 @@ async function loadTestDataStatus() {
         const cntRost = document.getElementById('cntTestRoster');
         const cntMeet = document.getElementById('cntTestMeetings');
         const cntRice = document.getElementById('cntTestRice');
+        const cntTasks = document.getElementById('cntTestTasks');
         const cntTot = document.getElementById('cntTestTotal');
 
         if (cntInsp) cntInsp.textContent = activeTestDataState.counts.inspections || 0;
@@ -2464,6 +2465,7 @@ async function loadTestDataStatus() {
         if (cntRost) cntRost.textContent = activeTestDataState.counts.roster || 0;
         if (cntMeet) cntMeet.textContent = activeTestDataState.counts.meetings || 0;
         if (cntRice) cntRice.textContent = activeTestDataState.counts.rice || 0;
+        if (cntTasks) cntTasks.textContent = activeTestDataState.counts.tasks || 0;
         if (cntTot) cntTot.textContent = activeTestDataState.total || 0;
 
         // Render Test Records Table
@@ -2537,6 +2539,19 @@ async function loadTestDataStatus() {
             `);
         });
 
+        // Tasks / Orders
+        (data.records.tasks || []).forEach(r => {
+            allRows.push(`
+                <tr>
+                    <td><span style="font-weight:600; color:#ec4899;">📬 आदेश एवं कार्य</span></td>
+                    <td><code>${escapeHtml(r.id)}</code></td>
+                    <td>${escapeHtml(r.subject || r.issue_center_name || 'N/A')}</td>
+                    <td>${escapeHtml(r.inspection_date ? String(r.inspection_date).slice(0, 10) : 'N/A')}</td>
+                    <td><span class="superv-badge badge-warning">${escapeHtml(r.status || 'NEW')}</span></td>
+                </tr>
+            `);
+        });
+
         if (allRows.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">डेटाबेस में वर्तमान में कोई टेस्ट/डमी डेटा नहीं है। (डेटाबेस पूरी तरह स्वच्छ है)</td></tr>`;
         } else {
@@ -2563,7 +2578,8 @@ async function seedTestDataFromUI() {
                 fetchRoster(),
                 fetchMeetings(),
                 fetchRiceInspections(),
-                fetchSupervisionStats()
+                fetchSupervisionStats(),
+                loadSupervisionTasks()
             ]);
 
             renderDashboard();
@@ -2590,7 +2606,7 @@ async function cleanupTestDataFromUI() {
         return;
     }
 
-    const confirmMsg = `⚠️ महत्वपूर्ण चेतावनी (Strict Safe Deletion):\n\nयह कार्रवाई केवल TEST/DUMMY के रूप में चिह्नित कुल ${total} रिकॉर्ड्स को डेटाबेस से स्थायी रूप से हटाएगी।\n\n• सघन निरीक्षण: ${activeTestDataState.counts.inspections || 0}\n• औचक दौरे: ${activeTestDataState.counts.surprise || 0}\n• वार्षिक रोस्टर: ${activeTestDataState.counts.roster || 0}\n• समन्वय बैठकें: ${activeTestDataState.counts.meetings || 0}\n• चावल परीक्षण: ${activeTestDataState.counts.rice || 0}\n\nमूल एवं वास्तविक उत्पादन डेटा (DEMO_01, ROST_2026_.. आदि) 100% सुरक्षित रहेंगे।\n\nक्या आप इन सभी ${total} टेस्ट रिकॉर्ड्स को हटाना चाहते हैं?`;
+    const confirmMsg = `⚠️ महत्वपूर्ण चेतावनी (Strict Safe Deletion):\n\nयह कार्रवाई केवल TEST/DUMMY के रूप में चिह्नित कुल ${total} रिकॉर्ड्स को डेटाबेस से स्थायी रूप से हटाएगी।\n\n• सघन निरीक्षण: ${activeTestDataState.counts.inspections || 0}\n• औचक दौरे: ${activeTestDataState.counts.surprise || 0}\n• वार्षिक रोस्टर: ${activeTestDataState.counts.roster || 0}\n• समन्वय बैठकें: ${activeTestDataState.counts.meetings || 0}\n• चावल परीक्षण: ${activeTestDataState.counts.rice || 0}\n• आदेश एवं कार्य: ${activeTestDataState.counts.tasks || 0}\n\nमूल एवं वास्तविक उत्पादन डेटा (DEMO_01, ROST_2026_.. आदि) 100% सुरक्षित रहेंगे।\n\nक्या आप इन सभी ${total} टेस्ट रिकॉर्ड्स को हटाना चाहते हैं?`;
 
     if (!confirm(confirmMsg)) {
         return;
@@ -2607,7 +2623,8 @@ async function cleanupTestDataFromUI() {
                 fetchRoster(),
                 fetchMeetings(),
                 fetchRiceInspections(),
-                fetchSupervisionStats()
+                fetchSupervisionStats(),
+                loadSupervisionTasks()
             ]);
 
             renderDashboard();
@@ -2618,9 +2635,31 @@ async function cleanupTestDataFromUI() {
             renderRiceInspectionsTable();
 
             await loadTestDataStatus();
-            alert(`✅ टेस्ट डेटा सफलतापूर्वक हटा दिया गया!\n\nकुल हटाए गए टेस्ट रिकॉर्ड्स: ${data.totalDeleted}\n• सघन निरीक्षण: ${data.deleted.inspections}\n• औचक दौरे: ${data.deleted.surprise}\n• रोस्टर लक्ष्य: ${data.deleted.roster}\n• समन्वय बैठकें: ${data.deleted.meetings}\n• चावल प्रपत्र: ${data.deleted.rice}\n\nडेटाबेस अब स्वच्छ है और मूल डेटा पूरी तरह सुरक्षित है।`);
+            alert(`✅ टेस्ट डेटा सफलतापूर्वक हटा दिया गया!\n\nकुल हटाए गए टेस्ट रिकॉर्ड्स: ${data.totalDeleted}\n• सघन निरीक्षण: ${data.deleted.inspections || 0}\n• औचक दौरे: ${data.deleted.surprise || 0}\n• रोस्टर लक्ष्य: ${data.deleted.roster || 0}\n• समन्वय बैठकें: ${data.deleted.meetings || 0}\n• चावल प्रपत्र: ${data.deleted.rice || 0}\n• आदेश एवं कार्य: ${data.deleted.tasks || 0}\n\nडेटाबेस अब स्वच्छ है और मूल डेटा पूरी तरह सुरक्षित है।`);
         } else {
             alert('टेस्ट डेटा हटाने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
+/**
+ * 1-Click Safe Cleanup of Dummy Tasks specifically from Orders & Tasks Module
+ */
+async function deleteDummyTasksFromUI() {
+    if (!confirm('क्या आप "आदेश एवं कार्य अनुश्रवण" से सभी डमी/परीक्षण टास्क स्थायी रूप से हटाना चाहते हैं?\n\n(वास्तविक शासकीय ईमेल से सिंक किए गए आदेश पूर्णतः सुरक्षित रहेंगे)')) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/supervision/tasks/delete-dummy', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            await loadSupervisionTasks();
+            alert(`✅ ${data.message || 'डमी टास्क सफलतापूर्वक हटा दिए गए।'}`);
+        } else {
+            alert('त्रुटि: ' + (data.error || 'डमी डेटा हटाने में विफल'));
         }
     } catch (err) {
         alert('सर्वर त्रुटि: ' + err.message);
