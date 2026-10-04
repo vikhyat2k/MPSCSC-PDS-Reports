@@ -2152,12 +2152,17 @@ function toggleTheme() {
 /* ── Sidebar Toggle ───────────────────────────────── */
 function toggleSidebar() {
     var wrapper = document.getElementById('appWrapper');
+    var sb = document.getElementById('appSidebar');
+    if (!wrapper) return;
     if (window.innerWidth <= 768) {
         wrapper.classList.toggle('sidebar-open');
     } else {
-        wrapper.classList.toggle('sidebar-collapsed');
-        localStorage.setItem('sidebar-collapsed',
-            wrapper.classList.contains('sidebar-collapsed') ? '1' : '0');
+        var isCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+        if (sb) {
+            if (isCollapsed) sb.classList.add('collapsed');
+            else sb.classList.remove('collapsed');
+        }
+        localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
     }
 }
 function closeMobileSidebar() {
