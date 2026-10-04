@@ -2414,8 +2414,100 @@ function toggleTheme() {
 }
 
 function toggleSidebar() {
+    const wrapper = document.getElementById('appWrapper') || document.querySelector('.app-wrapper');
     const sb = document.getElementById('appSidebar');
-    if (sb) sb.classList.toggle('collapsed');
+    if (!wrapper) return;
+
+    if (window.innerWidth <= 768) {
+        wrapper.classList.toggle('sidebar-open');
+    } else {
+        const isCollapsed = wrapper.classList.toggle('sidebar-collapsed');
+        if (sb) {
+            if (isCollapsed) sb.classList.add('collapsed');
+            else sb.classList.remove('collapsed');
+        }
+        localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
+    }
+}
+
+function closeMobileSidebar() {
+    const wrapper = document.getElementById('appWrapper') || document.querySelector('.app-wrapper');
+    if (wrapper) wrapper.classList.remove('sidebar-open');
+}
+
+function initSidebarState() {
+    const wrapper = document.getElementById('appWrapper') || document.querySelector('.app-wrapper');
+    const sb = document.getElementById('appSidebar');
+    if (!wrapper) return;
+
+    const saved = localStorage.getItem('sidebar-collapsed');
+    // Auto-shrink behavior:
+    // 1) Explicit user preference saved as '1'
+    // 2) Or medium screen (768px < width <= 1100px) and no explicit preference saved
+    if (saved === '1' || (saved === null && window.innerWidth > 768 && window.innerWidth <= 1100)) {
+        wrapper.classList.add('sidebar-collapsed');
+        if (sb) sb.classList.add('collapsed');
+    } else if (saved === '0') {
+        wrapper.classList.remove('sidebar-collapsed');
+        if (sb) sb.classList.remove('collapsed');
+    }
+
+    // Responsive auto-shrink on window resize
+    window.addEventListener('resize', () => {
+        if (window.innerWidth <= 768) {
+            wrapper.classList.remove('sidebar-collapsed');
+            if (sb) sb.classList.remove('collapsed');
+        } else {
+            wrapper.classList.remove('sidebar-open');
+            const currentPref = localStorage.getItem('sidebar-collapsed');
+            if (currentPref === '1' || (currentPref === null && window.innerWidth <= 1100)) {
+                wrapper.classList.add('sidebar-collapsed');
+                if (sb) sb.classList.add('collapsed');
+            } else if (currentPref === '0') {
+                wrapper.classList.remove('sidebar-collapsed');
+                if (sb) sb.classList.remove('collapsed');
+            }
+        }
+    });
+
+    // Close mobile drawer on outside click or nav item click
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768) {
+            if (sb && !sb.contains(e.target) && !e.target.closest('.header-toggle-btn')) {
+                wrapper.classList.remove('sidebar-open');
+            }
+            if (e.target.closest('.app-sidebar .nav-item')) {
+                wrapper.classList.remove('sidebar-open');
+            }
+        }
+    });
+
+    // Tooltip for icon-only collapsed sidebar
+    const tip = document.getElementById('nav-hover-tooltip');
+    if (tip) {
+        document.addEventListener('mouseover', (e) => {
+            if (!wrapper.classList.contains('sidebar-collapsed')) {
+                tip.classList.remove('tip-visible');
+                return;
+            }
+            const navItem = e.target.closest('.app-sidebar .nav-item');
+            if (!navItem) return;
+            const label = navItem.querySelector('.nav-label');
+            if (!label) return;
+            const rect = navItem.getBoundingClientRect();
+            tip.textContent = label.textContent.trim();
+            tip.style.left = (rect.right + 12) + 'px';
+            tip.style.top = (rect.top + rect.height / 2) + 'px';
+            tip.classList.add('tip-visible');
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const navItem = e.target.closest('.app-sidebar .nav-item');
+            if (navItem && !navItem.contains(e.relatedTarget)) {
+                tip.classList.remove('tip-visible');
+            }
+        });
+    }
 }
 
 function escapeHtml(str) {
