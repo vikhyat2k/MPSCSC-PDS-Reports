@@ -4557,8 +4557,19 @@ app.post('/api/gmail/disconnect', async (req, res) => {
 
 app.post('/api/gmail/link', async (req, res) => {
     try {
-        const email = req.body?.email || 'dmnanbetul1@gmail.com';
-        const displayName = req.body?.displayName || 'जिला कार्यालय बैतूल (District Office Betul)';
+        const email = String(req.body?.email || 'dmnanbetul1@gmail.com').trim();
+        const displayName = String(req.body?.displayName || 'जिला कार्यालय बैतूल (District Office Betul)').trim();
+        const appPassword = req.body?.appPassword ? String(req.body.appPassword).trim() : null;
+
+        if (appPassword) {
+            updateEnvFile({
+                EMAIL_USER: email,
+                EMAIL_PASSWORD: appPassword,
+                EMAIL_FROM: `"PDS Report System" <${email}>`
+            });
+            console.log(`🔐 Gmail App Password configured via frontend UI for ${email}`);
+        }
+
         const account = await gmailService.linkDirectAccount(db, email, displayName);
         res.json({ success: true, account });
     } catch (err) {
