@@ -4079,10 +4079,12 @@ async function testGeminiConnectionUI() {
     }
 
     try {
-        const res = await fetch('/api/gemini/status');
+        const res = await fetch('/api/gemini/status?force=true');
         const data = await res.json();
         if (data.active) {
             alert(`✅ Gemini AI कनेक्शन सफल एवं सक्रिय है!\n\n• मॉडल: ${data.model}\n• स्थिति: ऑनलाइन एवं शासकीय विश्लेषण हेतु तैयार`);
+        } else if (data.rateLimited) {
+            alert(`⚠️ Gemini API दर सीमा (Rate Limit):\n${data.error}\n\n💡 सूचना: यदि आपने Sarvam AI Key कॉन्फ़िगर की है, तो सिस्टम बिना किसी रुकावट के स्वचालित रूप से Sarvam AI पर स्विच होकर सभी ईमेल का विश्लेषण करेगा!`);
         } else {
             alert(`⚠️ Gemini AI कनेक्शन चेतावनी: ${data.error || 'सत्यापन विफल'}`);
         }
@@ -4091,7 +4093,7 @@ async function testGeminiConnectionUI() {
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerText = '⚡ कनेक्शन टेस्ट करें';
+            btn.innerText = '⚡ Gemini टेस्ट करें';
         }
     }
 }
@@ -4129,7 +4131,74 @@ async function saveGeminiApiKeyUI() {
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerText = '💾 सुरक्षित करें';
+            btn.innerText = '💾 Gemini Key सुरक्षित करें';
+        }
+    }
+}
+
+// ── Sarvam AI Sovereign Fallback Handlers ──────────────────────
+
+async function testSarvamConnectionUI() {
+    const btn = document.getElementById('btnTestSarvam');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ टेस्ट हो रहा है...';
+    }
+
+    try {
+        const res = await fetch('/api/sarvam/status');
+        const data = await res.json();
+        if (data.active) {
+            alert(`✅ Sarvam AI कनेक्शन सफल एवं सक्रिय है!\n\n• मॉडल: ${data.model}\n• स्थिति: ऑनलाइन एवं शासकीय विश्लेषण हेतु तैयार\n• यह इंजन Gemini AI की दर सीमा पर स्वतः फॉलबैक का कार्य करेगा।`);
+        } else if (data.quotaExhausted) {
+            alert(`⚠️ Sarvam AI स्थिति सूचना:\n\n• मॉडल: sarvam-105b\n• परिणाम: API Key वैध है, परंतु खाते में 0 क्रेडिट उपलब्ध हैं (No credits available)।\n\n💡 समाधान: कृपया Sarvam AI डैशबोर्ड (dashboard.sarvam.ai) पर जाकर वॉलेट रिचार्ज करें ताकि Gemini 429 दर सीमा होने पर यह फॉलबैक स्वचालित कार्य कर सके।`);
+        } else {
+            alert(`⚠️ Sarvam AI स्थिति:\n${data.error || 'कनेक्शन सत्यापन विफल'}`);
+        }
+    } catch (e) {
+        alert('सर्वर त्रुटि: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '⚡ Sarvam AI टेस्ट करें';
+        }
+    }
+}
+
+async function saveSarvamApiKeyUI() {
+    const input = document.getElementById('txtSarvamApiKey');
+    const apiKey = input ? input.value.trim() : '';
+    if (!apiKey) {
+        alert('कृपया वैध Sarvam AI API Subscription Key प्रविष्ट करें।');
+        if (input) input.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnSaveSarvamKey');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ सुरक्षित हो रहा है...';
+    }
+
+    try {
+        const res = await fetch('/api/sarvam/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`🎉 ${data.message}\n\nमॉडल: ${data.model}\nGemini AI की दर सीमा होने पर सिस्टम स्वचालित रूप से Sarvam AI पर स्विच हो जाएगा!`);
+            await openGmailStatusModal();
+        } else {
+            alert('सुरक्षित करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (e) {
+        alert('सर्वर त्रुटि: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '💾 Sarvam Key सुरक्षित करें';
         }
     }
 }
