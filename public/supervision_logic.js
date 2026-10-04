@@ -138,7 +138,11 @@ function showSupervView(viewId, navEl) {
     if (viewId === 'compliance') {
         renderMonthlyComplianceLetter();
     }
+    if (viewId === 'tasks') {
+        loadSupervisionTasks();
+    }
 }
+
 
 // ── API Fetchers ──────────────────────────────────────────
 async function fetchSupervisionStats() {
