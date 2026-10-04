@@ -1788,6 +1788,7 @@ class DatabaseManager {
       roster: 0,
       meetings: 0,
       rice: 0,
+      tasks: 0,
       total: 0
     };
     const records = {
@@ -1795,7 +1796,8 @@ class DatabaseManager {
       surprise: [],
       roster: [],
       meetings: [],
-      rice: []
+      rice: [],
+      tasks: []
     };
     try {
       const i = await this.get("SELECT COUNT(*) as c FROM supervision_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
@@ -1818,7 +1820,11 @@ class DatabaseManager {
       counts.rice = rc ? rc.c : 0;
       records.rice = await this.all("SELECT id, warehouse_name as center_name, '' as mill_name, analysis_date as inspection_date, 'PASSED' as overall_result FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' ORDER BY analysis_date DESC LIMIT 10");
 
-      counts.total = counts.inspections + counts.surprise + counts.roster + counts.meetings + counts.rice;
+      const tk = await this.get("SELECT COUNT(*) as c FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%'");
+      counts.tasks = tk ? tk.c : 0;
+      records.tasks = await this.all("SELECT id, letter_ref_no as issue_center_name, due_date as inspection_date, priority as status, subject FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%' ORDER BY created_at DESC LIMIT 10");
+
+      counts.total = counts.inspections + counts.surprise + counts.roster + counts.meetings + counts.rice + counts.tasks;
     } catch (e) {
       console.error('Error fetching test data counts:', e.message);
     }
@@ -1843,6 +1849,8 @@ class DatabaseManager {
     await this.run("DELETE FROM supervision_roster WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
     await this.run("DELETE FROM supervision_meetings WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
     await this.run("DELETE FROM supervision_rice_inspections WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%'");
+    await this.run("DELETE FROM task_attachments WHERE task_id IN (SELECT id FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%')");
+    await this.run("DELETE FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%'");
     return {
       success: true,
       totalDeleted: before.total,
