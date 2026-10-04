@@ -21,6 +21,16 @@
 <div class="bg-blob blob-3"></div>
 
 <div class="app-wrapper" id="appWrapper">
+    <script>
+        (function(){
+            var sc = localStorage.getItem('sidebar-collapsed');
+            if (sc === '1' || (sc === null && window.innerWidth > 768 && window.innerWidth <= 1100)) {
+                var w = document.getElementById('appWrapper');
+                if (w) w.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
+    <div class="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
     <!-- ── SIDEBAR ────────────────────────────────────────── -->
     <aside class="app-sidebar" id="appSidebar">
@@ -1711,6 +1721,7 @@
     </div>
 </div>
 
+<div id="nav-hover-tooltip"></div>
 <script src="./supervision_logic.js"></script>
 </body>
 </html>
