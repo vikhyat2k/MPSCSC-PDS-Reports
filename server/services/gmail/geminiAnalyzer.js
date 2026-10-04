@@ -1,22 +1,40 @@
 /**
- * Gemini AI Email & Administrative Task Analyzer
+ * Dual-Engine Administrative AI Intelligence (Google Gemini AI + Sarvam AI Fallback)
  * MPSCSC Supervision Portal — District Office Betul
  * 
- * Uses Google Gemini Generative AI to perform contextual analysis,
- * priority assessment, timeline determination, action point extraction,
- * and draft compliance note generation for government orders.
+ * Primary Engine: Google Gemini Generative AI (gemini-flash-latest, gemini-3.5-flash, gemini-3.8-flash)
+ * Fallback Engine: Sarvam AI (sarvam-105b) — Indian Sovereign AI for official Hindi governance orders
+ * 
+ * Automatically failovers to Sarvam AI when Gemini AI encounters HTTP 429 (Rate Limit),
+ * quota exhaustion, or temporary API downtime.
  */
 
 const CANDIDATE_MODELS = ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-3.8-flash'];
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
+const SARVAM_MODELS = ['sarvam-105b', 'sarvam-105b-conversations'];
+const SARVAM_API_URL = 'https://api.sarvam.ai/v1/chat/completions';
+
 function getApiKey() {
   return (process.env.GEMINI_API_KEY || '').trim();
 }
 
-function isConfigured() {
+function getSarvamApiKey() {
+  return (process.env.SARVAM_API_KEY || '').trim();
+}
+
+function isGeminiConfigured() {
   const key = getApiKey();
   return Boolean(key && key.length > 10);
+}
+
+function isSarvamConfigured() {
+  const key = getSarvamApiKey();
+  return Boolean(key && key.length > 10);
+}
+
+function isConfigured() {
+  return isGeminiConfigured() || isSarvamConfigured();
 }
 
 /**
@@ -52,7 +70,7 @@ async function testConnection(testKey) {
 
       if (res.status === 429) {
         hitRateLimit = true;
-        lastError = 'Gemini API दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें।';
+        lastError = 'Gemini API दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें या Sarvam AI फॉलबैक का उपयोग करें।';
         console.warn(`⚠️ Gemini model ${model}: 429 Rate Limit — skipping`);
         continue;
       }
@@ -65,7 +83,7 @@ async function testConnection(testKey) {
 
       const data = await res.json();
       if (res.ok && data.candidates && data.candidates[0]) {
-        return { ok: true, model };
+        return { ok: true, model, provider: 'gemini' };
       }
 
       console.warn(`⚠️ Gemini model ${model}: HTTP ${res.status}, no candidates — trying next`);
@@ -76,36 +94,87 @@ async function testConnection(testKey) {
   }
 
   if (hitRateLimit) {
-    return { ok: false, error: lastError, rateLimited: true };
+    return { ok: false, error: lastError, rateLimited: true, provider: 'gemini' };
   }
 
-  return { ok: false, error: lastError };
+  return { ok: false, error: lastError, provider: 'gemini' };
 }
 
 /**
- * Contextually analyzes an official email & attachments using Gemini
- * @param {object} param0 { subject, sender, date, body, pdfText, attachments }
+ * Validates the Sarvam AI API key with a fast ping
+ * @param {string} testKey Optional key to test, defaults to process.env.SARVAM_API_KEY
  */
-async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date(), body = '', pdfText = '', attachments = [] }) {
-  const key = getApiKey();
-  if (!isConfigured()) {
-    return null;
+async function testSarvamConnection(testKey) {
+  const key = (testKey || getSarvamApiKey()).trim();
+  if (!key) {
+    return { ok: false, error: 'Sarvam AI API Key missing' };
   }
 
-  const receivedDate = date instanceof Date ? date : new Date(date || Date.now());
-  const formattedDate = receivedDate.toISOString().split('T')[0];
+  try {
+    const res = await fetch(SARVAM_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-subscription-key': key
+      },
+      body: JSON.stringify({
+        model: 'sarvam-105b',
+        messages: [{ role: 'user', content: 'Reply in JSON: {"status":"OK"}' }],
+        max_tokens: 30
+      })
+    });
 
-  // Truncate input to avoid excessive token overhead while preserving key content
-  const maxChars = 12000;
-  let combinedDocument = `EMAIL SUBJECT: ${subject}\nFROM: ${sender}\nDATE RECEIVED: ${formattedDate}\n\nBODY TEXT:\n${body}`;
-  if (pdfText) {
-    combinedDocument += `\n\nATTACHED OFFICIAL ORDER PDF TEXT:\n${pdfText}`;
-  }
-  if (combinedDocument.length > maxChars) {
-    combinedDocument = combinedDocument.substring(0, maxChars) + '\n\n[...Truncated for processing...]';
-  }
+    if (res.status === 200) {
+      const data = await res.json();
+      return { ok: true, model: 'sarvam-105b', provider: 'sarvam', data };
+    }
 
-  const systemInstruction = `
+    if (res.status === 402) {
+      return {
+        ok: false,
+        quotaExhausted: true,
+        model: 'sarvam-105b',
+        provider: 'sarvam',
+        error: 'Sarvam AI कोटा समाप्त (402 No credits available). API Key सही है, कृपया Sarvam AI डैशबोर्ड (dashboard.sarvam.ai) पर क्रेडिट जोड़ें।'
+      };
+    }
+
+    if (res.status === 401 || res.status === 403) {
+      return {
+        ok: false,
+        model: 'sarvam-105b',
+        provider: 'sarvam',
+        error: 'Sarvam AI API Key अमान्य है। कृपया सही Subscription Key दर्ज करें।'
+      };
+    }
+
+    if (res.status === 429) {
+      return {
+        ok: false,
+        rateLimited: true,
+        model: 'sarvam-105b',
+        provider: 'sarvam',
+        error: 'Sarvam AI दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें।'
+      };
+    }
+
+    const errText = await res.text();
+    return {
+      ok: false,
+      model: 'sarvam-105b',
+      provider: 'sarvam',
+      error: `Sarvam AI HTTP ${res.status}: ${errText.substring(0, 120)}`
+    };
+  } catch (err) {
+    return { ok: false, model: 'sarvam-105b', provider: 'sarvam', error: `नेटवर्क त्रुटि (Sarvam AI): ${err.message}` };
+  }
+}
+
+/**
+ * Builds the official administrative prompt for government orders
+ */
+function buildGovernmentOrderPrompt(formattedDate) {
+  return `
 आप मध्य प्रदेश स्टेट सिविल सप्लाईज कार्पोरेशन (MPSCSC - नागरिक आपूर्ति निगम), जिला कार्यालय बैतूल के प्रशासनिक एवं तकनीकी एआई विश्लेषक (Government Order AI Specialist) हैं।
 नीचे दिए गए शासकीय ईमेल, आदेश या परिपत्र का गहन अध्ययन करें और शुद्ध JSON प्रारूप में आउटपुट दें।
 
@@ -139,75 +208,228 @@ async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date
 
 उत्तर केवल और केवल वैध JSON ब्लॉक में होना चाहिए। कोई अन्य टिप्पणी या मार्कडाउन न जोड़ें।
 `;
+}
 
-  for (const model of CANDIDATE_MODELS) {
-    try {
-      const url = `${GEMINI_API_URL}/${model}:generateContent?key=${key}`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 18000); // 18s safety timeout
+/**
+ * Extracts and cleans JSON object from raw LLM output
+ */
+function parseJsonFromText(rawText) {
+  if (!rawText) return null;
+  const cleanJson = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+  try {
+    return JSON.parse(cleanJson);
+  } catch (err) {
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (e) {}
+    }
+  }
+  return null;
+}
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: systemInstruction },
-              { text: combinedDocument }
-            ]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json"
-          }
-        })
-      });
+/**
+ * Calls Sarvam AI (sarvam-105b) as an administrative intelligence engine
+ */
+async function callSarvamAI(systemInstruction, combinedDocument, formattedDate, subject) {
+  const sarvamKey = getSarvamApiKey();
+  if (!sarvamKey) return null;
 
-      clearTimeout(timeoutId);
+  console.log('🇮🇳 [Dual-Engine AI] Invoking Sarvam AI (sarvam-105b) as failover engine...');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-      if (!res.ok) {
-        console.warn(`⚠️ Gemini API model ${model} HTTP ${res.status}, trying next fallback...`);
-        continue;
+  try {
+    const res = await fetch(SARVAM_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-subscription-key': sarvamKey
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'sarvam-105b',
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: combinedDocument }
+        ],
+        temperature: 0.1,
+        max_tokens: 1800
+      })
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.status === 402) {
+      console.warn('⚠️ [Sarvam AI] 402 Insufficient Quota (No credits available). Please recharge Sarvam AI credits.');
+      return null;
+    }
+
+    if (!res.ok) {
+      console.warn(`⚠️ [Sarvam AI] HTTP ${res.status} failed: ${await res.text()}`);
+      return null;
+    }
+
+    const data = await res.json();
+    const rawContent = data.choices?.[0]?.message?.content;
+    const result = parseJsonFromText(rawContent);
+
+    if (!result) {
+      console.warn('⚠️ [Sarvam AI] Could not parse valid JSON from response');
+      return null;
+    }
+
+    return {
+      aiPowered: true,
+      provider: 'sarvam',
+      modelUsed: 'sarvam-105b (Sarvam AI Fallback)',
+      letterRefNo: result.letterRefNo || 'उल्लेख नहीं',
+      letterDate: result.letterDate || formattedDate,
+      issuingAuthority: result.issuingAuthority || 'सक्षम प्राधिकारी',
+      taskDescription: result.taskDescription || subject,
+      summary: result.summary || subject,
+      priority: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(result.priority) ? result.priority : 'MEDIUM',
+      priorityReason: result.priorityReason || 'Sarvam AI द्वारा शासकीय प्राथमिकीकरण',
+      dueDate: result.dueDate || null,
+      suggestedTimeline: result.suggestedTimeline || 'समय-सीमा अनिर्णित',
+      deadlineType: result.deadlineType || 'AI_SUGGESTED',
+      requiresConfirmation: result.requiresConfirmation ?? 1,
+      reportingRequired: result.reportingRequired ?? 0,
+      category: result.category || 'GENERAL',
+      assignedSection: result.assignedSection || null,
+      draftComplianceResponse: result.draftComplianceResponse || ''
+    };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn('⚠️ [Sarvam AI] Request error:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Contextually analyzes an official email & attachments using Gemini (Primary) with Sarvam AI fallback
+ * @param {object} param0 { subject, sender, date, body, pdfText, attachments }
+ */
+async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date(), body = '', pdfText = '', attachments = [] }) {
+  if (!isConfigured()) {
+    return null;
+  }
+
+  const receivedDate = date instanceof Date ? date : new Date(date || Date.now());
+  const formattedDate = receivedDate.toISOString().split('T')[0];
+
+  // Truncate input to avoid excessive token overhead while preserving key content
+  const maxChars = 12000;
+  let combinedDocument = `EMAIL SUBJECT: ${subject}\nFROM: ${sender}\nDATE RECEIVED: ${formattedDate}\n\nBODY TEXT:\n${body}`;
+  if (pdfText) {
+    combinedDocument += `\n\nATTACHED OFFICIAL ORDER PDF TEXT:\n${pdfText}`;
+  }
+  if (combinedDocument.length > maxChars) {
+    combinedDocument = combinedDocument.substring(0, maxChars) + '\n\n[...Truncated for processing...]';
+  }
+
+  const systemInstruction = buildGovernmentOrderPrompt(formattedDate);
+  const geminiKey = getApiKey();
+  let geminiFailed = false;
+
+  // 1. Try Gemini Primary Models if configured
+  if (isGeminiConfigured()) {
+    for (const model of CANDIDATE_MODELS) {
+      try {
+        const url = `${GEMINI_API_URL}/${model}:generateContent?key=${geminiKey}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s safety timeout
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: systemInstruction },
+                { text: combinedDocument }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        clearTimeout(timeoutId);
+
+        if (res.status === 429) {
+          console.warn(`⚠️ Gemini API model ${model} HTTP 429 Rate Limit. Switching to next model / Sarvam AI fallback...`);
+          geminiFailed = true;
+          continue;
+        }
+
+        if (!res.ok) {
+          console.warn(`⚠️ Gemini API model ${model} HTTP ${res.status}, trying next fallback...`);
+          continue;
+        }
+
+        const data = await res.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) continue;
+
+        const result = parseJsonFromText(rawText);
+        if (!result) continue;
+
+        return {
+          aiPowered: true,
+          provider: 'gemini',
+          modelUsed: model,
+          letterRefNo: result.letterRefNo || 'उल्लेख नहीं',
+          letterDate: result.letterDate || formattedDate,
+          issuingAuthority: result.issuingAuthority || 'सक्षम प्राधिकारी',
+          taskDescription: result.taskDescription || subject,
+          summary: result.summary || subject,
+          priority: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(result.priority) ? result.priority : 'MEDIUM',
+          priorityReason: result.priorityReason || 'Gemini AI द्वारा शासकीय प्राथमिकीकरण',
+          dueDate: result.dueDate || null,
+          suggestedTimeline: result.suggestedTimeline || 'समय-सीमा अनिर्णित',
+          deadlineType: result.deadlineType || 'AI_SUGGESTED',
+          requiresConfirmation: result.requiresConfirmation ?? 1,
+          reportingRequired: result.reportingRequired ?? 0,
+          category: result.category || 'GENERAL',
+          assignedSection: result.assignedSection || null,
+          draftComplianceResponse: result.draftComplianceResponse || ''
+        };
+      } catch (err) {
+        console.warn(`⚠️ Model ${model} analysis error:`, err.message);
       }
+    }
+    geminiFailed = true;
+  } else {
+    geminiFailed = true;
+  }
 
-      const data = await res.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) continue;
-
-      const cleanJson = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-      const result = JSON.parse(cleanJson);
-
-      return {
-        aiPowered: true,
-        modelUsed: model,
-        letterRefNo: result.letterRefNo || 'उल्लेख नहीं',
-        letterDate: result.letterDate || formattedDate,
-        issuingAuthority: result.issuingAuthority || 'सक्षम प्राधिकारी',
-        taskDescription: result.taskDescription || subject,
-        summary: result.summary || subject,
-        priority: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(result.priority) ? result.priority : 'MEDIUM',
-        priorityReason: result.priorityReason || 'Gemini AI द्वारा शासकीय प्राथमिकीकरण',
-        dueDate: result.dueDate || null,
-        suggestedTimeline: result.suggestedTimeline || 'समय-सीमा अनिर्णित',
-        deadlineType: result.deadlineType || 'AI_SUGGESTED',
-        requiresConfirmation: result.requiresConfirmation ?? 1,
-        reportingRequired: result.reportingRequired ?? 0,
-        category: result.category || 'GENERAL',
-        draftComplianceResponse: result.draftComplianceResponse || ''
-      };
-    } catch (err) {
-      console.warn(`⚠️ Model ${model} analysis error:`, err.message);
+  // 2. Fallback to Sarvam AI if Gemini exhausted/failed or unconfigured
+  if (geminiFailed && isSarvamConfigured()) {
+    console.log('🔄 [Failover Triggered] Gemini AI rate-limited or unavailable. Activating Sarvam AI Sovereign Fallback...');
+    const sarvamResult = await callSarvamAI(systemInstruction, combinedDocument, formattedDate, subject);
+    if (sarvamResult) {
+      return sarvamResult;
     }
   }
 
-  console.warn('⚠️ All Gemini models failed or timed out. Falling back to rules engine.');
+  console.warn('⚠️ All AI models (Gemini & Sarvam) failed, exhausted, or timed out. Falling back to deterministic rules engine.');
   return null;
 }
 
 module.exports = {
   isConfigured,
+  isGeminiConfigured,
+  isSarvamConfigured,
+  getApiKey,
+  getSarvamApiKey,
   testConnection,
+  testSarvamConnection,
   analyzeOfficialEmail,
-  CANDIDATE_MODELS
+  CANDIDATE_MODELS,
+  SARVAM_MODELS
 };
