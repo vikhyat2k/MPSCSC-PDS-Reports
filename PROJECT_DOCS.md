@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 21 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Official Gmail Integration & Actionable Tasks Monitoring Subsystem (ISSUE-048) |
+| Last Code Change | 04 Oct 2026 — Orders & Tasks Active Tab Visibility Fix & End-to-End UI Verification (ISSUE-049) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -620,7 +620,7 @@ Tracks implementation status of all major features.
 | Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape direct print engine (ISSUE-044) + Solid opaque surfaces & high-contrast typography eliminating background bleed-through (ISSUE-045) |
 | Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
-| Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048) |
+| Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048, ISSUE-049) |
 
 ---
 
@@ -786,6 +786,7 @@ Tracks what has been tested and confirmed working.
 | Supervision Full Functional Testing & Dummy Data Sandbox | End-to-End, CRUD & Data Safety | VERIFIED | 04 Oct 2026 | Verified 33/33 automated tests covering CRUD, boundary tests, input validation, search/filter, stats sync, 22 multi-scenario dummy records, and 100% data safety preservation of original records (ISSUE-046) |
 | Rice Quality Common Limits (KMS 2025-26) Specification | Unit, UI & Print Verification | VERIFIED | 04 Oct 2026 | Verified 10-point Common Rice maximum limits validation, interactive spec-violation class highlighting, automatic BRL result selection on out-of-spec parameters, NA handling for Admixture, and official schedule box in A4 print layout (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Module | Unit, Crypto, Parsing & Integration Verification | VERIFIED | 04 Oct 2026 | Verified AES-256-GCM token encryption, triage rules, Hindi order parsing, explicit vs AI-suggested timeline determination, database CRUD, metric aggregations, and 100% automated test suite passing (ISSUE-048) |
+| Supervision Orders & Tasks UI & Active Tab Rendering | End-to-End Headless Browser UI Verification | VERIFIED | 04 Oct 2026 | Verified removal of inline display:none blocking #view-tasks rendering, confirmed active tab display (display: block), 6 KPI metric cards, task matrix rows, Collectorate TL filter pill, task detail modal with direct Gmail deep-link, and Gmail OAuth status modal (ISSUE-049) |
 
 ---
 
@@ -840,10 +841,32 @@ Tracks what has been tested and confirmed working.
 | ISSUE-046 | Supervision Portal lacked dedicated multi-scenario dummy test datasets, 1-click safe cleanup mechanism, and full CRUD automated test coverage | HIGH | RESOLVED | server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-supervision-full-suite.js | 04 Oct 2026 |
 | ISSUE-047 | Rice Quality Inspection (KMS 2025-26) schedule limits used generic/loose thresholds (e.g. Damaged 4%, FRK 1.1%) instead of official GOI Uniform Specification for Common Rice maximum limits | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, public/supervision.css, tests/test-supervision-full-suite.js, tests/test-rice-common-spec.js | 04 Oct 2026 |
 | ISSUE-048 | Supervision Portal lacked direct official Gmail integration, automatic government order parsing, and actionable task tracking with timeline determination | HIGH | RESOLVED | server/services/gmail/*, server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-gmail-tasks-module.js | 04 Oct 2026 |
+| ISSUE-049 | Orders & Tasks view container (#view-tasks) had inline style="display:none;" in supervision.html, preventing tab activation and rendering due to inline style overriding CSS .superv-view.active specificity | HIGH | RESOLVED | public/supervision.html, tests/test-supervision-tasks-ui.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Orders & Tasks Active Tab Visibility Fix & End-to-End UI Verification Suite
+
+Files: public/supervision.html, tests/test-supervision-tasks-ui.js, PROJECT_DOCS.md
+Type: Bug Fix / UI & Verification Suite
+Closes: ISSUE-049
+
+- ROOT CAUSE:
+  In `public/supervision.html`, line 911 declared `<section class="superv-view" id="view-tasks" style="display:none;">`. While `showSupervView('tasks', this)` successfully added the `.active` CSS class to the section, the inline `style="display:none;"` had higher specificity than the stylesheet rule `.superv-view.active { display: block; }` in `supervision.css`. Consequently, clicking the "आदेश एवं कार्य (Orders & Tasks)" sidebar navigation tab left the section completely invisible to the user.
+- FIX:
+  1. Removed `style="display:none;"` from `<section class="superv-view" id="view-tasks">` in `public/supervision.html`, allowing the standard CSS `.superv-view` / `.superv-view.active` rules to cleanly control tab visibility.
+  2. Created automated Headless Chrome Puppeteer UI test suite (`tests/test-supervision-tasks-ui.js`) that verifies:
+     - Tab navigation switches `#view-tasks` to `display: block`.
+     - All 6 KPI metric counters display proper numeric aggregations.
+     - Task table renders all rows correctly with department and status badges.
+     - Interactive department filter buttons (e.g. `Collectorate TL`) filter the table in real time.
+     - Clicking "👁️ विवरण" opens `#modalTaskDetail` with letter ref, date, authority, instructions, and deep-link pointing to `https://mail.google.com/mail/u/0/#inbox/<message_id>`.
+     - Clicking "⚙️ जीमेल खाता स्थिति" opens `#modalGmailStatus` with OAuth credential status and connect button.
+     - 100% test pass verified.
+
+---
 
 ### 2026-10-04 | Official Gmail Integration & Actionable Tasks Monitoring Subsystem
 
