@@ -29,7 +29,14 @@ async function testConnection(testKey) {
     return { ok: false, error: 'Gemini API Key missing' };
   }
 
-  for (const model of CANDIDATE_MODELS) {
+  let lastError = 'Failed to authenticate with Gemini API models';
+  let hitRateLimit = false;
+
+  for (let i = 0; i < CANDIDATE_MODELS.length; i++) {
+    const model = CANDIDATE_MODELS[i];
+    // Small delay between retries to avoid cascading 429s
+    if (i > 0) await new Promise(r => setTimeout(r, 500));
+
     try {
       const url = `${GEMINI_API_URL}/${model}:generateContent?key=${key}`;
       const res = await fetch(url, {
@@ -43,16 +50,36 @@ async function testConnection(testKey) {
         })
       });
 
+      if (res.status === 429) {
+        hitRateLimit = true;
+        lastError = 'Gemini API दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें।';
+        console.warn(`⚠️ Gemini model ${model}: 429 Rate Limit — skipping`);
+        continue;
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        lastError = 'Gemini API Key अमान्य है। कृपया सही API Key दर्ज करें।';
+        console.warn(`⚠️ Gemini model ${model}: ${res.status} Auth failure`);
+        break; // No point trying other models with a bad key
+      }
+
       const data = await res.json();
       if (res.ok && data.candidates && data.candidates[0]) {
         return { ok: true, model };
       }
+
+      console.warn(`⚠️ Gemini model ${model}: HTTP ${res.status}, no candidates — trying next`);
     } catch (err) {
-      // try next model
+      console.warn(`⚠️ Gemini model ${model} fetch error: ${err.message}`);
+      lastError = `नेटवर्क त्रुटि: ${err.message}`;
     }
   }
 
-  return { ok: false, error: 'Failed to authenticate with Gemini API models' };
+  if (hitRateLimit) {
+    return { ok: false, error: lastError, rateLimited: true };
+  }
+
+  return { ok: false, error: lastError };
 }
 
 /**
