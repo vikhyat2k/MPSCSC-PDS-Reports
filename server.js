@@ -4347,15 +4347,168 @@ app.post('/api/supervision/test-data/seed', async (req, res) => {
 app.post('/api/supervision/test-data/cleanup', async (req, res) => {
     try {
         const result = await db.cleanupSupervisionTestData();
-        res.json(result);
+// ─────────────────────────────────────────────
+// SUPERVISION OFFICIAL ORDERS & TASKS API
+// ─────────────────────────────────────────────
+
+app.get('/api/supervision/tasks', async (req, res) => {
+    try {
+        const rawTasks = await db.getSupervisionTasks(req.query);
+        const { summary, tasks } = gmailService.processTaskEscalations(rawTasks);
+        res.json({ success: true, summary, tasks });
     } catch (err) {
-        console.error('Error cleaning up test data:', err);
-        res.status(500).json({ error: 'Failed to clean up test data: ' + err.message });
+        console.error('Error fetching supervision tasks:', err);
+        res.status(500).json({ error: 'Failed to fetch supervision tasks: ' + err.message });
+    }
+});
+
+app.get('/api/supervision/tasks/:id', async (req, res) => {
+    try {
+        const task = await db.getSupervisionTaskById(req.params.id);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+        res.json(task);
+    } catch (err) {
+        console.error('Error fetching task details:', err);
+        res.status(500).json({ error: 'Failed to fetch task: ' + err.message });
+    }
+});
+
+app.post('/api/supervision/tasks', async (req, res) => {
+    try {
+        if (!req.body || !req.body.subject) {
+            return res.status(400).json({ error: 'Subject is required' });
+        }
+        const taskId = req.body.id || await gmailService.generateNextTaskId(db);
+        const taskObj = { ...req.body, id: taskId };
+        await db.saveSupervisionTask(taskObj);
+        res.json({ success: true, taskId, task: taskObj });
+    } catch (err) {
+        console.error('Error saving supervision task:', err);
+        res.status(500).json({ error: 'Failed to save task: ' + err.message });
+    }
+});
+
+app.patch('/api/supervision/tasks/:id', async (req, res) => {
+    try {
+        const result = await db.updateSupervisionTask(req.params.id, req.body);
+        res.json({ success: true, updated: result.changes });
+    } catch (err) {
+        console.error('Error updating supervision task:', err);
+        res.status(500).json({ error: 'Failed to update task: ' + err.message });
+    }
+});
+
+app.delete('/api/supervision/tasks/:id', async (req, res) => {
+    try {
+        await db.deleteSupervisionTask(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error deleting task:', err);
+        res.status(500).json({ error: 'Failed to delete task: ' + err.message });
+    }
+});
+
+// ─────────────────────────────────────────────
+// OFFICIAL GMAIL OAUTH & INGESTION API
+// ─────────────────────────────────────────────
+
+app.get('/api/gmail/status', async (req, res) => {
+    try {
+        const configured = gmailService.isConfigured();
+        const activeAccount = await gmailService.getActiveAccount(db);
+        res.json({
+            configured,
+            connected: Boolean(activeAccount),
+            account: activeAccount ? {
+                email: activeAccount.email_address,
+                displayName: activeAccount.display_name,
+                accountType: activeAccount.account_type,
+                connectedAt: activeAccount.connected_at
+            } : null
+        });
+    } catch (err) {
+        console.error('Error checking Gmail status:', err);
+        res.status(500).json({ error: 'Failed to check Gmail status: ' + err.message });
+    }
+});
+
+app.get('/api/gmail/oauth/url', (req, res) => {
+    try {
+        if (!gmailService.isConfigured()) {
+            return res.status(400).json({
+                error: 'Google OAuth not configured in environment. Please specify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env'
+            });
+        }
+        const url = gmailService.getAuthUrl();
+        res.json({ url });
+    } catch (err) {
+        console.error('Error generating Google OAuth URL:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/gmail/oauth/callback', async (req, res) => {
+    try {
+        const code = req.query.code;
+        if (!code) {
+            return res.status(400).send('Authorization code missing from Google callback');
+        }
+        const tokenData = await gmailService.exchangeCode(code);
+        await gmailService.saveConnectedAccount(db, tokenData);
+        console.log(`✅ Official Gmail account connected successfully: ${tokenData.profile.email}`);
+        res.redirect('/supervision?gmail=connected');
+    } catch (err) {
+        console.error('Google OAuth callback failed:', err);
+        res.status(500).send('Google OAuth authentication failed: ' + err.message);
+    }
+});
+
+app.post('/api/gmail/sync', async (req, res) => {
+    try {
+        const activeAccount = await gmailService.getActiveAccount(db);
+        if (!activeAccount) {
+            return res.status(400).json({ error: 'No active Gmail account connected' });
+        }
+        const syncResult = await gmailService.syncOfficialEmails(db, req.body || {});
+        res.json({ success: true, result: syncResult });
+    } catch (err) {
+        console.error('Manual Gmail sync failed:', err);
+        res.status(500).json({ error: 'Sync failed: ' + err.message });
+    }
+});
+
+app.post('/api/gmail/disconnect', async (req, res) => {
+    try {
+        const activeAccount = await gmailService.getActiveAccount(db);
+        if (activeAccount) {
+            await gmailService.disconnectAccount(db, activeAccount.id);
+        }
+        res.json({ success: true, message: 'Account disconnected successfully' });
+    } catch (err) {
+        console.error('Gmail disconnect failed:', err);
+        res.status(500).json({ error: 'Disconnect failed: ' + err.message });
+    }
+});
+
+// Periodic background polling worker for official orders (every 5 minutes)
+cron.schedule('*/5 * * * *', async () => {
+    try {
+        if (!gmailService.isConfigured()) return;
+        const activeAccount = await gmailService.getActiveAccount(db);
+        if (!activeAccount) return;
+        console.log('🔄 [Background Worker] Checking official Gmail for incoming orders...');
+        const result = await gmailService.syncOfficialEmails(db, { maxResults: 10 });
+        if (result.actionableCreated > 0) {
+            console.log(`📥 [Background Worker] ${result.actionableCreated} new actionable tasks created from official emails.`);
+        }
+    } catch (e) {
+        console.warn('⚠️ [Background Worker] Gmail background poll skipped:', e.message);
     }
 });
 
 // Serve index page
 app.get('/', (req, res) => {
+
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
