@@ -1138,6 +1138,10 @@ class DatabaseManager {
       sql += ' AND priority = ?';
       params.push(filters.priority);
     }
+    if (filters.section) {
+      sql += ' AND assigned_section = ?';
+      params.push(filters.section);
+    }
     if (filters.requires_confirmation !== undefined) {
       sql += ' AND requires_confirmation = ?';
       params.push(filters.requires_confirmation ? 1 : 0);
