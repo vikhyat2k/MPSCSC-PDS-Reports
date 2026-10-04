@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 21 |
+| Completed Milestones | 22 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Interactive Account Linkage Form & Google Sign-In in Gmail Status Modal (ISSUE-053) |
+| Last Code Change | 04 Oct 2026 — Left Panel Auto-Shrink & Front-End Gmail Account Linkage Hub (ISSUE-054, ISSUE-055) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -791,6 +791,8 @@ Tracks what has been tested and confirmed working.
 | Official Gmail Account Linkage (dmnanbetul1@gmail.com) | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified direct linkage of dmnanbetul1@gmail.com into official_email_accounts, priority status card rendering (green dot, active account badge), resilient sync execution without credential crashes, and 100% automated test pass (ISSUE-051) |
 | Orders & Tasks Dummy Data Safe Deletion & Startup Hygiene | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified permanent deletion of initial demo tasks (TASK-2026-10-001..003), disabled auto-reseeding on startup, added 1-click UI safe purge button, updated test-data sandbox modal, and verified empty-state rendering via Headless Chrome (ISSUE-052) |
 | Gmail Account Linking Form & OAuth 2.0 Direct Controls | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added interactive direct account linkage form (email & office inputs, 'Link Account' button) and always-visible Google OAuth 2.0 Sign-In option in #modalGmailStatus; verified with 100% passing Puppeteer test suite (ISSUE-053) |
+| Supervision Sidebar Auto-Shrink & State Synchronization | UI, CSS & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added dual-class (.app-wrapper.sidebar-collapsed, .app-sidebar.collapsed) support, smooth 72px auto-shrink, 260px hover expansion, backdrop overlay, tooltip tracking, and 7/7 automated test pass across supervision.html, index.html, and directory.html (ISSUE-054) |
+| Front-End Gmail Account Linkage Hub & Credential Persistence | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Implemented 3-option linkage hub (1-click quick link, in-app Google OAuth 2.0 Client ID/Secret form, and App Password setup) eliminating manual .env editing; verified with 100% passing Puppeteer test suite (ISSUE-055) |
 
 ---
 
@@ -850,10 +852,77 @@ Tracks what has been tested and confirmed working.
 | ISSUE-051 | Gmail account status and sync needed active linkage for official district address dmnanbetul1@gmail.com and resilient fallback sync execution when Google Cloud OAuth client ID is not yet configured | MEDIUM | RESOLVED | server/services/gmail/*, server.js, public/supervision_logic.js, tests/test-linked-account-ui.js | 04 Oct 2026 |
 | ISSUE-052 | Orders & Tasks module retained 3 initial demo dummy records (TASK-2026-10-001..003) and re-seeded them on restart if empty, requiring safe deletion, permanent auto-seed suppression, and UI purge parity | MEDIUM | RESOLVED | server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-verify-deleted-tasks-ui.js | 04 Oct 2026 |
 | ISSUE-053 | Official Gmail Account Status modal previously hid the connect button when connected or when OAuth was unconfigured, leaving no visible option in the UI to link, re-link, or update an account | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, tests/test-link-option-ui.js | 04 Oct 2026 |
+| ISSUE-054 | Supervision Portal left navigation panel auto-shrink not working on toggle or medium screens (<=1100px) due to missing .app-wrapper.sidebar-collapsed CSS rules, missing backdrop, and broken toggleSidebar() implementation | HIGH | RESOLVED | public/styles.css, public/supervision.html, public/supervision_logic.js, public/index.html, tests/test-sidebar-comprehensive.js | 04 Oct 2026 |
+| ISSUE-055 | Gmail account linking lacked comprehensive front-end configuration options, displaying alert to edit .env when clicking Google Sign-In; needed seamless multi-option UI hub (1-click quick link, in-app Google OAuth 2.0 Client ID/Secret form, and App Password setup) without requiring users to manually edit .env | HIGH | RESOLVED | server.js, public/supervision.html, public/supervision_logic.js, tests/test-frontend-link-options.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Front-End Official Gmail Account Linkage Hub & In-App Credential Management
+
+Files: server.js, public/supervision.html, public/supervision_logic.js, tests/test-frontend-link-options.js, tests/test-screenshot-tabs.js, PROJECT_DOCS.md
+Type: Feature / UI & API Enhancement
+Closes: ISSUE-055
+
+- USER REQUIREMENT & ISSUE:
+  The user requested: "there should be proper option to link account through front end" and previously encountered an alert dialog stating:
+  "Google Cloud OAuth 2.0 प्रमाणीकरण सूचना: Google OAuth not configured in environment. Please specify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env".
+- ROOT CAUSE:
+  1. The Google Sign-In flow invoked `/api/gmail/oauth/url`, which returned a 400 error when Google Client ID / Secret was unconfigured in `.env`, triggering a generic JavaScript `alert()` directing the user to edit their `.env` file manually.
+  2. The portal lacked in-app inputs to enter, save, and update Google Cloud API credentials (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`) directly from the browser without touching local files.
+  3. The user was not presented with a clean choice of linkage methods (1-Click Quick Link vs. Google Cloud OAuth 2.0 vs. Gmail App Password).
+- FIX & IMPLEMENTATION:
+  1. Backend Endpoints (`server.js`):
+     - Added `GET /api/gmail/oauth/config`: Returns `{ configured, clientId, redirectUri, hasSecret }`.
+     - Added `POST /api/gmail/oauth/config`: Accepts `{ clientId, clientSecret, redirectUri }`, calls `updateEnvFile()` to persist them to `.env` and `process.env`, and automatically returns the generated Google OAuth authorization URL.
+     - Enhanced `POST /api/gmail/link`: Supports an optional `appPassword` field to update `EMAIL_USER` and `EMAIL_PASSWORD` via `updateEnvFile()`.
+  2. Front-End 3-Option Linkage Hub (`public/supervision.html`):
+     - Redesigned `#modalGmailStatus` with a high-contrast segmented tab switcher:
+       * **Tab 1: ⚡ 1-क्लिक त्वरित लिंक (Quick 1-Click Link)**: Instantly links official email (`dmnanbetul1@gmail.com`) and office designation without requiring any Google Cloud setup or API credentials.
+       * **Tab 2: 🌐 Google OAuth 2.0**: In-app form with inputs for Google Client ID, masked Google Client Secret with eye toggle, read-only redirect URI with 1-click clipboard copy button, a prominent "Save & Sign In" button, and an expandable 2-minute Google Cloud Console setup guide.
+       * **Tab 3: 🔑 ऐप पासवर्ड (App PW)**: Input fields for Gmail address and 16-character Google App Password with show/hide toggle.
+  3. Interactive Frontend Logic (`public/supervision_logic.js`):
+     - Implemented `switchGmailLinkTab(tabName)`: Clean tab state switching and panel visibility toggling.
+     - Implemented `saveGoogleOAuthCredentials()`: Reads in-app credentials, POSTs to `/api/gmail/oauth/config`, and automatically redirects the user to the Google OAuth consent screen.
+     - Implemented `linkWithAppPassword()`: Reads email and app password, POSTs to `/api/gmail/link`, and reloads status.
+     - Implemented `copyRedirectUri()`: Copies the authorized redirect URI to clipboard with button feedback.
+     - Implemented `toggleSecretVisibility(id)` and `toggleOAuthEditForm()`.
+     - Updated `openGmailStatusModal()`: Fetches both account status and OAuth config, auto-fills redirect URI, displays current connection status, and shows/hides setup forms appropriately.
+  4. Automated Verification:
+     - Created and executed `tests/test-frontend-link-options.js` verifying tab switching, OAuth panel visibility, redirect URI, App Password panel, 1-click link of `dmnanbetul1@gmail.com`, active green badge, and screenshot capture. 100% passed.
+     - Captured tab screenshots: `tests/gmail_modal_frontend_linking.png`, `tests/gmail_modal_tab_oauth.png`, and `tests/gmail_modal_tab_apppw.png`.
+
+---
+
+### 2026-10-04 | Left Navigation Panel Auto-Shrink & Responsive Sidebar Synchronization
+
+Files: public/styles.css, public/supervision.html, public/supervision_logic.js, public/index.html, tests/test-sidebar-comprehensive.js, PROJECT_DOCS.md
+Type: Bug Fix / UI Usability Enhancement
+Closes: ISSUE-054
+
+- USER REQUIREMENT & ISSUE:
+  The user reported: "auto shrink of left panel not working" on the Supervision Portal (`supervision.html`).
+- ROOT CAUSE:
+  1. `public/styles.css` only targeted `.app-wrapper.sidebar-collapsed .app-sidebar`, but in `supervision.html` and other pages, `.collapsed` was being toggled directly on `#appSidebar` (`.app-sidebar.collapsed`).
+  2. `.app-shell` margin-left transitions had conflicting CSS rules across `styles.css` and `supervision.css`.
+  3. `toggleSidebar()` in `public/supervision_logic.js` only checked `window.innerWidth <= 768` for mobile, lacking medium-screen (769px–1100px) auto-shrink handling, backdrop coordination, and persistent localStorage sync.
+- FIX & IMPLEMENTATION:
+  1. CSS Unification (`public/styles.css`):
+     - Added dual-class selector rules: `.app-wrapper.sidebar-collapsed .app-sidebar, .app-sidebar.collapsed` ensuring 72px width, centered icons, and hidden text labels in collapsed state.
+     - Added smooth hover expansion: `.app-wrapper.sidebar-collapsed .app-sidebar:hover, .app-sidebar.collapsed:hover` expands sidebar smoothly to 260px and reveals labels with elevated z-index and box-shadow.
+     - Synchronized `.app-shell` margin-left to automatically shrink from 260px to 72px with smooth bezier transition.
+  2. Script Enhancement (`public/supervision_logic.js`):
+     - Re-implemented `toggleSidebar()` to toggle both `sidebar-collapsed` on `.app-wrapper` and `collapsed` on `.app-sidebar`.
+     - Added `initSidebarState()` with responsive resize listener: automatically shrinks sidebar to 72px on viewports <= 1100px.
+     - Added hover tooltip manager for collapsed mode icons.
+  3. Early Hydration Script (`public/supervision.html`):
+     - Added inline script right before `<body>` to prevent flash of un-collapsed sidebar on initial load or reload.
+  4. Automated Verification:
+     - Created and executed comprehensive test suite `tests/test-sidebar-comprehensive.js`.
+     - Verified 7/7 test cases: Initial 260px expanded width, manual toggle collapse to 72px, hover auto-expansion to 260px, mouse-out auto-shrink to 72px, reload state retention, toggle expansion back to 260px, and responsive 1024px auto-shrink to 72px.
+
+---
 
 ### 2026-10-04 | Interactive Account Linkage Form & Google Sign-In in Gmail Status Modal
 

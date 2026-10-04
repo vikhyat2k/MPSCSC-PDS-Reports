@@ -17,21 +17,26 @@ const path = require('path');
         page.on('dialog', async dialog => {
             alertCount++;
             lastAlertMsg = dialog.message();
-            console.log(`  [Alert Dialog] "${lastAlertMsg}"`);
+            console.log(`  [Alert Dialog ${alertCount}] "${lastAlertMsg}"`);
             await dialog.accept();
         });
 
         console.log('1. Navigating to http://localhost:3000/supervision.html...');
         await page.goto('http://localhost:3000/supervision.html', { waitUntil: 'networkidle2', timeout: 30000 });
 
-        console.log('2. Opening Official Gmail Account Status & Linkage Modal (#btnManageGmail)...');
+        console.log('2. Navigating to Orders & Tasks View (#superv-nav-tasks)...');
+        await page.waitForSelector('#superv-nav-tasks', { visible: true });
+        await page.click('#superv-nav-tasks');
+        await new Promise(r => setTimeout(r, 600));
+
+        console.log('3. Opening Official Gmail Account Status & Linkage Modal (#btnManageGmail)...');
         await page.waitForSelector('#btnManageGmail', { visible: true });
         await page.click('#btnManageGmail');
 
-        await page.waitForSelector('#modalGmailStatus.active', { visible: true, timeout: 5000 });
+        await page.waitForSelector('#modalGmailStatus.open', { visible: true, timeout: 5000 });
         console.log('  ✓ Modal #modalGmailStatus opened successfully.');
 
-        console.log('3. Verifying presence of 3 Account Linkage Tabs...');
+        console.log('4. Verifying presence of 3 Account Linkage Tabs...');
         const tabCheck = await page.evaluate(() => {
             const tab1 = document.getElementById('btnTabQuickLink');
             const tab2 = document.getElementById('btnTabOAuth');
@@ -52,7 +57,7 @@ const path = require('path');
         }
         console.log(`  ✓ 3 Tabs exist. Initial panel visibility: Quick=${tabCheck.p1Visible}, OAuth=${tabCheck.p2Visible}, AppPW=${tabCheck.p3Visible}`);
 
-        console.log('4. Testing Tab Switch to Google OAuth 2.0...');
+        console.log('5. Testing Tab Switch to Google OAuth 2.0...');
         await page.click('#btnTabOAuth');
         await new Promise(r => setTimeout(r, 400));
         const oauthVisible = await page.evaluate(() => {
@@ -70,7 +75,7 @@ const path = require('path');
         if (!oauthVisible.visible) throw new Error('OAuth panel failed to display on tab switch');
         console.log(`  ✓ OAuth 2.0 panel visible. Redirect URI: ${oauthVisible.redirectUriVal}`);
 
-        console.log('5. Testing Tab Switch to App Password...');
+        console.log('6. Testing Tab Switch to App Password...');
         await page.click('#btnTabAppPassword');
         await new Promise(r => setTimeout(r, 400));
         const appPwVisible = await page.evaluate(() => {
@@ -86,14 +91,14 @@ const path = require('path');
         if (!appPwVisible.visible) throw new Error('App Password panel failed to display on tab switch');
         console.log(`  ✓ App Password panel visible. Default email: ${appPwVisible.emailVal}`);
 
-        console.log('6. Testing Quick 1-Click Link with dmnanbetul1@gmail.com...');
+        console.log('7. Testing Quick 1-Click Link with dmnanbetul1@gmail.com...');
         await page.click('#btnTabQuickLink');
         await new Promise(r => setTimeout(r, 400));
 
         await page.click('#btnSubmitLinkDirect');
         await new Promise(r => setTimeout(r, 1200));
 
-        console.log('7. Verifying Active Linked Status Badge & Details...');
+        console.log('8. Verifying Active Linked Status Badge & Details...');
         const statusDetails = await page.evaluate(() => {
             const dot = document.getElementById('gmailStatusDot');
             const heading = document.getElementById('gmailStatusHeading');
