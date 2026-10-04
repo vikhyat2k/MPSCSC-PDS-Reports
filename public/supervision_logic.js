@@ -3523,9 +3523,7 @@ function copyRedirectUri() {
 }
 
 function openGeminiModal() {
-    openModal('modalGmailStatus');
-    switchGmailLinkTab('gemini');
-    openGmailStatusModal();
+    openGmailStatusModal('gemini');
 }
 
 function openGeminiModalFromNav(navEl) {
@@ -3533,6 +3531,18 @@ function openGeminiModalFromNav(navEl) {
     showSupervView('tasks', tasksNav || navEl);
     setTimeout(() => {
         openGeminiModal();
+    }, 100);
+}
+
+function openSyncSettingsModal() {
+    openGmailStatusModal('sync');
+}
+
+function openSyncSettingsModalFromNav(navEl) {
+    const tasksNav = document.getElementById('superv-nav-tasks');
+    showSupervView('tasks', tasksNav || navEl);
+    setTimeout(() => {
+        openSyncSettingsModal();
     }, 100);
 }
 
@@ -3544,6 +3554,7 @@ async function updateGeminiBadges() {
         const bannerBadge = document.getElementById('geminiBannerBadge');
         const modalBadge = document.getElementById('geminiStatusBadge');
         const sarvamBadge = document.getElementById('sarvamStatusBadge');
+        const bannerDesc = document.getElementById('geminiBannerDesc');
 
         const isGeminiActive = Boolean(aiData.active);
         const isSarvamActive = Boolean(aiData.sarvam && aiData.sarvam.active);
@@ -3556,6 +3567,9 @@ async function updateGeminiBadges() {
             }
             if (bannerBadge) {
                 bannerBadge.className = 'superv-badge badge-success';
+                bannerBadge.style.background = 'rgba(16,185,129,0.15)';
+                bannerBadge.style.color = '#10b981';
+                bannerBadge.style.border = '1px solid rgba(16,185,129,0.3)';
                 bannerBadge.textContent = `🟢 Gemini सक्रिय (${aiData.model || 'gemini-3.5-flash'})`;
             }
             if (modalBadge) {
@@ -3569,20 +3583,43 @@ async function updateGeminiBadges() {
             }
             if (bannerBadge) {
                 bannerBadge.className = 'superv-badge badge-success';
+                bannerBadge.style.background = 'rgba(16,185,129,0.15)';
+                bannerBadge.style.color = '#10b981';
+                bannerBadge.style.border = '1px solid rgba(16,185,129,0.3)';
                 bannerBadge.textContent = `🇮🇳 Sarvam AI सक्रिय (फॉलबैक)`;
             }
             if (modalBadge) {
                 modalBadge.className = 'superv-badge badge-warning';
-                modalBadge.textContent = aiData.rateLimited ? 'दर सीमा (Rate Limit) — Sarvam सक्रिय' : 'अपुष्ट (Unverified)';
+                modalBadge.textContent = 'दर सीमा (Rate Limit) — Sarvam सक्रिय';
             }
         } else if (aiData.rateLimited) {
-            if (headerBadge) {
-                headerBadge.style.background = '#f59e0b';
-                headerBadge.textContent = 'Rate Limit';
-            }
-            if (bannerBadge) {
-                bannerBadge.className = 'superv-badge badge-warning';
-                bannerBadge.textContent = '🟡 Gemini दर सीमा (Rate Limit)';
+            if (isSarvamQuota) {
+                if (headerBadge) {
+                    headerBadge.style.background = '#ef4444';
+                    headerBadge.textContent = 'कोटा समाप्त';
+                }
+                if (bannerBadge) {
+                    bannerBadge.className = 'superv-badge';
+                    bannerBadge.style.background = 'rgba(239,68,68,0.15)';
+                    bannerBadge.style.color = '#ef4444';
+                    bannerBadge.style.border = '1px solid rgba(239,68,68,0.3)';
+                    bannerBadge.textContent = '🔴 Gemini दर सीमा (429) • Sarvam 0 क्रेडिट';
+                }
+                if (bannerDesc) {
+                    bannerDesc.textContent = 'Google Gemini की दैनिक दर सीमा (HTTP 429) समाप्त हो गई है एवं Sarvam AI में 0 क्रेडिट हैं। सिस्टम वर्तमान में सुरक्षित नियम-आधारित पार्सर (Rules Engine) से कार्य कर रहा है।';
+                }
+            } else {
+                if (headerBadge) {
+                    headerBadge.style.background = '#f59e0b';
+                    headerBadge.textContent = 'दर सीमा (429)';
+                }
+                if (bannerBadge) {
+                    bannerBadge.className = 'superv-badge badge-warning';
+                    bannerBadge.style.background = 'rgba(245,158,11,0.15)';
+                    bannerBadge.style.color = '#fbbf24';
+                    bannerBadge.style.border = '1px solid rgba(245,158,11,0.3)';
+                    bannerBadge.textContent = '🟡 Gemini दर सीमा (429 Rate Limit)';
+                }
             }
             if (modalBadge) {
                 modalBadge.className = 'superv-badge badge-warning';
@@ -3591,15 +3628,24 @@ async function updateGeminiBadges() {
         } else if (aiData.configured) {
             if (headerBadge) {
                 headerBadge.style.background = '#f59e0b';
-                headerBadge.textContent = 'Pending';
+                headerBadge.textContent = 'जांच जारी';
             }
             if (bannerBadge) {
                 bannerBadge.className = 'superv-badge badge-warning';
-                bannerBadge.textContent = '🟡 अपुष्ट';
+                bannerBadge.textContent = '🟡 अपुष्ट / परीक्षण जारी';
             }
             if (modalBadge) {
                 modalBadge.className = 'superv-badge badge-warning';
                 modalBadge.textContent = 'अपुष्ट (Unverified)';
+            }
+        } else {
+            if (headerBadge) {
+                headerBadge.style.background = 'var(--text-muted)';
+                headerBadge.textContent = 'Inactive';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge';
+                bannerBadge.textContent = '⚪ असंरचित';
             }
         }
 
@@ -3622,8 +3668,11 @@ async function updateGeminiBadges() {
     } catch (e) {}
 }
 
-async function openGmailStatusModal() {
+async function openGmailStatusModal(initialTab = null) {
     openModal('modalGmailStatus');
+    if (initialTab) {
+        switchGmailLinkTab(initialTab);
+    }
     const dot = document.getElementById('gmailStatusDot');
     const heading = document.getElementById('gmailStatusHeading');
     const emailEl = document.getElementById('gmailAccountEmail');
