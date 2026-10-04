@@ -3900,6 +3900,10 @@ async function openGmailStatusModal(initialTab = null) {
                 alertBox.style.display = 'none';
             }
         }
+
+        if (initialTab) {
+            switchGmailLinkTab(initialTab);
+        }
     } catch (err) {
         console.warn('Failed to check Gmail status:', err);
     }
