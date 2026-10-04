@@ -1234,6 +1234,21 @@ class DatabaseManager {
     return await this.run('DELETE FROM supervision_tasks WHERE id = ?', [id]);
   }
 
+  /**
+   * Delete dummy / test tasks from Official Orders & Actionable Tasks
+   */
+  async deleteDummySupervisionTasks() {
+    const row = await this.get("SELECT COUNT(*) as c FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%'");
+    const count = row ? row.c : 0;
+    await this.run("DELETE FROM task_attachments WHERE task_id IN (SELECT id FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%')");
+    await this.run("DELETE FROM supervision_tasks WHERE is_test = 1 OR id LIKE 'TEST_%' OR id LIKE 'DUMMY_%' OR id LIKE 'TASK-2026-10-%'");
+    return {
+      success: true,
+      deleted: count,
+      message: `आदेश एवं कार्य अनुश्रवण से ${count} डमी/परीक्षण रिकॉर्ड्स सफलतापूर्वक हटा दिए गए।`
+    };
+  }
+
   async seedOfficialTasksIfEmpty() {
     try {
       const row = await this.get('SELECT COUNT(*) as c FROM supervision_tasks');
@@ -1323,7 +1338,8 @@ class DatabaseManager {
    */
   async seedSupervisionDataIfEmpty() {
     try {
-      await this.seedOfficialTasksIfEmpty();
+      // NOTE: seedOfficialTasksIfEmpty disabled so dummy tasks are not automatically recreated after user deletion.
+      // await this.seedOfficialTasksIfEmpty();
       const countRow = await this.get('SELECT COUNT(*) as c FROM supervision_roster');
       if (countRow && countRow.c > 0) return;
 
