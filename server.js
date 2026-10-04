@@ -42,6 +42,7 @@ const WelfarePDFGenerator = require('./server/services/welfarePdfGenerator');
 const AnalyticsService = require('./server/services/analytics');
 const reportValidator = require('./server/services/reportValidator');
 const BalancesReportGenerator = require('./server/services/balancesReportGenerator');
+const gmailService = require('./server/services/gmail');
 
 // Date Range Specific Models
 const NFSADaterangeScraper = require('./server/automation/nfsa_daterange_scraper');
