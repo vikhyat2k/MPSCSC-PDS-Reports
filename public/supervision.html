@@ -1482,6 +1482,179 @@
             </div>
         </div>
     </div>
+<!-- 6. Official Gmail Account Status & Configuration Modal -->
+<div class="superv-modal-overlay" id="modalGmailStatus">
+    <div class="superv-modal-box" style="max-width:620px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);">📧 शासकीय जीमेल खाता स्थिति (Official Gmail Account)</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalGmailStatus')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body" style="padding:20px;">
+            <div id="gmailAccountStatusCard" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div id="gmailStatusDot" style="width:12px; height:12px; border-radius:50%; background:#94a3b8;"></div>
+                    <div>
+                        <div id="gmailStatusHeading" style="font-weight:700; font-size:14px; color:var(--text-main);">जांच हो रही है...</div>
+                        <div id="gmailAccountEmail" style="font-size:12px; color:var(--text-muted); margin-top:2px;">खाता विवरण लोड हो रहा है...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:12px; font-size:12px; color:var(--text-main); margin-bottom:16px; line-height:1.6;">
+                <strong>💡 Google OAuth 2.0 सुरक्षा मानक (Security Standards):</strong><br>
+                यह प्रणाली बिना पासवर्ड के Google OAuth 2.0 (Least Privilege Read-Only) के माध्यम से शासकीय ईमेल से सीधे आदेश व परिपत्र स्वतः ट्रेक करती है। कोई भी ईमेल हटाया या भेजा नहीं जाता है।
+            </div>
+
+            <div id="gmailConfigAlert" style="display:none; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:12px; font-size:12px; color:#ef4444; margin-bottom:16px;">
+                ⚠️ <code>GOOGLE_CLIENT_ID</code> एवं <code>GOOGLE_CLIENT_SECRET</code> .env में अनुपलब्ध हैं। कृपया Google Cloud Console से क्रेडेंशियल कॉन्फ़िगर करें।
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modalGmailStatus')">बंद करें</button>
+                <button type="button" id="btnConnectGmail" class="btn btn-primary" onclick="initiateGmailConnect()" style="display:none;">
+                    🔗 Google से अधिकृत करें (Connect Gmail)
+                </button>
+                <button type="button" id="btnDisconnectGmail" class="btn" onclick="disconnectGmailAccount()" style="display:none; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">
+                    विच्छेद करें (Disconnect)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. Task Form Modal (Add / Edit Actionable Order) -->
+<div class="superv-modal-overlay" id="modalTaskForm">
+    <div class="superv-modal-box" style="max-width:720px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);" id="modalTaskFormTitle">शासकीय कार्य / आदेश प्रविष्टि</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalTaskForm')">✕ बंद करें</button>
+        </div>
+        <form id="taskEditorForm" class="superv-modal-form" onsubmit="handleSaveTask(event)">
+            <input type="hidden" id="taskFormId" value="">
+            <div class="superv-modal-body" style="padding:16px 20px;">
+                <div class="superv-form-grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="superv-form-group">
+                        <label class="superv-label required">पत्र क्रमांक / संदर्भ (Letter Ref No.)</label>
+                        <input type="text" class="superv-input" id="taskFormRefNo" placeholder="उदा. मुख्या./पीडीएस/2026/4182" required>
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label required">पत्र दिनांक (Letter Date)</label>
+                        <input type="date" class="superv-input" id="taskFormLetterDate" required>
+                    </div>
+                </div>
+
+                <div class="superv-form-grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="superv-form-group">
+                        <label class="superv-label required">जारीकर्ता प्राधिकारी (Issuing Authority)</label>
+                        <input type="text" class="superv-input" id="taskFormAuthority" placeholder="उदा. प्रबंध संचालक, म.प्र. स्टेट सिविल सप्लाईज कार्पोरेशन" required>
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label required">विभाग श्रेणी (Category)</label>
+                        <select class="superv-select" id="taskFormCategory" required>
+                            <option value="HO">मुख्यालय (Head Office Bhopal)</option>
+                            <option value="DISTRICT_ADMIN">कलेक्टर / जिला प्रशासन (TL)</option>
+                            <option value="RO">क्षेत्रीय कार्यालय (Regional Office)</option>
+                            <option value="OTHER_GOVT">अन्य विभाग / संस्था</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label required">विषय (Subject)</label>
+                    <input type="text" class="superv-input" id="taskFormSubject" placeholder="पत्र / निर्देश का मुख्य विषय" required>
+                </div>
+
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label required">कार्य विवरण एवं मुख्य निर्देश (Action Items)</label>
+                    <textarea class="superv-textarea" id="taskFormDescription" rows="3" placeholder="किए जाने वाले कार्य एवं निर्देश बिंदु..." required></textarea>
+                </div>
+
+                <div class="superv-form-grid" style="grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="superv-form-group">
+                        <label class="superv-label">प्रभारी शाखा (Section)</label>
+                        <select class="superv-select" id="taskFormSection">
+                            <option value="PDS">PDS (उठाव एवं वितरण)</option>
+                            <option value="Storage">भंडारण एवं वेयरहाउसिंग</option>
+                            <option value="Quality">गुणवत्ता नियंत्रण (QC)</option>
+                            <option value="Finance">वित्त एवं लेखा</option>
+                            <option value="Admin">सामान्य प्रशासन</option>
+                        </select>
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label">उत्तरदायी अधिकारी / प्रभारी</label>
+                        <input type="text" class="superv-input" id="taskFormResponsible" placeholder="उदा. जिला प्रबंधक / QC अधिकारी">
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label">प्राथमिकता (Priority)</label>
+                        <select class="superv-select" id="taskFormPriority">
+                            <option value="CRITICAL">🔴 अति-महत्वपूर्ण (Critical/TL)</option>
+                            <option value="HIGH" selected>🟠 उच्च (High)</option>
+                            <option value="MEDIUM">🟡 सामान्य (Medium)</option>
+                            <option value="LOW">⚪ सामान्य सूचना (Low)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="superv-form-grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="superv-form-group">
+                        <label class="superv-label">समय-सीमा (Due Date)</label>
+                        <input type="datetime-local" class="superv-input" id="taskFormDueDate">
+                    </div>
+                    <div class="superv-form-group">
+                        <label class="superv-label">समय-सीमा प्रकार (Deadline Type)</label>
+                        <select class="superv-select" id="taskFormDeadlineType" onchange="toggleConfirmCheckbox(this.value)">
+                            <option value="OFFICIAL_EXPLICIT">राजकीय समय-सीमा (Officially Stated)</option>
+                            <option value="AI_SUGGESTED">अनुमानित (AI Suggested Relative)</option>
+                            <option value="MANUAL">मैनुअल निर्धारित</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="taskFormRequiresConfirm" style="width:16px; height:16px;">
+                    <label for="taskFormRequiresConfirm" style="font-size:12px; color:var(--text-main); font-weight:600; cursor:pointer;">
+                        ⚠️ समय-सीमा की अधिकारी द्वारा पुष्टि अपेक्षित है (Requires Confirmation)
+                    </label>
+                </div>
+
+                <div class="superv-form-group" style="margin-bottom:12px;">
+                    <label class="superv-label">अनुपालन टिप्पणी / पालन प्रतिवेदन विवरण (Compliance Remarks)</label>
+                    <input type="text" class="superv-input" id="taskFormRemarks" placeholder="उदा. मुख्यालय को पालन प्रतिवेदन प्रेषित किया जा चुका है...">
+                </div>
+
+                <div class="superv-form-group">
+                    <label class="superv-label">कार्य स्थिति (Status)</label>
+                    <select class="superv-select" id="taskFormStatus">
+                        <option value="NEW">नवीन (New)</option>
+                        <option value="IN_PROGRESS">प्रगतिरत (In Progress)</option>
+                        <option value="COMPLETED">पूर्ण (Completed)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="superv-modal-footer" style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); padding:12px 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modalTaskForm')">रद्द करें</button>
+                <button type="submit" class="btn btn-primary">💾 सुरक्षित करें</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 8. Task Detail View Modal -->
+<div class="superv-modal-overlay" id="modalTaskDetail">
+    <div class="superv-modal-box" style="max-width:800px;">
+        <div class="superv-modal-header">
+            <h3 style="margin:0; font-size:16px; color:var(--text-main);" id="taskDetailTitle">शासकीय आदेश विवरण</h3>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalTaskDetail')">✕ बंद करें</button>
+        </div>
+        <div class="superv-modal-body" id="taskDetailBody" style="padding:20px;">
+            <!-- Populated dynamically via supervision_logic.js -->
+        </div>
+        <div class="superv-modal-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px;">
+            <div id="taskDetailEmailLinkContainer"></div>
+            <button class="btn btn-secondary" onclick="closeModal('modalTaskDetail')">बंद करें</button>
+        </div>
+    </div>
 </div>
 
 <script src="./supervision_logic.js"></script>
