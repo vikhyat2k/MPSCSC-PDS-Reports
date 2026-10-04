@@ -4498,6 +4498,18 @@ app.post('/api/gmail/disconnect', async (req, res) => {
     }
 });
 
+app.post('/api/gmail/link', async (req, res) => {
+    try {
+        const email = req.body?.email || 'dmnanbetul1@gmail.com';
+        const displayName = req.body?.displayName || 'जिला कार्यालय बैतूल (District Office Betul)';
+        const account = await gmailService.linkDirectAccount(db, email, displayName);
+        res.json({ success: true, account });
+    } catch (err) {
+        console.error('Direct account link failed:', err);
+        res.status(500).json({ error: 'Link failed: ' + err.message });
+    }
+});
+
 // Periodic background polling worker for official orders (every 5 minutes)
 cron.schedule('*/5 * * * *', async () => {
     try {
