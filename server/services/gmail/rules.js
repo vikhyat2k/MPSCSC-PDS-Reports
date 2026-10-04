@@ -43,6 +43,24 @@ const DEFAULT_DEPARTMENT_RULES = [
     departmentCategory: 'OTHER_GOVT',
     defaultPriority: 'MEDIUM',
     assignedSection: 'Storage'
+  },
+  {
+    id: 'RULE_MILLING',
+    name: 'Milling Section (मिलिंग शाखा - कस्टम मिलिंग/राइस मिल/CMR)',
+    domainPatterns: ['milling', 'ricemill', 'cmr'],
+    keywords: ['मिलिंग', 'milling', 'कस्टम मिलिंग', 'राइस मिल', 'धान मिलिंग', 'मिलर', 'miller', 'सीएमआर', 'cmr', 'अनुबंध', 'मिलिंग प्रभार', 'फोर्टिफाइड', 'frk', 'चावल जमा'],
+    departmentCategory: 'HO',
+    defaultPriority: 'HIGH',
+    assignedSection: 'Milling'
+  },
+  {
+    id: 'RULE_PROCUREMENT',
+    name: 'Procurement Section (उपार्जन शाखा - रबी/खरीफ MSP उपार्जन)',
+    domainPatterns: ['procurement', 'uparjan'],
+    keywords: ['उपार्जन', 'uparjan', 'procurement', 'समर्थन मूल्य', 'msp', 'धान उपार्जन', 'गेहूं उपार्जन', 'उपार्जन केंद्र', 'किसान पंजीयन', 'स्लॉट बुकिंग', 'बारदाना', 'तौल केंद्र', 'एफएक्यू', 'faq'],
+    departmentCategory: 'HO',
+    defaultPriority: 'HIGH',
+    assignedSection: 'Procurement'
   }
 ];
 
