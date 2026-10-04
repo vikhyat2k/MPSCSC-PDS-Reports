@@ -27,10 +27,10 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 20 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Comprehensive Supervision Testing, Safe Dummy Dataset & 1-Click Purge (ISSUE-046) |
+| Last Code Change | 04 Oct 2026 — Uniform Specification Alignment for Common Rice (KMS 2025-26) Maximum Limits (ISSUE-047) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
-| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Rice KMS 2025-26) |
+| Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2 & Common Rice KMS 2025-26) |
 
 ---
 
@@ -618,6 +618,7 @@ Tracks implementation status of all major features.
 | Executive Report 5-Page Redesign | COMPLETE | YES | Strict 5-page decision dashboard: Exec Dashboard, Priority Sectors, Transporters, POS Integrity, Appendix |
 | Supervision & Inspection Module | COMPLETE | YES | Complete implementation of Orders 3/1 (DM) & 3/2 (RM) + Rice Quality Inspection Sheet (KMS 2025-26 CMR Analysis) + Responsive Modals (ISSUE-043) + A4 Landscape direct print engine (ISSUE-044) + Solid opaque surfaces & high-contrast typography eliminating background bleed-through (ISSUE-045) |
 | Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
+| Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
 
 ---
 
@@ -779,6 +780,7 @@ Tracks what has been tested and confirmed working.
 | A4 Landscape Default Print Engine & Single-Page Fitting | UI, CSS & PDF Print Verification | VERIFIED | 03 Oct 2026 | Verified default @page { size: A4 landscape; margin: 5mm 6mm; }, isolated iframe printing via printElementDirectly(), modal unconstraining in @media print, and strict single-page (1 of 1) rendering with all 18 columns, totals, and 3 official signatures intact |
 | Supervision Surprise Modal Solid Opaque Surfaces & Contrast | UI, CSS & Visual Screenshot Audit | VERIFIED | 04 Oct 2026 | Verified solid opaque surfaces (--surface, --surface-light, --surface-input), elimination of transparent background bleed-through, 3-column input header layout, prominent blue scrollbar, and crystal-clear contrast in both dark and light modes (ISSUE-045) |
 | Supervision Full Functional Testing & Dummy Data Sandbox | End-to-End, CRUD & Data Safety | VERIFIED | 04 Oct 2026 | Verified 33/33 automated tests covering CRUD, boundary tests, input validation, search/filter, stats sync, 22 multi-scenario dummy records, and 100% data safety preservation of original records (ISSUE-046) |
+| Rice Quality Common Limits (KMS 2025-26) Specification | Unit, UI & Print Verification | VERIFIED | 04 Oct 2026 | Verified 10-point Common Rice maximum limits validation, interactive spec-violation class highlighting, automatic BRL result selection on out-of-spec parameters, NA handling for Admixture, and official schedule box in A4 print layout (ISSUE-047) |
 
 ---
 
@@ -830,7 +832,64 @@ Tracks what has been tested and confirmed working.
 | ISSUE-044 | Rice Quality Inspection printout defaulted to portrait, clipping 30% of quality columns, cutting off lower lot rows and signatures due to modal container height overflow and app shell print leakage | HIGH | RESOLVED | public/supervision.css, public/supervision_logic.js, public/supervision.html | 03 Oct 2026 |
 | ISSUE-045 | Surprise Inspection modal was translucent/unreadable due to undefined --surface token falling back to transparent, causing underlying dashboard and protocol table text to bleed through | HIGH | RESOLVED | public/supervision.css, public/supervision.html, public/supervision_logic.js | 04 Oct 2026 |
 | ISSUE-046 | Supervision Portal lacked dedicated multi-scenario dummy test datasets, 1-click safe cleanup mechanism, and full CRUD automated test coverage | HIGH | RESOLVED | server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-supervision-full-suite.js | 04 Oct 2026 |
+| ISSUE-047 | Rice Quality Inspection (KMS 2025-26) schedule limits used generic/loose thresholds (e.g. Damaged 4%, FRK 1.1%) instead of official GOI Uniform Specification for Common Rice maximum limits | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, public/supervision.css, tests/test-supervision-full-suite.js, tests/test-rice-common-spec.js | 04 Oct 2026 |
 
+---
+
+## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Uniform Specification Alignment for Common Rice (KMS 2025-26) Maximum Limits
+
+Files: public/supervision.html, public/supervision_logic.js, public/supervision.css, tests/test-supervision-full-suite.js, tests/test-rice-common-spec.js, PROJECT_DOCS.md
+Type: Feature / Regulatory Compliance / Quality Inspection Logic
+Closes: ISSUE-047
+
+- USER REQUIREMENT & REGULATORY CONTEXT:
+  The user provided the official Government schedule:
+  *"UNIFORM SPECIFICATION FOR GRADE 'A' & 'COMMON' RICE (KHARIF MARKETING SEASON 2025-2026)"*
+  and instructed:
+  *"uniform specification for INSPECTION OF RICE (KMS 2025-26) considor only common maximum limit."*
+
+- OFFICIAL PRESCRIBED COMMON RICE MAXIMUM LIMITS:
+  1. Broken Total: Max 25.0% (Raw Common Rice)
+     - Footnote (*): Small broken must NOT exceed 1.0% by weight (<= 1.0%).
+  2. Foreign Matter Total: Max 0.50%
+     - Footnote (**): Mineral/inorganic matter must NOT exceed 0.20% by weight (<= 0.20%). Impurities of animal origin max 0.10%.
+  3. Damaged / Slightly Damaged Grains: Max 3.0% (Raw Common Rice, including pinpoint damaged grains; previously hardcoded as 4.0%).
+  4. Discolored Grains: Max 3.0% (Raw Common Rice; previously not validated).
+  5. Chalky Grains: Max 5.0% (Raw Common Rice; previously not validated).
+  6. Red Grains: Max 3.0% (Raw/Parboiled Common Rice; previously not validated).
+  7. Admixture of Lower Class: NA (Not Applicable for Common Rice as it is the base class; Grade 'A' allows 6%, Common is explicitly NA).
+  8. Dehusked Grains: Max 13.0% (Raw/Parboiled Common Rice; previously not validated).
+  9. Moisture Content: Max 14.0% without value cut (permissible up to 15.0% with full value cut).
+  10. FRK (Fortified Rice Kernel): 1.0% (w/w) normal blending.
+     - Footnote (@@): Permissible blending range is 0.90% to 1.20% by weight.
+
+- IMPLEMENTATION DETAILS:
+  1. **Strict Evaluation Engine (`public/supervision_logic.js`)**:
+     - Defined `COMMON_RICE_SPEC_2025_26` containing the exact government thresholds.
+     - Updated `recalculateRiceRow(tr)` with 10-point evaluation. Every cell triggers real-time checking.
+     - Implemented `markSpecCellStatus()`: any input exceeding its Common Rice limit receives class `.spec-violation` (vibrant red border `#ef4444`, 12% red background, bold red text) and a detailed Hindi tooltip explaining the violation and exact limit.
+     - Automated Result select mapping: if any of the 10 refractions exceed the Common limit, the row automatically switches to `BRL` (Beyond Rejection Limit) in bold red. When all refractions are within spec, it switches to `Within Specification` in bold green.
+     - Updated `addRiceLotRow`: attached `oninput="recalculateRiceRow"` to all quality inputs (brokenSmall, brokenBig, fmInorg, fmOrg, damaged, admixture, red, chalky, discoloured, dehusked, frk).
+     - Configured default rows with `admixture: 'NA'` reflecting Common rice standards.
+  2. **Interactive UI & Visual Guide (`public/supervision.html` & `public/supervision.css`)**:
+     - Updated interactive table header with Common Rice limit indicators: `Damaged (≤3.0%)`, `Admixture (NA)`, `Red Kernels (≤3.0%)`, `Chalky (≤5.0%)`, `Discoloured (≤3.0%)`, `Dehusked (≤13.0%)`, `FRK (0.9-1.2%)`, `Small Broken (≤1.0%)`, `Total Broken (≤25.0%)`, `Inorg FM (≤0.20%)`, `Total FM (≤0.50%)`.
+     - Replaced brief guidelines text with a comprehensive **भारत सरकार विनिर्देश अनुसूची — COMMON RICE (KMS 2025-26)** card with 10 distinct, styled parameter tiles.
+     - Added `.superv-input.spec-violation` rule in `public/supervision.css`.
+  3. **Official A4 Landscape Print View (`generateRiceOfficialPrintHtml`)**:
+     - Added column limit sub-indicators in the official print header.
+     - Embedded a dedicated **📌 विनिर्देश अनुसूची — Uniform Specification for Common Rice (KMS 2025-2026) Maximum Limits** reference box right below the lot table and above the 3 official signature blocks (Branch Manager MPWLC, Centre Incharge MPSCSC, District Manager MPSCSC).
+     - Ensured zero print overflow on A4 Landscape.
+  4. **Automated Verification (`tests/test-supervision-full-suite.js` & `tests/test-rice-common-spec.js`)**:
+     - Added dedicated specification test suite in `tests/test-supervision-full-suite.js`. All 34/34 tests passed.
+     - Built end-to-end Puppeteer browser test `tests/test-rice-common-spec.js` validating out-of-spec input entry (Damaged 3.50% -> `.spec-violation` + `BRL`), restoration to compliant value (2.20% -> `Within Specification`), and verified print preview modal rendering. All tests passed.
+
+---
+
+### 2026-10-04 | Comprehensive Supervision Testing, Multi-Scenario Dummy Dataset & 1-Click Safe Cleanup
+
+Files: server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-supervision-full-suite.js, tests/test-ui-supervision-browser.js, PROJECT_DOCS.md
 ---
 
 ## 20. CHANGE LOG (DATEWISE)

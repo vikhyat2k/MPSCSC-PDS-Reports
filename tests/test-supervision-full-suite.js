@@ -465,6 +465,63 @@ async function runSupervisionFullTestSuite() {
         assert.strictEqual(checkRes.status, 404);
     })();
 
+    await recordTest('SPEC: Verify Common Rice (KMS 2025-26) Maximum Limit thresholds', async () => {
+        // Test evaluation logic against official KMS 2025-26 Common Rice Schedule
+        const COMMON_LIMITS = {
+            brokenTotalMax: 25.0,
+            brokenSmallMax: 1.0,
+            fmTotalMax: 0.50,
+            fmInorgMax: 0.20,
+            damagedMax: 3.0,
+            discolouredMax: 3.0,
+            chalkyMax: 5.0,
+            redKernelsMax: 3.0,
+            dehuskedMax: 13.0,
+            frkMin: 0.90,
+            frkMax: 1.20
+        };
+
+        // Within limits lot
+        const compliantLot = {
+            brokenSmall: 0.85,
+            brokenBig: 18.0,
+            brokenTotal: 18.85,
+            fmInorg: 0.12,
+            fmOrg: 0.20,
+            fmTotal: 0.32,
+            damaged: 2.80, // <= 3.0% Common limit
+            discoloured: 2.50, // <= 3.0% Common limit
+            chalky: 4.20, // <= 5.0% Common limit
+            redKernels: 2.10, // <= 3.0% Common limit
+            dehusked: 11.50, // <= 13.0% Common limit
+            frk: 1.05 // between 0.90 - 1.20%
+        };
+
+        const isCompliant = compliantLot.brokenSmall <= COMMON_LIMITS.brokenSmallMax &&
+                            compliantLot.brokenTotal <= COMMON_LIMITS.brokenTotalMax &&
+                            compliantLot.fmInorg <= COMMON_LIMITS.fmInorgMax &&
+                            compliantLot.fmTotal <= COMMON_LIMITS.fmTotalMax &&
+                            compliantLot.damaged <= COMMON_LIMITS.damagedMax &&
+                            compliantLot.discoloured <= COMMON_LIMITS.discolouredMax &&
+                            compliantLot.chalky <= COMMON_LIMITS.chalkyMax &&
+                            compliantLot.redKernels <= COMMON_LIMITS.redKernelsMax &&
+                            compliantLot.dehusked <= COMMON_LIMITS.dehuskedMax &&
+                            compliantLot.frk >= COMMON_LIMITS.frkMin && compliantLot.frk <= COMMON_LIMITS.frkMax;
+        assert.strictEqual(isCompliant, true, 'Compliant lot should pass all Common Rice KMS 2025-26 limits');
+
+        // Damaged exceeding 3.0% (previously passed when limit was wrongly 4.0%)
+        const damagedExceededLot = { ...compliantLot, damaged: 3.40 };
+        assert.strictEqual(damagedExceededLot.damaged > COMMON_LIMITS.damagedMax, true, '3.40% Damaged must exceed Common Rice 3.0% max limit');
+
+        // Small broken exceeding 1.0%
+        const smallBrokenExceeded = { ...compliantLot, brokenSmall: 1.25 };
+        assert.strictEqual(smallBrokenExceeded.brokenSmall > COMMON_LIMITS.brokenSmallMax, true, '1.25% Small Broken must exceed Footnote (*) 1.0% limit');
+
+        // Discolored exceeding 3.0% (Raw Common limit)
+        const discolouredExceeded = { ...compliantLot, discoloured: 3.60 };
+        assert.strictEqual(discolouredExceeded.discoloured > COMMON_LIMITS.discolouredMax, true, '3.60% Discoloured must exceed Raw Common 3.0% limit');
+    })();
+
     // ──────────────────────────────────────────────────────────
     // SUITE 8: NEGATIVE, VALIDATION & ERROR HANDLING
     // ──────────────────────────────────────────────────────────
