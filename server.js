@@ -4678,7 +4678,17 @@ cron.schedule('*/5 * * * *', async () => {
         const activeAccount = await gmailService.getActiveAccount(db);
         if (!activeAccount) return;
         console.log('🔄 [Background Worker] Checking official Gmail for incoming orders...');
-        const result = await gmailService.syncOfficialEmails(db, { maxResults: 10 });
+
+        // Read configurable limits from DB (fallback to safe defaults)
+        const bgLimitVal = await db.getSetting('sync_limit_bg').catch(() => null);
+        const timeWindowVal = await db.getSetting('sync_time_window_days').catch(() => null);
+        const bgLimit = Math.min(parseInt(bgLimitVal) || 10, 100); // cap at 100
+        const timeWindowDays = Math.min(parseInt(timeWindowVal) || 14, 365);
+
+        const result = await gmailService.syncOfficialEmails(db, {
+            maxResults: bgLimit,
+            query: `newer_than:${timeWindowDays}d`
+        });
         if (result.actionableCreated > 0) {
             console.log(`📥 [Background Worker] ${result.actionableCreated} new actionable tasks created from official emails.`);
         }
