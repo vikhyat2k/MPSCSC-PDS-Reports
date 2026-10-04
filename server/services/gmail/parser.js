@@ -378,7 +378,8 @@ async function parseOfficialEmail({ messageId, threadId, subject, sender, date, 
     aiPowered: aiAnalysis ? 1 : 0,
     aiPriorityReason: aiAnalysis?.priorityReason || 'शासकीय नियम आधारित ट्राइएज',
     draftComplianceResponse: aiAnalysis?.draftComplianceResponse || '',
-    category: aiAnalysis?.category || 'GENERAL'
+    category: aiAnalysis?.category || 'GENERAL',
+    assignedSection: aiAnalysis?.assignedSection || null
   };
 }
 
