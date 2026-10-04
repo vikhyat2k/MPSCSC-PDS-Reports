@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 25 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Gemini AI Management Tab & Direct Access Visibility (ISSUE-058) |
+| Last Code Change | 04 Oct 2026 — Email Sync Configurable Settings Panel (⚙️ Sync सेटिंग्स Tab in Gmail Modal) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -864,6 +864,35 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Email Sync Configurable Settings Panel (⚙️ Sync सेटिंग्स)
+
+Files: public/supervision.html, public/supervision_logic.js, server.js
+Type: Feature / Configuration Enhancement
+
+- USER REQUIREMENT:
+  User asked: "Add a configurable setting in the UI to let you control these limits from the supervision panel". Previously, email sync limits (background: 10, manual: 20) and the 14-day time window were hardcoded with no way to change them from the UI.
+- ROOT CAUSE:
+  All sync limits were hardcoded in `server.js` background cron (maxResults: 10) and `ingestion.js` default (20). No settings existed in the DB for these values.
+- FIX & IMPLEMENTATION:
+  1. New "⚙️ Sync सेटिंग्स" 5th tab added to the Gmail modal tab row (`supervision.html`).
+  2. New panel `#panelGmailSyncSettings` with:
+     - 🔄 Background Sync limit slider (5–100, default 10)
+     - 📥 Manual Sync limit slider (5–500, default 20)
+     - 📅 Time Window slider (1–365 days, default 14)
+     - ⏱️ Auto Poll Interval pill buttons (1/2/5/10/30 min, default 5)
+     - Live summary display showing current active settings
+     - 💾 Save button that persists all 4 values to DB via `/api/settings`
+  3. JS functions added to `supervision_logic.js`:
+     - `loadSyncSettings()`: reads 4 keys from DB on tab open
+     - `saveSyncSettings()`: saves all 4 keys to DB with success/error feedback
+     - `setSyncInterval(minutes)`: highlights selected interval button
+     - `switchGmailLinkTab()` extended for 'sync' tab with auto-load
+  4. Backend (`server.js`) background cron now reads `sync_limit_bg` and `sync_time_window_days` from DB on every tick (fallback to defaults if not set).
+  5. `/api/gmail/sync` manual endpoint now reads `sync_limit_manual` and `sync_time_window_days` from DB (unless caller overrides).
+  6. DB keys used: `sync_limit_bg`, `sync_limit_manual`, `sync_time_window_days`, `sync_poll_interval_min` (stored via existing `db.saveSetting`/`db.getSetting`).
+
+---
 
 ### 2026-10-04 | Gemini AI Management Direct Access Elements & Visibility Enhancements
 
