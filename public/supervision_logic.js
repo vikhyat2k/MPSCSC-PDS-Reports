@@ -3212,6 +3212,75 @@ async function viewTaskDetails(taskId) {
 
 // ── Gmail Account Management & Sync ──────────────────────────
 
+function switchGmailLinkTab(tabName) {
+    const tabs = ['quick', 'oauth', 'apppw'];
+    const tabBtns = {
+        quick: document.getElementById('btnTabQuickLink'),
+        oauth: document.getElementById('btnTabOAuth'),
+        apppw: document.getElementById('btnTabAppPassword')
+    };
+    const tabPanels = {
+        quick: document.getElementById('panelGmailQuickLink'),
+        oauth: document.getElementById('panelGmailOAuth'),
+        apppw: document.getElementById('panelGmailAppPassword')
+    };
+
+    tabs.forEach(t => {
+        const btn = tabBtns[t];
+        const panel = tabPanels[t];
+        const isActive = t === tabName;
+        if (btn) {
+            btn.style.background = isActive ? 'var(--primary)' : 'transparent';
+            btn.style.color = isActive ? '#fff' : 'var(--text-muted)';
+        }
+        if (panel) {
+            panel.style.display = isActive ? 'block' : 'none';
+        }
+    });
+}
+
+function toggleOAuthEditForm() {
+    const readyBox = document.getElementById('oauthReadyBox');
+    const formBox = document.getElementById('oauthConfigForm');
+    if (!formBox) return;
+    if (formBox.style.display === 'none') {
+        formBox.style.display = 'block';
+        if (readyBox) readyBox.style.display = 'none';
+    } else {
+        formBox.style.display = 'none';
+        if (readyBox) readyBox.style.display = 'block';
+    }
+}
+
+function toggleSecretVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function copyRedirectUri() {
+    const input = document.getElementById('txtGoogleRedirectUri');
+    const btn = document.getElementById('btnCopyRedirectUri');
+    if (!input) return;
+    
+    const textToCopy = input.value || (window.location.origin + '/api/gmail/oauth/callback');
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        if (btn) {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '✓ कॉपी हो गया!';
+            btn.style.borderColor = '#10b981';
+            btn.style.color = '#10b981';
+            setTimeout(() => {
+                btn.innerHTML = orig;
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 2500);
+        }
+    }).catch(err => {
+        alert('URI कॉपी करने के लिए टेक्स्ट का चयन करें: ' + textToCopy);
+    });
+}
+
 async function openGmailStatusModal() {
     openModal('modalGmailStatus');
     const dot = document.getElementById('gmailStatusDot');
@@ -3222,34 +3291,73 @@ async function openGmailStatusModal() {
     const btnDisconnect = document.getElementById('btnDisconnectGmail');
     const txtEmail = document.getElementById('txtLinkGmailEmail');
     const txtName = document.getElementById('txtLinkGmailName');
+    const txtAppEmail = document.getElementById('txtAppPwEmail');
+    const txtOAuthClientId = document.getElementById('txtGoogleClientId');
+    const txtOAuthRedirect = document.getElementById('txtGoogleRedirectUri');
     const btnSubmitText = document.getElementById('btnSubmitLinkDirectText');
     const btnSubmitIcon = document.getElementById('btnSubmitLinkDirectIcon');
     const oauthBadge = document.getElementById('oauthStatusBadge');
+    const oauthReadyBox = document.getElementById('oauthReadyBox');
+    const oauthConfigForm = document.getElementById('oauthConfigForm');
+
+    // Auto-fill origin redirect URI if empty
+    const currentOriginRedirect = window.location.origin + '/api/gmail/oauth/callback';
+    if (txtOAuthRedirect && !txtOAuthRedirect.value) {
+        txtOAuthRedirect.value = currentOriginRedirect;
+    }
 
     try {
-        const res = await fetch('/api/gmail/status');
-        const data = await res.json();
+        // 1. Fetch current Gmail linkage status
+        const [statusRes, oauthRes] = await Promise.allSettled([
+            fetch('/api/gmail/status'),
+            fetch('/api/gmail/oauth/config')
+        ]);
 
+        let data = {};
+        if (statusRes.status === 'fulfilled') {
+            data = await statusRes.value.json();
+        }
+
+        let oauthConfig = {};
+        if (oauthRes.status === 'fulfilled') {
+            oauthConfig = await oauthRes.value.json();
+        }
+
+        // Configure OAuth UI tab
+        const isOAuthConfigured = Boolean(oauthConfig.configured);
         if (oauthBadge) {
-            if (data.configured) {
+            if (isOAuthConfigured) {
                 oauthBadge.className = 'superv-badge badge-success';
                 oauthBadge.textContent = 'सक्रिय (Configured)';
+                if (oauthReadyBox) oauthReadyBox.style.display = 'block';
+                if (oauthConfigForm) oauthConfigForm.style.display = 'none';
             } else {
-                oauthBadge.className = 'superv-badge';
-                oauthBadge.textContent = 'वैकल्पिक (Optional)';
+                oauthBadge.className = 'superv-badge badge-warning';
+                oauthBadge.textContent = 'असंरचित (Setup Required)';
+                if (oauthReadyBox) oauthReadyBox.style.display = 'none';
+                if (oauthConfigForm) oauthConfigForm.style.display = 'block';
             }
+        }
+
+        if (txtOAuthClientId && oauthConfig.clientId) {
+            txtOAuthClientId.value = oauthConfig.clientId;
+        }
+        if (txtOAuthRedirect && oauthConfig.redirectUri) {
+            txtOAuthRedirect.value = oauthConfig.redirectUri;
         }
 
         if (btnConnect) {
             btnConnect.style.display = 'flex';
         }
 
+        // Configure Linked Account Header
         if (data.connected && data.account) {
             if (dot) dot.style.background = '#10b981';
             if (heading) heading.textContent = `सक्रिय एवं अधिकृत: ${data.account.displayName || data.account.email}`;
             if (emailEl) emailEl.innerHTML = `<strong>${data.account.email}</strong> (${data.account.accountType === 'gmail_workspace' ? 'Google Workspace' : 'Standard Gmail'})<br><span style="color:#10b981; font-weight:600;">● शासकीय ईमेल संबद्ध एवं सक्रिय</span> · कनेक्टेड: ${new Date(data.account.connectedAt).toLocaleDateString('hi-IN')}`;
             if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
             if (txtEmail) txtEmail.value = data.account.email;
+            if (txtAppEmail) txtAppEmail.value = data.account.email;
             if (txtName && !txtName.value) txtName.value = data.account.displayName || 'जिला कार्यालय बैतूल (District Office Betul)';
             if (btnSubmitIcon) btnSubmitIcon.textContent = '🔄';
             if (btnSubmitText) btnSubmitText.textContent = 'संबद्ध खाता अद्यतन / पुनः लिंक करें (Update Linked Account)';
@@ -3260,23 +3368,16 @@ async function openGmailStatusModal() {
         } else {
             if (dot) dot.style.background = '#f59e0b';
             if (heading) heading.textContent = 'कोई शासकीय खाता संबद्ध नहीं है';
-            if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए नीचे दिए गए फॉर्म से खाता लिंक करें।';
+            if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए नीचे दिए गए 3 विकल्पों में से किसी एक से खाता लिंक करें।';
             if (btnDisconnect) btnDisconnect.style.display = 'none';
             if (txtEmail && !txtEmail.value) txtEmail.value = 'dmnanbetul1@gmail.com';
+            if (txtAppEmail && !txtAppEmail.value) txtAppEmail.value = 'dmnanbetul1@gmail.com';
             if (txtName && !txtName.value) txtName.value = 'जिला कार्यालय बैतूल (District Office Betul)';
             if (btnSubmitIcon) btnSubmitIcon.textContent = '🔗';
-            if (btnSubmitText) btnSubmitText.textContent = 'यह शासकीय खाता लिंक करें (Link Account)';
+            if (btnSubmitText) btnSubmitText.textContent = 'यह शासकीय खाता लिंक एवं सक्रिय करें (Link Account)';
 
             if (alertBox) {
-                if (!data.configured) {
-                    alertBox.style.display = 'block';
-                    alertBox.innerHTML = 'ℹ️ Google Cloud Console OAuth 2.0 क्रेडेंशियल वैकल्पिक हैं। आप ऊपर दिए गए "🔗 शासकीय ईमेल खाता लिंक करें" फॉर्म से बिना Google API क्रेडेंशियल के सीधे खाता जोड़ सकते हैं।';
-                    alertBox.style.background = 'rgba(59,130,246,0.08)';
-                    alertBox.style.borderColor = 'rgba(59,130,246,0.25)';
-                    alertBox.style.color = 'var(--text-main)';
-                } else {
-                    alertBox.style.display = 'none';
-                }
+                alertBox.style.display = 'none';
             }
         }
     } catch (err) {
@@ -3327,6 +3428,114 @@ async function linkGmailAccountDirect() {
     }
 }
 
+async function saveGoogleOAuthCredentials() {
+    const idInput = document.getElementById('txtGoogleClientId');
+    const secretInput = document.getElementById('txtGoogleClientSecret');
+    const redirectInput = document.getElementById('txtGoogleRedirectUri');
+
+    const clientId = idInput ? idInput.value.trim() : '';
+    const clientSecret = secretInput ? secretInput.value.trim() : '';
+    const redirectUri = redirectInput ? redirectInput.value.trim() : (window.location.origin + '/api/gmail/oauth/callback');
+
+    if (!clientId) {
+        alert('कृपया Google Cloud Console से प्राप्त Client ID प्रविष्ट करें।\n(उदा. xxxxx.apps.googleusercontent.com)');
+        if (idInput) idInput.focus();
+        return;
+    }
+    if (!clientSecret) {
+        alert('कृपया Google Cloud Console से प्राप्त Client Secret प्रविष्ट करें।\n(उदा. GOCSPX-xxxxx)');
+        if (secretInput) secretInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnSaveOAuthAndConnect');
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>क्रेडेंशियल सुरक्षित हो रहे हैं...</span>';
+    }
+
+    try {
+        const res = await fetch('/api/gmail/oauth/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientId, clientSecret, redirectUri })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert('✅ Google OAuth 2.0 क्रेडेंशियल सुरक्षित कर दिए गए हैं!\n\nअब आपको Google Sign-In पृष्ठ पर पुनर्निर्देशित किया जा रहा है...');
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                await initiateGmailConnect();
+            }
+        } else {
+            alert('क्रेडेंशियल सुरक्षित करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+
+async function linkWithAppPassword() {
+    const emailInput = document.getElementById('txtAppPwEmail');
+    const pwInput = document.getElementById('txtAppPwKey');
+
+    const email = emailInput ? emailInput.value.trim() : '';
+    const appPassword = pwInput ? pwInput.value.trim().replace(/\s+/g, '') : '';
+
+    if (!email || !email.includes('@')) {
+        alert('कृपया वैध शासकीय ईमेल पता प्रविष्ट करें (उदा. dmnanbetul1@gmail.com)');
+        if (emailInput) emailInput.focus();
+        return;
+    }
+    if (!appPassword || appPassword.length < 8) {
+        alert('कृपया वैध 16-अक्षरीय Google App Password प्रविष्ट करें।\n(Google Account > Security > App Passwords में जनरेट किया गया)');
+        if (pwInput) pwInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnSubmitAppPw');
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>सुरक्षित किया जा रहा है...</span>';
+    }
+
+    try {
+        const res = await fetch('/api/gmail/link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email,
+                displayName: 'जिला कार्यालय बैतूल (District Office Betul)',
+                appPassword
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ Google App Password सुरक्षित हो गया एवं शासकीय ईमेल "${email}" सफलतापूर्वक लिंक हो गया!`);
+            await openGmailStatusModal();
+            await loadSupervisionTasks();
+        } else {
+            alert('ऐप पासवर्ड से लिंक करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
+    }
+}
+
 async function initiateGmailConnect() {
     try {
         const res = await fetch('/api/gmail/oauth/url');
@@ -3334,7 +3543,9 @@ async function initiateGmailConnect() {
         if (data.url) {
             window.location.href = data.url;
         } else {
-            alert('ℹ️ Google Cloud OAuth 2.0 प्रमाणीकरण सूचना:\n\n' + (data.error || 'Google OAuth क्रेडेंशियल कॉन्फ़िगर नहीं हैं।') + '\n\nसुझाव: आप ऊपर दिए गए "🔗 शासकीय ईमेल खाता लिंक करें" फॉर्म से तुरंत बिना Google API सेटअप के शासकीय जीमेल (dmnanbetul1@gmail.com) जोड़ सकते हैं।');
+            // Show clear front-end guidance and switch to the OAuth setup tab directly
+            switchGmailLinkTab('oauth');
+            alert('ℹ️ Google Cloud OAuth 2.0 प्रमाणीकरण सूचना:\n\n' + (data.error || 'Google OAuth क्रेडेंशियल कॉन्फ़िगर नहीं हैं।') + '\n\nहमने आपके लिए Google OAuth सेटअप टैब खोल दिया है। आप ऊपर दिए गए फॉर्म में Client ID और Secret भरकर तुरंत सुरक्षित कर सकते हैं!');
         }
     } catch (err) {
         alert('सर्वर त्रुटि: ' + err.message);
