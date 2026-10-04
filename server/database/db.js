@@ -280,6 +280,104 @@ class DatabaseManager {
     await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_rice_date ON supervision_rice_inspections(analysis_date DESC)`);
     await this.run(`CREATE INDEX IF NOT EXISTS idx_superv_rice_wh ON supervision_rice_inspections(warehouse_name)`);
 
+    // Official Gmail Integration & Actionable Tasks Management
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS official_email_accounts (
+        id TEXT PRIMARY KEY,
+        email_address TEXT NOT NULL UNIQUE,
+        account_type TEXT DEFAULT 'gmail',
+        display_name TEXT,
+        encrypted_refresh_token TEXT NOT NULL,
+        access_token TEXT,
+        token_expires_at INTEGER,
+        last_history_id TEXT,
+        is_active INTEGER DEFAULT 1,
+        connected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS email_sync_logs (
+        id TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        message_id TEXT NOT NULL UNIQUE,
+        thread_id TEXT NOT NULL,
+        sender TEXT NOT NULL,
+        sender_domain TEXT,
+        recipient TEXT,
+        subject TEXT,
+        received_at DATETIME NOT NULL,
+        has_attachments INTEGER DEFAULT 0,
+        triage_status TEXT DEFAULT 'PENDING',
+        triage_reason TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS supervision_tasks (
+        id TEXT PRIMARY KEY,
+        sync_log_id TEXT,
+        gmail_message_id TEXT NOT NULL,
+        gmail_thread_id TEXT NOT NULL,
+        letter_ref_no TEXT,
+        letter_date TEXT,
+        issuing_authority TEXT NOT NULL,
+        department_category TEXT DEFAULT 'HO',
+        subject TEXT NOT NULL,
+        task_description TEXT NOT NULL,
+        assigned_section TEXT DEFAULT 'PDS',
+        responsible_person TEXT,
+        priority TEXT DEFAULT 'MEDIUM',
+        due_date DATETIME,
+        suggested_timeline TEXT,
+        deadline_type TEXT NOT NULL DEFAULT 'OFFICIAL_EXPLICIT',
+        requires_confirmation INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'NEW',
+        reporting_required INTEGER DEFAULT 0,
+        reporting_details TEXT,
+        completion_date DATETIME,
+        compliance_remarks TEXT,
+        source_email_url TEXT NOT NULL,
+        is_test INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS task_attachments (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        filename TEXT NOT NULL,
+        mime_type TEXT,
+        file_size_bytes INTEGER,
+        local_storage_path TEXT NOT NULL,
+        ocr_extracted_text TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`
+      CREATE TABLE IF NOT EXISTS email_triage_rules (
+        id TEXT PRIMARY KEY,
+        rule_name TEXT NOT NULL,
+        sender_pattern TEXT,
+        keyword_match TEXT,
+        assigned_priority TEXT DEFAULT 'HIGH',
+        assigned_section TEXT DEFAULT 'PDS',
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_tasks_due ON supervision_tasks(due_date ASC)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_tasks_status ON supervision_tasks(status)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_tasks_dept ON supervision_tasks(department_category)`);
+    await this.run(`CREATE INDEX IF NOT EXISTS idx_tasks_created ON supervision_tasks(created_at DESC)`);
+
+
     // Migration: add scheme and insights columns if they don't exist
     try {
       await this.run(`ALTER TABLE reports ADD COLUMN scheme TEXT DEFAULT 'nfsa'`);
