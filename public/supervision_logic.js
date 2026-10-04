@@ -3539,25 +3539,56 @@ function openGeminiModalFromNav(navEl) {
 async function updateGeminiBadges() {
     try {
         const res = await fetch('/api/gemini/status');
-        const geminiData = await res.json();
+        const aiData = await res.json();
         const headerBadge = document.getElementById('geminiHeaderBadge');
         const bannerBadge = document.getElementById('geminiBannerBadge');
         const modalBadge = document.getElementById('geminiStatusBadge');
+        const sarvamBadge = document.getElementById('sarvamStatusBadge');
 
-        if (geminiData.active) {
+        const isGeminiActive = Boolean(aiData.active);
+        const isSarvamActive = Boolean(aiData.sarvam && aiData.sarvam.active);
+        const isSarvamQuota = Boolean(aiData.sarvam && aiData.sarvam.quotaExhausted);
+
+        if (isGeminiActive) {
             if (headerBadge) {
                 headerBadge.style.background = '#10b981';
                 headerBadge.textContent = 'Active';
             }
             if (bannerBadge) {
                 bannerBadge.className = 'superv-badge badge-success';
-                bannerBadge.textContent = `🟢 सक्रिय (${geminiData.model || 'gemini-3.5-flash'})`;
+                bannerBadge.textContent = `🟢 Gemini सक्रिय (${aiData.model || 'gemini-3.5-flash'})`;
             }
             if (modalBadge) {
                 modalBadge.className = 'superv-badge badge-success';
-                modalBadge.textContent = `सक्रिय (Active: ${geminiData.model || 'gemini-3.5-flash'})`;
+                modalBadge.textContent = `सक्रिय (Active: ${aiData.model || 'gemini-3.5-flash'})`;
             }
-        } else if (geminiData.configured) {
+        } else if (isSarvamActive) {
+            if (headerBadge) {
+                headerBadge.style.background = '#059669';
+                headerBadge.textContent = 'Sarvam AI';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge badge-success';
+                bannerBadge.textContent = `🇮🇳 Sarvam AI सक्रिय (फॉलबैक)`;
+            }
+            if (modalBadge) {
+                modalBadge.className = 'superv-badge badge-warning';
+                modalBadge.textContent = aiData.rateLimited ? 'दर सीमा (Rate Limit) — Sarvam सक्रिय' : 'अपुष्ट (Unverified)';
+            }
+        } else if (aiData.rateLimited) {
+            if (headerBadge) {
+                headerBadge.style.background = '#f59e0b';
+                headerBadge.textContent = 'Rate Limit';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge badge-warning';
+                bannerBadge.textContent = '🟡 Gemini दर सीमा (Rate Limit)';
+            }
+            if (modalBadge) {
+                modalBadge.className = 'superv-badge badge-warning';
+                modalBadge.textContent = 'दर सीमा (429 Rate Limit)';
+            }
+        } else if (aiData.configured) {
             if (headerBadge) {
                 headerBadge.style.background = '#f59e0b';
                 headerBadge.textContent = 'Pending';
@@ -3569,6 +3600,23 @@ async function updateGeminiBadges() {
             if (modalBadge) {
                 modalBadge.className = 'superv-badge badge-warning';
                 modalBadge.textContent = 'अपुष्ट (Unverified)';
+            }
+        }
+
+        // Update Sarvam Badge
+        if (sarvamBadge) {
+            if (isSarvamActive) {
+                sarvamBadge.className = 'superv-badge badge-success';
+                sarvamBadge.textContent = '🟢 सक्रिय (sarvam-105b)';
+            } else if (isSarvamQuota) {
+                sarvamBadge.className = 'superv-badge badge-warning';
+                sarvamBadge.textContent = '🟡 कोटा समाप्त (0 Credits)';
+            } else if (aiData.sarvam && aiData.sarvam.configured) {
+                sarvamBadge.className = 'superv-badge badge-warning';
+                sarvamBadge.textContent = '🟡 स्टैंडबाय (Standby)';
+            } else {
+                sarvamBadge.className = 'superv-badge';
+                sarvamBadge.textContent = 'असंरचित (Setup Required)';
             }
         }
     } catch (e) {}
@@ -3600,7 +3648,7 @@ async function openGmailStatusModal() {
     }
 
     try {
-        // 1. Fetch current Gmail linkage status and Gemini status
+        // 1. Fetch current Gmail linkage status and AI status
         const [statusRes, oauthRes, geminiRes] = await Promise.allSettled([
             fetch('/api/gmail/status'),
             fetch('/api/gmail/oauth/config'),
@@ -3617,7 +3665,7 @@ async function openGmailStatusModal() {
             oauthConfig = await oauthRes.value.json();
         }
 
-        // Configure Gemini AI indicators across Header, OAuth panel, App PW panel, and Gemini tab
+        // Configure Dual-Engine AI indicators across Header, OAuth panel, App PW panel, and Gemini tab
         let geminiData = {};
         if (geminiRes.status === 'fulfilled') {
             try {
@@ -3626,9 +3674,16 @@ async function openGmailStatusModal() {
         }
 
         const isGeminiActive = Boolean(geminiData && geminiData.active);
-        const isGeminiConfigured = Boolean(geminiData && geminiData.configured);
+        const isGeminiConfigured = Boolean(geminiData && geminiData.geminiConfigured);
         const geminiModel = (geminiData && geminiData.model) || 'gemini-3.5-flash';
         const maskedKey = (geminiData && geminiData.maskedKey) || (isGeminiConfigured ? '••••••••••••' : 'असंरचित (Setup Required)');
+
+        // Sarvam details
+        const sarvam = geminiData.sarvam || {};
+        const isSarvamActive = Boolean(sarvam.active);
+        const isSarvamQuota = Boolean(sarvam.quotaExhausted);
+        const isSarvamConfigured = Boolean(sarvam.configured);
+        const maskedSarvamKey = sarvam.maskedKey || (isSarvamConfigured ? '••••••••••••' : '');
 
         // 1. Gemini AI Tab badge & key input
         const badge = document.getElementById('geminiStatusBadge');
@@ -3637,6 +3692,9 @@ async function openGmailStatusModal() {
             if (isGeminiActive) {
                 badge.className = 'superv-badge badge-success';
                 badge.textContent = `सक्रिय (Active: ${geminiModel})`;
+            } else if (geminiData.rateLimited) {
+                badge.className = 'superv-badge badge-warning';
+                badge.textContent = `दर सीमा (429 Rate Limit)`;
             } else if (isGeminiConfigured) {
                 badge.className = 'superv-badge badge-warning';
                 badge.textContent = `अपुष्ट (Unverified)`;
@@ -3649,15 +3707,44 @@ async function openGmailStatusModal() {
             txtKey.value = geminiData.maskedKey;
         }
 
-        // 2. Dual Pipeline Header Pill for Gemini AI
+        // 1b. Sarvam AI Tab badge & key input
+        const sarvamBadge = document.getElementById('sarvamStatusBadge');
+        const txtSarvamKey = document.getElementById('txtSarvamApiKey');
+        if (sarvamBadge) {
+            if (isSarvamActive) {
+                sarvamBadge.className = 'superv-badge badge-success';
+                sarvamBadge.textContent = `सक्रिय (sarvam-105b)`;
+            } else if (isSarvamQuota) {
+                sarvamBadge.className = 'superv-badge badge-warning';
+                sarvamBadge.textContent = `कोटा समाप्त (0 Credits)`;
+            } else if (isSarvamConfigured) {
+                sarvamBadge.className = 'superv-badge badge-warning';
+                sarvamBadge.textContent = `स्टैंडबाय (Standby)`;
+            } else {
+                sarvamBadge.className = 'superv-badge';
+                sarvamBadge.textContent = `असंरचित (Setup Required)`;
+            }
+        }
+        if (txtSarvamKey && !txtSarvamKey.value && maskedSarvamKey) {
+            txtSarvamKey.value = maskedSarvamKey;
+        }
+
+        // 2. Dual Pipeline Header Pill
         const pillGemini = document.getElementById('headerPillGemini');
         if (pillGemini) {
             if (isGeminiActive) {
+                const fallbackLabel = isSarvamConfigured ? ' + Sarvam 🛡️' : '';
                 pillGemini.className = 'superv-badge badge-success';
-                pillGemini.textContent = `🤖 Gemini AI: सक्रिय (${geminiModel})`;
+                pillGemini.textContent = `🤖 Gemini AI: सक्रिय (${geminiModel})${fallbackLabel}`;
+            } else if (isSarvamActive) {
+                pillGemini.className = 'superv-badge badge-success';
+                pillGemini.textContent = `🇮🇳 Sarvam AI: सक्रिय (फॉलबैक)`;
+            } else if (geminiData.rateLimited) {
+                pillGemini.className = 'superv-badge badge-warning';
+                pillGemini.textContent = `⚠️ Gemini AI: दर सीमा (Rate Limit)`;
             } else {
                 pillGemini.className = 'superv-badge badge-warning';
-                pillGemini.textContent = `🤖 Gemini AI: असंरचित`;
+                pillGemini.textContent = `🤖 AI इंजन: असंरचित`;
             }
         }
 
