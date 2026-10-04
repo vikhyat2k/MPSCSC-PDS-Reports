@@ -204,6 +204,42 @@ async function disconnectAccount(db, accountId) {
   return await db.run('UPDATE official_email_accounts SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [accountId]);
 }
 
+/**
+ * Directly links an official email account (e.g. dmnanbetul1@gmail.com)
+ * @param {object} db DatabaseManager instance
+ * @param {string} email Official email address
+ * @param {string} [displayName] Official display name
+ */
+async function linkDirectAccount(db, email, displayName = 'जिला कार्यालय बैतूल (District Office Betul)') {
+  const accountId = 'GMAIL_' + email.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const encryptedToken = encryptToken('OFFICIAL_LINKED_' + email);
+
+  await db.run(`
+    INSERT INTO official_email_accounts (
+      id, email_address, account_type, display_name, encrypted_refresh_token,
+      is_active, connected_at, updated_at
+    ) VALUES (?, ?, 'gmail_standard', ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      email_address = excluded.email_address,
+      display_name = excluded.display_name,
+      encrypted_refresh_token = excluded.encrypted_refresh_token,
+      is_active = 1,
+      updated_at = CURRENT_TIMESTAMP
+  `, [
+    accountId,
+    email,
+    displayName,
+    encryptedToken
+  ]);
+
+  return {
+    id: accountId,
+    email,
+    displayName,
+    accountType: 'gmail_standard'
+  };
+}
+
 module.exports = {
   SCOPES,
   isConfigured,
@@ -213,5 +249,7 @@ module.exports = {
   saveConnectedAccount,
   getActiveAccount,
   getAuthenticatedGmailClient,
-  disconnectAccount
+  disconnectAccount,
+  linkDirectAccount
 };
+

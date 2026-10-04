@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 21 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Orders & Tasks Active Tab Visibility Fix & End-to-End UI Verification (ISSUE-049) |
+| Last Code Change | 04 Oct 2026 — Modal DOM Unnesting Fix Unlocking Gmail Status, Email Sync & Task Modals (ISSUE-050) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -787,6 +787,7 @@ Tracks what has been tested and confirmed working.
 | Rice Quality Common Limits (KMS 2025-26) Specification | Unit, UI & Print Verification | VERIFIED | 04 Oct 2026 | Verified 10-point Common Rice maximum limits validation, interactive spec-violation class highlighting, automatic BRL result selection on out-of-spec parameters, NA handling for Admixture, and official schedule box in A4 print layout (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Module | Unit, Crypto, Parsing & Integration Verification | VERIFIED | 04 Oct 2026 | Verified AES-256-GCM token encryption, triage rules, Hindi order parsing, explicit vs AI-suggested timeline determination, database CRUD, metric aggregations, and 100% automated test suite passing (ISSUE-048) |
 | Supervision Orders & Tasks UI & Active Tab Rendering | End-to-End Headless Browser UI Verification | VERIFIED | 04 Oct 2026 | Verified removal of inline display:none blocking #view-tasks rendering, confirmed active tab display (display: block), 6 KPI metric cards, task matrix rows, Collectorate TL filter pill, task detail modal with direct Gmail deep-link, and Gmail OAuth status modal (ISSUE-049) |
+| Gmail Status, Email Sync & Task Modals DOM Unnesting | End-to-End Headless Browser UI Verification | VERIFIED | 04 Oct 2026 | Verified addition of missing closing </div> for #modalTestData, liberating #modalGmailStatus, #modalTaskForm, and #modalTaskDetail to top level; confirmed 100% interactive opening and rendering of Gmail Status, Email Sync auto-prompt, Task Detail, and Add Task modals (ISSUE-050) |
 
 ---
 
@@ -842,10 +843,31 @@ Tracks what has been tested and confirmed working.
 | ISSUE-047 | Rice Quality Inspection (KMS 2025-26) schedule limits used generic/loose thresholds (e.g. Damaged 4%, FRK 1.1%) instead of official GOI Uniform Specification for Common Rice maximum limits | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, public/supervision.css, tests/test-supervision-full-suite.js, tests/test-rice-common-spec.js | 04 Oct 2026 |
 | ISSUE-048 | Supervision Portal lacked direct official Gmail integration, automatic government order parsing, and actionable task tracking with timeline determination | HIGH | RESOLVED | server/services/gmail/*, server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-gmail-tasks-module.js | 04 Oct 2026 |
 | ISSUE-049 | Orders & Tasks view container (#view-tasks) had inline style="display:none;" in supervision.html, preventing tab activation and rendering due to inline style overriding CSS .superv-view.active specificity | HIGH | RESOLVED | public/supervision.html, tests/test-supervision-tasks-ui.js | 04 Oct 2026 |
+| ISSUE-050 | Gmail Account Status and Email Sync buttons did not work because #modalTestData was missing its closing </div>, nesting #modalGmailStatus, #modalTaskForm, and #modalTaskDetail inside an invisible, non-interactive overlay | HIGH | RESOLVED | public/supervision.html, tests/test-verify-modals-and-buttons.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Modal DOM Unnesting Fix (Gmail Status, Email Sync, Task Modals)
+
+Files: public/supervision.html, tests/test-verify-modals-and-buttons.js, PROJECT_DOCS.md
+Type: Bug Fix / DOM Structure & UI Interaction
+Closes: ISSUE-050
+
+- ROOT CAUSE:
+  In `public/supervision.html`, `<div class="superv-modal-overlay" id="modalTestData">` was missing its closing `</div>` tag after `.superv-modal-box`. As a consequence of this unbalanced DOM nesting (374 open `<div>` tags vs 373 close tags), `#modalGmailStatus` (Official Gmail Account Status & Config), `#modalTaskForm` (Add/Edit Task), and `#modalTaskDetail` (Task Detail View) were all parsed by the browser as children inside `#modalTestData`. Because `#modalTestData` remained closed (`opacity: 0; pointer-events: none;`), clicking "जीमेल खाता स्थिति" (`openGmailStatusModal()`), "ईमेल सिंक करें" (`syncGmailOrders()`), "➕ नया कार्य जोड़ें", or "👁️ विवरण" added `.open` to child modals, but their parent `#modalTestData` remained completely invisible and non-interactive, preventing any modal from displaying.
+- FIX:
+  1. Added the missing closing `</div>` tag at line 1484 of `public/supervision.html`, cleanly closing `#modalTestData` and establishing `#modalGmailStatus`, `#modalTaskForm`, and `#modalTaskDetail` as direct top-level overlay siblings under `<body>`.
+  2. Verified total DOM `<div>` tag balance (374 `<div` tags vs 374 `</div>` tags, diff = 0).
+  3. Created and executed Puppeteer verification suite `tests/test-verify-modals-and-buttons.js`:
+     - Confirmed clicking "जीमेल खाता स्थिति" opens `#modalGmailStatus` with full opacity, active pointer events, and OAuth configuration warnings.
+     - Confirmed clicking "ईमेल सिंक करें" when no account is connected automatically prompts `#modalGmailStatus`.
+     - Confirmed clicking "👁️ विवरण" opens `#modalTaskDetail` with order specifics and direct Gmail deep-link.
+     - Confirmed clicking "➕ नया कार्य जोड़ें" opens `#modalTaskForm` with all 13 government order inputs.
+     - 100% automated test pass.
+
+---
 
 ### 2026-10-04 | Orders & Tasks Active Tab Visibility Fix & End-to-End UI Verification Suite
 
