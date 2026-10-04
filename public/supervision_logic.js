@@ -3130,6 +3130,7 @@ async function openGmailStatusModal() {
     const txtEmail = document.getElementById('txtLinkGmailEmail');
     const txtName = document.getElementById('txtLinkGmailName');
     const btnSubmitText = document.getElementById('btnSubmitLinkDirectText');
+    const btnSubmitIcon = document.getElementById('btnSubmitLinkDirectIcon');
     const oauthBadge = document.getElementById('oauthStatusBadge');
 
     try {
@@ -3157,7 +3158,8 @@ async function openGmailStatusModal() {
             if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
             if (txtEmail) txtEmail.value = data.account.email;
             if (txtName && !txtName.value) txtName.value = data.account.displayName || 'जिला कार्यालय बैतूल (District Office Betul)';
-            if (btnSubmitText) btnSubmitText.textContent = '🔄 संबद्ध खाता अद्यतन / पुनः लिंक करें (Update Linked Account)';
+            if (btnSubmitIcon) btnSubmitIcon.textContent = '🔄';
+            if (btnSubmitText) btnSubmitText.textContent = 'संबद्ध खाता अद्यतन / पुनः लिंक करें (Update Linked Account)';
 
             if (alertBox) {
                 alertBox.style.display = 'none';
@@ -3169,7 +3171,8 @@ async function openGmailStatusModal() {
             if (btnDisconnect) btnDisconnect.style.display = 'none';
             if (txtEmail && !txtEmail.value) txtEmail.value = 'dmnanbetul1@gmail.com';
             if (txtName && !txtName.value) txtName.value = 'जिला कार्यालय बैतूल (District Office Betul)';
-            if (btnSubmitText) btnSubmitText.textContent = '🔗 यह शासकीय खाता लिंक करें (Link Account)';
+            if (btnSubmitIcon) btnSubmitIcon.textContent = '🔗';
+            if (btnSubmitText) btnSubmitText.textContent = 'यह शासकीय खाता लिंक करें (Link Account)';
 
             if (alertBox) {
                 if (!data.configured) {
