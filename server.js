@@ -4450,6 +4450,53 @@ app.get('/api/gmail/status', async (req, res) => {
     }
 });
 
+app.get('/api/gmail/oauth/config', (req, res) => {
+    try {
+        const host = req.headers.host || 'localhost:3000';
+        const proto = req.headers['x-forwarded-proto'] || 'http';
+        const defaultRedirect = `${proto}://${host}/api/gmail/oauth/callback`;
+        res.json({
+            configured: gmailService.isConfigured(),
+            clientId: process.env.GOOGLE_CLIENT_ID || '',
+            redirectUri: process.env.GOOGLE_REDIRECT_URI || defaultRedirect,
+            hasSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/gmail/oauth/config', (req, res) => {
+    try {
+        const { clientId, clientSecret, redirectUri } = req.body || {};
+        if (!clientId || !clientSecret) {
+            return res.status(400).json({ error: 'Google Client ID एवं Client Secret दोनों अनिवार्य हैं।' });
+        }
+        const cleanClientId = String(clientId).trim();
+        const cleanClientSecret = String(clientSecret).trim();
+        const host = req.headers.host || 'localhost:3000';
+        const proto = req.headers['x-forwarded-proto'] || 'http';
+        const cleanRedirectUri = String(redirectUri || `${proto}://${host}/api/gmail/oauth/callback`).trim();
+
+        updateEnvFile({
+            GOOGLE_CLIENT_ID: cleanClientId,
+            GOOGLE_CLIENT_SECRET: cleanClientSecret,
+            GOOGLE_REDIRECT_URI: cleanRedirectUri
+        });
+
+        console.log(`🔑 Google OAuth credentials updated via frontend UI (Client ID: ${cleanClientId.substring(0, 16)}...)`);
+        const url = gmailService.getAuthUrl(cleanRedirectUri);
+        res.json({
+            success: true,
+            message: 'Google OAuth क्रेडेंशियल सुरक्षित कर दिए गए हैं।',
+            url
+        });
+    } catch (err) {
+        console.error('Error saving Google OAuth config:', err);
+        res.status(500).json({ error: 'क्रेडेंशियल सुरक्षित करने में विफल: ' + err.message });
+    }
+});
+
 app.get('/api/gmail/oauth/url', (req, res) => {
     try {
         if (!gmailService.isConfigured()) {
