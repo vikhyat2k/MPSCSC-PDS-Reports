@@ -4347,9 +4347,17 @@ app.post('/api/supervision/test-data/seed', async (req, res) => {
 app.post('/api/supervision/test-data/cleanup', async (req, res) => {
     try {
         const result = await db.cleanupSupervisionTestData();
+        res.json(result);
+    } catch (err) {
+        console.error('Error cleaning up test data:', err);
+        res.status(500).json({ error: 'Failed to clean up test data: ' + err.message });
+    }
+});
+
 // ─────────────────────────────────────────────
 // SUPERVISION OFFICIAL ORDERS & TASKS API
 // ─────────────────────────────────────────────
+
 
 app.get('/api/supervision/tasks', async (req, res) => {
     try {
