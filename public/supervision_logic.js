@@ -3314,18 +3314,20 @@ async function generateDraftCompliance(taskId) {
 // ── Gmail Account Management & Sync ──────────────────────────
 
 function switchGmailLinkTab(tabName) {
-    const tabs = ['quick', 'oauth', 'apppw', 'gemini'];
+    const tabs = ['quick', 'oauth', 'apppw', 'gemini', 'sync'];
     const tabBtns = {
         quick: document.getElementById('btnTabQuickLink'),
         oauth: document.getElementById('btnTabOAuth'),
         apppw: document.getElementById('btnTabAppPassword'),
-        gemini: document.getElementById('btnTabGemini')
+        gemini: document.getElementById('btnTabGemini'),
+        sync: document.getElementById('btnTabSyncSettings')
     };
     const tabPanels = {
         quick: document.getElementById('panelGmailQuickLink'),
         oauth: document.getElementById('panelGmailOAuth'),
         apppw: document.getElementById('panelGmailAppPassword'),
-        gemini: document.getElementById('panelGmailGemini')
+        gemini: document.getElementById('panelGmailGemini'),
+        sync: document.getElementById('panelGmailSyncSettings')
     };
 
     tabs.forEach(t => {
@@ -3333,14 +3335,150 @@ function switchGmailLinkTab(tabName) {
         const panel = tabPanels[t];
         const isActive = t === tabName;
         if (btn) {
-            btn.style.background = isActive ? 'var(--primary)' : 'transparent';
-            btn.style.color = isActive ? '#fff' : 'var(--text-muted)';
+            if (t === 'gemini') {
+                // Gemini has a special active style
+                btn.style.background = isActive ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.12)';
+                btn.style.color = isActive ? '#a5b4fc' : '#818cf8';
+                btn.style.border = isActive ? '1px solid rgba(99,102,241,0.6)' : '1px solid rgba(99,102,241,0.35)';
+            } else {
+                btn.style.background = isActive ? 'var(--primary)' : 'transparent';
+                btn.style.color = isActive ? '#fff' : 'var(--text-muted)';
+            }
         }
         if (panel) {
             panel.style.display = isActive ? 'block' : 'none';
         }
     });
+
+    // Load sync settings when switching to sync tab
+    if (tabName === 'sync') {
+        loadSyncSettings();
+    }
 }
+
+// ── Sync Settings Functions ────────────────────────────────────────────────
+
+let _syncIntervalSelected = 5; // default 5 minutes
+
+function setSyncInterval(minutes) {
+    _syncIntervalSelected = minutes;
+    const display = document.getElementById('syncIntervalDisplay');
+    if (display) display.textContent = minutes + ' मिनट';
+    document.querySelectorAll('.sync-interval-btn').forEach(btn => {
+        const val = parseInt(btn.getAttribute('data-val'));
+        const isActive = val === minutes;
+        btn.style.background = isActive ? 'rgba(99,102,241,0.15)' : 'transparent';
+        btn.style.color = isActive ? 'var(--primary)' : 'var(--text-muted)';
+        btn.style.border = isActive ? '1px solid var(--primary)' : '1px solid var(--border)';
+        btn.style.fontWeight = isActive ? '700' : '600';
+    });
+}
+
+async function loadSyncSettings() {
+    try {
+        const [bgRes, manRes, twRes, intRes] = await Promise.all([
+            fetch('/api/settings/sync_limit_bg').then(r => r.json()).catch(() => ({ value: null })),
+            fetch('/api/settings/sync_limit_manual').then(r => r.json()).catch(() => ({ value: null })),
+            fetch('/api/settings/sync_time_window_days').then(r => r.json()).catch(() => ({ value: null })),
+            fetch('/api/settings/sync_poll_interval_min').then(r => r.json()).catch(() => ({ value: null }))
+        ]);
+
+        const bgLimit = parseInt(bgRes.value) || 10;
+        const manLimit = parseInt(manRes.value) || 20;
+        const timeWindow = parseInt(twRes.value) || 14;
+        const pollInterval = parseInt(intRes.value) || 5;
+
+        const bgSlider = document.getElementById('syncLimitBgSlider');
+        const manSlider = document.getElementById('syncLimitManualSlider');
+        const twSlider = document.getElementById('syncTimeWindowSlider');
+        const bgDisplay = document.getElementById('syncLimitBgDisplay');
+        const manDisplay = document.getElementById('syncLimitManualDisplay');
+        const twDisplay = document.getElementById('syncTimeWindowDisplay');
+
+        if (bgSlider) { bgSlider.value = bgLimit; }
+        if (bgDisplay) { bgDisplay.textContent = bgLimit + ' ईमेल'; }
+        if (manSlider) { manSlider.value = manLimit; }
+        if (manDisplay) { manDisplay.textContent = manLimit + ' ईमेल'; }
+        if (twSlider) { twSlider.value = timeWindow; }
+        if (twDisplay) { twDisplay.textContent = timeWindow + ' दिन'; }
+
+        setSyncInterval(pollInterval);
+
+        // Show summary
+        const summaryEl = document.getElementById('syncSettingsSummary');
+        const summaryText = document.getElementById('syncSettingsSummaryText');
+        if (summaryEl && summaryText) {
+            summaryEl.style.display = 'block';
+            summaryText.innerHTML = `
+                🔄 पृष्ठभूमि: <strong>${bgLimit} ईमेल</strong> हर <strong>${pollInterval} मिनट</strong> &nbsp;|
+                📥 मैनुअल: <strong>${manLimit} ईमेल</strong> &nbsp;|
+                📅 समय-सीमा: <strong>पिछले ${timeWindow} दिन</strong>`;
+        }
+    } catch (e) {
+        console.warn('Sync settings load failed:', e);
+    }
+}
+
+async function saveSyncSettings() {
+    const btn = document.getElementById('btnSaveSyncSettings');
+    const bgLimit = parseInt(document.getElementById('syncLimitBgSlider')?.value) || 10;
+    const manLimit = parseInt(document.getElementById('syncLimitManualSlider')?.value) || 20;
+    const timeWindow = parseInt(document.getElementById('syncTimeWindowSlider')?.value) || 14;
+    const pollInterval = _syncIntervalSelected || 5;
+
+    if (btn) {
+        btn.innerHTML = '⏳ सुरक्षित हो रहा है...';
+        btn.disabled = true;
+    }
+
+    try {
+        const saves = await Promise.all([
+            fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'sync_limit_bg', value: String(bgLimit) }) }),
+            fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'sync_limit_manual', value: String(manLimit) }) }),
+            fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'sync_time_window_days', value: String(timeWindow) }) }),
+            fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'sync_poll_interval_min', value: String(pollInterval) }) })
+        ]);
+
+        const allOk = saves.every(r => r.ok);
+        if (allOk) {
+            if (btn) {
+                btn.innerHTML = '✅ सेटिंग्स सुरक्षित!';
+                btn.style.background = '#10b981';
+            }
+            // Update summary
+            const summaryEl = document.getElementById('syncSettingsSummary');
+            const summaryText = document.getElementById('syncSettingsSummaryText');
+            if (summaryEl && summaryText) {
+                summaryEl.style.display = 'block';
+                summaryText.innerHTML = `
+                    🔄 पृष्ठभूमि: <strong>${bgLimit} ईमेल</strong> हर <strong>${pollInterval} मिनट</strong> &nbsp;|
+                    📥 मैनुअल: <strong>${manLimit} ईमेल</strong> &nbsp;|
+                    📅 समय-सीमा: <strong>पिछले ${timeWindow} दिन</strong>`;
+            }
+            setTimeout(() => {
+                if (btn) {
+                    btn.innerHTML = '💾 सेटिंग्स सुरक्षित करें';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }
+            }, 2500);
+        } else {
+            throw new Error('कुछ सेटिंग्स सुरक्षित नहीं हुईं।');
+        }
+    } catch (e) {
+        if (btn) {
+            btn.innerHTML = '❌ त्रुटि: ' + e.message;
+            btn.style.background = '#ef4444';
+            setTimeout(() => {
+                btn.innerHTML = '💾 सेटिंग्स सुरक्षित करें';
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 3000);
+        }
+    }
+}
+
+// ── End Sync Settings Functions ────────────────────────────────────────────
 
 function toggleOAuthEditForm() {
     const readyBox = document.getElementById('oauthReadyBox');
