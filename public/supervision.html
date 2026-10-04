@@ -1320,239 +1320,7 @@
                 </div>
                 <div class="superv-form-group" style="margin-bottom:12px;">
                     <label class="superv-label required">प्रदाय केंद्र (Issue Center)</label>
-                    <select class="superv-select" id="rosterIC" required>
-                        <option value="Betul">Betul (बैतूल)</option>
-                        <option value="Multai">Multai (मुलताई)</option>
-                        <option value="Bhainsdehi">Bhainsdehi (भैंसदेही)</option>
-                        <option value="Athner">Athner (आठनेर)</option>
-                        <option value="Shahpur">Shahpur (शाहपुर)</option>
-                        <option value="Chicholi">Chicholi (चिचोली)</option>
-                        <option value="Ghoradongri">Ghoradongri (घोड़ाडोंगरी)</option>
-                        <option value="Amla">Amla (आमला)</option>
-                        <option value="Pattan">Pattan (पट्टन)</option>
-                        <option value="Bhimpur">Bhimpur (भीमपुर)</option>
-                    </select>
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">संबद्ध गोदामों की संख्या</label>
-                    <input type="number" class="superv-input" id="rosterGodowns" value="3" min="1">
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">प्रस्तावित निरीक्षण दिनांक</label>
-                    <input type="date" class="superv-input" id="rosterPlannedDate">
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">वास्तविक पूर्ण दिनांक (यदि पूर्ण हो चुका है)</label>
-                    <input type="date" class="superv-input" id="rosterCompletedDate">
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label required">स्थिति (Status)</label>
-                    <select class="superv-select" id="rosterStatus" required>
-                        <option value="pending">प्रस्तावित / लंबित (Pending)</option>
-                        <option value="completed">संपन्न (Completed)</option>
-                        <option value="rescheduled">पुनर्निर्धारित (Rescheduled)</option>
-                    </select>
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">निरीक्षणकर्ता अधिकारी</label>
-                    <input type="text" class="superv-input" id="rosterOfficer" value="District Manager (MPSCSC)">
-                </div>
-                <div class="superv-form-group" style="margin-bottom:8px;">
-                    <label class="superv-label">टिप्पणी</label>
-                    <input type="text" class="superv-input" id="rosterRemarks" placeholder="विशेष टीप...">
-                </div>
-            </div>
-            <div class="superv-modal-footer">
-                <div style="font-size:12px; color:var(--text-muted);">मासिक रोस्टर प्रविष्टि</div>
-                <div class="footer-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalRoster')">रद्द करें</button>
-                    <button type="submit" class="btn btn-primary">💾 सुरक्षित करें</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- 4. Meeting Notes Editor Modal -->
-<div class="superv-modal-overlay" id="modalMeeting">
-    <div class="superv-modal-box" style="max-width:720px;">
-        <div class="superv-modal-header">
-            <h3 style="margin:0; font-size:16px; color:var(--text-main);" id="modalMeetingTitle">बैठक कार्यवृत्त दर्ज करें</h3>
-            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalMeeting')">✕ बंद करें</button>
-        </div>
-        <form id="meetingForm" class="superv-modal-form" onsubmit="handleSaveMeeting(event)">
-            <div class="superv-modal-body">
-                <input type="hidden" id="meetingTypeHidden" value="coordination">
-                <div class="superv-form-grid" style="margin-bottom:12px;">
-                    <div class="superv-form-group">
-                        <label class="superv-label required">संस्था / बैठक प्रकार</label>
-                        <select class="superv-select" id="meetingAgency" required>
-                            <option value="MPWLC">MPWLC (वेयरहाउसिंग कार्पोरेशन)</option>
-                            <option value="Markfed">मार्कफेड (Markfed)</option>
-                            <option value="FCI">भारतीय खाद्य निगम (FCI)</option>
-                            <option value="DCCB">सहकारी बैंक (DCCB)</option>
-                            <option value="IC_Incharges">केन्द्र प्रभारी व कम्प्यूटर ऑपरेटर बैठक</option>
-                            <option value="Sectional">जिला कार्यालय कक्ष प्रभारी बैठक</option>
-                        </select>
-                    </div>
-                    <div class="superv-form-group">
-                        <label class="superv-label required">बैठक दिनांक</label>
-                        <input type="date" class="superv-input" id="meetingDate" required>
-                    </div>
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">बैठक अध्यक्षता / अध्यक्ष</label>
-                    <input type="text" class="superv-input" id="meetingChairperson" value="District Manager, MPSCSC Betul">
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">उपस्थित अधिकारी / प्रतिभागी</label>
-                    <input type="text" class="superv-input" id="meetingAttendees" placeholder="उपस्थित अधिकारियों के नाम व पद...">
-                </div>
-                <div class="superv-form-group" style="margin-bottom:12px;">
-                    <label class="superv-label">विचार-विमर्श एवं मुख्य निर्णय (Minutes of Meeting)</label>
-                    <textarea class="superv-textarea" id="meetingMinutes" rows="3" placeholder="बैठक में लिए गए निर्णय व विचारणीय बिंदुओं की स्थिति..."></textarea>
-                </div>
-                <div class="superv-form-group" style="margin-bottom:8px;">
-                    <label class="superv-label">अनुपालन बिंदु / समय सीमा (Action Points)</label>
-                    <textarea class="superv-textarea" id="meetingActionPoints" rows="2" placeholder="समयबद्ध दायित्व एवं संबंधित अधिकारी..."></textarea>
-                </div>
-            </div>
-            <div class="superv-modal-footer">
-                <div style="font-size:12px; color:var(--text-muted);">बैठक कार्यवृत्त (Minutes)</div>
-                <div class="footer-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalMeeting')">रद्द करें</button>
-                    <button type="submit" class="btn btn-primary">💾 कार्यवृत्त सुरक्षित करें</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- 5. Rice Quality Inspection Official Print Modal -->
-<div class="superv-modal-overlay" id="modalRicePrintView">
-    <div class="superv-modal-box" style="max-width:1150px;">
-        <div class="superv-modal-header">
-            <h3 style="margin:0; font-size:16px; color:var(--text-main);">INSPECTION OF RICE (KMS 2025-26) — Official Sheet</h3>
-            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalRicePrintView')">✕ बंद करें</button>
-        </div>
-        <div class="superv-modal-body" id="printableRiceSheetArea">
-            <!-- Rendered dynamically -->
-        </div>
-        <div class="superv-modal-footer">
-            <div style="font-size:12px; color:var(--text-muted);">CMR चावल गुणवत्ता प्रपत्र (Default A4 Landscape)</div>
-            <div class="footer-actions">
-                <button class="btn btn-secondary" onclick="closeModal('modalRicePrintView')">बंद करें</button>
-                <button class="btn btn-primary" onclick="printOfficialRiceDocument()">🖨️ प्रिंट करें (Print A4 Landscape)</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 6. Test & Dummy Data Sandbox Modal -->
-<div class="superv-modal-overlay" id="modalTestData">
-    <div class="superv-modal-box" style="max-width:850px;">
-        <div class="superv-modal-header" style="border-bottom:1px solid var(--border);">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:20px;">🧪</span>
-                <h3 style="margin:0; font-size:16px; color:var(--text-main);">डमी व टेस्ट डेटा प्रबंधन (Test Data Sandbox)</h3>
-            </div>
-            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalTestData')">✕ बंद करें</button>
-        </div>
-        <div class="superv-modal-body" style="padding:16px 20px; max-height:75vh; overflow-y:auto;">
-            <!-- Safety Guarantee Notice -->
-            <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:12.5px; color:var(--text-main); display:flex; gap:10px; align-items:flex-start;">
-                <span style="font-size:18px; line-height:1;">🛡️</span>
-                <div>
-                    <strong>डेटा सुरक्षा आश्वासन (Strict Zero-Data-Loss Guarantee):</strong>
-                    यह टूल केवल <code>is_test = 1</code> अथवा <code>TEST_</code> प्रीफ़िक्स वाले डमी परीक्षण रिकॉर्ड्स को प्रबंधित करता है। वास्तविक विभागीय डेटा, लाइव रिपोर्ट एवं मूल प्रविष्टियां पूर्णतः सुरक्षित हैं।
-                </div>
-            </div>
-
-            <!-- Test Stats Counter Grid -->
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-bottom:16px;">
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">सघन निरीक्षण</div>
-                    <div style="font-size:18px; font-weight:700; color:var(--primary); margin-top:2px;" id="cntTestInspections">0</div>
-                </div>
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">औचक निरीक्षण</div>
-                    <div style="font-size:18px; font-weight:700; color:var(--superv-warning); margin-top:2px;" id="cntTestSurprise">0</div>
-                </div>
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">वार्षिक रोस्टर</div>
-                    <div style="font-size:18px; font-weight:700; color:#3b82f6; margin-top:2px;" id="cntTestRoster">0</div>
-                </div>
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">समन्वय बैठकें</div>
-                    <div style="font-size:18px; font-weight:700; color:#a855f7; margin-top:2px;" id="cntTestMeetings">0</div>
-                </div>
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">चावल परीक्षण</div>
-                    <div style="font-size:18px; font-weight:700; color:#10b981; margin-top:2px;" id="cntTestRice">0</div>
-                </div>
-                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:600;">आदेश एवं कार्य</div>
-                    <div style="font-size:18px; font-weight:700; color:#ec4899; margin-top:2px;" id="cntTestTasks">0</div>
-                </div>
-                <div style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:8px; padding:10px; text-align:center;">
-                    <div style="font-size:11px; color:#818cf8; font-weight:700;">सक्रिय टेस्ट रिकॉर्ड्स</div>
-                    <div style="font-size:18px; font-weight:800; color:#6366f1; margin-top:2px;" id="cntTestTotal">0</div>
-                </div>
-            </div>
-
-            <!-- Test Records Preview Section -->
-            <div style="border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px;">
-                <div style="padding:8px 12px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; font-weight:700; color:var(--text-main);">📋 वर्तमान टेस्ट डेटा सूची (Test Records In Database)</span>
-                    <button class="btn btn-secondary btn-sm" onclick="loadTestDataStatus()" style="font-size:11px; padding:2px 8px;">🔄 रीफ्रेश</button>
-                </div>
-                <div style="max-height:220px; overflow-y:auto;">
-                    <table class="superv-table" style="font-size:12px;">
-                        <thead>
-                            <tr>
-                                <th>मॉड्यूल</th>
-                                <th>रिकॉर्ड आईडी</th>
-                                <th>प्रदाय केन्द्र / विषय</th>
-                                <th>दिनांक</th>
-                                <th>स्थिति</th>
-                            </tr>
-                        </thead>
-                        <tbody id="testDataRecordsTableBody">
-                            <tr>
-                                <td colspan="5" style="text-align:center; color:var(--text-muted); padding:16px;">डेटा लोड हो रहा है...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="superv-modal-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding:12px 20px;">
-            <button class="btn btn-secondary" onclick="closeModal('modalTestData')">बंद करें</button>
-            <div style="display:flex; gap:8px;">
-                <button class="btn" onclick="seedTestDataFromUI()" style="background:var(--primary); color:#fff; font-size:12.5px;">
-                    🚀 22 टेस्ट रिकॉर्ड्स पुनः लोड करें
-                </button>
-                <button class="btn" onclick="cleanupTestDataFromUI()" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); font-size:12.5px;">
-                    🧹 केवल टेस्ट डेटा हटाएं (Safe Purge)
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 6. Official Gmail Account Status & Configuration Modal -->
-<div class="superv-modal-overlay" id="modalGmailStatus">
-    <div class="superv-modal-box" style="max-width:680px;">
-        <div class="superv-modal-header" style="border-bottom:1px solid var(--border);">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:18px;">📧</span>
-                <h3 style="margin:0; font-size:16px; color:var(--text-main);">शासकीय जीमेल खाता प्रबंधन (Official Gmail Account)</h3>
-            </div>
-            <button class="btn btn-secondary btn-sm" onclick="closeModal('modalGmailStatus')">✕ बंद करें</button>
-        </div>
-        <div class="superv-modal-body" style="padding:18px 20px; max-height:80vh; overflow-y:auto;">
-            <!-- Current Account Status Card -->
+                    <select class="superv-sel            <!-- Current Account Status Card -->
             <div id="gmailAccountStatusCard" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:16px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -1571,20 +1339,326 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Dual Engine Pipeline Status Bar (Transport + Gemini AI) -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-muted);">एकीकृत पाइपलाइन (Pipeline):</span>
+                        <span id="headerPillTransport" class="superv-badge" style="font-size:10.5px; padding:2px 8px; background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.25);">
+                            📥 इनबॉक्स: जांच जारी...
+                        </span>
+                        <span style="color:var(--text-muted); font-size:11px;">➔</span>
+                        <span id="headerPillGemini" class="superv-badge badge-success" style="font-size:10.5px; padding:2px 8px; display:inline-flex; align-items:center; gap:4px;">
+                            🤖 Gemini AI: सक्रिय (gemini-3.5-flash)
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="switchGmailLinkTab('gemini')" style="font-size:10.5px; padding:3px 9px;" title="Gemini AI प्रबंधन एवं विन्यास देखें">
+                        ⚙️ AI सेटिंग्स / की बदलें
+                    </button>
+                </div>
             </div>
 
             <!-- Segmented Method Switcher Tabs -->
             <div style="display:flex; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; padding:3px; gap:4px; margin-bottom:16px;">
                 <button type="button" class="btn btn-sm" id="btnTabQuickLink" onclick="switchGmailLinkTab('quick')" style="flex:1; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:var(--primary); color:#fff; transition:all 0.2s;">
-                    ⚡ 1-क्लिक त्वरित लिंक
+                    ⚡ 1-क्लिक लिंक
                 </button>
-                <button type="button" class="btn btn-sm" id="btnTabOAuth" onclick="switchGmailLinkTab('oauth')" style="flex:1; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
-                    🌐 Google OAuth 2.0
+                <button type="button" class="btn btn-sm" id="btnTabOAuth" onclick="switchGmailLinkTab('oauth')" style="flex:1.2; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
+                    🌐 Google OAuth + 🤖 AI
                 </button>
-                <button type="button" class="btn btn-sm" id="btnTabAppPassword" onclick="switchGmailLinkTab('apppw')" style="flex:1; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
-                    🔑 ऐप पासवर्ड (App PW)
+                <button type="button" class="btn btn-sm" id="btnTabAppPassword" onclick="switchGmailLinkTab('apppw')" style="flex:1.2; border:none; padding:8px 10px; font-size:12px; font-weight:600; border-radius:6px; background:transparent; color:var(--text-muted); transition:all 0.2s;">
+                    🔑 App Password + 🤖 AI
                 </button>
                 <button type="button" class="btn btn-sm" id="btnTabGemini" onclick="switchGmailLinkTab('gemini')" style="flex:1.2; border:1px solid rgba(99,102,241,0.35); padding:8px 10px; font-size:12px; font-weight:700; border-radius:6px; background:rgba(99,102,241,0.12); color:#818cf8; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px;">
+                    <span>🤖 Gemini AI प्रबंधन</span>
+                    <span style="font-size:9px; background:#10b981; color:#fff; padding:1px 5px; border-radius:4px;">Active</span>
+                </button>
+            </div>
+
+            <!-- Panel 1: Quick 1-Click Link -->
+            <div id="panelGmailQuickLink" style="display:block;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <span style="font-size:18px;">⚡</span>
+                        <div>
+                            <strong style="font-size:13.5px; color:var(--text-main);">शासकीय ईमेल त्वरित लिंकेज (Quick 1-Click Link)</strong>
+                            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">बिना किसी API सेटअप या Google Cloud क्रेडेंशियल के सीधे शासकीय खाता जोड़ें।</div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:14px;">
+                        <div>
+                            <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                                शासकीय जीमेल पता (Official Gmail Address) <span style="color:#ef4444;">*</span>
+                            </label>
+                            <input type="email" id="txtLinkGmailEmail" class="superv-input" placeholder="dmnanbetul1@gmail.com" value="dmnanbetul1@gmail.com" style="width:100%; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                                कार्यालय / पदनाम (Office / Designation)
+                            </label>
+                            <input type="text" id="txtLinkGmailName" class="superv-input" placeholder="जिला कार्यालय बैतूल (District Office Betul)" value="जिला कार्यालय बैतूल (District Office Betul)" style="width:100%; box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <button type="button" id="btnSubmitLinkDirect" class="btn btn-primary" onclick="linkGmailAccountDirect()" style="width:100%; justify-content:center; padding:10px 16px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                        <span id="btnSubmitLinkDirectIcon">🔗</span> <span id="btnSubmitLinkDirectText">यह शासकीय खाता लिंक एवं सक्रिय करें (Link Account)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel 2: Google Cloud OAuth 2.0 -->
+            <div id="panelGmailOAuth" style="display:none;">
+                <!-- Integrated Gemini AI Auto-Analysis Box for Google Cloud OAuth 2.0 -->
+                <div style="background:linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(59,130,246,0.06) 100%); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px 14px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:18px;">🤖</span>
+                            <div>
+                                <strong style="font-size:12.5px; color:var(--text-main);">Google Cloud OAuth 2.0 + Gemini AI एकीकृत पाइपलाइन</strong>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                                    OAuth 2.0 द्वारा प्राप्त ईमेल सीधे Gemini AI द्वारा विश्लेषित होंगे (पत्र क्र., T.L. प्राथमिकता, मिलिंग/उपार्जन व ड्राफ्ट प्रतिवेदन)।
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="oauthGeminiStatusBadge" class="superv-badge badge-success" style="font-size:10.5px;">✓ Gemini AI सक्रिय</span>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="testGeminiConnectionUI()" style="font-size:11px; padding:4px 8px;">
+                                ⚡ AI टेस्ट
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; font-size:11px; background:rgba(0,0,0,0.18); border-radius:6px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="color:var(--text-muted);">सक्रिय Gemini API Key:</span>
+                            <span id="oauthGeminiKeyMasked" style="font-family:monospace; color:#818cf8; font-weight:700;">जांच हो रही है...</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-link" onclick="switchGmailLinkTab('gemini')" style="color:var(--primary); font-size:11px; text-decoration:underline; padding:0; background:none; border:none; cursor:pointer;">
+                            AI प्रबंधन एवं की बदलें ↗
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:18px;">🌐</span>
+                            <div>
+                                <strong style="font-size:13.5px; color:var(--text-main);">Google Cloud OAuth 2.0 अधिकृतिकरण</strong>
+                                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Google API टोकन द्वारा 24/7 पृष्ठभूमि ईमेल पोलिंग।</div>
+                            </div>
+                        </div>
+                        <span id="oauthStatusBadge" class="superv-badge" style="font-size:11px;">जांच हो रही है...</span>
+                    </div>
+
+                    <!-- If configured, big sign-in button -->
+                    <div id="oauthReadyBox" style="display:none; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:14px; margin-bottom:14px; text-align:center;">
+                        <div style="font-size:12.5px; color:#10b981; font-weight:600; margin-bottom:10px;">
+                            ✓ Google OAuth क्रेडेंशियल सुरक्षित हैं!
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="initiateGmailConnect()" style="width:100%; justify-content:center; padding:10px 16px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.54 0 2.94.54 4.04 1.44l3.03-3.03C17.21 1.71 14.77 1 12 1 7.42 1 3.55 3.6 1.7 7.35l3.66 2.84C6.24 7.27 8.87 5 12 5z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.7 2.87c2.16-2 3.72-4.94 3.72-8.69z"/><path fill="#FBBC05" d="M5.36 14.81c-.24-.71-.38-1.47-.38-2.26s.14-1.55.38-2.26L1.7 7.45C.62 9.61 0 12.02 0 14.55s.62 4.94 1.7 7.1l3.66-2.84z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.7-2.87c-1.08.72-2.45 1.16-4.23 1.16-3.13 0-5.76-2.27-6.64-5.19L1.7 17.03C3.55 20.78 7.42 24 12 24z"/></svg>
+                            Google द्वारा साइन-इन एवं अधिकृत करें (Sign-in via Google)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleOAuthEditForm()" style="margin-top:10px; font-size:11.5px;">
+                            ⚙️ क्रेडेंशियल संपादित करें / बदलें (Edit Credentials)
+                        </button>
+                    </div>
+
+                    <!-- In-app OAuth Credentials Configuration Form -->
+                    <div id="oauthConfigForm" style="display:block;">
+                        <div style="font-size:12px; font-weight:600; color:var(--text-main); margin-bottom:10px;">
+                            ⚙️ Google Cloud API Credentials प्रविष्ट करें:
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:14px;">
+                            <div>
+                                <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:3px;">
+                                    Google Client ID <span style="color:#ef4444;">*</span>
+                                </label>
+                                <input type="text" id="txtGoogleClientId" class="superv-input" placeholder="उदा. 123456789-xxxxx.apps.googleusercontent.com" style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:3px;">
+                                    Google Client Secret <span style="color:#ef4444;">*</span>
+                                </label>
+                                <div style="position:relative;">
+                                    <input type="password" id="txtGoogleClientSecret" class="superv-input" placeholder="उदा. GOCSPX-xxxxxxxxx" style="width:100%; box-sizing:border-box; padding-right:40px;">
+                                    <button type="button" onclick="toggleSecretVisibility('txtGoogleClientSecret')" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:13px;" title="Show/Hide">👁️</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:3px;">
+                                    Authorized Redirect URI (Google Cloud Console में यह URL जोड़ें):
+                                </label>
+                                <div style="display:flex; gap:6px;">
+                                    <input type="text" id="txtGoogleRedirectUri" class="superv-input" readonly value="http://localhost:3000/api/gmail/oauth/callback" style="flex:1; background:rgba(255,255,255,0.03); color:var(--text-muted); font-family:monospace; font-size:11px;">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btnCopyRedirectUri" onclick="copyRedirectUri()" style="flex-shrink:0; padding:4px 10px; font-size:11.5px;">
+                                        📋 कॉपी करें
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btnSaveOAuthAndConnect" class="btn btn-primary" onclick="saveGoogleOAuthCredentials()" style="width:100%; justify-content:center; padding:10px 16px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                            💾 क्रेडेंशियल सुरक्षित करें एवं Google Sign-In करें (Save & Sign In)
+                        </button>
+                    </div>
+
+                    <!-- Collapsible 2-Minute Google Cloud Console Help Guide -->
+                    <details style="margin-top:14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:11.5px; color:var(--text-muted);">
+                        <summary style="cursor:pointer; font-weight:600; color:var(--primary);">📖 Google Cloud Console से Client ID व Secret कैसे प्राप्त करें (मार्गदर्शिका)</summary>
+                        <ol style="margin:8px 0 0 16px; padding:0; line-height:1.6;">
+                            <li><a href="https://console.cloud.google.com/" target="_blank" style="color:var(--primary); text-decoration:underline;">Google Cloud Console</a> खोलें और एक नया प्रोजेक्ट बनाएं (उदा. <code>MPSCSC Supervision</code>).</li>
+                            <li><strong>APIs & Services > Library</strong> में जाकर <strong>Gmail API</strong> खोजें और <strong>Enable</strong> करें।</li>
+                            <li><strong>APIs & Services > Credentials</strong> में जाएं और <strong>Create Credentials > OAuth client ID</strong> चुनें।</li>
+                            <li>Application type में <strong>Web application</strong> चुनें।</li>
+                            <li><strong>Authorized redirect URIs</strong> में ऊपर दिया गया Redirect URI जोड़ें: <code>http://localhost:3000/api/gmail/oauth/callback</code>.</li>
+                            <li>प्राप्त <strong>Client ID</strong> और <strong>Client Secret</strong> को ऊपर दिए गए बॉक्स में पेस्ट करके <strong>सुरक्षित करें</strong> पर क्लिक करें।</li>
+                        </ol>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Panel 3: Gmail App Password -->
+            <div id="panelGmailAppPassword" style="display:none;">
+                <!-- Integrated Gemini AI Auto-Analysis Box for App Password -->
+                <div style="background:linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(245,158,11,0.06) 100%); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px 14px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:18px;">🤖</span>
+                            <div>
+                                <strong style="font-size:12.5px; color:var(--text-main);">App Password + Gemini AI एकीकृत पाइपलाइन</strong>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                                    16-अक्षरीय ऐप पासवर्ड से सिंक होते ही प्रत्येक शासकीय आदेश Gemini AI द्वारा तुरंत विश्लेषित होकर कार्यसूची में दर्ज होगा।
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="appPwGeminiStatusBadge" class="superv-badge badge-success" style="font-size:10.5px;">✓ Gemini AI सक्रिय</span>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="testGeminiConnectionUI()" style="font-size:11px; padding:4px 8px;">
+                                ⚡ AI टेस्ट
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; font-size:11px; background:rgba(0,0,0,0.18); border-radius:6px; padding:6px 10px; border:1px solid rgba(255,255,255,0.06);">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="color:var(--text-muted);">सक्रिय Gemini API Key:</span>
+                            <span id="appPwGeminiKeyMasked" style="font-family:monospace; color:#818cf8; font-weight:700;">जांच हो रही है...</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-link" onclick="switchGmailLinkTab('gemini')" style="color:var(--primary); font-size:11px; text-decoration:underline; padding:0; background:none; border:none; cursor:pointer;">
+                            AI प्रबंधन एवं की बदलें ↗
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <span style="font-size:18px;">🔑</span>
+                        <div>
+                            <strong style="font-size:13.5px; color:var(--text-main);">Gmail App Password (16-अक्षरीय कोड) लिंकेज</strong>
+                            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Google 2-Step Verification का 16-अक्षरीय ऐप पासवर्ड प्रविष्ट करके सीधा सुरक्षित कनेक्शन।</div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:14px;">
+                        <div>
+                            <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                                शासकीय ईमेल (Gmail Address) <span style="color:#ef4444;">*</span>
+                            </label>
+                            <input type="email" id="txtAppPwEmail" class="superv-input" placeholder="dmnanbetul1@gmail.com" value="dmnanbetul1@gmail.com" style="width:100%; box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                                Google 16-Digit App Password <span style="color:#ef4444;">*</span>
+                            </label>
+                            <div style="position:relative;">
+                                <input type="password" id="txtAppPwKey" class="superv-input" placeholder="उदा. xxxx xxxx xxxx xxxx" value="qrfvhxiplslorudq" style="width:100%; box-sizing:border-box; font-family:monospace; letter-spacing:1px; padding-right:40px;">
+                                <button type="button" onclick="toggleSecretVisibility('txtAppPwKey')" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:13px;" title="Show/Hide">👁️</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="btnSubmitAppPw" class="btn btn-primary" onclick="linkWithAppPassword()" style="width:100%; justify-content:center; padding:10px 16px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                        <span>🔐</span> <span>ऐप पासवर्ड सुरक्षित करें एवं खाता लिंक करें (Save & Link)</span>
+                    </button>
+
+                    <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.5; background:rgba(255,255,255,0.03); border-radius:6px; padding:8px 10px;">
+                        💡 <strong>ऐप पासवर्ड कैसे प्राप्त करें:</strong> Google Account > Security > 2-Step Verification > App Passwords में जाकर "Other (Supervision Portal)" नाम देकर 16 अक्षरों का कोड जनरेट करें।
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 4: Google Gemini AI Administrative Intelligence -->
+            <div id="panelGmailGemini" style="display:none;">
+                <!-- Unified Architecture Integration Diagram -->
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                        <span>🔗</span> <span>द्वि-प्रोटोकॉल एकीकरण (Google Cloud OAuth 2.0 + App Password ➔ Gemini AI)</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; text-align:center; font-size:11px;">
+                        <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:6px; padding:8px 6px;">
+                            <div style="font-weight:700; color:#60a5fa;">🌐 Google OAuth 2.0</div>
+                            <div style="color:var(--text-muted); font-size:10px; margin-top:2px;">Background API Token</div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="switchGmailLinkTab('oauth')" style="margin-top:6px; font-size:10px; padding:2px 6px;">OAuth देखें</button>
+                        </div>
+                        <div style="color:var(--text-muted); font-weight:700; font-size:13px;">एवं / या</div>
+                        <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:6px; padding:8px 6px;">
+                            <div style="font-weight:700; color:#fbbf24;">🔑 16-Digit App Password</div>
+                            <div style="color:var(--text-muted); font-size:10px; margin-top:2px;">2-Step Verification Password</div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="switchGmailLinkTab('apppw')" style="margin-top:6px; font-size:10px; padding:2px 6px;">App PW देखें</button>
+                        </div>
+                    </div>
+                    <div style="text-align:center; margin:8px 0; font-size:11px; color:#818cf8; font-weight:600;">
+                        ⬇️ शासकीय ईमेल स्वतः Gemini AI मस्तिष्क को प्रेषित ⬇️
+                    </div>
+                    <div style="background:linear-gradient(135deg, rgba(99,102,241,0.14) 0%, rgba(139,92,246,0.12) 100%); border:1px solid rgba(99,102,241,0.35); border-radius:6px; padding:10px; text-align:center;">
+                        <div style="font-weight:700; font-size:12px; color:#818cf8; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <span>🤖</span> <span>Google Gemini AI विश्लेषक (Auto Intelligence Engine)</span>
+                        </div>
+                        <div style="font-size:10.5px; color:var(--text-muted); margin-top:3px;">
+                            पत्र क्रमांक • कलेक्टर T.L. • मिलिंग/उपार्जन शाखा • समय-सीमा • 1-क्लिक पालन प्रतिवेदन
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:18px;">🤖</span>
+                            <div>
+                                <strong style="font-size:13.5px; color:var(--text-main);">Google Gemini AI शासकीय आदेश विश्लेषक</strong>
+                                <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">प्रशासनिक हिंदी विश्लेषण, स्वचालित प्राथमिकीकरण एवं ड्राफ्ट पालन प्रतिवेदन।</div>
+                            </div>
+                        </div>
+                        <span id="geminiStatusBadge" class="superv-badge badge-success" style="font-size:11px;">जांच हो रही है...</span>
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">
+                            Gemini API Key
+                        </label>
+                        <div style="position:relative;">
+                            <input type="password" id="txtGeminiApiKey" class="superv-input" placeholder="Google AI Studio से प्राप्त Gemini API Key दर्ज करें" value="" style="width:100%; box-sizing:border-box; font-family:monospace; padding-right:40px;">
+                            <button type="button" onclick="toggleSecretVisibility('txtGeminiApiKey')" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:13px;" title="Show/Hide">👁️</button>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-bottom:14px;">
+                        <button type="button" id="btnTestGemini" class="btn btn-secondary btn-sm" onclick="testGeminiConnectionUI()" style="flex:1; justify-content:center; font-size:12px; font-weight:600;">
+                            ⚡ कनेक्शन टेस्ट करें
+                        </button>
+                        <button type="button" id="btnSaveGeminiKey" class="btn btn-primary btn-sm" onclick="saveGeminiApiKeyUI()" style="flex:1; justify-content:center; font-size:12px; font-weight:600;">
+                            💾 सुरक्षित करें
+                        </button>
+                    </div>
+
+                    <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.2); border-radius:8px; padding:12px; font-size:11.5px; color:var(--text-main); line-height:1.6;">
+                        <strong>✨ Gemini AI स्वचालित क्षमताएं:</strong>
+                        <ul style="margin:4px 0 0 16px; padding:0;">
+                            <li><strong>शासकीय हिंदी पत्र क्रमांक निष्कर्षण:</strong> आदेशों से सटीक पत्र क्र./जावक क्र. निकालता है।</li>
+                            <li><strong>बौद्धिक प्राथमिकीकरण (Smart Priority):</strong> कलेक्टर टी.एल., कोर्ट केस, उठाव आदेशों को स्वतः CRITICAL / HIGH श्रेणी में रखता है।</li>
+                            <li><strong>समय-सीमा की स्वतः गणना:</strong> स्पष्ट तिथियों व सापेक्ष दिनों (उदा. 3 दिवस) की गणना।</li>
+                            <li><strong>1-क्लिक पालन प्रतिवेदन ड्राफ्ट:</strong> सक्षम अधिकारी को उत्तर भेजने हेतु औपचारिक प्रतिवेदन पत्र स्वतः तैयार करता है।</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>,241,0.35); padding:8px 10px; font-size:12px; font-weight:700; border-radius:6px; background:rgba(99,102,241,0.12); color:#818cf8; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px;">
                     <span>🤖 Gemini AI प्रबंधन</span>
                     <span style="font-size:9px; background:#10b981; color:#fff; padding:1px 5px; border-radius:4px;">Active</span>
                 </button>
