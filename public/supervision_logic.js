@@ -3384,9 +3384,10 @@ function copyRedirectUri() {
     });
 }
 
-async function openGeminiModal() {
-    await openGmailStatusModal();
+function openGeminiModal() {
+    openModal('modalGmailStatus');
     switchGmailLinkTab('gemini');
+    openGmailStatusModal();
 }
 
 function openGeminiModalFromNav(navEl) {
@@ -3394,7 +3395,7 @@ function openGeminiModalFromNav(navEl) {
     showSupervView('tasks', tasksNav || navEl);
     setTimeout(() => {
         openGeminiModal();
-    }, 150);
+    }, 100);
 }
 
 async function updateGeminiBadges() {
