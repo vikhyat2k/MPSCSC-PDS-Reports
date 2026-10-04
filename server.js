@@ -4416,6 +4416,16 @@ app.delete('/api/supervision/tasks/:id', async (req, res) => {
     }
 });
 
+app.post('/api/supervision/tasks/delete-dummy', async (req, res) => {
+    try {
+        const result = await db.deleteDummySupervisionTasks();
+        res.json(result);
+    } catch (err) {
+        console.error('Error deleting dummy tasks:', err);
+        res.status(500).json({ error: 'Failed to delete dummy tasks: ' + err.message });
+    }
+});
+
 // ─────────────────────────────────────────────
 // OFFICIAL GMAIL OAUTH & INGESTION API
 // ─────────────────────────────────────────────
