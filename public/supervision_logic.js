@@ -2766,9 +2766,11 @@ async function deleteDummyTasksFromUI() {
 async function loadSupervisionTasks() {
     try {
         const statusFilter = document.getElementById('taskStatusFilter')?.value || '';
+        const sectionFilter = document.getElementById('taskSectionFilter')?.value || '';
         let url = `/api/supervision/tasks?`;
         if (SupervState.taskFilterDept) url += `department=${encodeURIComponent(SupervState.taskFilterDept)}&`;
-        if (statusFilter) url += `status=${encodeURIComponent(statusFilter)}`;
+        if (statusFilter) url += `status=${encodeURIComponent(statusFilter)}&`;
+        if (sectionFilter) url += `section=${encodeURIComponent(sectionFilter)}&`;
 
         const res = await fetch(url);
         const data = await res.json();
@@ -2882,8 +2884,8 @@ function renderTasksTable(tasks) {
                     </div>
                 </td>
                 <td>
-                    <div style="font-size:12px; font-weight:600; color:var(--text-main);">${t.assigned_section || 'PDS'}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${t.responsible_person || '—'}</div>
+                    <div>${formatSectionBadge(t.assigned_section)}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">${t.responsible_person || '—'}</div>
                 </td>
                 <td>
                     ${deadlineHtml}
@@ -2951,10 +2953,39 @@ function filterTasksLocally() {
         (t.subject && t.subject.toLowerCase().includes(q)) ||
         (t.letter_ref_no && t.letter_ref_no.toLowerCase().includes(q)) ||
         (t.issuing_authority && t.issuing_authority.toLowerCase().includes(q)) ||
-        (t.task_description && t.task_description.toLowerCase().includes(q))
+        (t.task_description && t.task_description.toLowerCase().includes(q)) ||
+        (t.assigned_section && t.assigned_section.toLowerCase().includes(q)) ||
+        (formatSectionLabel(t.assigned_section).toLowerCase().includes(q))
     );
 
     renderTasksTable(filtered);
+}
+
+function formatSectionBadge(sec) {
+    const labels = {
+        'PDS': { name: 'PDS (उठाव/वितरण)', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+        'Milling': { name: 'मिलिंग (Milling)', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+        'Procurement': { name: 'उपार्जन (Procurement)', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+        'Storage': { name: 'भंडारण (Storage)', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+        'Quality': { name: 'गुणवत्ता नियंत्रण (QC)', color: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
+        'Finance': { name: 'वित्त एवं लेखा', color: '#14b8a6', bg: 'rgba(20,184,166,0.1)' },
+        'Admin': { name: 'सामान्य प्रशासन', color: '#64748b', bg: 'rgba(100,116,139,0.1)' }
+    };
+    const s = labels[sec] || { name: sec || 'PDS', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' };
+    return `<span style="display:inline-block; font-size:11px; font-weight:600; padding:2px 7px; border-radius:4px; background:${s.bg}; color:${s.color}; border:1px solid ${s.color}33;">${s.name}</span>`;
+}
+
+function formatSectionLabel(sec) {
+    const labels = {
+        'PDS': 'PDS (उठाव एवं वितरण)',
+        'Milling': 'मिलिंग (Milling)',
+        'Procurement': 'उपार्जन (Procurement)',
+        'Storage': 'भंडारण एवं वेयरहाउसिंग',
+        'Quality': 'गुणवत्ता नियंत्रण (QC)',
+        'Finance': 'वित्त एवं लेखा',
+        'Admin': 'सामान्य प्रशासन'
+    };
+    return labels[sec] || sec || 'PDS';
 }
 
 function openNewTaskModal() {
@@ -3170,7 +3201,7 @@ async function viewTaskDetails(taskId) {
                     <div style="font-size:11px; color:var(--text-muted);">समय-सीमा (Due Date)</div>
                     <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${dDate}</div>
                     <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">प्रभारी शाखा एवं अधिकारी</div>
-                    <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${task.assigned_section || 'PDS'} — ${task.responsible_person || 'प्रभारी'}</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${formatSectionLabel(task.assigned_section)} — ${task.responsible_person || 'प्रभारी'}</div>
                 </div>
             </div>
 
