@@ -4582,19 +4582,31 @@ app.post('/api/gmail/link', async (req, res) => {
 // ─────────────────────────────────────────────
 const geminiAnalyzer = require('./server/services/gmail/geminiAnalyzer');
 
+let cachedGeminiPing = null;
+let lastGeminiPingTime = 0;
+
 app.get('/api/gemini/status', async (req, res) => {
     try {
         const configured = geminiAnalyzer.isConfigured();
         let pingResult = { ok: false };
+        const now = Date.now();
         if (configured) {
-            pingResult = await geminiAnalyzer.testConnection();
+            if (cachedGeminiPing && (now - lastGeminiPingTime < 5 * 60 * 1000) && req.query.force !== 'true') {
+                pingResult = cachedGeminiPing;
+            } else {
+                pingResult = await geminiAnalyzer.testConnection();
+                if (pingResult.ok) {
+                    cachedGeminiPing = pingResult;
+                    lastGeminiPingTime = now;
+                }
+            }
         }
         const rawKey = process.env.GEMINI_API_KEY || '';
         const maskedKey = rawKey.length > 8 ? `${rawKey.substring(0, 6)}...${rawKey.substring(rawKey.length - 4)}` : '';
         res.json({
             configured,
             active: pingResult.ok,
-            model: pingResult.model || 'gemini-flash-latest',
+            model: pingResult.model || 'gemini-3.5-flash',
             maskedKey,
             error: pingResult.error || null
         });
