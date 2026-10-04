@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 23 |
+| Completed Milestones | 24 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Google Gemini AI Administrative Order Intelligence Engine (ISSUE-056) |
+| Last Code Change | 04 Oct 2026 — Milling & Procurement Sections Integration under प्रभारी शाखा (ISSUE-057) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -794,6 +794,7 @@ Tracks what has been tested and confirmed working.
 | Supervision Sidebar Auto-Shrink & State Synchronization | UI, CSS & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added dual-class (.app-wrapper.sidebar-collapsed, .app-sidebar.collapsed) support, smooth 72px auto-shrink, 260px hover expansion, backdrop overlay, tooltip tracking, and 7/7 automated test pass across supervision.html, index.html, and directory.html (ISSUE-054) |
 | Front-End Gmail Account Linkage Hub & Credential Persistence | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Implemented 3-option linkage hub (1-click quick link, in-app Google OAuth 2.0 Client ID/Secret form, and App Password setup) eliminating manual .env editing; verified with 100% passing Puppeteer test suite (ISSUE-055) |
 | Gemini AI Administrative Order Intelligence Engine | End-to-End AI, Database & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified Gemini Generative AI (gemini-3.5-flash / gemini-flash-latest) integration, bilingual administrative Hindi order parsing, automatic letter ref & date extraction, smart priority assessment, due date calculation, draft compliance note generation, in-app API key management, and 100% automated test pass (ISSUE-056) |
+| Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
 
 ---
 
@@ -856,10 +857,43 @@ Tracks what has been tested and confirmed working.
 | ISSUE-054 | Supervision Portal left navigation panel auto-shrink not working on toggle or medium screens (<=1100px) due to missing .app-wrapper.sidebar-collapsed CSS rules, missing backdrop, and broken toggleSidebar() implementation | HIGH | RESOLVED | public/styles.css, public/supervision.html, public/supervision_logic.js, public/index.html, tests/test-sidebar-comprehensive.js | 04 Oct 2026 |
 | ISSUE-055 | Gmail account linking lacked comprehensive front-end configuration options, displaying alert to edit .env when clicking Google Sign-In; needed seamless multi-option UI hub (1-click quick link, in-app Google OAuth 2.0 Client ID/Secret form, and App Password setup) without requiring users to manually edit .env | HIGH | RESOLVED | server.js, public/supervision.html, public/supervision_logic.js, tests/test-frontend-link-options.js | 04 Oct 2026 |
 | ISSUE-056 | Official government email analysis relied solely on keyword regex without nuanced contextual understanding, semantic priority determination, or automatic compliance note drafting; required deep LLM administrative intelligence via Google Gemini API | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server.js, server/database/db.js, public/supervision.html, public/supervision_logic.js, tests/test-gemini-integration.js, tests/test-gemini-ui.js | 04 Oct 2026 |
+| ISSUE-057 | Supervision Orders & Tasks module lacked dedicated support for Milling (मिलिंग) and Procurement (उपार्जन) under प्रभारी शाखा (Section), missing dropdown options, UI section filtering, and automated rule/AI triage | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server/services/gmail/rules.js, server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server/database/db.js, tests/test-sections-milling-procurement.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Milling & Procurement Sections Integration under प्रभारी शाखा (Section)
+
+Files: public/supervision.html, public/supervision_logic.js, server/services/gmail/rules.js, server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server/database/db.js, tests/test-sections-milling-procurement.js, PROJECT_DOCS.md
+Type: Feature / Section Categorization & Triage Enhancement
+Closes: ISSUE-057
+
+- USER REQUIREMENT & ISSUE:
+  The user requested: "add Milling(मिलिंग ), Procurement (उपार्जन ) under प्रभारी शाखा (Section)". Previously, the "प्रभारी शाखा (Section)" dropdown only had PDS, Storage, Quality, Finance, and Admin, omitting the two critical pillars of MPSCSC operations: Paddy/Rice Milling and Kharif/Rabi MSP Procurement.
+- ROOT CAUSE:
+  1. `#taskFormSection` in `#modalTaskForm` did not offer `Milling` or `Procurement` as choices.
+  2. The Orders & Tasks list lacked a dedicated Section Filter dropdown, allowing only status and department authority filtering.
+  3. The automated triage rules (`server/services/gmail/rules.js`) and Google Gemini system prompt (`server/services/gmail/geminiAnalyzer.js`) did not categorize incoming official orders into `Milling` or `Procurement`.
+  4. Backend database query `getSupervisionTasks()` lacked `filters.section` handling.
+- FIX & IMPLEMENTATION:
+  1. Front-End Dropdowns & Filtering (`public/supervision.html`, `public/supervision_logic.js`):
+     - Added `Milling (मिलिंग)` and `Procurement (उपार्जन)` to `#taskFormSection` select options in `#modalTaskForm`.
+     - Added `#taskSectionFilter` dropdown to the filter toolbar in Orders & Tasks view allowing instant 1-click filtering by Section.
+     - Implemented `formatSectionBadge(sec)` and `formatSectionLabel(sec)` in `supervision_logic.js` providing colored badges for all 7 sections (PDS, Milling, Procurement, Storage, Quality, Finance, Admin).
+     - Enhanced local search `filterTasksLocally()` to match Hindi/English section names.
+     - Updated `loadSupervisionTasks()` to append `section` parameter to `/api/supervision/tasks`.
+  2. Backend Database & API Filtering (`server/database/db.js`):
+     - Updated `getSupervisionTasks(filters)` to support `filters.section`, dynamically filtering `WHERE assigned_section = ?`.
+  3. Automated Triage & Gemini AI Integration (`server/services/gmail/rules.js`, `geminiAnalyzer.js`, `parser.js`, `ingestion.js`):
+     - Added `RULE_MILLING` (keywords: मिलिंग, milling, कस्टम मिलिंग, राइस मिल, धान मिलिंग, मिलर, सीएमआर, cmr, अनुबंध, फोर्टिफाइड, frk) targeting `Milling` section.
+     - Added `RULE_PROCUREMENT` (keywords: उपार्जन, uparjan, procurement, समर्थन मूल्य, msp, धान उपार्जन, गेहूं उपार्जन, उपार्जन केंद्र, किसान पंजीयन, स्लॉट बुकिंग, बारदाना, तौल केंद्र) targeting `Procurement` section.
+     - Updated Gemini AI system prompt to classify administrative orders into `Milling` or `Procurement` and flow through parser and ingestion pipelines.
+  4. Automated Verification:
+     - Created `tests/test-sections-milling-procurement.js`: Tested API creation of Milling & Procurement tasks, validated `/api/supervision/tasks?section=Milling` and `?section=Procurement`, automated Puppeteer headless test selecting Milling filter and verifying table badge rendering. 100% passed.
+     - Captured screenshot: `tests/sections_milling_procurement_verified.png`.
+
+---
 
 ### 2026-10-04 | Google Gemini AI Administrative Order Intelligence Engine & Draft Compliance Generation
 

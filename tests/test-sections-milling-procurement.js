@@ -3,6 +3,10 @@ const puppeteer = require('puppeteer');
 (async () => {
   console.log("=== Testing Milling & Procurement Section Feature ===");
 
+  // Clean any previous test tasks first
+  await fetch('http://localhost:3000/api/supervision/tasks/TASK-2026-10-007', { method: 'DELETE' });
+  await fetch('http://localhost:3000/api/supervision/tasks/TASK-2026-10-008', { method: 'DELETE' });
+
   // 1. Test Backend API: Create test tasks in Milling and Procurement
   console.log("1. Creating test tasks for Milling and Procurement...");
   const millingTaskPayload = {
@@ -77,11 +81,9 @@ const puppeteer = require('puppeteer');
 
   await page.goto('http://localhost:3000/supervision.html', { waitUntil: 'networkidle2' });
 
-  // Navigate to Tasks tab
-  await page.evaluate(() => {
-    switchSupervTab('tasks');
-  });
-  await new Promise(r => setTimeout(r, 1000));
+  // Navigate to Tasks view via sidebar
+  await page.click('#superv-nav-tasks');
+  await new Promise(r => setTimeout(r, 600));
 
   // Check section filter dropdown presence and options
   const filterOptions = await page.evaluate(() => {
@@ -101,7 +103,14 @@ const puppeteer = require('puppeteer');
 
   // Filter UI by 'Milling'
   await page.select('#taskSectionFilter', 'Milling');
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 800));
+
+  // Verify that the table displays the Milling task with badge
+  const tableContent = await page.evaluate(() => {
+    const tbody = document.getElementById('supervisionTasksTableBody');
+    return tbody ? tbody.innerText : '';
+  });
+  console.log("Filtered Table Text contains 'मिलिंग (Milling)':", tableContent.includes('मिलिंग (Milling)'));
 
   // Capture screenshot of filtered view
   await page.screenshot({ path: 'tests/sections_milling_procurement_verified.png' });
