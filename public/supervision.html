@@ -945,8 +945,11 @@
                             <button type="button" class="btn btn-secondary btn-sm" onclick="openGmailStatusModal()" id="btnManageGmail" title="जीमेल अधिकृत खाता स्थिति">
                                 ⚙️ जीमेल खाता स्थिति
                             </button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="openGeminiModal()" id="btnHeaderGemini" style="background:rgba(99,102,241,0.12); color:#818cf8; border:1px solid rgba(99,102,241,0.4); font-weight:600; display:flex; align-items:center; gap:6px;" title="Google Gemini AI विन्यास एवं मॉडल स्थिति">
-                                <span>🤖 Gemini AI प्रबंधन</span>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openSyncSettingsModal()" id="btnSyncSettings" style="background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.4); font-weight:600; display:flex; align-items:center; gap:6px;" title="ईमेल सिंक सीमाएं एवं आवधिकता कॉन्फ़िगर करें">
+                                ⚙️ Sync सेटिंग्स
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openGeminiModal()" id="btnHeaderGemini" style="background:rgba(99,102,241,0.12); color:#818cf8; border:1px solid rgba(99,102,241,0.4); font-weight:600; display:flex; align-items:center; gap:6px;" title="Google Gemini + Sarvam AI विन्यास एवं मॉडल स्थिति">
+                                <span>🤖 AI प्रबंधन</span>
                                 <span id="geminiHeaderBadge" style="font-size:10px; background:#10b981; color:#fff; padding:1px 5px; border-radius:10px; font-weight:700;">Active</span>
                             </button>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="deleteDummyTasksFromUI()" id="btnDeleteDummyTasks" style="color:#ef4444; border-color:rgba(239,68,68,0.3);" title="आदेश अनुश्रवण से डमी/परीक्षण डेटा हटाएं">
@@ -964,17 +967,22 @@
                             <div style="font-size:24px; line-height:1; padding:8px 10px; background:rgba(99,102,241,0.15); border-radius:8px;">🤖</div>
                             <div>
                                 <div style="font-size:13.5px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px;">
-                                    <span>Google Gemini AI प्रशासनिक विश्लेषक (Administrative Intelligence Engine)</span>
-                                    <span id="geminiBannerBadge" class="superv-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-size:10.5px; padding:2px 7px;">🟢 सक्रिय (gemini-3.5-flash)</span>
+                                    <span>Google Gemini + Sarvam AI प्रशासनिक विश्लेषक (Dual-Engine AI)</span>
+                                    <span id="geminiBannerBadge" class="superv-badge" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-size:10.5px; padding:2px 7px;">🟢 सक्रिय</span>
                                 </div>
-                                <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
+                                <div id="geminiBannerDesc" style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
                                     शासकीय ईमेल व आदेशों का गहन हिंदी विश्लेषण, पत्र क्रमांक निष्कर्षण, प्राथमिकीकरण एवं 1-क्लिक पालन प्रतिवेदन तैयार करने हेतु सक्रिय।
                                 </div>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="openGeminiModal()" style="font-size:12px; font-weight:600; padding:7px 14px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(99,102,241,0.25);">
-                            ⚙️ Gemini AI प्रबंधन (Open Gemini Tab)
-                        </button>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openSyncSettingsModal()" style="font-size:12px; font-weight:600; padding:7px 12px; display:flex; align-items:center; gap:4px; border:1px solid rgba(245,158,11,0.4); color:#fbbf24; background:rgba(245,158,11,0.12);" title="ईमेल सिंक सीमाएं एवं आवधिकता कॉन्फ़िगर करें">
+                                ⚙️ Sync सेटिंग्स
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openGeminiModal()" style="font-size:12px; font-weight:600; padding:7px 14px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(99,102,241,0.25);" title="Gemini एवं Sarvam AI इंजन प्रबंधित करें">
+                                🤖 AI प्रबंधन (Gemini + Sarvam)
+                            </button>
+                        </div>
                     </div>
 
                     <!-- KPI Metric Counters -->
