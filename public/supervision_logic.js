@@ -2627,3 +2627,560 @@ async function cleanupTestDataFromUI() {
     }
 }
 
+// ════════════════════════════════════════════════════════════
+// OFFICIAL ORDERS & TASKS MODULE LOGIC
+// ════════════════════════════════════════════════════════════
+
+async function loadSupervisionTasks() {
+    try {
+        const statusFilter = document.getElementById('taskStatusFilter')?.value || '';
+        let url = `/api/supervision/tasks?`;
+        if (SupervState.taskFilterDept) url += `department=${encodeURIComponent(SupervState.taskFilterDept)}&`;
+        if (statusFilter) url += `status=${encodeURIComponent(statusFilter)}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+            SupervState.tasks = data.tasks || [];
+            SupervState.taskSummary = data.summary || {};
+
+            // Update Metric Counters
+            const sm = SupervState.taskSummary;
+            const elTotal = document.getElementById('taskStatTotal');
+            const elOverdue = document.getElementById('taskStatOverdue');
+            const elDueToday = document.getElementById('taskStatDueToday');
+            const elDue3Days = document.getElementById('taskStatDue3Days');
+            const elReqConfirm = document.getElementById('taskStatRequiresConfirm');
+            const elCompleted = document.getElementById('taskStatCompleted');
+
+            if (elTotal) elTotal.textContent = sm.total || 0;
+            if (elOverdue) elOverdue.textContent = sm.overdue || 0;
+            if (elDueToday) elDueToday.textContent = sm.dueToday || 0;
+            if (elDue3Days) elDue3Days.textContent = sm.dueIn3Days || 0;
+            if (elReqConfirm) elReqConfirm.textContent = sm.requiresConfirmation || 0;
+            if (elCompleted) elCompleted.textContent = sm.completed || 0;
+
+            renderTasksTable(SupervState.tasks);
+        }
+    } catch (err) {
+        console.warn('Failed to load supervision tasks:', err);
+    }
+}
+
+function renderTasksTable(tasks) {
+    const tbody = document.getElementById('supervisionTasksTableBody');
+    if (!tbody) return;
+
+    if (!tasks || tasks.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px; color:var(--text-muted);">कोई शासकीय आदेश या कार्य दर्ज नहीं है। 'ईमेल सिंक करें' या 'नया कार्य जोड़ें' पर क्लिक करें।</td></tr>`;
+        return;
+    }
+
+    const priorityBadges = {
+        CRITICAL: `<span class="badge" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">🔴 अति-महत्वपूर्ण (TL)</span>`,
+        HIGH: `<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);">🟠 उच्च (High)</span>`,
+        MEDIUM: `<span class="badge" style="background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3);">🟡 सामान्य (Medium)</span>`,
+        LOW: `<span class="badge" style="background:rgba(148,163,184,0.15); color:#94a3b8; border:1px solid rgba(148,163,184,0.3);">⚪ सामान्य सूचना</span>`
+    };
+
+    const statusBadges = {
+        NEW: `<span class="badge" style="background:rgba(59,130,246,0.15); color:#3b82f6;">नवीन (New)</span>`,
+        IN_PROGRESS: `<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b;">प्रगतिरत</span>`,
+        COMPLETED: `<span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981;">✅ पूर्ण</span>`,
+        ESCALATED: `<span class="badge" style="background:rgba(239,68,68,0.15); color:#ef4444;">🚨 टी.एल. विलंबित</span>`
+    };
+
+    let html = '';
+    for (const t of tasks) {
+        // Priority
+        const pBadge = priorityBadges[t.priority] || priorityBadges.MEDIUM;
+        const sBadge = statusBadges[t.status] || statusBadges.NEW;
+
+        // Deadline & Distinction
+        let deadlineHtml = '';
+        if (t.due_date) {
+            const d = new Date(t.due_date);
+            const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            
+            if (t.deadline_type === 'OFFICIAL_EXPLICIT') {
+                deadlineHtml = `<div style="font-weight:600; color:var(--text-main); font-size:12px;">📅 ${dateStr}</div>
+                                <div style="font-size:10px; color:#10b981; font-weight:600;">🟢 राजकीय समय-सीमा</div>`;
+            } else {
+                deadlineHtml = `<div style="font-weight:600; color:var(--text-main); font-size:12px;">📅 ${dateStr}</div>
+                                <div style="font-size:10px; color:#d97706; font-weight:600;">🟡 AI अनुमानित</div>`;
+            }
+
+            if (t.isOverdue) {
+                deadlineHtml += `<div style="font-size:10px; color:#ef4444; font-weight:700; margin-top:2px;">⚠️ समय-सीमा समाप्त (${Math.abs(t.daysToDue)} दिन पूर्व)</div>`;
+            } else if (t.isDueToday) {
+                deadlineHtml += `<div style="font-size:10px; color:#f59e0b; font-weight:700; margin-top:2px;">⏳ आज अंतिम तिथि है!</div>`;
+            }
+        } else {
+            deadlineHtml = `<div style="font-size:11px; color:var(--text-muted);">समय-सीमा अनिर्णित</div>`;
+        }
+
+        // If requires confirmation, offer one-click confirmation
+        if (t.requires_confirmation && t.status !== 'COMPLETED') {
+            deadlineHtml += `<button type="button" class="btn btn-secondary btn-sm" style="font-size:10px; padding:2px 6px; margin-top:4px; color:#d97706; border-color:#d97706;" onclick="confirmTaskTimeline('${t.id}', '${t.due_date || ''}')">
+                ✓ समय-सीमा पुष्टि करें
+            </button>`;
+        }
+
+        const emailUrl = t.source_email_url || `https://mail.google.com/mail/u/0/#inbox/${t.gmail_message_id}`;
+
+        html += `
+            <tr style="${t.isOverdue ? 'background:rgba(239,68,68,0.03);' : ''}">
+                <td>
+                    <div style="font-weight:700; font-size:12px; color:var(--text-main);">${t.id}</div>
+                    <div style="margin-top:4px;">${pBadge}</div>
+                </td>
+                <td>
+                    <div style="font-weight:600; font-size:12px; color:var(--text-main);">${t.letter_ref_no || '—'}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">दिनांक: ${t.letter_date || '—'}</div>
+                </td>
+                <td>
+                    <div style="font-size:12px; font-weight:600; color:var(--text-main);">${t.issuing_authority}</div>
+                    <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">श्रेणी: ${t.department_category || 'HO'}</div>
+                </td>
+                <td>
+                    <div style="font-weight:600; font-size:12.5px; color:var(--text-main);">${t.subject}</div>
+                    <div style="font-size:11.5px; color:var(--text-muted); margin-top:4px; max-height:42px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                        ${t.task_description}
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size:12px; font-weight:600; color:var(--text-main);">${t.assigned_section || 'PDS'}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${t.responsible_person || '—'}</div>
+                </td>
+                <td>
+                    ${deadlineHtml}
+                </td>
+                <td>
+                    ${sBadge}
+                </td>
+                <td style="text-align:center;">
+                    <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+                        <a href="${emailUrl}" target="_blank" class="btn btn-secondary btn-sm" style="width:100%; text-align:center; font-size:11px; padding:3px 6px; text-decoration:none;" title="मूल ईमेल Gmail में खोलें">
+                            📨 ईमेल खोलें
+                        </a>
+                        <div style="display:flex; gap:4px; width:100%;">
+                            <button type="button" class="btn btn-secondary btn-sm" style="flex:1; font-size:11px; padding:3px 4px;" onclick="viewTaskDetails('${t.id}')" title="विस्तार से देखें">
+                                👁️ विवरण
+                            </button>
+                            ${t.status !== 'COMPLETED' ? `
+                            <button type="button" class="btn btn-sm" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-size:11px; padding:3px 4px;" onclick="markTaskComplete('${t.id}')" title="कार्य पूर्ण चिह्नित करें">
+                                ✓ पूर्ण
+                            </button>
+                            ` : ''}
+                        </div>
+                        <div style="display:flex; gap:4px; width:100%;">
+                            <button type="button" class="btn btn-secondary btn-sm" style="flex:1; font-size:10px; padding:2px 4px;" onclick="openEditTaskModal('${t.id}')">
+                                ✏️ संपादन
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" style="font-size:10px; padding:2px 4px; color:#ef4444;" onclick="deleteTask('${t.id}')">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    tbody.innerHTML = html;
+}
+
+function filterTasksByDept(dept) {
+    SupervState.taskFilterDept = dept;
+    const btnAll = document.getElementById('btnFilterDeptAll');
+    const btnHO = document.getElementById('btnFilterDeptHO');
+    const btnDist = document.getElementById('btnFilterDeptDist');
+    const btnRO = document.getElementById('btnFilterDeptRO');
+
+    [btnAll, btnHO, btnDist, btnRO].forEach(b => b?.classList.remove('active'));
+
+    if (!dept && btnAll) btnAll.classList.add('active');
+    if (dept === 'HO' && btnHO) btnHO.classList.add('active');
+    if (dept === 'DISTRICT_ADMIN' && btnDist) btnDist.classList.add('active');
+    if (dept === 'RO' && btnRO) btnRO.classList.add('active');
+
+    loadSupervisionTasks();
+}
+
+function filterTasksLocally() {
+    const q = (document.getElementById('taskSearchInput')?.value || '').toLowerCase().trim();
+    if (!q) {
+        renderTasksTable(SupervState.tasks);
+        return;
+    }
+
+    const filtered = SupervState.tasks.filter(t => 
+        (t.subject && t.subject.toLowerCase().includes(q)) ||
+        (t.letter_ref_no && t.letter_ref_no.toLowerCase().includes(q)) ||
+        (t.issuing_authority && t.issuing_authority.toLowerCase().includes(q)) ||
+        (t.task_description && t.task_description.toLowerCase().includes(q))
+    );
+
+    renderTasksTable(filtered);
+}
+
+function openNewTaskModal() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('modalTaskFormTitle').textContent = '➕ नवीन शासकीय कार्य / आदेश प्रविष्टि';
+    document.getElementById('taskFormId').value = '';
+    document.getElementById('taskFormRefNo').value = '';
+    document.getElementById('taskFormLetterDate').value = today;
+    document.getElementById('taskFormAuthority').value = 'प्रबंध संचालक, म.प्र. स्टेट सिविल सप्लाईज कार्पोरेशन, भोपाल';
+    document.getElementById('taskFormCategory').value = 'HO';
+    document.getElementById('taskFormSubject').value = '';
+    document.getElementById('taskFormDescription').value = '';
+    document.getElementById('taskFormSection').value = 'PDS';
+    document.getElementById('taskFormResponsible').value = 'जिला प्रबंधक बैतूल';
+    document.getElementById('taskFormPriority').value = 'HIGH';
+    document.getElementById('taskFormDueDate').value = '';
+    document.getElementById('taskFormDeadlineType').value = 'OFFICIAL_EXPLICIT';
+    document.getElementById('taskFormRequiresConfirm').checked = false;
+    document.getElementById('taskFormRemarks').value = '';
+    document.getElementById('taskFormStatus').value = 'NEW';
+
+    openModal('modalTaskForm');
+}
+
+function openEditTaskModal(taskId) {
+    const task = SupervState.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    document.getElementById('modalTaskFormTitle').textContent = `✏️ कार्य संपादन: ${task.id}`;
+    document.getElementById('taskFormId').value = task.id;
+    document.getElementById('taskFormRefNo').value = task.letter_ref_no || '';
+    document.getElementById('taskFormLetterDate').value = task.letter_date || '';
+    document.getElementById('taskFormAuthority').value = task.issuing_authority || '';
+    document.getElementById('taskFormCategory').value = task.department_category || 'HO';
+    document.getElementById('taskFormSubject').value = task.subject || '';
+    document.getElementById('taskFormDescription').value = task.task_description || '';
+    document.getElementById('taskFormSection').value = task.assigned_section || 'PDS';
+    document.getElementById('taskFormResponsible').value = task.responsible_person || '';
+    document.getElementById('taskFormPriority').value = task.priority || 'MEDIUM';
+    
+    if (task.due_date) {
+        document.getElementById('taskFormDueDate').value = task.due_date.substring(0, 16);
+    } else {
+        document.getElementById('taskFormDueDate').value = '';
+    }
+
+    document.getElementById('taskFormDeadlineType').value = task.deadline_type || 'OFFICIAL_EXPLICIT';
+    document.getElementById('taskFormRequiresConfirm').checked = Boolean(task.requires_confirmation);
+    document.getElementById('taskFormRemarks').value = task.compliance_remarks || '';
+    document.getElementById('taskFormStatus').value = task.status || 'NEW';
+
+    openModal('modalTaskForm');
+}
+
+function toggleConfirmCheckbox(type) {
+    const chk = document.getElementById('taskFormRequiresConfirm');
+    if (chk) {
+        chk.checked = (type === 'AI_SUGGESTED');
+    }
+}
+
+async function handleSaveTask(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('taskFormId').value;
+    const taskPayload = {
+        id: id || undefined,
+        letter_ref_no: document.getElementById('taskFormRefNo').value,
+        letter_date: document.getElementById('taskFormLetterDate').value,
+        issuing_authority: document.getElementById('taskFormAuthority').value,
+        department_category: document.getElementById('taskFormCategory').value,
+        subject: document.getElementById('taskFormSubject').value,
+        task_description: document.getElementById('taskFormDescription').value,
+        assigned_section: document.getElementById('taskFormSection').value,
+        responsible_person: document.getElementById('taskFormResponsible').value,
+        priority: document.getElementById('taskFormPriority').value,
+        due_date: document.getElementById('taskFormDueDate').value ? new Date(document.getElementById('taskFormDueDate').value).toISOString() : null,
+        deadline_type: document.getElementById('taskFormDeadlineType').value,
+        requires_confirmation: document.getElementById('taskFormRequiresConfirm').checked ? 1 : 0,
+        compliance_remarks: document.getElementById('taskFormRemarks').value,
+        status: document.getElementById('taskFormStatus').value
+    };
+
+    try {
+        const method = id ? 'PATCH' : 'POST';
+        const url = id ? `/api/supervision/tasks/${id}` : '/api/supervision/tasks';
+
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(taskPayload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            closeModal('modalTaskForm');
+            await loadSupervisionTasks();
+            alert('✅ कार्य सफलतापूर्वक सुरक्षित कर लिया गया है!');
+        } else {
+            alert('त्रुटि: ' + (data.error || 'अज्ञात समस्या'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
+async function markTaskComplete(taskId) {
+    const remarks = prompt('कार्य पूर्ण करने संबंधी टिप्पणी दर्ज करें (वैकल्पिक):', 'आदेश का पालन सुनिश्चित किया गया।');
+    if (remarks === null) return;
+
+    try {
+        const res = await fetch(`/api/supervision/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                status: 'COMPLETED',
+                compliance_remarks: remarks,
+                completion_date: new Date().toISOString()
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            await loadSupervisionTasks();
+        } else {
+            alert('कार्य पूर्ण अद्यतन करने में विफल: ' + (data.error || ''));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
+async function confirmTaskTimeline(taskId, currentDueDate) {
+    const newDateStr = prompt('अधिकारी द्वारा अनुमोदित समय-सीमा दर्ज करें (YYYY-MM-DD):', currentDueDate ? currentDueDate.split('T')[0] : '');
+    if (!newDateStr) return;
+
+    const parsedDate = new Date(newDateStr + 'T18:00:00');
+    if (isNaN(parsedDate.getTime())) {
+        alert('अमान्य दिनांक प्रारूप। कृपया YYYY-MM-DD प्रारूप में दर्ज करें।');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/supervision/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                due_date: parsedDate.toISOString(),
+                deadline_type: 'OFFICIAL_EXPLICIT',
+                requires_confirmation: 0,
+                suggested_timeline: `अनुमोदित समय-सीमा: ${newDateStr}`
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            await loadSupervisionTasks();
+            alert('✅ समय-सीमा की पुष्टि कर ली गई है!');
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
+async function deleteTask(taskId) {
+    if (!confirm(`क्या आप कार्य ${taskId} को हटाना चाहते हैं?`)) return;
+
+    try {
+        const res = await fetch(`/api/supervision/tasks/${taskId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            await loadSupervisionTasks();
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
+async function viewTaskDetails(taskId) {
+    try {
+        const res = await fetch(`/api/supervision/tasks/${taskId}`);
+        const task = await res.json();
+        if (!task || task.error) {
+            alert('कार्य विवरण लोड करने में असमर्थ');
+            return;
+        }
+
+        document.getElementById('taskDetailTitle').textContent = `शासकीय आदेश: ${task.id} (${task.letter_ref_no || 'बिना क्रमांक'})`;
+        
+        let attachHtml = '<div style="font-size:12px; color:var(--text-muted);">कोई संलग्नक नहीं।</div>';
+        if (task.attachments && task.attachments.length > 0) {
+            attachHtml = task.attachments.map(a => `
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:8px 12px; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:12px; font-weight:600; color:var(--text-main);">📎 ${a.filename}</div>
+                        <div style="font-size:11px; color:var(--text-muted);">${(a.file_size_bytes / 1024).toFixed(1)} KB · ${a.mime_type}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const dDate = task.due_date ? new Date(task.due_date).toLocaleString('hi-IN') : 'अनिर्णित';
+
+        document.getElementById('taskDetailBody').innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px;">
+                    <div style="font-size:11px; color:var(--text-muted);">जारीकर्ता प्राधिकारी</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${task.issuing_authority}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">पत्र क्रमांक एवं दिनांक</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${task.letter_ref_no || '—'} (दिनांक: ${task.letter_date || '—'})</div>
+                </div>
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px;">
+                    <div style="font-size:11px; color:var(--text-muted);">समय-सीमा (Due Date)</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${dDate}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">प्रभारी शाखा एवं अधिकारी</div>
+                    <div style="font-size:13px; font-weight:600; color:var(--text-main); margin-top:2px;">${task.assigned_section || 'PDS'} — ${task.responsible_person || 'प्रभारी'}</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <div style="font-size:12px; font-weight:600; color:var(--text-muted);">विषय (Subject):</div>
+                <div style="font-size:14px; font-weight:700; color:var(--text-main); margin-top:4px;">${task.subject}</div>
+            </div>
+
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:16px;">
+                <div style="font-size:12px; font-weight:600; color:var(--text-muted);">कार्य विवरण एवं निर्देश बिंदु:</div>
+                <div style="font-size:13px; color:var(--text-main); line-height:1.7; margin-top:6px; white-space:pre-wrap;">${task.task_description}</div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <div style="font-size:12px; font-weight:600; color:var(--text-muted);">संलग्न आदेश प्रतियां (Attachments):</div>
+                ${attachHtml}
+            </div>
+
+            ${task.compliance_remarks ? `
+            <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:12px;">
+                <div style="font-size:11px; font-weight:600; color:#10b981;">अनुपालन टिप्पणी / पालन प्रतिवेदन स्थिति:</div>
+                <div style="font-size:12.5px; color:var(--text-main); margin-top:4px;">${task.compliance_remarks}</div>
+            </div>
+            ` : ''}
+        `;
+
+        const linkUrl = task.source_email_url || `https://mail.google.com/mail/u/0/#inbox/${task.gmail_message_id}`;
+        document.getElementById('taskDetailEmailLinkContainer').innerHTML = `
+            <a href="${linkUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                📨 Gmail में मूल पत्र खोलें (Open Email)
+            </a>
+        `;
+
+        openModal('modalTaskDetail');
+    } catch (err) {
+        alert('त्रुटि: ' + err.message);
+    }
+}
+
+// ── Gmail Account Management & Sync ──────────────────────────
+
+async function openGmailStatusModal() {
+    openModal('modalGmailStatus');
+    const dot = document.getElementById('gmailStatusDot');
+    const heading = document.getElementById('gmailStatusHeading');
+    const emailEl = document.getElementById('gmailAccountEmail');
+    const alertBox = document.getElementById('gmailConfigAlert');
+    const btnConnect = document.getElementById('btnConnectGmail');
+    const btnDisconnect = document.getElementById('btnDisconnectGmail');
+
+    try {
+        const res = await fetch('/api/gmail/status');
+        const data = await res.json();
+
+        if (!data.configured) {
+            if (dot) dot.style.background = '#ef4444';
+            if (heading) heading.textContent = 'Google OAuth क्रेडेंशियल अनुपलब्ध';
+            if (emailEl) emailEl.textContent = 'सर्वर पर .env फाइल में GOOGLE_CLIENT_ID जोड़ें';
+            if (alertBox) alertBox.style.display = 'block';
+            if (btnConnect) btnConnect.style.display = 'none';
+            if (btnDisconnect) btnDisconnect.style.display = 'none';
+            return;
+        }
+
+        if (alertBox) alertBox.style.display = 'none';
+
+        if (data.connected && data.account) {
+            if (dot) dot.style.background = '#10b981';
+            if (heading) heading.textContent = `सक्रिय एवं अधिकृत: ${data.account.displayName || 'Official Account'}`;
+            if (emailEl) emailEl.innerHTML = `<strong>${data.account.email}</strong> (${data.account.accountType === 'gmail_workspace' ? 'Google Workspace' : 'Standard Gmail'})<br>कनेक्टेड: ${new Date(data.account.connectedAt).toLocaleDateString('hi-IN')}`;
+            if (btnConnect) btnConnect.style.display = 'none';
+            if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+        } else {
+            if (dot) dot.style.background = '#f59e0b';
+            if (heading) heading.textContent = 'कोई शासकीय खाता कनेक्टेड नहीं है';
+            if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए Google से अधिकृत करें';
+            if (btnConnect) btnConnect.style.display = 'inline-block';
+            if (btnDisconnect) btnDisconnect.style.display = 'none';
+        }
+    } catch (err) {
+        console.warn('Failed to check Gmail status:', err);
+    }
+}
+
+async function initiateGmailConnect() {
+    try {
+        const res = await fetch('/api/gmail/oauth/url');
+        const data = await res.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            alert('OAuth URL प्राप्त करने में विफल: ' + (data.error || ''));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
+async function disconnectGmailAccount() {
+    if (!confirm('क्या आप शासकीय Gmail खाते का अधिकृत कनेक्शन विच्छेद करना चाहते हैं?')) return;
+
+    try {
+        const res = await fetch('/api/gmail/disconnect', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            alert('जीमेल खाता सफलतापूर्वक विच्छेदित कर दिया गया।');
+            closeModal('modalGmailStatus');
+            await loadSupervisionTasks();
+        }
+    } catch (err) {
+        alert('त्रुटि: ' + err.message);
+    }
+}
+
+async function syncGmailOrders() {
+    const btn = document.getElementById('btnSyncGmail');
+    const spinner = document.getElementById('syncSpinner');
+
+    if (btn) btn.disabled = true;
+    if (spinner) spinner.style.display = 'inline';
+
+    try {
+        const res = await fetch('/api/gmail/sync', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+            const r = data.result || {};
+            await loadSupervisionTasks();
+            alert(`📥 ईमेल सिंक पूर्ण!\n\n• जांचे गए ईमेल: ${r.checked || 0}\n• नवीन कार्य निर्मित: ${r.actionableCreated || 0}\n• गैर-कार्रवाई योग्य / सूचना ईमेल: ${r.ignoredNoise || 0}`);
+        } else {
+            if (data.error && data.error.includes('No active Gmail account')) {
+                openGmailStatusModal();
+            } else {
+                alert('सिंक विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+            }
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    } finally {
+        if (btn) btn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+    }
+}
+
+
