@@ -4604,14 +4604,15 @@ app.get('/api/gemini/status', async (req, res) => {
         let pingResult = { ok: false };
         const now = Date.now();
         if (configured) {
-            if (cachedGeminiPing && (now - lastGeminiPingTime < 5 * 60 * 1000) && req.query.force !== 'true') {
+            // Cache successful pings for 5 min; cache rate-limit failures for 2 min to avoid hammering
+            const cacheTTL = (cachedGeminiPing && cachedGeminiPing.rateLimited) ? 2 * 60 * 1000 : 5 * 60 * 1000;
+            if (cachedGeminiPing && (now - lastGeminiPingTime < cacheTTL) && req.query.force !== 'true') {
                 pingResult = cachedGeminiPing;
             } else {
                 pingResult = await geminiAnalyzer.testConnection();
-                if (pingResult.ok) {
-                    cachedGeminiPing = pingResult;
-                    lastGeminiPingTime = now;
-                }
+                // Cache both successes AND rate-limit failures to prevent API hammering
+                cachedGeminiPing = pingResult;
+                lastGeminiPingTime = now;
             }
         }
         const rawKey = process.env.GEMINI_API_KEY || '';
@@ -4619,6 +4620,7 @@ app.get('/api/gemini/status', async (req, res) => {
         res.json({
             configured,
             active: pingResult.ok,
+            rateLimited: pingResult.rateLimited || false,
             model: pingResult.model || 'gemini-3.5-flash',
             maskedKey,
             error: pingResult.error || null
