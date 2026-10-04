@@ -307,7 +307,7 @@ async function syncOfficialEmails(db, options = {}) {
           triageResult.departmentCategory || 'OTHER_GOVT',
           parsed.subject,
           parsed.taskDescription,
-          triageResult.suggestedSection || 'PDS',
+          parsed.assignedSection || triageResult.suggestedSection || 'PDS',
           parsed.priority || triageResult.suggestedPriority || 'MEDIUM',
           parsed.dueDate,
           parsed.suggestedTimeline,
