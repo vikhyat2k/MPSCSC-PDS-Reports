@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 21 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Safe Deletion of Dummy Data for Orders & Tasks Subsystem (ISSUE-052) |
+| Last Code Change | 04 Oct 2026 — Interactive Account Linkage Form & Google Sign-In in Gmail Status Modal (ISSUE-053) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -790,6 +790,7 @@ Tracks what has been tested and confirmed working.
 | Gmail Status, Email Sync & Task Modals DOM Unnesting | End-to-End Headless Browser UI Verification | VERIFIED | 04 Oct 2026 | Verified addition of missing closing </div> for #modalTestData, liberating #modalGmailStatus, #modalTaskForm, and #modalTaskDetail to top level; confirmed 100% interactive opening and rendering of Gmail Status, Email Sync auto-prompt, Task Detail, and Add Task modals (ISSUE-050) |
 | Official Gmail Account Linkage (dmnanbetul1@gmail.com) | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified direct linkage of dmnanbetul1@gmail.com into official_email_accounts, priority status card rendering (green dot, active account badge), resilient sync execution without credential crashes, and 100% automated test pass (ISSUE-051) |
 | Orders & Tasks Dummy Data Safe Deletion & Startup Hygiene | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified permanent deletion of initial demo tasks (TASK-2026-10-001..003), disabled auto-reseeding on startup, added 1-click UI safe purge button, updated test-data sandbox modal, and verified empty-state rendering via Headless Chrome (ISSUE-052) |
+| Gmail Account Linking Form & OAuth 2.0 Direct Controls | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added interactive direct account linkage form (email & office inputs, 'Link Account' button) and always-visible Google OAuth 2.0 Sign-In option in #modalGmailStatus; verified with 100% passing Puppeteer test suite (ISSUE-053) |
 
 ---
 
@@ -848,10 +849,40 @@ Tracks what has been tested and confirmed working.
 | ISSUE-050 | Gmail Account Status and Email Sync buttons did not work because #modalTestData was missing its closing </div>, nesting #modalGmailStatus, #modalTaskForm, and #modalTaskDetail inside an invisible, non-interactive overlay | HIGH | RESOLVED | public/supervision.html, tests/test-verify-modals-and-buttons.js | 04 Oct 2026 |
 | ISSUE-051 | Gmail account status and sync needed active linkage for official district address dmnanbetul1@gmail.com and resilient fallback sync execution when Google Cloud OAuth client ID is not yet configured | MEDIUM | RESOLVED | server/services/gmail/*, server.js, public/supervision_logic.js, tests/test-linked-account-ui.js | 04 Oct 2026 |
 | ISSUE-052 | Orders & Tasks module retained 3 initial demo dummy records (TASK-2026-10-001..003) and re-seeded them on restart if empty, requiring safe deletion, permanent auto-seed suppression, and UI purge parity | MEDIUM | RESOLVED | server/database/db.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-verify-deleted-tasks-ui.js | 04 Oct 2026 |
+| ISSUE-053 | Official Gmail Account Status modal previously hid the connect button when connected or when OAuth was unconfigured, leaving no visible option in the UI to link, re-link, or update an account | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, tests/test-link-option-ui.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Interactive Account Linkage Form & Google Sign-In in Gmail Status Modal
+
+Files: public/supervision.html, public/supervision_logic.js, tests/test-link-option-ui.js, PROJECT_DOCS.md
+Type: Bug Fix / UI & Usability Enhancement
+Closes: ISSUE-053
+
+- USER REQUIREMENT & ISSUE:
+  The user reported: "option to link is not available" with a screenshot of `#modalGmailStatus`.
+- ROOT CAUSE:
+  1. In `public/supervision_logic.js`, `openGmailStatusModal()` previously hid `btnConnectGmail` (`display = 'none'`) whenever an account was connected (`data.connected`) OR whenever Google Cloud OAuth client credentials were not present in `.env` (`!data.configured`).
+  2. The modal had no input fields or dedicated button for linking/updating an official email address directly, leaving the user with only a "विच्छेद करें (Disconnect)" button and no visible option to link, change, or re-link an account.
+- FIX & IMPLEMENTATION:
+  1. Direct Account Linkage Form (`public/supervision.html`):
+     - Added a dedicated, permanent card: **"🔗 शासकीय ईमेल खाता लिंक / अपडेट करें (Link Official Account)"**.
+     - Inputs: `txtLinkGmailEmail` (Official Gmail Address, pre-filled with `dmnanbetul1@gmail.com`) and `txtLinkGmailName` (Office / Designation).
+     - Prominent action button: `#btnSubmitLinkDirect` ("🔗 यह शासकीय खाता लिंक करें" / "🔄 संबद्ध खाता अद्यतन / पुनः लिंक करें").
+  2. Google Cloud OAuth 2.0 Sign-In Section:
+     - Added a permanent Google Sign-In option with official Google logo button (`#btnConnectGmail`) allowing users to initiate OAuth 2.0 authorization anytime.
+     - Added user-friendly guidance in `initiateGmailConnect()` explaining optional Cloud Console setup.
+  3. Interactive Frontend Logic (`public/supervision_logic.js`):
+     - Implemented `linkGmailAccountDirect()`: validates email, POSTs to `/api/gmail/link`, gives instant confirmation toast, updates UI and refreshes task status.
+     - Updated `openGmailStatusModal()`: keeps both linking form and Google OAuth button visible in all states, toggling between "Link Account" and "Update Linked Account".
+     - Updated `disconnectGmailAccount()`: automatically re-opens the modal in the disconnected state with pre-filled inputs ready for re-linking.
+  4. Automated Verification:
+     - Created and executed Puppeteer UI test `tests/test-link-option-ui.js`.
+     - Confirmed: email and designation input fields visible, link button active, Google OAuth button visible, disconnect button visible, live account update verified, screenshot artifact saved to `tests/gmail_modal_with_link_options.png`. 100% test pass.
+
+---
 
 ### 2026-10-04 | Orders & Tasks Subsystem: Safe Deletion of Dummy Data & Startup Hygiene
 

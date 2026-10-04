@@ -169,73 +169,101 @@
 }
 
 /* ─── COLLAPSED STATE ───────────────────────────────── */
-.app-wrapper.sidebar-collapsed .app-sidebar {
+.app-wrapper.sidebar-collapsed .app-sidebar,
+.app-sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
 }
 .app-wrapper.sidebar-collapsed .app-sidebar .nav-label,
 .app-wrapper.sidebar-collapsed .app-sidebar .sidebar-brand,
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-bottom .nav-label {
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-bottom .nav-label,
+.app-sidebar.collapsed .nav-label,
+.app-sidebar.collapsed .sidebar-brand,
+.app-sidebar.collapsed .sidebar-bottom .nav-label {
     opacity: 0; width: 0; overflow: hidden;
 }
-.app-wrapper.sidebar-collapsed .app-sidebar .nav-item { justify-content: center; padding: 10px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .nav-item.active::before { display: none; }
-.app-wrapper.sidebar-collapsed .app-sidebar .nav-icon { width: 20px; height: 20px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-header { justify-content: center; padding: 18px 8px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-logo-img { width: 32px; height: 32px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-nav { padding: 16px 8px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-bottom { padding: 12px 8px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-system-pill { justify-content: center; padding: 10px; }
-.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-divider { margin: 10px 8px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .nav-item,
+.app-sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .nav-item.active::before,
+.app-sidebar.collapsed .nav-item.active::before { display: none; }
+.app-wrapper.sidebar-collapsed .app-sidebar .nav-icon,
+.app-sidebar.collapsed .nav-icon { width: 20px; height: 20px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-header,
+.app-sidebar.collapsed .sidebar-header { justify-content: center; padding: 18px 8px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-logo-img,
+.app-sidebar.collapsed .sidebar-logo-img { width: 32px; height: 32px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-nav,
+.app-sidebar.collapsed .sidebar-nav { padding: 16px 8px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-bottom,
+.app-sidebar.collapsed .sidebar-bottom { padding: 12px 8px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-system-pill,
+.app-sidebar.collapsed .sidebar-system-pill { justify-content: center; padding: 10px; }
+.app-wrapper.sidebar-collapsed .app-sidebar .sidebar-divider,
+.app-sidebar.collapsed .sidebar-divider { margin: 10px 8px; }
 /* Collapsed sidebar: icon-only by default. Auto-expands on hover. */
 @media (min-width: 769px) {
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover,
+    .app-sidebar.collapsed:hover {
         width: var(--sidebar-width);
         box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.15);
         z-index: 300;
     }
     .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-label,
     .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-brand,
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-bottom .nav-label {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-bottom .nav-label,
+    .app-sidebar.collapsed:hover .nav-label,
+    .app-sidebar.collapsed:hover .sidebar-brand,
+    .app-sidebar.collapsed:hover .sidebar-bottom .nav-label {
         opacity: 1;
         width: auto;
         overflow: visible;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-section-label {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-section-label,
+    .app-sidebar.collapsed:hover .nav-section-label {
         opacity: 1;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-item {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-item,
+    .app-sidebar.collapsed:hover .nav-item {
         justify-content: flex-start;
         padding: 10px 12px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-item.active::before {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-item.active::before,
+    .app-sidebar.collapsed:hover .nav-item.active::before {
         display: block;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-icon {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .nav-icon,
+    .app-sidebar.collapsed:hover .nav-icon {
         width: 18px;
         height: 18px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-header {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-header,
+    .app-sidebar.collapsed:hover .sidebar-header {
         justify-content: flex-start;
         padding: 18px 16px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-logo-img {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-logo-img,
+    .app-sidebar.collapsed:hover .sidebar-logo-img {
         width: 36px;
         height: 36px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-nav {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-nav,
+    .app-sidebar.collapsed:hover .sidebar-nav {
         padding: 16px 10px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-bottom {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-bottom,
+    .app-sidebar.collapsed:hover .sidebar-bottom {
         padding: 12px 10px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-system-pill {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-system-pill,
+    .app-sidebar.collapsed:hover .sidebar-system-pill {
         justify-content: flex-start;
         padding: 10px 12px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-divider {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover .sidebar-divider,
+    .app-sidebar.collapsed:hover .sidebar-divider {
         margin: 10px 10px;
     }
-    .app-wrapper.sidebar-collapsed .app-sidebar:hover ~ .app-shell {
+    .app-wrapper.sidebar-collapsed .app-sidebar:hover ~ .app-shell,
+    .app-sidebar.collapsed:hover ~ .app-shell {
         margin-left: var(--sidebar-width);
     }
 }
