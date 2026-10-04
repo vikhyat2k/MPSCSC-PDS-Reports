@@ -2795,6 +2795,9 @@ async function loadSupervisionTasks() {
             if (elReqConfirm) elReqConfirm.textContent = sm.requiresConfirmation || 0;
             if (elCompleted) elCompleted.textContent = sm.completed || 0;
 
+            // Sync Gemini AI Status Badge
+            updateGeminiBadges();
+
             renderTasksTable(SupervState.tasks);
         }
     } catch (err) {
@@ -3379,6 +3382,57 @@ function copyRedirectUri() {
     }).catch(err => {
         alert('URI कॉपी करने के लिए टेक्स्ट का चयन करें: ' + textToCopy);
     });
+}
+
+async function openGeminiModal() {
+    await openGmailStatusModal();
+    switchGmailLinkTab('gemini');
+}
+
+function openGeminiModalFromNav(navEl) {
+    const tasksNav = document.getElementById('superv-nav-tasks');
+    showSupervView('tasks', tasksNav || navEl);
+    setTimeout(() => {
+        openGeminiModal();
+    }, 150);
+}
+
+async function updateGeminiBadges() {
+    try {
+        const res = await fetch('/api/gemini/status');
+        const geminiData = await res.json();
+        const headerBadge = document.getElementById('geminiHeaderBadge');
+        const bannerBadge = document.getElementById('geminiBannerBadge');
+        const modalBadge = document.getElementById('geminiStatusBadge');
+
+        if (geminiData.active) {
+            if (headerBadge) {
+                headerBadge.style.background = '#10b981';
+                headerBadge.textContent = 'Active';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge badge-success';
+                bannerBadge.textContent = `🟢 सक्रिय (${geminiData.model || 'gemini-3.5-flash'})`;
+            }
+            if (modalBadge) {
+                modalBadge.className = 'superv-badge badge-success';
+                modalBadge.textContent = `सक्रिय (Active: ${geminiData.model || 'gemini-3.5-flash'})`;
+            }
+        } else if (geminiData.configured) {
+            if (headerBadge) {
+                headerBadge.style.background = '#f59e0b';
+                headerBadge.textContent = 'Pending';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge badge-warning';
+                bannerBadge.textContent = '🟡 अपुष्ट';
+            }
+            if (modalBadge) {
+                modalBadge.className = 'superv-badge badge-warning';
+                modalBadge.textContent = 'अपुष्ट (Unverified)';
+            }
+        }
+    } catch (e) {}
 }
 
 async function openGmailStatusModal() {
