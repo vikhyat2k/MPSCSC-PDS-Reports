@@ -68,6 +68,7 @@ const SupervState = {
 
 // ── Initial Boot ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+    initSidebarState();
     initDefaultDates();
     renderStockVerificationRows();
     renderCheckpoints();
