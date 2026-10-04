@@ -287,7 +287,8 @@ body:has(.app-sidebar:hover) .sidebar-tooltip {
     isolation: isolate;
     overflow: visible;
 }
-.app-wrapper.sidebar-collapsed .app-shell {
+.app-wrapper.sidebar-collapsed .app-shell,
+.app-sidebar.collapsed ~ .app-shell {
     margin-left: var(--sidebar-collapsed-width);
 }
 
