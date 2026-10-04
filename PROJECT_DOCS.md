@@ -25,9 +25,9 @@
 | Open Critical Issues | 0 |
 | Open Medium Issues | 0 |
 | Open Low Issues | 0 |
-| Completed Milestones | 24 |
+| Completed Milestones | 25 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Milling & Procurement Sections Integration under प्रभारी शाखा (ISSUE-057) |
+| Last Code Change | 04 Oct 2026 — Gemini AI Management Tab & Direct Access Visibility (ISSUE-058) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -795,6 +795,7 @@ Tracks what has been tested and confirmed working.
 | Front-End Gmail Account Linkage Hub & Credential Persistence | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Implemented 3-option linkage hub (1-click quick link, in-app Google OAuth 2.0 Client ID/Secret form, and App Password setup) eliminating manual .env editing; verified with 100% passing Puppeteer test suite (ISSUE-055) |
 | Gemini AI Administrative Order Intelligence Engine | End-to-End AI, Database & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified Gemini Generative AI (gemini-3.5-flash / gemini-flash-latest) integration, bilingual administrative Hindi order parsing, automatic letter ref & date extraction, smart priority assessment, due date calculation, draft compliance note generation, in-app API key management, and 100% automated test pass (ISSUE-056) |
 | Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
+| Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
 
 ---
 
@@ -858,10 +859,39 @@ Tracks what has been tested and confirmed working.
 | ISSUE-055 | Gmail account linking lacked comprehensive front-end configuration options, displaying alert to edit .env when clicking Google Sign-In; needed seamless multi-option UI hub (1-click quick link, in-app Google OAuth 2.0 Client ID/Secret form, and App Password setup) without requiring users to manually edit .env | HIGH | RESOLVED | server.js, public/supervision.html, public/supervision_logic.js, tests/test-frontend-link-options.js | 04 Oct 2026 |
 | ISSUE-056 | Official government email analysis relied solely on keyword regex without nuanced contextual understanding, semantic priority determination, or automatic compliance note drafting; required deep LLM administrative intelligence via Google Gemini API | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server.js, server/database/db.js, public/supervision.html, public/supervision_logic.js, tests/test-gemini-integration.js, tests/test-gemini-ui.js | 04 Oct 2026 |
 | ISSUE-057 | Supervision Orders & Tasks module lacked dedicated support for Milling (मिलिंग) and Procurement (उपार्जन) under प्रभारी शाखा (Section), missing dropdown options, UI section filtering, and automated rule/AI triage | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server/services/gmail/rules.js, server/services/gmail/geminiAnalyzer.js, server/services/gmail/parser.js, server/services/gmail/ingestion.js, server/database/db.js, tests/test-sections-milling-procurement.js | 04 Oct 2026 |
+| ISSUE-058 | Gemini AI Management tab was hidden inside the official Gmail account modal without top-level sidebar navigation, view header controls, or status banner, making it difficult for users to find or configure | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-gemini-management-tab.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Gemini AI Management Direct Access Elements & Visibility Enhancements
+
+Files: public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-gemini-management-tab.js, PROJECT_DOCS.md
+Type: UI / UX Usability Enhancement
+Closes: ISSUE-058
+
+- USER REQUIREMENT & ISSUE:
+  The user reported: "unable to see Gemini AI\" Management Tab". Previously, the Gemini AI tab was tucked exclusively inside the `#modalGmailStatus` modal under the button labeled "⚙️ जीमेल खाता स्थिति", with no prominent top-level indicators, sidebar links, or header actions to access Gemini AI directly.
+- ROOT CAUSE:
+  1. The left sidebar navigation lacked a dedicated item for Gemini AI.
+  2. The Orders & Tasks view header button group had no button for Gemini AI.
+  3. Inside `#modalGmailStatus`, the tab switcher was styled neutrally without prominent visual contrast or glowing highlight.
+- FIX & IMPLEMENTATION:
+  1. Left Sidebar Navigation (`public/supervision.html`):
+     - Added `<a id="superv-nav-gemini" onclick="openGeminiModalFromNav(this)">` right below Orders & Tasks, featuring robot icon, Devanagari title `🤖 Gemini AI प्रबंधन`, and a high-contrast glowing `ACTIVE` pill.
+  2. Orders & Tasks View Header & Banner (`public/supervision.html`):
+     - Added dedicated action button `#btnHeaderGemini` (`🤖 Gemini AI प्रबंधन [Active]`) directly in the header button group.
+     - Added an interactive **Google Gemini AI Administrative Intelligence Engine** banner right above the KPI counters with a prominent `⚙️ Gemini AI प्रबंधन (Open Gemini Tab)` button.
+  3. Direct Modal Tab Synchronization (`public/supervision_logic.js`):
+     - Implemented `openGeminiModal()` which opens the modal and synchronously activates the `🤖 Gemini AI` tab.
+     - Implemented `openGeminiModalFromNav(navEl)` which seamlessly switches to the Orders & Tasks view and opens the Gemini tab.
+     - Added 5-minute server-side caching in `/api/gemini/status` in `server.js` so connection status loads instantly without network latency.
+  4. Automated Verification:
+     - Created `tests/test-verify-gemini-management-tab.js`: Verified presence of `#superv-nav-gemini` in sidebar, direct modal tab activation on click, header button presence, and AI status banner rendering. 100% passed.
+     - Captured screenshots: `tests/gemini_management_tab_opened_verified.png` and `tests/gemini_header_and_banner_verified.png`.
+
+---
 
 ### 2026-10-04 | Milling & Procurement Sections Integration under प्रभारी शाखा (Section)
 
