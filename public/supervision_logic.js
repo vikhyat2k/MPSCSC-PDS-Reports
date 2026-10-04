@@ -3127,57 +3127,107 @@ async function openGmailStatusModal() {
     const alertBox = document.getElementById('gmailConfigAlert');
     const btnConnect = document.getElementById('btnConnectGmail');
     const btnDisconnect = document.getElementById('btnDisconnectGmail');
+    const txtEmail = document.getElementById('txtLinkGmailEmail');
+    const txtName = document.getElementById('txtLinkGmailName');
+    const btnSubmitText = document.getElementById('btnSubmitLinkDirectText');
+    const oauthBadge = document.getElementById('oauthStatusBadge');
 
     try {
         const res = await fetch('/api/gmail/status');
         const data = await res.json();
 
+        if (oauthBadge) {
+            if (data.configured) {
+                oauthBadge.className = 'superv-badge badge-success';
+                oauthBadge.textContent = 'सक्रिय (Configured)';
+            } else {
+                oauthBadge.className = 'superv-badge';
+                oauthBadge.textContent = 'वैकल्पिक (Optional)';
+            }
+        }
+
+        if (btnConnect) {
+            btnConnect.style.display = 'flex';
+        }
+
         if (data.connected && data.account) {
             if (dot) dot.style.background = '#10b981';
             if (heading) heading.textContent = `सक्रिय एवं अधिकृत: ${data.account.displayName || data.account.email}`;
             if (emailEl) emailEl.innerHTML = `<strong>${data.account.email}</strong> (${data.account.accountType === 'gmail_workspace' ? 'Google Workspace' : 'Standard Gmail'})<br><span style="color:#10b981; font-weight:600;">● शासकीय ईमेल संबद्ध एवं सक्रिय</span> · कनेक्टेड: ${new Date(data.account.connectedAt).toLocaleDateString('hi-IN')}`;
-            if (btnConnect) btnConnect.style.display = 'none';
             if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+            if (txtEmail) txtEmail.value = data.account.email;
+            if (txtName && !txtName.value) txtName.value = data.account.displayName || 'जिला कार्यालय बैतूल (District Office Betul)';
+            if (btnSubmitText) btnSubmitText.textContent = '🔄 संबद्ध खाता अद्यतन / पुनः लिंक करें (Update Linked Account)';
+
+            if (alertBox) {
+                alertBox.style.display = 'none';
+            }
+        } else {
+            if (dot) dot.style.background = '#f59e0b';
+            if (heading) heading.textContent = 'कोई शासकीय खाता संबद्ध नहीं है';
+            if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए नीचे दिए गए फॉर्म से खाता लिंक करें।';
+            if (btnDisconnect) btnDisconnect.style.display = 'none';
+            if (txtEmail && !txtEmail.value) txtEmail.value = 'dmnanbetul1@gmail.com';
+            if (txtName && !txtName.value) txtName.value = 'जिला कार्यालय बैतूल (District Office Betul)';
+            if (btnSubmitText) btnSubmitText.textContent = '🔗 यह शासकीय खाता लिंक करें (Link Account)';
 
             if (alertBox) {
                 if (!data.configured) {
                     alertBox.style.display = 'block';
+                    alertBox.innerHTML = 'ℹ️ Google Cloud Console OAuth 2.0 क्रेडेंशियल वैकल्पिक हैं। आप ऊपर दिए गए "🔗 शासकीय ईमेल खाता लिंक करें" फॉर्म से बिना Google API क्रेडेंशियल के सीधे खाता जोड़ सकते हैं।';
                     alertBox.style.background = 'rgba(59,130,246,0.08)';
                     alertBox.style.borderColor = 'rgba(59,130,246,0.25)';
                     alertBox.style.color = 'var(--text-main)';
-                    alertBox.innerHTML = `ℹ️ शासकीय खाता <strong>${data.account.email}</strong> संबद्ध है। 24/7 पृष्ठभूमि ऑटो-सिंक के लिए Google Cloud OAuth क्रेडेंशियल (.env में GOOGLE_CLIENT_ID) वैकल्पिक रूप से जोड़े जा सकते हैं।`;
                 } else {
                     alertBox.style.display = 'none';
                 }
             }
-            return;
         }
-
-        if (!data.configured) {
-            if (dot) dot.style.background = '#ef4444';
-            if (heading) heading.textContent = 'Google OAuth क्रेडेंशियल अनुपलब्ध';
-            if (emailEl) emailEl.textContent = 'सर्वर पर .env फाइल में GOOGLE_CLIENT_ID जोड़ें';
-            if (alertBox) {
-                alertBox.style.display = 'block';
-                alertBox.style.background = 'rgba(239,68,68,0.08)';
-                alertBox.style.borderColor = 'rgba(239,68,68,0.25)';
-                alertBox.style.color = '#ef4444';
-                alertBox.innerHTML = '⚠️ <code>GOOGLE_CLIENT_ID</code> एवं <code>GOOGLE_CLIENT_SECRET</code> .env में अनुपलब्ध हैं। कृपया Google Cloud Console से क्रेडेंशियल कॉन्फ़िगर करें।';
-            }
-            if (btnConnect) btnConnect.style.display = 'none';
-            if (btnDisconnect) btnDisconnect.style.display = 'none';
-            return;
-        }
-
-        if (alertBox) alertBox.style.display = 'none';
-
-        if (dot) dot.style.background = '#f59e0b';
-        if (heading) heading.textContent = 'कोई शासकीय खाता कनेक्टेड नहीं है';
-        if (emailEl) emailEl.textContent = 'शासकीय ईमेल से स्वतः आदेश ट्रेक करने के लिए Google से अधिकृत करें';
-        if (btnConnect) btnConnect.style.display = 'inline-block';
-        if (btnDisconnect) btnDisconnect.style.display = 'none';
     } catch (err) {
         console.warn('Failed to check Gmail status:', err);
+    }
+}
+
+async function linkGmailAccountDirect() {
+    const emailInput = document.getElementById('txtLinkGmailEmail');
+    const nameInput = document.getElementById('txtLinkGmailName');
+    const email = emailInput ? emailInput.value.trim() : '';
+    const displayName = nameInput ? nameInput.value.trim() : '';
+
+    if (!email || !email.includes('@')) {
+        alert('कृपया वैध शासकीय ईमेल पता प्रविष्ट करें (उदा. dmnanbetul1@gmail.com)');
+        if (emailInput) emailInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnSubmitLinkDirect');
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>संबद्ध किया जा रहा है...</span>';
+    }
+
+    try {
+        const res = await fetch('/api/gmail/link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, displayName })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ शासकीय जीमेल खाता "${email}" सफलतापूर्वक लिंक हो गया है!`);
+            await openGmailStatusModal();
+            await loadSupervisionTasks();
+        } else {
+            alert('खाता लिंक करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }
     }
 }
 
@@ -3188,7 +3238,7 @@ async function initiateGmailConnect() {
         if (data.url) {
             window.location.href = data.url;
         } else {
-            alert('OAuth URL प्राप्त करने में विफल: ' + (data.error || ''));
+            alert('ℹ️ Google Cloud OAuth 2.0 प्रमाणीकरण सूचना:\n\n' + (data.error || 'Google OAuth क्रेडेंशियल कॉन्फ़िगर नहीं हैं।') + '\n\nसुझाव: आप ऊपर दिए गए "🔗 शासकीय ईमेल खाता लिंक करें" फॉर्म से तुरंत बिना Google API सेटअप के शासकीय जीमेल (dmnanbetul1@gmail.com) जोड़ सकते हैं।');
         }
     } catch (err) {
         alert('सर्वर त्रुटि: ' + err.message);
@@ -3203,7 +3253,7 @@ async function disconnectGmailAccount() {
         const data = await res.json();
         if (data.success) {
             alert('जीमेल खाता सफलतापूर्वक विच्छेदित कर दिया गया।');
-            closeModal('modalGmailStatus');
+            await openGmailStatusModal();
             await loadSupervisionTasks();
         }
     } catch (err) {
