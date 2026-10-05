@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — Dual-Engine AI Integration: Integrated Sarvam AI (sarvam-105b) as automatic failover engine for Gemini rate limits / quota exhaustion across analyzer, server API, and supervision UI |
+| Last Code Change | 04 Oct 2026 — UI Prominence: Added direct 1-click '⚙️ Sync सेटिंग्स' controls across toolbar, AI banner, and sidebar; resolved ambiguous 'Pending' badge with accurate 429 quota-exhausted status |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -799,6 +799,7 @@ Tracks what has been tested and confirmed working.
 | Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
 | Dual-Engine AI (Gemini + Sarvam Fallback) | Automated Integration Test | VERIFIED | 04 Oct 2026 | tests/test-dual-ai-integration.js verifies Gemini ping, Sarvam ping, 429 rate-limit failover, and graceful fallback |
+| Email Sync Settings Direct Access & Quota-Exceeded Badges | Puppeteer UI & Screenshot Verification | VERIFIED | 04 Oct 2026 | tests/test-verify-sync-and-gemini-ui.js confirms direct toolbar button, banner button, sidebar nav, and accurate 429 status rendering (ISSUE-061) |
 
 ---
 
@@ -865,10 +866,32 @@ Tracks what has been tested and confirmed working.
 | ISSUE-058 | Gemini AI Management tab was hidden inside the official Gmail account modal without top-level sidebar navigation, view header controls, or status banner, making it difficult for users to find or configure | HIGH | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-gemini-management-tab.js | 04 Oct 2026 |
 | ISSUE-059 | Gemini AI testConnection() silently swallowed 429 Rate Limit HTTP errors, returning generic "Failed to authenticate" message. Cache was not saved on failure so every page reload hammered the API further. | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js | 04 Oct 2026 |
 | ISSUE-060 | Gemini AI rate limits (429 Too Many Requests) or quota exhaustions halted official government email analysis; required an alternate Indian Sovereign AI engine (Sarvam AI sarvam-105b) as an automatic, seamless failover | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-dual-ai-integration.js | 04 Oct 2026 |
+| ISSUE-061 | Email Sync Configurable Settings was hidden as the 5th tab inside Gmail Status modal with no direct button on toolbar or sidebar; Gemini AI badge showed ambiguous 'Pending' when hitting HTTP 429 quota exhaustion | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, tests/test-verify-sync-and-gemini-ui.js | 04 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-04 | Email Sync Settings Direct Access Controls & Accurate 429 Quota Status
+
+Files: public/supervision.html, public/supervision_logic.js, tests/test-verify-sync-and-gemini-ui.js
+Type: UI / UX Enhancement
+Closes: ISSUE-061
+
+- ROOT CAUSE / MOTIVATION:
+  1. The Email Sync Configurable Settings panel (`#panelGmailSyncSettings`) was only accessible as the 5th segmented tab inside the Gmail Status modal. Users viewing the Orders & Tasks dashboard could not find it directly because there was no dedicated button on the toolbar, banner, or sidebar.
+  2. When the Google Gemini API key exceeded its daily/monthly quota (`HTTP 429: You exceeded your current quota`), the UI previously fell into an ambiguous `Pending / अपुष्ट` badge state because `active` was false while `configured` was true, misleading the user into thinking the key was unverified or waiting.
+
+- FIX:
+  1. Direct 1-Click Access for Sync Settings:
+     - Added amber-accented `[⚙️ Sync सेटिंग्स]` button directly on the Orders & Tasks view toolbar (`#btnSyncSettings`).
+     - Added secondary `[⚙️ Sync सेटिंग्स]` button inside the AI Status Banner.
+     - Added `[⚙️ ईमेल सिंक सेटिंग्स]` navigation link in the left sidebar navigation (`#superv-nav-sync-settings`).
+     - Implemented `openSyncSettingsModal()` to open `#modalGmailStatus` and switch straight to the `'sync'` tab and load settings automatically.
+  2. Accurate Quota Exhaustion / Rate Limit Badge:
+     - Refined `updateGeminiBadges()`: when `rateLimited: true`, the badge now explicitly displays `🔴 कोटा समाप्त (429 Rate Limit)` instead of `Pending`.
+     - Banner text informs the user that the free quota on Google AI Studio has been exceeded and that the system is currently protecting operations via the deterministic rules engine or Sarvam AI fallback.
+     - Dynamic modal tab mini-badge (`#tabGeminiBadge`) updated to match live status.
 
 ### 2026-10-04 | Dual-Engine Administrative AI Integration (Sarvam AI Sovereign Failover)
 
