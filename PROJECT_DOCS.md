@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 04 Oct 2026 — UI Prominence: Added direct 1-click '⚙️ Sync सेटिंग्स' controls across toolbar, AI banner, and sidebar; resolved ambiguous 'Pending' badge with accurate 429 quota-exhausted status |
+| Last Code Change | 05 Oct 2026 — Bug Fix: Welfare 'Get Report' button now waits for DOM presence before clicking (prevents 'No element found for selector' crash on slow portal loads); NFSA/Welfare NO_DATA errors in email flow now show clean human-readable messages; duplicate fresh-generation prevention via deduplication |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -867,10 +867,29 @@ Tracks what has been tested and confirmed working.
 | ISSUE-059 | Gemini AI testConnection() silently swallowed 429 Rate Limit HTTP errors, returning generic "Failed to authenticate" message. Cache was not saved on failure so every page reload hammered the API further. | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js | 04 Oct 2026 |
 | ISSUE-060 | Gemini AI rate limits (429 Too Many Requests) or quota exhaustions halted official government email analysis; required an alternate Indian Sovereign AI engine (Sarvam AI sarvam-105b) as an automatic, seamless failover | HIGH | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, tests/test-dual-ai-integration.js | 04 Oct 2026 |
 | ISSUE-061 | Email Sync Configurable Settings was hidden as the 5th tab inside Gmail Status modal with no direct button on toolbar or sidebar; Gemini AI badge showed ambiguous 'Pending' when hitting HTTP 429 quota exhaustion | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, tests/test-verify-sync-and-gemini-ui.js | 04 Oct 2026 |
+| ISSUE-062 | Welfare 'Get Report' button click failed with 'No element found for selector' when portal loaded slowly — scraper did not wait for button DOM presence before attempting to click | HIGH | RESOLVED | server/automation/welfare_scraper.js | 05 Oct 2026 |
+| ISSUE-063 | Email send flow showed raw 'NFSA/WELFARE fresh generation failed: NO_DATA: ...' message in warning toast; duplicate welfare fresh-generation triggered when same scheme checked twice | MEDIUM | RESOLVED | public/app.js | 05 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-05 | Bug Fix: Welfare Scraper DOM Race + Email NO_DATA Error Messaging
+
+Files: server/automation/welfare_scraper.js, public/app.js
+Type: Bug Fix
+Closes: ISSUE-062, ISSUE-063
+
+- ROOT CAUSE:
+  1. **WELFARE 'Get Report' crash (ISSUE-062):** The welfare scraper's `_clickGetReport()` immediately attempted `page.click('input[type="button"][value="Get Report"]')` as a fallback when `evaluate()` returned false, throwing Puppeteer's `No element found for selector` error. The page was still loading (incomplete `domcontentloaded`) when the button search executed — the button exists in static HTML but wasn't rendered yet due to portal server lag. Also, `extractData()` did not wait for the filter form (`#month`) to appear after navigation.
+  2. **Duplicate WELFARE fresh generation (ISSUE-063):** The `freshSchemes` array in `submitGlobalEmail()` had no deduplication — if welfare appeared twice in checked boxes (same scheme+month+year), it was sent to generation twice, causing two consecutive failures.
+  3. **Raw NO_DATA error message (ISSUE-063):** When the NFSA portal has no data for the current month (expected early in the month), the warning toast showed the raw `NO_DATA: The portal currently shows "No data found"...` prefix, which is confusing to users.
+
+- FIX:
+  1. **welfare_scraper.js `_clickGetReport()`:** Added `page.waitForSelector('input[value="Get Report"]', { timeout: 20000 })` before any click attempt. If timeout triggers, saves `welfare_btn_missing_debug.html` and throws a descriptive error. Changed fallback from `page.click('input[type="button"][...]')` to `page.click('input[value="Get Report"]')` with a `.catch()` to produce a meaningful error instead of Puppeteer's raw selector failure.
+  2. **welfare_scraper.js `extractData()`:** Added `page.waitForSelector('#month', { timeout: 15000 })` after navigation to ensure the filter form is rendered before setting values or saving debug HTML.
+  3. **public/app.js `submitGlobalEmail()`:** Added `freshSeenKeys` Set to deduplicate fresh-generation requests by `scheme|month|year` key — prevents the same report from being generated twice.
+  4. **public/app.js error handler:** NO_DATA errors now display as `SCHEME – No portal data yet: <clean message>` instead of `SCHEME fresh generation failed: NO_DATA: ...`.
 
 ### 2026-10-04 | Email Sync Settings Direct Access Controls & Accurate 429 Quota Status
 
