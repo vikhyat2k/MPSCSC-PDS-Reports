@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.sequence.json",
+    "sha256": "ec1e32613085438bf4ddb3ed94918e91063a583d1b575f7f22729d7b35fce4cd",
+    "bytes": 3987
+  },
+  "artifact": {
+    "path": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.html",
+    "sha256": "ee795351df4fd0d04f647d7be0bc00ef2d505d5e6cfc748c6f7fbf5ab8ac129c",
+    "bytes": 758471
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.finalize.json",
+    "summaryReceipt": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.finalize-summary.json",
+    "browserCheckReceipt": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.0.1",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-05T15:09:55.734Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 7383
+}

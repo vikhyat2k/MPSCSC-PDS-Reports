@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "PDS Lifting Portal - System Architecture",
+    "output": "diagrams/system-architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "browser", "type": "frontend", "label": "Web Browser", "sublabel": "Vanilla SPA UI", "pos": [40, 260], "size": [140, 64] },
+    { "id": "server", "type": "backend", "label": "Express Server", "sublabel": "server.js :3000", "pos": [260, 260], "size": [150, 64], "tag": "REST + Polling" },
+    { "id": "concurrency", "type": "security", "label": "Concurrency Guard", "sublabel": "Watchdog & Lock", "pos": [260, 110], "size": [150, 64], "tag": "Max 3 Jobs" },
+    { "id": "processor", "type": "backend", "label": "Data Processor", "sublabel": "analytics.js", "pos": [260, 410], "size": [150, 64] },
+    { "id": "scrapers", "type": "backend", "label": "Puppeteer Fleet", "sublabel": "Headless Scrapers", "pos": [490, 260], "size": [150, 64], "tag": "5 Schemes" },
+    { "id": "captcha", "type": "security", "label": "CAPTCHA Engine", "sublabel": "Jimp + Tesseract", "pos": [490, 110], "size": [150, 64], "tag": "OCR ~60%" },
+    { "id": "scm_portal", "type": "external", "label": "MP SCM Portal", "sublabel": "epds.mp.gov.in", "pos": [720, 260], "size": [140, 64] },
+    { "id": "db", "type": "database", "label": "SQLite DB", "sublabel": "database.sqlite", "pos": [490, 410], "size": [150, 64], "tag": "Reports & Logs" },
+    { "id": "exports", "type": "backend", "label": "Export Engine", "sublabel": "ExcelJS & PDFKit", "pos": [260, 560], "size": [150, 64] },
+    { "id": "supervision", "type": "external", "label": "Comms & Alerts", "sublabel": "Gmail & WhatsApp", "pos": [490, 560], "size": [150, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Local Application Host (Node.js & SQLite)", "wraps": ["server", "concurrency", "processor", "scrapers", "captcha", "db", "exports"] }
+  ],
+  "connections": [
+    { "id": "c-browser-server", "from": "browser", "to": "server", "label": "HTTP / Poll", "variant": "emphasis" },
+    { "id": "c-server-guard", "from": "server", "to": "concurrency", "label": "check load", "fromSide": "top", "toSide": "bottom" },
+    { "id": "c-server-scrapers", "from": "server", "to": "scrapers", "label": "launch task", "variant": "emphasis" },
+    { "id": "c-scrapers-captcha", "from": "scrapers", "to": "captcha", "label": "solve token", "fromSide": "top", "toSide": "bottom" },
+    { "id": "c-scrapers-portal", "from": "scrapers", "to": "scm_portal", "label": "scrape HTML", "variant": "emphasis" },
+    { "id": "c-scrapers-processor", "from": "scrapers", "to": "processor", "label": "raw data", "fromSide": "bottom", "toSide": "right" },
+    { "id": "c-processor-db", "from": "processor", "to": "db", "label": "save metrics" },
+    { "id": "c-processor-exports", "from": "processor", "to": "exports", "label": ".xlsx / .pdf", "fromSide": "bottom", "toSide": "top" },
+    { "id": "c-server-supervision", "from": "server", "to": "supervision", "label": "official tasks", "fromSide": "bottom", "toSide": "left" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Client & Express Core",
+      "items": [
+        "Lightweight single page interface renders real-time district lifting metrics.",
+        "Async polling avoids HTTP timeouts during lengthy multi-minute scraping runs.",
+        "Concurrency controller limits active Chrome browser instances to 3."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Autonomous Scraping",
+      "items": [
+        "Dedicated scrapers for NFSA Monthly, Date-range, MDM, ICDS, and Welfare.",
+        "In-process Jimp preprocessing + Tesseract OCR bypasses government login CAPTCHA.",
+        "Resilient retry mechanisms protect against intermittent state portal downtime."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Analytics & Dissemination",
+      "items": [
+        "Commodity aggregations calculate pending balances and transporter performance.",
+        "Structured records, raw payloads, and history saved into SQLite.",
+        "Automated Excel / PDF generation and WhatsApp / Gmail supervision integration."
+      ]
+    }
+  ]
+}

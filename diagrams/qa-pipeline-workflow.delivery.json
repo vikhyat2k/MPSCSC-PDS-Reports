@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "71e144d3-0439-44fd-bbac-2cb0b1751dbf",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.workflow.json",
+  "output": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.html",
+  "specification": {
+    "sha256": "bc30bd12881e5458369e346fc3efb3f3383ada5fb4229fd554642d5cb51d8342",
+    "bytes": 3952
+  },
+  "artifact": {
+    "sha256": "3fb2ba3cb8a66f06a35fa21b9aa4887d0d20c84b3cdef8f589d4d1c72eaeb241",
+    "bytes": 757141
+  }
+}

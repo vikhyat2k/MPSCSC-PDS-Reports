@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.workflow.json",
+    "sha256": "bc30bd12881e5458369e346fc3efb3f3383ada5fb4229fd554642d5cb51d8342",
+    "bytes": 3952
+  },
+  "artifact": {
+    "path": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.html",
+    "sha256": "3fb2ba3cb8a66f06a35fa21b9aa4887d0d20c84b3cdef8f589d4d1c72eaeb241",
+    "bytes": 757141
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.finalize.json",
+    "summaryReceipt": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.finalize-summary.json",
+    "browserCheckReceipt": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\qa-pipeline-workflow.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.0.1",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-05T15:09:55.734Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 7222
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0af8c803-d55d-4fe4-be14-760094b7ff98",
+  "status": "current",
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-status-lifecycle.lifecycle.json",
+  "output": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-status-lifecycle.html",
+  "specification": {
+    "sha256": "a94b83bf17fadf62eed48f4b08898e14b33b8257f5ed7cff006511c1377cdb3c",
+    "bytes": 3122
+  },
+  "artifact": {
+    "sha256": "6b61b4c280aea5c91a2cdc22b7aa349c99fb00bdaeeb0d3f94be2b5bc63cb694",
+    "bytes": 760082
+  }
+}

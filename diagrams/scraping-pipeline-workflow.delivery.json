@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "c448ac03-c7f7-4147-90bd-e26b6e9d1539",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\scraping-pipeline-workflow.workflow.json",
+  "output": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\scraping-pipeline-workflow.html",
+  "specification": {
+    "sha256": "4a612bcfeb2cad506c6e6bfbaba89e36fd71c5e2fd8a97f08fec9f5abd5cb68f",
+    "bytes": 4378
+  },
+  "artifact": {
+    "sha256": "5e6ce464fa782dd0fdb4c5373f89f86cfd4eb9691b0795db009c56c91b02aef7",
+    "bytes": 759523
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "534e0c8e-806a-448c-974a-dfe20885907b",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\cache-miss-flow.sequence.json",
+  "output": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\cache-miss-flow.html",
+  "specification": {
+    "sha256": "9791cb82b45a912fc5b4d71b12487ba6bbf47bad3c81855932311dd83bf4a6c0",
+    "bytes": 3193
+  },
+  "artifact": {
+    "sha256": "c18da76353c7f83f85c4e48c529fab9a3313b3333dbf42013fd59a2df39ad526",
+    "bytes": 753780
+  }
+}

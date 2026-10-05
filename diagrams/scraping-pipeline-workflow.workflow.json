@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "PDS Lifting Pipeline & Quality Gate Workflow",
+    "viewBox": [1200, 680],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "output": "diagrams/scraping-pipeline-workflow.html"
+  },
+  "lanes": [
+    { "id": "client", "label": "Client / Trigger" },
+    { "id": "server", "label": "Task Orchestration" },
+    { "id": "browser", "label": "Scraper & CAPTCHA" },
+    { "id": "data", "label": "Analytics & Storage" }
+  ],
+  "phases": [
+    { "id": "intake", "label": "Intake & Queue", "fromCol": 0, "toCol": 1 },
+    { "id": "scraping", "label": "Portal Scraping", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "postprocess", "label": "Analytics & Storage", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "orchestrator", "label": "Express Guard", "lane": "server", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "automation_cluster", "label": "Puppeteer Cluster", "lane": "browser", "fromCol": 2, "toCol": 3, "variant": "security" },
+    { "id": "delivery_cluster", "label": "Persistence & Export", "lane": "data", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["req_btn", "concurrency", "task_queue", "launch_chrome", "solve_ocr", "clean_tables", "save_sqlite", "poll_view"],
+  "nodes": [
+    { "id": "req_btn", "lane": "client", "col": 0, "type": "frontend", "label": "Trigger Report", "sublabel": "Select scheme / month", "width": 140 },
+    { "id": "poll_view", "lane": "client", "col": 5, "type": "frontend", "label": "Render Dashboard", "sublabel": "Matrix & charts", "width": 140 },
+    { "id": "concurrency", "lane": "server", "col": 0, "type": "security", "label": "Capacity Check", "sublabel": "Active slots <= 3", "width": 140 },
+    { "id": "task_queue", "lane": "server", "col": 1, "type": "backend", "label": "Assign Request ID", "sublabel": "Spawn async runner", "tag": "Immediate 202", "width": 140 },
+    { "id": "launch_chrome", "lane": "browser", "col": 2, "type": "backend", "label": "Puppeteer Session", "sublabel": "Stealth Chromium", "tag": "Headless", "width": 140 },
+    { "id": "solve_ocr", "lane": "browser", "col": 3, "type": "security", "label": "CAPTCHA Solver", "sublabel": "Jimp + Tesseract OCR", "tag": "Auto-retry", "width": 140 },
+    { "id": "clean_tables", "lane": "data", "col": 4, "type": "backend", "label": "Data Processing", "sublabel": "dataProcessor.js", "width": 140 },
+    { "id": "save_sqlite", "lane": "data", "col": 5, "type": "database", "label": "SQLite & Files", "sublabel": "reports & .xlsx/.pdf", "width": 140 }
+  ],
+  "edges": [
+    { "id": "e-trig-check", "from": "req_btn", "to": "concurrency", "variant": "default" },
+    { "id": "e-check-queue", "from": "concurrency", "to": "task_queue", "variant": "emphasis" },
+    { "id": "e-queue-chrome", "from": "task_queue", "to": "launch_chrome", "label": "spawn job", "variant": "emphasis" },
+    { "id": "e-chrome-ocr", "from": "launch_chrome", "to": "solve_ocr", "variant": "default" },
+    { "id": "e-ocr-process", "from": "solve_ocr", "to": "clean_tables", "label": "raw HTML", "variant": "emphasis" },
+    { "id": "e-process-store", "from": "clean_tables", "to": "save_sqlite", "variant": "default" },
+    { "id": "e-store-view", "from": "save_sqlite", "to": "poll_view", "label": "final poll", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Workflow Gatekeeping",
+      "items": [
+        "Express server protects the machine from RAM exhaustion by throttling parallel scrapers to 3.",
+        "Clients receive instant acknowledgement and seamlessly transition to a non-blocking polling state."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Autonomous Execution",
+      "items": [
+        "Headless Chrome logs into MP state servers and handles visual CAPTCHA verification.",
+        "Scraped tables are parsed into clean JSON objects with commodity-level totals."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Persistence & Presentation",
+      "items": [
+        "Results are written to SQLite, formatted Excel workbooks are emitted to disk.",
+        "Frontend renders complete sector lifting matrix and performance indicators."
+      ]
+    }
+  ]
+}

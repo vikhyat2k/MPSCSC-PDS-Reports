@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Web Request: Cache Miss Flow",
+    "output": "diagrams/cache-miss-flow.html",
+    "viewBox": [1000, 600],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "browser", "type": "frontend", "label": "Browser", "sublabel": "Client app" },
+    { "id": "api", "type": "backend", "label": "API Gateway / Server", "sublabel": "Application layer" },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "In-memory cache" },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL", "sublabel": "Primary persistent store" }
+  ],
+  "segments": [
+    { "from": 140, "to": 240, "label": "1. Inbound Request & Cache Check" },
+    { "from": 250, "to": 370, "label": "2. Cache Miss & Database Query" },
+    { "from": 380, "to": 470, "label": "3. Cache Population & Client Response" }
+  ],
+  "messages": [
+    { "id": "http-req", "from": "browser", "to": "api", "y": 160, "label": "GET /api/resource", "variant": "emphasis" },
+    { "id": "check-redis", "from": "api", "to": "redis", "y": 195, "label": "GET cache:resource_key", "variant": "default" },
+    { "id": "cache-miss", "from": "redis", "to": "api", "y": 225, "label": "Cache miss (null)", "variant": "return" },
+    { "id": "query-pg", "from": "api", "to": "postgres", "y": 275, "label": "SELECT * FROM resource WHERE id = ?", "variant": "emphasis" },
+    { "id": "pg-result", "from": "postgres", "to": "api", "y": 325, "label": "Record result set", "variant": "return" },
+    { "id": "set-redis", "from": "api", "to": "redis", "y": 395, "label": "SETEX cache:resource_key 3600 (fill cache)", "variant": "dashed" },
+    { "id": "http-res", "from": "api", "to": "browser", "y": 440, "label": "200 OK (JSON payload)", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "browser", "from": 155, "to": 445, "type": "frontend" },
+    { "participant": "api", "from": 160, "to": 440, "type": "backend" },
+    { "participant": "redis", "from": 190, "to": 230, "type": "database" },
+    { "participant": "postgres", "from": 270, "to": 330, "type": "database" },
+    { "participant": "redis", "from": 390, "to": 420, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Client Request & Cache Miss",
+      "items": [
+        "Browser submits an HTTP GET request to the API.",
+        "API performs a lookaside check against Redis cache.",
+        "Redis returns a miss (key does not exist or expired)."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Fallback & Database Fetch",
+      "items": [
+        "API falls back to primary storage in PostgreSQL.",
+        "PostgreSQL executes query and returns the matching record.",
+        "Ensures consistent read when cache is cold or invalidated."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Cache Warmup & Response",
+      "items": [
+        "API populates Redis (SETEX) with TTL for subsequent hits.",
+        "API sends HTTP 200 JSON payload back to the browser.",
+        "Subsequent queries will hit Redis directly without DB load."
+      ]
+    }
+  ]
+}

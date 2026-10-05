@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5f6d07ae-9de0-4ef5-9005-70211b1ecd20",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.architecture.json",
+  "output": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.html",
+  "specification": {
+    "sha256": "f1c5e230205ed7da7316578bc50f2f5ce61eb727334fd7c7eff2d5da40ff9712",
+    "bytes": 4205
+  },
+  "artifact": {
+    "sha256": "fd1660b07579e6d86a45792a44c9e7c56801c478f2cf46172661a8751416be67",
+    "bytes": 765493
+  }
+}

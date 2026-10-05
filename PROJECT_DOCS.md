@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 05 Oct 2026 — Fix & Domain Alignment: SCM data is real-time (not published daily); fixed server.js catch block swallowing global scraper errors and masking failures as false NO_DATA; updated UI to reflect real-time live records (ISSUE-064) |
+| Last Code Change | 05 Oct 2026 — Feature: Generated full suite of Archify Interactive System Architecture, API Sequences, Pipeline Workflows, and Lifecycle Diagrams in diagrams/ folder |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -874,6 +874,20 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-05 | Feature: Interactive System Architecture, Sequence & Pipeline Diagrams via Archify
+
+Files: diagrams/system-architecture.architecture.json, diagrams/system-architecture.html, diagrams/report-generation-sequence.sequence.json, diagrams/report-generation-sequence.html, diagrams/scraping-pipeline-workflow.workflow.json, diagrams/scraping-pipeline-workflow.html, diagrams/qa-pipeline-workflow.workflow.json, diagrams/qa-pipeline-workflow.html, diagrams/report-status-lifecycle.lifecycle.json, diagrams/report-status-lifecycle.html, PROJECT_DOCS.md
+Type: Feature / Architecture & System Visualization
+
+- WHAT WAS ADDED:
+  1. **System Architecture Diagram (`system-architecture.html`)**: Complete component mapping of Client SPA, Express Server, Concurrency Guard, Puppeteer Cluster, Jimp/Tesseract OCR Engine, SQLite DB, Excel/PDF Export Engine, and State SCM portal with boundary isolation.
+  2. **API Sequences & Request Flows (`report-generation-sequence.html` & `cache-miss-flow.html`)**: Interactive end-to-end trace of async report generation (client dispatch, immediate 202 token, headless extraction, polling loop, analytics aggregation, and delivery) and web request cache lookaside miss flow.
+  3. **Workflows & CI/CD Pipelines (`scraping-pipeline-workflow.html` & `qa-pipeline-workflow.html`)**: Signal-flow pipeline models detailing the scraper concurrency gate, OCR solving, table parsing, database commit, test suites (analytics, scrapers, exports), and automated documentation sync.
+  4. **Status & State Machine Lifecycles (`report-status-lifecycle.html`)**: State transition model covering `Idle` -> `Queued` -> `Scraping SCM` -> `Processing Data` -> `Complete & Saved`, with throttling (HTTP 429) and failure/retry branches.
+  5. **Verification**: 100% of diagrams validated through Archify showcase quality gates (`validate`, `deliver`, `check`, `browser-check`) with trace animations and dark/light themes.
+
+---
 
 ### 2026-10-05 | Fix & Domain Correction: Realtime SCM Data Handling & Global Scraper Error Masking
 

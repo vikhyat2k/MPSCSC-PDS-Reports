@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8517f2fb-8f1a-4758-8cc9-eeca50039fe0",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.sequence.json",
+  "output": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\report-generation-sequence.html",
+  "specification": {
+    "sha256": "ec1e32613085438bf4ddb3ed94918e91063a583d1b575f7f22729d7b35fce4cd",
+    "bytes": 3987
+  },
+  "artifact": {
+    "sha256": "ee795351df4fd0d04f647d7be0bc00ef2d505d5e6cfc748c6f7fbf5ab8ac129c",
+    "bytes": 758471
+  }
+}

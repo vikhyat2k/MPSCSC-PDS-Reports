@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.architecture.json",
+    "sha256": "f1c5e230205ed7da7316578bc50f2f5ce61eb727334fd7c7eff2d5da40ff9712",
+    "bytes": 4205
+  },
+  "artifact": {
+    "path": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.html",
+    "sha256": "fd1660b07579e6d86a45792a44c9e7c56801c478f2cf46172661a8751416be67",
+    "bytes": 765493
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.finalize.json",
+    "summaryReceipt": "F:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.finalize-summary.json",
+    "browserCheckReceipt": "f:\\AI Projects\\Anti Gravity\\PDS lifting Report\\diagrams\\system-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.0.1",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-05T15:09:55.734Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6951,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 1,
+      "routesOverSuggestedBends": 2,
+      "routesOverSuggestedStretch": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "c-processor-exports",
+            "from": "processor",
+            "to": "exports",
+            "label": ".xlsx / .pdf",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "right": {
+            "id": "c-server-supervision",
+            "from": "server",
+            "to": "supervision",
+            "label": "official tasks",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "point": [
+            335,
+            557
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "c-scrapers-processor",
+            "from": "scrapers",
+            "to": "processor",
+            "label": "raw data",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 3,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "c-server-supervision",
+            "from": "server",
+            "to": "supervision",
+            "label": "official tasks",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "bends": 5,
+          "stretch": 1.372
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "processor → exports crosses server → supervision: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "scrapers → processor needs 3 bends: move node scrapers or processor so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "server → supervision needs 5 bends: move node server or supervision so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

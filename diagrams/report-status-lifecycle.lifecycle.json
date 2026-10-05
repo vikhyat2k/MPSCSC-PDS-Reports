@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "PDS Report Status Lifecycle",
+    "output": "diagrams/report-status-lifecycle.html",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "main", "label": "Report Progress Rail" },
+    { "id": "throttle", "label": "Rate Limiting & Wait" },
+    { "id": "terminal", "label": "Terminal Outcomes" }
+  ],
+  "states": [
+    { "id": "idle", "type": "start", "label": "Idle", "sublabel": "awaiting user trigger", "lane": "main", "col": 0, "step": "01", "tag": "ready" },
+    { "id": "queued", "type": "active", "label": "Queued", "sublabel": "requestId assigned", "lane": "main", "col": 1, "step": "02", "tag": "scheduled" },
+    { "id": "scraping", "type": "active", "label": "Scraping SCM", "sublabel": "Puppeteer + OCR solver", "lane": "main", "col": 2, "step": "03", "tag": "headless" },
+    { "id": "processing", "type": "active", "label": "Processing Data", "sublabel": "analytics & aggregation", "lane": "main", "col": 3, "step": "04", "tag": "metrics" },
+    { "id": "persisted", "type": "success", "label": "Complete & Saved", "sublabel": "SQLite, Excel, PDF ready", "lane": "terminal", "col": 4, "step": "05", "tag": "success" },
+    { "id": "throttled", "type": "waiting", "label": "Throttled (429)", "sublabel": "active workers >= 3", "lane": "throttle", "col": 1, "tag": "wait slot" },
+    { "id": "failed", "type": "failure", "label": "Scrape Failed", "sublabel": "timeout or CAPTCHA abort", "lane": "terminal", "col": 2, "tag": "terminal" }
+  ],
+  "transitions": [
+    { "from": "idle", "to": "queued", "label": "POST /api/generate-report", "variant": "emphasis" },
+    { "from": "queued", "to": "throttled", "variant": "security", "label": "limit reached" },
+    { "from": "throttled", "to": "queued", "variant": "dashed", "label": "slot freed" },
+    { "from": "queued", "to": "scraping", "variant": "emphasis", "label": "spawn worker" },
+    { "from": "scraping", "to": "failed", "variant": "security", "label": "max retries reached" },
+    { "from": "scraping", "to": "processing", "variant": "emphasis", "label": "table extracted" },
+    { "from": "processing", "to": "persisted", "variant": "emphasis", "label": "commit report" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Primary Execution Rail",
+      "items": [
+        "A user report moves cleanly through Queued -> Scraping -> Processing -> Complete.",
+        "Clients poll intermediate states every 3 seconds to monitor progress."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Concurrency Safety",
+      "items": [
+        "Express limits active scrapers to 3 concurrent instances.",
+        "Excess requests wait in the throttled state until a browser slot becomes available."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Fault Tolerance",
+      "items": [
+        "CAPTCHA failures automatically retry in the Scraping phase up to the limit.",
+        "Catastrophic failures exit to terminal Failed state with explicit error logs."
+      ]
+    }
+  ]
+}

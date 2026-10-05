@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "PDS Quality Assurance & Verification Pipeline",
+    "viewBox": [1180, 680],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "output": "diagrams/qa-pipeline-workflow.html"
+  },
+  "lanes": [
+    { "id": "commit", "label": "Code & Environment" },
+    { "id": "backend_test", "label": "Unit & Service Tests" },
+    { "id": "integration", "label": "E2E & Scraper Suite" },
+    { "id": "reporting", "label": "Artifacts & Master Sync" }
+  ],
+  "phases": [
+    { "id": "stage_lint", "label": "1. Static & Config Gates", "fromCol": 0, "toCol": 1 },
+    { "id": "stage_tests", "label": "2. Business Logic Validation", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "stage_artifacts", "label": "3. UI Verification & Deliverables", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "gate_env", "label": "Pre-flight Verification", "lane": "commit", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "gate_logic", "label": "Data Integrity Suite", "lane": "backend_test", "fromCol": 2, "toCol": 3, "variant": "security" },
+    { "id": "gate_delivery", "label": "Audit & Export Checks", "lane": "reporting", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["git_change", "config_validate", "test_analytics", "test_scrapers", "gen_exports", "sync_master_doc"],
+  "nodes": [
+    { "id": "git_change", "lane": "commit", "col": 0, "type": "frontend", "label": "Code Modification", "sublabel": "Bug fix / New feature", "width": 140 },
+    { "id": "config_validate", "lane": "commit", "col": 1, "type": "security", "label": "Config Integrity", "sublabel": "sectors.json & .env", "tag": "Zero regression", "width": 140 },
+    { "id": "test_analytics", "lane": "backend_test", "col": 2, "type": "backend", "label": "Analytics Tests", "sublabel": "test-advanced-analytics.js", "width": 140 },
+    { "id": "test_scrapers", "lane": "integration", "col": 3, "type": "backend", "label": "Scraper & Auth Tests", "sublabel": "Puppeteer + OCR tests", "tag": "Mock & Live", "width": 140 },
+    { "id": "gen_exports", "lane": "reporting", "col": 4, "type": "backend", "label": "Export Validation", "sublabel": "ExcelJS & PDFKit checks", "width": 140 },
+    { "id": "sync_master_doc", "lane": "reporting", "col": 5, "type": "database", "label": "PROJECT_DOCS Sync", "sublabel": "Ledger & Change Log", "tag": "Rule Compliant", "width": 140 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "git_change", "to": "config_validate", "variant": "default" },
+    { "id": "e2", "from": "config_validate", "to": "test_analytics", "label": "config verified", "variant": "emphasis" },
+    { "id": "e3", "from": "test_analytics", "to": "test_scrapers", "label": "metrics pass", "variant": "default" },
+    { "id": "e4", "from": "test_scrapers", "to": "gen_exports", "label": "extract ok", "variant": "emphasis" },
+    { "id": "e5", "from": "gen_exports", "to": "sync_master_doc", "label": "all verified", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Static & Configuration Safety",
+      "items": [
+        "Ensures critical mappings (sectors.json, shops-mapping.json) remain strictly valid.",
+        "Prevents unhandled crashes and enforces environment credential presence."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "End-to-End Test Suite",
+      "items": [
+        "Runs mathematical assertions across NFSA, MDM, ICDS, and Welfare formulas.",
+        "Executes headless Puppeteer integration tests verifying DOM scrapers and CAPTCHA."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Continuous Master Doc Sync",
+      "items": [
+        "Updates PROJECT_DOCS.md verification ledger, known issues, and change log.",
+        "Guarantees the system documentation is never stale across agent sessions."
+      ]
+    }
+  ]
+}
