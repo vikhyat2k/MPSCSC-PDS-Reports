@@ -154,6 +154,11 @@ class WelfareScraper {
             }
             console.log('✅ [Welfare] Navigated to Welfare allotment page.');
 
+            // Ensure the filter form is fully rendered before doing anything
+            await this.page.waitForSelector('#month', { timeout: 15000 }).catch(() => {
+                console.warn('⚠️ [Welfare] #month dropdown not found after navigation. Page may have loaded incompletely.');
+            });
+
             // Save debug HTML
             const html = await this.page.content();
             fs.writeFileSync(path.join(this.logsDir, 'welfare_page_debug.html'), html);
