@@ -628,6 +628,7 @@ app.post('/api/generate-report', async (req, res) => {
                             workerStatus[roType].progress = 0;
                         }
                     }
+                    throw globalErr; // Do not swallow: ensure real errors (login, timeout, etc.) are reported accurately
                 } finally {
                     activeScrapers.delete(requestId);
                     if (isBrowserInitialized) {
