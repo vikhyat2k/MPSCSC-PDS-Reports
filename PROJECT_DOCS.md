@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 05 Oct 2026 — Feature: Generated full suite of Archify Interactive System Architecture, API Sequences, Pipeline Workflows, and Lifecycle Diagrams in diagrams/ folder |
+| Last Code Change | 05 Oct 2026 — Database Sync: Synchronized pds-seed.db with all 7 Supervision Inspection records and tasks for Render cloud persistence |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -874,6 +874,21 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-05 | Database Sync: Synchronized `pds-seed.db` for Render Cloud Supervision Data
+
+Files: database/pds-seed.db, PROJECT_DOCS.md
+Type: Maintenance / Cloud Database Persistence
+
+- ROOT CAUSE / CONTEXT:
+  - Local database (`pds-reports.db`) contained 7 newly submitted Inspection Reports (including `INSP_1791054093204_d2pj`, `TEST_INSP_005`, `TEST_INSP_001`), roster, and task attachments.
+  - However, Render cloud deployments (`pds-mpscsc.onrender.com`) initialize SQLite storage from `database/pds-seed.db` (because SQLite `.db` is gitignored and Render ephemeral disk resets).
+  - `database/pds-seed.db` was last committed on 24 September 2026 before the `supervision_inspections` table was created, causing Render to show 0 inspection reports.
+
+- FIX:
+  1. Checkpointed WAL logs into `database/pds-reports.db` using `PRAGMA wal_checkpoint(FULL);`.
+  2. Overwrote `database/pds-seed.db` with the updated database, persisting all 7 inspection reports and associated tables.
+  3. Committed and pushed `database/pds-seed.db` to GitHub `main` so Render automatically redeploys with complete data.
 
 ### 2026-10-05 | Feature: Interactive System Architecture, Sequence & Pipeline Diagrams via Archify
 
