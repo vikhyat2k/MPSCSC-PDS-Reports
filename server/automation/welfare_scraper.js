@@ -298,6 +298,21 @@ class WelfareScraper {
     async _clickGetReport() {
         console.log('   Clicking "Get Report"...');
 
+        // Wait for the button to appear in the DOM (page may load slowly)
+        try {
+            await this.page.waitForSelector('input[value="Get Report"]', { timeout: 20000 });
+        } catch (e) {
+            // Button not found within timeout — dump current HTML for debugging
+            console.warn('⚠️ [Welfare] "Get Report" button not found within 20s. Dumping debug HTML...');
+            try {
+                const dbgHtml = await this.page.content();
+                fs.writeFileSync(path.join(this.logsDir, 'welfare_btn_missing_debug.html'), dbgHtml);
+                console.log('   Saved debug HTML: welfare_btn_missing_debug.html');
+            } catch (_) {}
+            throw new Error('"Get Report" button not found on Welfare portal. The page may not have loaded correctly.');
+        }
+
+        // Click via evaluate (avoids Puppeteer selector errors on slow renders)
         const clicked = await this.page.evaluate(() => {
             const btn = document.querySelector('input[value="Get Report"]');
             if (btn) { btn.click(); return true; }
@@ -305,7 +320,10 @@ class WelfareScraper {
         });
 
         if (!clicked) {
-            await this.page.click('input[type="button"][value="Get Report"]');
+            // Last-resort: direct Puppeteer click (button confirmed present above)
+            await this.page.click('input[value="Get Report"]').catch(err => {
+                throw new Error(`Failed to click "Get Report" button: ${err.message}`);
+            });
         }
 
         await this._waitForLoading();
