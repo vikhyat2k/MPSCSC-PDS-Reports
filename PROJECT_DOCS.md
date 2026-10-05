@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 05 Oct 2026 — Bug Fix: Welfare 'Get Report' button now waits for DOM presence before clicking (prevents 'No element found for selector' crash on slow portal loads); NFSA/Welfare NO_DATA errors in email flow now show clean human-readable messages; duplicate fresh-generation prevention via deduplication |
+| Last Code Change | 05 Oct 2026 — Fix & Domain Alignment: SCM data is real-time (not published daily); fixed server.js catch block swallowing global scraper errors and masking failures as false NO_DATA; updated UI to reflect real-time live records (ISSUE-064) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -869,10 +869,30 @@ Tracks what has been tested and confirmed working.
 | ISSUE-061 | Email Sync Configurable Settings was hidden as the 5th tab inside Gmail Status modal with no direct button on toolbar or sidebar; Gemini AI badge showed ambiguous 'Pending' when hitting HTTP 429 quota exhaustion | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, tests/test-verify-sync-and-gemini-ui.js | 04 Oct 2026 |
 | ISSUE-062 | Welfare 'Get Report' button click failed with 'No element found for selector' when portal loaded slowly — scraper did not wait for button DOM presence before attempting to click | HIGH | RESOLVED | server/automation/welfare_scraper.js | 05 Oct 2026 |
 | ISSUE-063 | Email send flow showed raw 'NFSA/WELFARE fresh generation failed: NO_DATA: ...' message in warning toast; duplicate welfare fresh-generation triggered when same scheme checked twice | MEDIUM | RESOLVED | public/app.js | 05 Oct 2026 |
+| ISSUE-064 | In NFSA scraper (server.js), global errors (login failure, navigation timeout, etc.) were swallowed in catch(globalErr) without rethrowing, causing fallthrough to aggregatedRawData.length === 0 and masking real failures as 'NO_DATA: The portal currently shows "No data found"...'. SCM data is real-time; real errors were falsely presented as empty data. | HIGH | RESOLVED | server.js, public/app.js | 05 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-05 | Fix & Domain Correction: Realtime SCM Data Handling & Global Scraper Error Masking
+
+Files: server.js, public/app.js
+Type: Bug Fix / Domain Alignment
+Closes: ISSUE-064
+
+- DOMAIN CLARIFICATION (USER DIRECTIVE):
+  - In the MPSCSC SCM portal, lifting and allotment transactions are updated in **real-time** as transactions occur. There is NO daily or monthly publishing schedule / batch publishing.
+  - Assumptions that "data is published daily" or "not published yet early in the month" were incorrect. An empty portal response indicates either zero registered lifting records on the portal for that period in real-time, or a scraping/communication failure.
+
+- ROOT CAUSE:
+  1. **Scraper Error Masking (ISSUE-064):** In `server.js` (`/api/generate-report`), `catch (globalErr)` caught global scraping errors (e.g., login failure, CAPTCHA timeouts, Puppeteer crashes, navigation timeouts) but did not re-throw them. Execution continued to the `finally` block and then fell through to `if (aggregatedRawData.length === 0)`, which threw `NO_DATA: The portal currently shows "No data found" for this month/year.`. Real technical failures were thus completely masked as "No data found".
+  2. **Misleading UI Phrasing:** `public/app.js` rendered `"– No portal data yet:"` in email warnings and `"No Data Published"` in error alerts, erroneously implying that data was awaiting a publishing schedule.
+
+- FIX:
+  1. **server.js:** Added `throw globalErr;` inside `catch (globalErr)` so that genuine scraper and login errors are preserved and returned to the caller with their exact diagnostic error message, rather than masquerading as NO_DATA.
+  2. **public/app.js:** Updated alert box title from `"No Data Published"` to `"No Records Found"`.
+  3. **public/app.js:** Updated email warning format from `${item.scheme.toUpperCase()} – No portal data yet: ${cleanMsg}` to `${item.scheme.toUpperCase()} – No records found on portal: ${cleanMsg}` to reflect real-time live availability.
 
 ### 2026-10-05 | Bug Fix: Welfare Scraper DOM Race + Email NO_DATA Error Messaging
 
