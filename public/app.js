@@ -2892,7 +2892,15 @@ async function submitGlobalEmail(event) {
                     await generateFreshSchemeForEmail(item, statusDiv, i + 1, freshCount);
                 } catch (genErr) {
                     console.warn(`Fresh generation failed for ${item.scheme}:`, genErr.message);
-                    errors.push(`${item.scheme.toUpperCase()} fresh generation failed: ${genErr.message}`);
+                    const errMsg = genErr.message || '';
+                    // NO_DATA is an expected portal state (e.g. data not yet published early in month)
+                    // Show a clean, user-friendly message instead of raw scraper error
+                    if (errMsg.includes('NO_DATA') || errMsg.toLowerCase().includes('no data found')) {
+                        const cleanMsg = errMsg.replace(/^NO_DATA:\s*/i, '').trim();
+                        errors.push(`${item.scheme.toUpperCase()} – No portal data yet: ${cleanMsg}`);
+                    } else {
+                        errors.push(`${item.scheme.toUpperCase()} fresh generation failed: ${errMsg}`);
+                    }
                 }
             }
 
