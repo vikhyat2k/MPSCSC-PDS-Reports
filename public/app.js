@@ -756,7 +756,7 @@ function showError(msg) {
             const icon = box.querySelector('.alert-icon');
             if(icon) icon.innerText = '⚠️';
             const title = box.querySelector('strong');
-            if(title) title.innerText = 'No Data Published';
+            if(title) title.innerText = 'No Records Found';
         } else {
             text.innerText = msg || 'An unknown error occurred during report generation.';
             box.classList.remove('alert-warning');
@@ -2901,11 +2901,11 @@ async function submitGlobalEmail(event) {
                 } catch (genErr) {
                     console.warn(`Fresh generation failed for ${item.scheme}:`, genErr.message);
                     const errMsg = genErr.message || '';
-                    // NO_DATA is an expected portal state (e.g. data not yet published early in month)
-                    // Show a clean, user-friendly message instead of raw scraper error
+                    // SCM portal data is updated in real-time. If the portal returned NO_DATA,
+                    // there are 0 live records registered for this scheme/period.
                     if (errMsg.includes('NO_DATA') || errMsg.toLowerCase().includes('no data found')) {
                         const cleanMsg = errMsg.replace(/^NO_DATA:\s*/i, '').trim();
-                        errors.push(`${item.scheme.toUpperCase()} – No portal data yet: ${cleanMsg}`);
+                        errors.push(`${item.scheme.toUpperCase()} – No records found on portal: ${cleanMsg}`);
                     } else {
                         errors.push(`${item.scheme.toUpperCase()} fresh generation failed: ${errMsg}`);
                     }
