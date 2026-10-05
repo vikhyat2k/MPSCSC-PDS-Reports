@@ -2822,6 +2822,7 @@ async function submitGlobalEmail(event) {
     // Separate history (cached) vs preset (fresh scrape) selections
     const historySchemes = [];
     const freshSchemes = [];
+    const freshSeenKeys = new Set(); // Deduplicate to prevent running same scheme twice
     
     allChecks.forEach(c => {
         const entry = { month: parseInt(c.dataset.month), year: parseInt(c.dataset.year), scheme: c.dataset.scheme };
@@ -2830,7 +2831,14 @@ async function submitGlobalEmail(event) {
         if (c.classList.contains('history-check')) {
             historySchemes.push(entry);
         } else {
-            freshSchemes.push(entry);
+            // Deduplicate fresh generations by scheme+month+year
+            const key = `${entry.scheme}|${entry.month}|${entry.year}`;
+            if (!freshSeenKeys.has(key)) {
+                freshSeenKeys.add(key);
+                freshSchemes.push(entry);
+            } else {
+                console.warn(`[email] Duplicate fresh scheme skipped: ${key}`);
+            }
         }
     });
 
