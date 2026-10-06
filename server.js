@@ -3528,6 +3528,7 @@ app.delete('/api/email-logs', async (req, res) => {
  */
 app.get('/api/auth/available-periods', async (req, res) => {
     try {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         db.db.all(`
             SELECT DISTINCT month, year, scheme 
             FROM reports 
@@ -3647,13 +3648,20 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
                         if (aggregatedRawData.length > 0) {
                             const processedResult = dataProcessor.processData(aggregatedRawData, combinedVerificationTotals, processedCategories, roTypes);
                             const excelFile = await excelGenerator.generateReport(processedResult, month, year);
+                            let fullInsights = null;
+                            try {
+                                fullInsights = analyticsService.analyzeReport(processedResult, null, null);
+                            } catch (e) {
+                                console.warn('[email-bundle] NFSA analytics compute warning:', e.message);
+                            }
                             const reportId = await db.saveReport({
                                 month, year, filename: excelFile.filename, filepath: excelFile.filepath,
                                 totalAllocation: processedResult.totals.totalAllocation,
                                 totalDispatch: processedResult.totals.totalDispatch,
                                 totalPOSReceipt: processedResult.totals.totalPOSReceipt,
                                 dispatchPercentage: processedResult.totals.dispatchPercentage,
-                                rawData: aggregatedRawData, scheme: 'nfsa'
+                                rawData: aggregatedRawData, scheme: 'nfsa',
+                                insights: fullInsights
                             });
                             report = await db.getReport(reportId);
                         } else {
@@ -3664,15 +3672,22 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
                         await scraper.init(true);
                         const result = await scraper.extractData(month, year);
                         if (result && result.status === 'success') {
-                            const processedResult = mdmDataProcessor.processData(result.rawData);
+                            const processedResult = mdmDataProcessor.processData(result.rawData, result.summaryTotals);
                             const excelFile = await mdmExcelGenerator.generateReport(processedResult, month, year);
+                            let fullInsights = null;
+                            try {
+                                fullInsights = computeMDMAnalytics(processedResult);
+                            } catch (e) {
+                                console.warn('[email-bundle] MDM analytics compute warning:', e.message);
+                            }
                             const reportId = await db.saveReport({
                                 month, year, filename: excelFile.filename, filepath: excelFile.filepath,
                                 totalAllocation: processedResult.totals.totalAllotted,
                                 totalDispatch: processedResult.totals.totalDispatched,
                                 totalPOSReceipt: processedResult.totals.totalReceived,
                                 dispatchPercentage: processedResult.totals.totalDispatchPct,
-                                rawData: result.rawData, scheme: 'mdm'
+                                rawData: result.rawData, scheme: 'mdm',
+                                insights: fullInsights
                             });
                             report = await db.getReport(reportId);
                         }
@@ -3683,13 +3698,20 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
                         if (result && result.status === 'success') {
                             const processedResult = icdsDataProcessor.processData(result.rawData, result.summaryTotals);
                             const excelFile = await icdsExcelGenerator.generateReport(processedResult, month, year);
+                            let fullInsights = null;
+                            try {
+                                fullInsights = computeICDSAnalytics(processedResult);
+                            } catch (e) {
+                                console.warn('[email-bundle] ICDS analytics compute warning:', e.message);
+                            }
                             const reportId = await db.saveReport({
                                 month, year, filename: excelFile.filename, filepath: excelFile.filepath,
                                 totalAllocation: processedResult.totals.totalAllotted,
                                 totalDispatch: processedResult.totals.totalDispatched,
                                 totalPOSReceipt: processedResult.totals.totalReceived,
                                 dispatchPercentage: processedResult.totals.totalDispatchPct,
-                                rawData: result.rawData, scheme: 'icds'
+                                rawData: result.rawData, scheme: 'icds',
+                                insights: fullInsights
                             });
                             report = await db.getReport(reportId);
                         }
@@ -3700,13 +3722,20 @@ async function runEmailBundleJob({ selectedSchemes, emailTo, cc, format, forceRe
                         if (result && result.status === 'success') {
                             const processedResult = welfareDataProcessor.processData(result.rawData);
                             const excelFile = await welfareExcelGenerator.generateReport(processedResult, month, year);
+                            let fullInsights = null;
+                            try {
+                                fullInsights = computeWelfareAnalytics(processedResult);
+                            } catch (e) {
+                                console.warn('[email-bundle] Welfare analytics compute warning:', e.message);
+                            }
                             const reportId = await db.saveReport({
                                 month, year, filename: excelFile.filename, filepath: excelFile.filepath,
                                 totalAllocation: processedResult.totals.totalAllotted,
                                 totalDispatch: processedResult.totals.totalDispatched,
                                 totalPOSReceipt: processedResult.totals.totalReceived,
                                 dispatchPercentage: processedResult.totals.totalDispatchPct,
-                                rawData: result.rawData, scheme: 'welfare'
+                                rawData: result.rawData, scheme: 'welfare',
+                                insights: fullInsights
                             });
                             report = await db.getReport(reportId);
                         }
