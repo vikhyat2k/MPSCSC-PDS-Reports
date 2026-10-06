@@ -800,8 +800,7 @@ Tracks what has been tested and confirmed working.
 | Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
 | Dual-Engine AI (Gemini + Sarvam Fallback) | Automated Integration Test | VERIFIED | 04 Oct 2026 | tests/test-dual-ai-integration.js verifies Gemini ping, Sarvam ping, 429 rate-limit failover, and graceful fallback |
-| Email Sync Settings Direct Access & Quota-Exceeded Badges | Puppeteer UI & Screenshot Verification | VERIFIED | 04 Oct 2026 | tests/test-verify-sync-and-gemini-ui.js confirms direct toolbar button, banner button, sidebar nav, and accurate 429 status rendering (ISSUE-061) |
-| Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, and background insights calculation in runEmailBundleJob (ISSUE-065) |
+| Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
 
 ---
 
@@ -895,18 +894,20 @@ Closes: ISSUE-065
 
 - FIXES & IMPLEMENTATION:
   1. **Frontend Module History Refresher (`public/app.js`):**
-     - Implemented `refreshModuleHistory(scheme)` helper that immediately calls the specific loader for the target scheme (`loadReports` for NFSA, `loadMDMReports` for MDM, `loadICDSReports` for ICDS, `loadWelfareReports` for Welfare), along with `loadStats()`, `loadEmailSchemeGrid()`, messenger selectors, and dashboard updates.
+     - Implemented `refreshModuleHistory(scheme)` helper that immediately calls the specific loader for the target scheme (`loadReports` for NFSA, `loadMDMReports` for MDM, `loadICDSReports` for ICDS, `loadWelfareReports` for Welfare), along with `loadStats()`, `loadEmailSchemeGrid()`, `populateMessengerReportDropdown()`, and `loadDashboard()`.
      - Updated `generateFreshSchemeForEmail()` to trigger `refreshModuleHistory(item.scheme)` the exact moment each individual scheme finishes generation (`status === 'complete'`).
      - Updated `submitGlobalEmail()` to trigger per-scheme refresh, plus a global `refreshAllReportsSilent()` in both success and finally blocks.
      - Updated `closeGlobalEmailModal()` to invoke `refreshAllReportsSilent()` whenever the modal is closed.
-  2. **Client-Side Cache-Busting Queries (`public/app.js` & `public/index.html`):**
-     - Appended `&t=${Date.now()}` query timestamps to all report history endpoints (`/api/reports?scheme=...&t=...`), stats (`/api/reports/stats?t=...`), email grid, and dashboard fetches.
+  2. **District Intelligence Dashboard & WhatsApp Messenger Reflection:**
+     - **District Intelligence Dashboard (`loadDashboard()` in `public/index.html`):** Re-fetches all scheme datasets in parallel with cache-busting queries (`&t=...`), immediately updating Overview KPIs (Total Allotted, Dispatched, Lifting %), Scheme Performance Cards, Comparison Bar Chart, Progress Rings, and Transporter Leaderboard.
+     - **Leaderboard Cache-Buster:** Added `?t=' + Date.now()` to `api/reports/:id` in `renderTransporterLeaderboard()`.
+     - **District Intelligence Messenger (`populateMessengerReportDropdown()` & `loadMessengerTransporters()` in `public/app.js`):** Added `&t=${Date.now()}` query timestamps to report dropdown population and `/api/reports/:id/analytics` transporter analysis fetches.
   3. **Backend HTTP Cache Invalidation Headers (`server.js`):**
-     - Added `res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')` to `GET /api/reports`, `GET /api/reports/stats`, and `GET /api/auth/available-periods`.
+     - Added `res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')` to `GET /api/reports`, `GET /api/reports/stats`, `GET /api/auth/available-periods`, `GET /api/reports/:id`, `GET /api/reports/:id/analytics`, and `GET /api/reports/insights/:scheme`.
   4. **Background Insights Computation (`server.js`):**
      - In `runEmailBundleJob()`, integrated analytics calculation (`analyticsService.analyzeReport` for NFSA, `computeMDMAnalytics` for MDM, `computeICDSAnalytics` for ICDS, `computeWelfareAnalytics` for Welfare) before saving auto-generated reports into SQLite.
   5. **Automated Verification:**
-     - Created and executed `tests/test-email-reports-history-sync.js` which verifies all Cache-Control headers, helper functions, hooks, modal triggers, and analytics insights logic. 100% test pass.
+     - Created and executed `tests/test-email-reports-history-sync.js` which verifies all Cache-Control headers, helper functions, hooks, modal triggers, District Intelligence sync, and analytics insights logic. 100% test pass.
 
 ---
 

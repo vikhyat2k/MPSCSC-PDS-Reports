@@ -3943,7 +3943,7 @@ async function renderTransporterLeaderboard(schemes) {
         var latestId = s.reports[0].id;
         if (!latestId) return;
         try {
-            var detail = await fetch('api/reports/' + latestId).then(function(r){ return r.json(); });
+            var detail = await fetch('api/reports/' + latestId + '?t=' + Date.now()).then(function(r){ return r.json(); });
             var ins = detail.insights;
             if (!ins) return;
             if (typeof ins === 'string') ins = JSON.parse(ins);

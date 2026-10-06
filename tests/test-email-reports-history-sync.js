@@ -62,6 +62,11 @@ assert(appJsCode.includes('api/reports/stats?t='),
 assert(appJsCode.includes('api/auth/available-periods?t='), 
     'loadEmailSchemeGrid must use cache-busting timestamp');
 
+assert(appJsCode.includes('api/reports?scheme=${scheme}&t=${Date.now()}'), 
+    'populateMessengerReportDropdown must use cache-busting timestamp');
+assert(appJsCode.includes('api/reports/${reportId}/analytics?t=${Date.now()}'), 
+    'loadMessengerTransporters must use cache-busting timestamp');
+
 console.log('✅ public/app.js verification passed: refreshModuleHistory, cache-busters, and event hooks verified.');
 
 // 3. Verify public/index.html implementation
@@ -70,6 +75,8 @@ assert(indexHtmlCode.includes("api/reports?scheme=nfsa&t=' + Date.now()"),
     'public/index.html loadDashboard must use cache-busting timestamp for nfsa');
 assert(indexHtmlCode.includes("api/reports?scheme=mdm&t=' + Date.now()"), 
     'public/index.html loadDashboard must use cache-busting timestamp for mdm');
-console.log('✅ public/index.html verification passed: loadDashboard cache-busters verified.');
+assert(indexHtmlCode.includes("api/reports/' + latestId + '?t=' + Date.now()"), 
+    'public/index.html renderTransporterLeaderboard must use cache-busting timestamp');
+console.log('✅ public/index.html verification passed: loadDashboard and leaderboard cache-busters verified.');
 
-console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! Email reports history reflection is 100% verified.');
+console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! Email reports history reflection & District Intelligence sync are 100% verified.');

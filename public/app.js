@@ -166,7 +166,7 @@ async function populateMessengerReportDropdown() {
 
         await Promise.allSettled(schemes.map(async scheme => {
             try {
-                const res = await fetch(`api/reports?scheme=${scheme}`);
+                const res = await fetch(`api/reports?scheme=${scheme}&t=${Date.now()}`);
                 if (!res.ok) return;
                 const reports = await res.json();
                 reports.forEach(r => allReports.push(r));
@@ -216,7 +216,7 @@ async function loadMessengerTransporters() {
     if (thresholdGroup) thresholdGroup.style.display = filterMode === 'diff' ? '' : 'none';
 
     try {
-        const response = await fetch(`api/reports/${reportId}/analytics`);
+        const response = await fetch(`api/reports/${reportId}/analytics?t=${Date.now()}`);
         if (!response.ok) throw new Error('Failed to load report analytics');
         const analytics = await response.json();
         window.currentMessengerAnalytics = analytics;
