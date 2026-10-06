@@ -2744,7 +2744,7 @@ function loadEmailSchemeGrid() {
     if (!grid) return;
 
     // Fetch unique months from existing reports
-    fetch('api/auth/available-periods')
+    fetch(`api/auth/available-periods?t=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
             grid.innerHTML = ''; // Clear first
@@ -2807,7 +2807,8 @@ async function generateFreshSchemeForEmail(item, statusDiv, index, total) {
     return new Promise((resolve, reject) => {
         const pollInt = setInterval(async () => {
             try {
-                const statusRes = await fetch(`api/generate-status/${requestId}`);
+                let statusEndpoint = (item.scheme && item.scheme !== 'nfsa' && item.scheme !== 'nfsa_daterange') ? `api/generate-${item.scheme}-status/${requestId}` : `api/generate-status/${requestId}`;
+                const statusRes = await fetch(statusEndpoint);
                 if (!statusRes.ok) return;
                 const statusData = await statusRes.json();
                 if (!statusData) return;
@@ -2829,6 +2830,12 @@ async function generateFreshSchemeForEmail(item, statusDiv, index, total) {
                 if (statusData.status === 'complete') {
                     clearInterval(pollInt);
                     closeManualCaptchaModal();
+                    
+                    // Immediately reflect newly generated report in the concerned module history
+                    if (typeof refreshModuleHistory === 'function') {
+                        refreshModuleHistory(item.scheme);
+                    }
+                    
                     resolve(statusData);
                 } else if (statusData.status === 'error') {
                     clearInterval(pollInt);
@@ -2933,6 +2940,9 @@ async function submitGlobalEmail(event) {
                 const item = freshSchemes[i];
                 try {
                     await generateFreshSchemeForEmail(item, statusDiv, i + 1, freshCount);
+                    if (typeof refreshModuleHistory === 'function') {
+                        refreshModuleHistory(item.scheme);
+                    }
                 } catch (genErr) {
                     console.warn(`Fresh generation failed for ${item.scheme}:`, genErr.message);
                     const errMsg = genErr.message || '';
@@ -2992,6 +3002,10 @@ async function submitGlobalEmail(event) {
             showToast(`📧 ${successText}`, 'success', 7000);
         }
 
+        // Always refresh all concerned modules, stats, and email history grid
+        if (typeof refreshAllReportsSilent === 'function') refreshAllReportsSilent();
+        if (typeof loadEmailSchemeGrid === 'function') loadEmailSchemeGrid();
+
         // Auto-refresh email logs table
         setTimeout(() => { loadEmailLogs(); }, 500);
 
@@ -3010,9 +3024,16 @@ async function submitGlobalEmail(event) {
             statusDiv.innerText = '❌ Mail Task Failed: ' + errorMsg;
         }
         showToast(`❌ Mail Task Failed: ${errorMsg}`, 'error', 7000);
+
+        // Even on error, update history for any reports that succeeded before failure
+        if (typeof refreshAllReportsSilent === 'function') refreshAllReportsSilent();
+        if (typeof loadEmailSchemeGrid === 'function') loadEmailSchemeGrid();
+
         setTimeout(() => { loadEmailLogs(); }, 500);
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = '<span class="btn-icon">🚀</span> <span id="globalEmailBtnText">Send Now</span>'; }
+        if (typeof refreshAllReportsSilent === 'function') refreshAllReportsSilent();
+        if (typeof loadEmailSchemeGrid === 'function') loadEmailSchemeGrid();
     }
 }
 
