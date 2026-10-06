@@ -3687,11 +3687,11 @@ async function loadDashboard() {
     try {
         /* Parallel fetch */
         var results = await Promise.allSettled([
-            fetch('api/reports?scheme=nfsa').then(function(r){ return r.json(); }),
-            fetch('api/reports?scheme=mdm').then(function(r){ return r.json(); }),
-            fetch('api/reports?scheme=icds').then(function(r){ return r.json(); }),
-            fetch('api/reports?scheme=welfare').then(function(r){ return r.json(); }),
-            fetch('api/reports/stats').then(function(r){ return r.json(); })
+            fetch('api/reports?scheme=nfsa&t=' + Date.now()).then(function(r){ return r.json(); }),
+            fetch('api/reports?scheme=mdm&t=' + Date.now()).then(function(r){ return r.json(); }),
+            fetch('api/reports?scheme=icds&t=' + Date.now()).then(function(r){ return r.json(); }),
+            fetch('api/reports?scheme=welfare&t=' + Date.now()).then(function(r){ return r.json(); }),
+            fetch('api/reports/stats?t=' + Date.now()).then(function(r){ return r.json(); })
         ]);
 
         var nfsaRaw    = results[0].status === 'fulfilled' ? results[0].value : [];
