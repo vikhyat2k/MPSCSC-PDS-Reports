@@ -2006,7 +2006,7 @@ function getStatusColor(p) {
 
 async function loadReports() {
     try {
-        const res = await fetch('api/reports?scheme=nfsa');
+        const res = await fetch(`api/reports?scheme=nfsa&t=${Date.now()}`);
         const reports = await res.json();
         const tbody = document.getElementById('reportsTableBody');
         const section = document.getElementById('nfsaReportHistorySection');
