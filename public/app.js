@@ -2443,6 +2443,11 @@ function closeGlobalEmailModal() {
 
     const timer = document.getElementById('emailHeaderTimer');
     if (timer) timer.style.display = 'none';
+
+    // Refresh history across modules in case reports were generated during this session
+    if (typeof refreshAllReportsSilent === 'function') {
+        refreshAllReportsSilent();
+    }
 }
 
 /**
