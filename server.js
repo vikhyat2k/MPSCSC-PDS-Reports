@@ -1357,6 +1357,7 @@ app.get('/api/reports/stats', async (req, res) => {
  * Get all available months, years, and schemes from the database
  */
 app.get('/api/reports/insights/:scheme', async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     try {
         const { scheme } = req.params;
         db.db.all(`
@@ -1524,6 +1525,7 @@ function translateInsightMessage(msg) {
 
 // Get report by ID (with automatic Deep Restore for legacy data)
 app.get('/api/reports/:id', async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     try {
         let report = await db.getReport(req.params.id);
         if (!report) {
@@ -1581,6 +1583,7 @@ app.get('/api/reports/:id', async (req, res) => {
 
 // Get report analytics specifically for Messenger
 app.get('/api/reports/:id/analytics', async (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     try {
         const report = await db.getReport(req.params.id);
         if (!report) return res.status(404).json({ error: 'Report not found' });

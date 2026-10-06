@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 05 Oct 2026 — Database Sync: Synchronized pds-seed.db with all 7 Supervision Inspection records and tasks for Render cloud persistence |
+| Last Code Change | 06 Oct 2026 — Email Reports History Sync: Instant module history reflection, no-store HTTP headers, and full background insights calculation (ISSUE-065) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -622,6 +622,7 @@ Tracks implementation status of all major features.
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048, ISSUE-049) |
 | Dual-Engine Administrative AI (Gemini + Sarvam AI) | COMPLETE | YES | Automatic failover to Indian Sovereign AI Sarvam (sarvam-105b) when Gemini hits 429 rate limit or quota exhaustion; full UI key configuration, status badges, and test coverage (ISSUE-060) |
+| Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
 
 ---
 
@@ -800,6 +801,7 @@ Tracks what has been tested and confirmed working.
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
 | Dual-Engine AI (Gemini + Sarvam Fallback) | Automated Integration Test | VERIFIED | 04 Oct 2026 | tests/test-dual-ai-integration.js verifies Gemini ping, Sarvam ping, 429 rate-limit failover, and graceful fallback |
 | Email Sync Settings Direct Access & Quota-Exceeded Badges | Puppeteer UI & Screenshot Verification | VERIFIED | 04 Oct 2026 | tests/test-verify-sync-and-gemini-ui.js confirms direct toolbar button, banner button, sidebar nav, and accurate 429 status rendering (ISSUE-061) |
+| Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, and background insights calculation in runEmailBundleJob (ISSUE-065) |
 
 ---
 
@@ -870,10 +872,43 @@ Tracks what has been tested and confirmed working.
 | ISSUE-062 | Welfare 'Get Report' button click failed with 'No element found for selector' when portal loaded slowly — scraper did not wait for button DOM presence before attempting to click | HIGH | RESOLVED | server/automation/welfare_scraper.js | 05 Oct 2026 |
 | ISSUE-063 | Email send flow showed raw 'NFSA/WELFARE fresh generation failed: NO_DATA: ...' message in warning toast; duplicate welfare fresh-generation triggered when same scheme checked twice | MEDIUM | RESOLVED | public/app.js | 05 Oct 2026 |
 | ISSUE-064 | In NFSA scraper (server.js), global errors (login failure, navigation timeout, etc.) were swallowed in catch(globalErr) without rethrowing, causing fallthrough to aggregatedRawData.length === 0 and masking real failures as 'NO_DATA: The portal currently shows "No data found"...'. SCM data is real-time; real errors were falsely presented as empty data. | HIGH | RESOLVED | server.js, public/app.js | 05 Oct 2026 |
+| ISSUE-065 | Reports generated via Send Reports via Email option were not reflected in history tables of concerned report modules without manual full-page reload | HIGH | RESOLVED | server.js, public/app.js, public/index.html | 06 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-06 | Feature & Bug Fix: Instant Module History Reflection for Reports Generated via Email
+
+Files: server.js, public/app.js, public/index.html, tests/test-email-reports-history-sync.js, PROJECT_DOCS.md
+Type: Feature / Bug Fix / UI & State Synchronization
+Closes: ISSUE-065
+
+- USER REQUIREMENT:
+  "reports generated through Send Reports via Email option should also be reflected in history of concerned report modules"
+
+- ROOT CAUSES:
+  1. **Missing Frontend Synchronization Hooks:** `submitGlobalEmail()` and `generateFreshSchemeForEmail()` in `public/app.js` processed report generation and dispatched emails without triggering any UI loaders (`loadReports`, `loadMDMReports`, `loadICDSReports`, `loadWelfareReports`). Consequently, the DOM table of whichever module the user was viewing remained unchanged until a full browser reload (F5).
+  2. **Browser HTTP Caching:** `GET /api/reports`, `GET /api/reports/stats`, and `GET /api/auth/available-periods` lacked explicit `Cache-Control: no-store` headers, allowing browsers (Chromium/Edge) to serve cached 304/disk responses on subsequent AJAX calls.
+  3. **Missing Cache-Busting Parameters:** Fetch calls for report histories and stats in `public/app.js` and `public/index.html` were issued without cache-busting timestamp queries.
+  4. **Email Bundle Incomplete Insights Calculation:** In `runEmailBundleJob()` in `server.js`, background-generated reports were saved to SQLite with `insights: null`, meaning executive summary metrics, transporter rankings, and sector matrices were not pre-calculated for history views.
+
+- FIXES & IMPLEMENTATION:
+  1. **Frontend Module History Refresher (`public/app.js`):**
+     - Implemented `refreshModuleHistory(scheme)` helper that immediately calls the specific loader for the target scheme (`loadReports` for NFSA, `loadMDMReports` for MDM, `loadICDSReports` for ICDS, `loadWelfareReports` for Welfare), along with `loadStats()`, `loadEmailSchemeGrid()`, messenger selectors, and dashboard updates.
+     - Updated `generateFreshSchemeForEmail()` to trigger `refreshModuleHistory(item.scheme)` the exact moment each individual scheme finishes generation (`status === 'complete'`).
+     - Updated `submitGlobalEmail()` to trigger per-scheme refresh, plus a global `refreshAllReportsSilent()` in both success and finally blocks.
+     - Updated `closeGlobalEmailModal()` to invoke `refreshAllReportsSilent()` whenever the modal is closed.
+  2. **Client-Side Cache-Busting Queries (`public/app.js` & `public/index.html`):**
+     - Appended `&t=${Date.now()}` query timestamps to all report history endpoints (`/api/reports?scheme=...&t=...`), stats (`/api/reports/stats?t=...`), email grid, and dashboard fetches.
+  3. **Backend HTTP Cache Invalidation Headers (`server.js`):**
+     - Added `res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')` to `GET /api/reports`, `GET /api/reports/stats`, and `GET /api/auth/available-periods`.
+  4. **Background Insights Computation (`server.js`):**
+     - In `runEmailBundleJob()`, integrated analytics calculation (`analyticsService.analyzeReport` for NFSA, `computeMDMAnalytics` for MDM, `computeICDSAnalytics` for ICDS, `computeWelfareAnalytics` for Welfare) before saving auto-generated reports into SQLite.
+  5. **Automated Verification:**
+     - Created and executed `tests/test-email-reports-history-sync.js` which verifies all Cache-Control headers, helper functions, hooks, modal triggers, and analytics insights logic. 100% test pass.
+
+---
 
 ### 2026-10-05 | Database Sync: Synchronized `pds-seed.db` for Render Cloud Supervision Data
 
