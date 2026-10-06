@@ -2161,7 +2161,7 @@ async function loadDaterangeReports() {
 
 async function loadMDMReports() {
     try {
-        const response = await fetch('api/reports?scheme=mdm');
+        const response = await fetch(`api/reports?scheme=mdm&t=${Date.now()}`);
         const reports = await response.json();
         const tbody = document.getElementById('mdmReportsTableBody');
         const section = document.getElementById('mdmHistory');
@@ -2212,7 +2212,7 @@ async function loadMDMReports() {
 
 async function loadICDSReports() {
     try {
-        const response = await fetch('api/reports?scheme=icds');
+        const response = await fetch(`api/reports?scheme=icds&t=${Date.now()}`);
         const reports = await response.json();
         const tbody = document.getElementById('icdsReportsTableBody');
         const section = document.getElementById('icdsHistory');
@@ -2263,7 +2263,7 @@ async function loadICDSReports() {
 
 async function loadWelfareReports() {
     try {
-        const response = await fetch('api/reports?scheme=welfare');
+        const response = await fetch(`api/reports?scheme=welfare&t=${Date.now()}`);
         const reports = await response.json();
         const tbody = document.getElementById('welfareReportsTableBody');
         const section = document.getElementById('welfareHistory');
@@ -2316,7 +2316,7 @@ async function loadWelfareReports() {
 
 async function loadStats() {
     try {
-        const res = await fetch('api/reports/stats');
+        const res = await fetch(`api/reports/stats?t=${Date.now()}`);
         const stats = await res.json();
         
         if (document.getElementById('stats-total-reports')) document.getElementById('stats-total-reports').innerText = stats.total || 0;
@@ -2335,13 +2335,43 @@ async function loadStats() {
     }
 }
 
+/**
+ * Helper to refresh history and UI of a specific report module immediately
+ */
+function refreshModuleHistory(scheme) {
+    if (!scheme) return;
+    const s = String(scheme).toLowerCase();
+    
+    if (s === 'nfsa') {
+        if (typeof loadReports === 'function') loadReports();
+    } else if (s === 'nfsa_daterange' || s === 'daterange') {
+        if (typeof loadDaterangeReports === 'function') loadDaterangeReports();
+    } else if (s === 'mdm') {
+        if (typeof loadMDMReports === 'function') loadMDMReports();
+    } else if (s === 'icds') {
+        if (typeof loadICDSReports === 'function') loadICDSReports();
+    } else if (s === 'welfare') {
+        if (typeof loadWelfareReports === 'function') loadWelfareReports();
+    }
+    
+    // Always refresh stats and available periods in email modal grid
+    if (typeof loadStats === 'function') loadStats();
+    if (typeof loadEmailSchemeGrid === 'function') loadEmailSchemeGrid();
+    if (typeof populateMessengerReportDropdown === 'function') populateMessengerReportDropdown();
+    if (typeof loadDashboard === 'function') loadDashboard();
+}
+window.refreshModuleHistory = refreshModuleHistory;
+
 function refreshAllReportsSilent() { 
     loadReports(); 
     loadDaterangeReports(); 
     loadMDMReports();
     loadICDSReports();
     loadWelfareReports();
-    loadStats(); 
+    loadStats();
+    if (typeof loadEmailSchemeGrid === 'function') loadEmailSchemeGrid();
+    if (typeof populateMessengerReportDropdown === 'function') populateMessengerReportDropdown();
+    if (typeof loadDashboard === 'function') loadDashboard();
 }
 function hideAllMessages() { document.querySelectorAll('.alert').forEach(el => el.style.display = 'none'); }
 function showProgress() { document.getElementById(currentScheme === 'nfsa' ? 'progressSection' : currentScheme + 'ProgressSection').style.display = 'block'; }
