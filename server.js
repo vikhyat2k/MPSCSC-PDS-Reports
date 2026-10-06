@@ -1293,6 +1293,7 @@ app.post(['/api/captcha/refresh', '/captcha/refresh'], async (req, res) => {
 // Get all reports (supports ?scheme=nfsa or ?scheme=mdm)
 app.get('/api/reports', async (req, res) => {
     try {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         const scheme = req.query.scheme || null;
         console.log(`🔍 [GET] /api/reports?scheme=${scheme}`);
         let reports = await db.getAllReports(50, scheme);
@@ -1323,6 +1324,7 @@ app.get('/api/reports', async (req, res) => {
 // Get report stats (total count)
 app.get('/api/reports/stats', async (req, res) => {
     try {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         
