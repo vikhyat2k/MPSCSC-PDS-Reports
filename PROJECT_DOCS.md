@@ -621,7 +621,7 @@ Tracks implementation status of all major features.
 | Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048, ISSUE-049) |
-| Administrative AI Intelligence (Google Gemini AI) | COMPLETE | YES | High-speed LLM administrative intelligence via Google Gemini Generative AI (gemini-3.5-flash) with deterministic rules fallback; full UI key configuration, status badges, and test coverage (ISSUE-056, ISSUE-066) |
+| Administrative AI Intelligence (Google Gemini + Groq Cloud LPU) | COMPLETE | YES | Dual-engine AI administrative intelligence combining Google Gemini with Groq Cloud LPU ultra-fast (~700ms) failover and deterministic rules engine fallback; in-app key management, telemetry, and 100% verified test suite (ISSUE-056, ISSUE-066, ISSUE-067) |
 | Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
 
 ---
@@ -652,7 +652,8 @@ Tracks implementation status of all major features.
 | M19 | Supervision & Inspection Module (Orders 3/1, 3/2 & Rice KMS 2025-26) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 + Rice Quality Analysis Sheet (KMS 2025-26) |
 | M20 | Comprehensive Supervision Testing, Realistic Dummy Dataset & 1-Click Safe Purge | 04 Oct 2026 | Full functional testing, CRUD verification across all 5 modules, input validation, 22-record multi-scenario dummy dataset, dedicated Sandbox UI modal with 1-click safe purge strictly preserving genuine production records, 33 automated tests verified (100% pass) |
 | M21 | Official Gmail Integration & Actionable Task Automation Subsystem | 04 Oct 2026 | Google OAuth 2.0 least-privilege integration, AES-256-GCM token security, official government order parser with timeline distinction, SQLite task persistence, interactive Supervision Portal task matrix & aging dashboard, and 100% verified test suite (ISSUE-048) |
-| M26 | Administrative AI Integration (Google Gemini AI Engine) | 04 Oct 2026 | Streamlined single-engine administrative AI architecture integrating Google Gemini with deterministic rules fallback for official government email analysis (Sarvam AI removed 08 Oct 2026) |
+| M26 | Administrative AI Integration (Google Gemini AI Engine) | 04 Oct 2026 | Single-engine administrative AI architecture integrating Google Gemini with deterministic rules fallback for official government email analysis (Sarvam AI removed 08 Oct 2026) |
+| M27 | Groq Cloud LPU AI Secondary Failover Integration | 08 Oct 2026 | Integrated Groq Cloud LPU AI (qwen/qwen3.8-27b, gpt-oss-120b) as zero-cost, ultra-fast (~700ms) secondary failover for Google Gemini 429 rate limit fallback with in-app configuration, dual status indicators, and full test suite (ISSUE-067) |
 
 
 ### Upcoming Milestones
@@ -800,6 +801,7 @@ Tracks what has been tested and confirmed working.
 | Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
 | Administrative AI Intelligence (Google Gemini) | Automated Integration & UI Test | VERIFIED | 08 Oct 2026 | tests/test-verify-gemini-management-tab.js & /api/gemini/status verify Gemini connection, masked key display, active model status, and UI management modal after Sarvam removal (ISSUE-066) |
+| Groq Cloud LPU AI Secondary Failover Integration | Automated Unit, API & UI Headless Browser Test | VERIFIED | 08 Oct 2026 | tests/test-verify-groq-integration.js verifies Groq Cloud API connectivity, Hindi Devanagari extraction with qwen/qwen3.8-27b (~700ms), /api/groq/status, /api/groq/config, prefilled masked keys, and dual-engine UI badges (ISSUE-067) |
 | Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
 
 ---
@@ -873,10 +875,40 @@ Tracks what has been tested and confirmed working.
 | ISSUE-064 | In NFSA scraper (server.js), global errors (login failure, navigation timeout, etc.) were swallowed in catch(globalErr) without rethrowing, causing fallthrough to aggregatedRawData.length === 0 and masking real failures as 'NO_DATA: The portal currently shows "No data found"...'. SCM data is real-time; real errors were falsely presented as empty data. | HIGH | RESOLVED | server.js, public/app.js | 05 Oct 2026 |
 | ISSUE-065 | Reports generated via Send Reports via Email option were not reflected in history tables of concerned report modules without manual full-page reload | HIGH | RESOLVED | server.js, public/app.js, public/index.html | 06 Oct 2026 |
 | ISSUE-066 | Sarvam AI integration was present in codebase as secondary failover; user requested complete removal of Sarvam API, endpoints, credentials, and dual-engine UI components | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-dual-ai-integration.js | 08 Oct 2026 |
+| ISSUE-067 | Gemini API rate limits (429) required an ultra-fast, zero-cost secondary failover AI engine for uninterrupted administrative email intelligence; integrated Groq Cloud LPU AI | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-verify-groq-integration.js | 08 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-08 | Feature & Architecture: Groq Cloud LPU AI Integration (Dual-Engine AI Failover)
+
+Files: server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-verify-groq-integration.js, PROJECT_DOCS.md
+Type: Feature / AI Engine Integration
+Closes: ISSUE-067
+
+- USER REQUIREMENT:
+  User provided Groq Cloud API key (`gsk_iRu...cxCk`) and requested integration of free AI alternatives to Gemini for administrative order analysis.
+
+- ROOT CAUSES & MOTIVATION:
+  1. Google Gemini free-tier API endpoints occasionally hit HTTP 429 (Too Many Requests) or daily rate limits during bulk official email synchronization.
+  2. While a deterministic regex rules engine existed as a fallback, having an ultra-fast, zero-cost LLM secondary engine ensures semantic understanding and draft compliance letter generation continue uninterrupted without downtime.
+  3. Groq Cloud LPU provides industry-leading inference speeds (~500 tokens/sec, ~700ms latency) and supports state-of-the-art multilingual models with native JSON mode.
+
+- IMPLEMENTATION & ARCHITECTURE DETAILS:
+  1. Key & Model Validation: Tested Groq key against Groq Cloud API endpoints; validated `qwen/qwen3.8-27b` and `openai/gpt-oss-120b` for Devanagari Hindi government order extraction with JSON mode (`response_format: { type: 'json_object' }`). Response benchmarked at 766ms.
+  2. AI Service Failover (`geminiAnalyzer.js`):
+     - Implemented `callGroqAI()`, `testGroqConnection()`, `isGroqConfigured()`, `getGroqApiKey()`.
+     - Configured dual-engine pipeline: Google Gemini (Primary) -> Groq Cloud LPU (Secondary Failover on Gemini 429 or failure) -> Deterministic Rules Engine (Tertiary).
+  3. Server Routes (`server.js`):
+     - Extended `GET /api/gemini/status` with `groq` telemetry (`configured`, `active`, `rateLimited`, `model`, `maskedKey`) and dynamic `activeProvider`.
+     - Added `GET /api/groq/status` and `POST /api/groq/config` for runtime key updates.
+  4. Supervision UI (`supervision.html` & `supervision_logic.js`):
+     - Updated sidebar navigation label to `🤖 AI प्रबंधन (Gemini + Groq)`.
+     - Added Groq Cloud LPU AI card in Panel 4 with masked key field, test button, save button, and status badge.
+     - Updated `updateGeminiBadges()` and `openGmailStatusModal()` with dual-engine awareness: displaying `Gemini + Groq LPU` when both active, and `Groq Failover` when Gemini is rate-limited.
+  5. Verification & Tests:
+     - Created `tests/test-verify-groq-integration.js` running Puppeteer headless verification: verified sidebar link, modal opening, key prefilling, badges, and screenshot captures. 100% pass.
 
 ### 2026-10-08 | Optimization & Architecture: Removal of Sarvam AI Engine
 

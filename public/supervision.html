@@ -939,6 +939,10 @@
                             <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">शासकीय ईमेल से प्राप्त आदेशों का स्वतः अनुश्रवण, पत्र क्रमांक निष्कर्षण, समय-सीमा निर्धारण एवं टी.एल. अनुपालन प्रणाली</div>
                         </div>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerEmailAiAnalysis()" id="btnHeaderAiAnalysis" style="background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:#ffffff; border:none; font-weight:700; display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(99,102,241,0.3); padding:6px 14px;" title="शासकीय ईमेल का Gemini + Groq AI से संपूर्ण विश्लेषण एवं सिंक करें">
+                                <span id="headerAiSpinner" style="display:none;">⏳</span>
+                                <span>⚡ ईमेल AI विश्लेषण (AI Analysis of Mails)</span>
+                            </button>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="syncGmailOrders()" id="btnSyncGmail" title="Gmail से नए आदेश प्राप्त करें">
                                 <span id="syncSpinner" style="display:none;">⏳</span> 🔄 ईमेल सिंक करें
                             </button>
@@ -976,10 +980,14 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerEmailAiAnalysis()" id="btnBannerAiAnalysis" style="font-size:12px; font-weight:700; padding:7px 16px; display:flex; align-items:center; gap:6px; background:linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border:none; box-shadow:0 2px 10px rgba(99,102,241,0.35); color:#ffffff; cursor:pointer;" title="शासकीय ईमेल का Gemini + Groq AI द्वारा गहन विश्लेषण एवं सिंक करें">
+                                <span id="bannerAiSpinner" style="display:none;">⏳</span>
+                                <span>⚡ ईमेल AI विश्लेषण करें (AI Analysis of Mails)</span>
+                            </button>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="openSyncSettingsModal()" style="font-size:12px; font-weight:600; padding:7px 12px; display:flex; align-items:center; gap:4px; border:1px solid rgba(245,158,11,0.4); color:#fbbf24; background:rgba(245,158,11,0.12);" title="ईमेल सिंक सीमाएं एवं आवधिकता कॉन्फ़िगर करें">
                                 ⚙️ Sync सेटिंग्स
                             </button>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="openGeminiModal()" style="font-size:12px; font-weight:600; padding:7px 14px; display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(99,102,241,0.25);" title="Google Gemini व Groq Cloud LPU AI इंजन प्रबंधित करें">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openGeminiModal()" style="font-size:12px; font-weight:600; padding:7px 14px; display:flex; align-items:center; gap:6px; border:1px solid rgba(99,102,241,0.4); background:rgba(99,102,241,0.12); color:#818cf8;" title="Google Gemini व Groq Cloud LPU AI इंजन प्रबंधित करें">
                                 🤖 AI प्रबंधन (Gemini + Groq)
                             </button>
                         </div>
@@ -1863,7 +1871,19 @@
                             <div style="font-weight:700; font-size:11.5px; color:#fb923c;">⚡ अति-तीव्र: Groq Cloud LPU</div>
                             <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">qwen3.8-27b (~700ms 429 Failover)</div>
                         </div>
+                </div>
+
+                <!-- 1-Click Action: Run AI Analysis on Mails -->
+                <div style="background:linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <div style="font-weight:700; font-size:12.5px; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                            <span>⚡</span> <span>शासकीय ईमेल का AI विश्लेषण चलाएं (Run AI Analysis of Mails)</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">नवीन ईमेल सिंक करके Gemini व Groq AI द्वारा प्राथमिकता, पत्र क्रमांक व पालन प्रतिवेदन तुरंत तैयार करेगा।</div>
                     </div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="triggerEmailAiAnalysis(); closeModal('modalGmailStatus');" id="btnModalTriggerAi" style="font-weight:700; padding:8px 16px; background:linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border:none; box-shadow:0 2px 8px rgba(99,102,241,0.35);">
+                        ⚡ अभी AI विश्लेषण चलाएं (Analyze Mails Now)
+                    </button>
                 </div>
 
                 <!-- Primary Engine: Google Gemini AI -->

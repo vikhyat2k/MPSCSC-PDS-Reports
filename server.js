@@ -4811,6 +4811,169 @@ app.get('/api/tasks/:id/draft-compliance', async (req, res) => {
     }
 });
 
+app.post('/api/gmail/analyze-ai', async (req, res) => {
+    try {
+        const activeAccount = await gmailService.getActiveAccount(db);
+        let syncResult = { checked: 0, actionableCreated: 0 };
+
+        // 1. Sync recent emails from Gmail if account is connected
+        if (activeAccount) {
+            try {
+                let syncOptions = { ...(req.body || {}) };
+                if (!syncOptions.maxResults) {
+                    const manLimitVal = await db.getSetting('sync_limit_manual').catch(() => null);
+                    syncOptions.maxResults = Math.min(parseInt(manLimitVal) || 20, 500);
+                }
+                if (!syncOptions.query) {
+                    const timeWindowVal = await db.getSetting('sync_time_window_days').catch(() => null);
+                    const days = Math.min(parseInt(timeWindowVal) || 14, 365);
+                    syncOptions.query = `newer_than:${days}d`;
+                }
+                syncResult = await gmailService.syncOfficialEmails(db, syncOptions);
+            } catch (syncErr) {
+                console.warn('⚠️ Gmail sync warning during AI analysis:', syncErr.message);
+            }
+        }
+
+        // 2. Perform deep AI Analysis on tasks (both newly synced and existing)
+        let tasksAnalyzed = 0;
+        if (geminiAnalyzer.isConfigured()) {
+            const tasksToProcess = await db.all(`
+                SELECT id, letter_ref_no, letter_date, issuing_authority, subject, 
+                       task_description, draft_compliance_response, assigned_section, 
+                       priority, due_date, ai_powered
+                FROM supervision_tasks 
+                ORDER BY created_at DESC 
+                LIMIT 30
+            `);
+
+            for (const task of tasksToProcess) {
+                // If force requested or task lacks full AI analysis or draft compliance
+                if (req.body?.force || !task.ai_powered || !task.draft_compliance_response) {
+                    try {
+                        const aiAnalysis = await geminiAnalyzer.analyzeOfficialEmail({
+                            subject: task.subject,
+                            sender: task.issuing_authority,
+                            date: task.letter_date,
+                            body: task.task_description
+                        });
+
+                        if (aiAnalysis) {
+                            const newPriority = aiAnalysis.priority || task.priority || 'MEDIUM';
+                            const newSection = aiAnalysis.assignedSection || task.assigned_section || 'PDS';
+                            const newDraft = aiAnalysis.draftComplianceResponse || task.draft_compliance_response || '';
+                            const newLetterRef = (aiAnalysis.letterRefNo && aiAnalysis.letterRefNo !== 'उल्लेख नहीं') 
+                                ? aiAnalysis.letterRefNo 
+                                : task.letter_ref_no;
+                            const newDueDate = aiAnalysis.dueDate || task.due_date;
+                            const newTimeline = aiAnalysis.suggestedTimeline || task.suggested_timeline;
+
+                            await db.run(`
+                                UPDATE supervision_tasks 
+                                SET priority = ?, 
+                                    assigned_section = ?, 
+                                    draft_compliance_response = ?, 
+                                    letter_ref_no = ?, 
+                                    due_date = ?, 
+                                    suggested_timeline = ?,
+                                    ai_powered = 1, 
+                                    ai_priority_reason = ?,
+                                    updated_at = CURRENT_TIMESTAMP
+                                WHERE id = ?
+                            `, [
+                                newPriority,
+                                newSection,
+                                newDraft,
+                                newLetterRef,
+                                newDueDate,
+                                newTimeline,
+                                aiAnalysis.priorityReason || 'AI विश्लेषण द्वारा अद्यतन',
+                                task.id
+                            ]);
+                            tasksAnalyzed++;
+                        }
+                    } catch (taskAiErr) {
+                        console.warn(`⚠️ Error analyzing task ${task.id}:`, taskAiErr.message);
+                    }
+                }
+            }
+        }
+
+        const activeAI = geminiAnalyzer.isGeminiConfigured() 
+            ? 'Google Gemini AI (gemini-3.5-flash)' 
+            : (geminiAnalyzer.isGroqConfigured() ? 'Groq Cloud LPU AI (qwen/qwen3.8-27b)' : 'Rules Engine');
+
+        res.json({
+            success: true,
+            message: `शासकीय ईमेल का AI विश्लेषण सफलतापूर्वक संपन्न!`,
+            syncedEmails: syncResult.checked || 0,
+            actionableCreated: syncResult.actionableCreated || 0,
+            tasksAnalyzed,
+            aiEngine: activeAI
+        });
+    } catch (err) {
+        console.error('Email AI Analysis failed:', err);
+        res.status(500).json({ error: 'AI विश्लेषण विफल: ' + err.message });
+    }
+});
+
+app.post('/api/tasks/analyze-ai', (req, res) => res.redirect(307, '/api/gmail/analyze-ai'));
+
+app.post('/api/tasks/:id/reanalyze', async (req, res) => {
+    try {
+        const task = await db.get('SELECT * FROM supervision_tasks WHERE id = ?', [req.params.id]);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
+
+        if (!geminiAnalyzer.isConfigured()) {
+            return res.status(400).json({ error: 'कोई AI इंजन (Gemini या Groq) कॉन्फ़िगर नहीं है।' });
+        }
+
+        const aiAnalysis = await geminiAnalyzer.analyzeOfficialEmail({
+            subject: task.subject,
+            sender: task.issuing_authority,
+            date: task.letter_date,
+            body: task.task_description
+        });
+
+        if (!aiAnalysis) {
+            return res.status(500).json({ error: 'AI इंजन से विश्लेषण प्राप्त नहीं हुआ।' });
+        }
+
+        await db.run(`
+            UPDATE supervision_tasks 
+            SET priority = ?, 
+                assigned_section = ?, 
+                draft_compliance_response = ?, 
+                letter_ref_no = ?, 
+                due_date = ?, 
+                suggested_timeline = ?,
+                ai_powered = 1, 
+                ai_priority_reason = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `, [
+            aiAnalysis.priority || task.priority,
+            aiAnalysis.assignedSection || task.assigned_section,
+            aiAnalysis.draftComplianceResponse || task.draft_compliance_response,
+            (aiAnalysis.letterRefNo && aiAnalysis.letterRefNo !== 'उल्लेख नहीं') ? aiAnalysis.letterRefNo : task.letter_ref_no,
+            aiAnalysis.dueDate || task.due_date,
+            aiAnalysis.suggestedTimeline || task.suggested_timeline,
+            aiAnalysis.priorityReason || 'AI विश्लेषण द्वारा अद्यतन',
+            task.id
+        ]);
+
+        const updated = await db.get('SELECT * FROM supervision_tasks WHERE id = ?', [req.params.id]);
+        res.json({
+            success: true,
+            message: 'कार्य का AI विश्लेषण सफलतापूर्वक संपन्न!',
+            task: updated,
+            modelUsed: aiAnalysis.modelUsed
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Periodic background polling worker for official orders (every 5 minutes)
 cron.schedule('*/5 * * * *', async () => {
     try {

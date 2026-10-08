@@ -2919,6 +2919,9 @@ function renderTasksTable(tasks) {
                                 🗑️
                             </button>
                         </div>
+                        <button type="button" class="btn btn-secondary btn-sm" style="width:100%; font-size:10px; padding:2px 4px; color:#818cf8; border-color:rgba(99,102,241,0.3); background:rgba(99,102,241,0.06); font-weight:600;" onclick="reanalyzeSingleTask('${t.id}')" title="इस आदेश का AI विश्लेषण करें">
+                            🤖 AI विश्लेषण
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -3259,9 +3262,14 @@ async function viewTaskDetails(taskId) {
 
         const linkUrl = task.source_email_url || `https://mail.google.com/mail/u/0/#inbox/${task.gmail_message_id}`;
         document.getElementById('taskDetailEmailLinkContainer').innerHTML = `
-            <a href="${linkUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                📨 Gmail में मूल पत्र खोलें (Open Email)
-            </a>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <a href="${linkUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                    📨 Gmail में मूल पत्र खोलें (Open Email)
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="reanalyzeSingleTask('${task.id}')" style="display:inline-flex; align-items:center; gap:4px; color:#818cf8; border-color:rgba(99,102,241,0.4); background:rgba(99,102,241,0.08); font-weight:600;" title="इस आदेश का AI द्वारा पुनः विश्लेषण करें">
+                    🤖 AI पुनः विश्लेषण (Re-analyze)
+                </button>
+            </div>
         `;
 
         openModal('modalTaskDetail');
@@ -4322,6 +4330,76 @@ async function saveGroqApiKeyUI() {
         }
     }
 }
+
+// ── Email AI Analysis Handlers (Dual Engine: Gemini + Groq) ──
+
+async function triggerEmailAiAnalysis() {
+    const btnHeader = document.getElementById('btnHeaderAiAnalysis');
+    const btnBanner = document.getElementById('btnBannerAiAnalysis');
+    const spinnerHeader = document.getElementById('headerAiSpinner');
+    const spinnerBanner = document.getElementById('bannerAiSpinner');
+
+    if (btnHeader) {
+        btnHeader.disabled = true;
+        btnHeader.classList.add('loading');
+    }
+    if (btnBanner) {
+        btnBanner.disabled = true;
+        btnBanner.classList.add('loading');
+    }
+    if (spinnerHeader) spinnerHeader.style.display = 'inline';
+    if (spinnerBanner) spinnerBanner.style.display = 'inline';
+
+    try {
+        const res = await fetch('/api/gmail/analyze-ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ force: true })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            await loadSupervisionTasks();
+            await updateGeminiBadges();
+            alert(`✅ ${data.message}\n\n• जाँचे गए ईमेल: ${data.syncedEmails}\n• नए निर्मित कार्य: ${data.actionableCreated}\n• AI विश्लेषित कार्य: ${data.tasksAnalyzed}\n• सक्रिय AI इंजन: ${data.aiEngine}`);
+        } else {
+            alert('AI विश्लेषण विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    } finally {
+        if (btnHeader) {
+            btnHeader.disabled = false;
+            btnHeader.classList.remove('loading');
+        }
+        if (btnBanner) {
+            btnBanner.disabled = false;
+            btnBanner.classList.remove('loading');
+        }
+        if (spinnerHeader) spinnerHeader.style.display = 'none';
+        if (spinnerBanner) spinnerBanner.style.display = 'none';
+    }
+}
+
+async function reanalyzeSingleTask(taskId) {
+    if (!confirm('क्या आप इस शासकीय आदेश का AI इंजन (Gemini/Groq) द्वारा गहन पुनः विश्लेषण करना चाहते हैं?')) return;
+    try {
+        const res = await fetch(`/api/tasks/${taskId}/reanalyze`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ आदेश ${taskId} का AI विश्लेषण पूर्ण!\n\n• मॉडल: ${data.modelUsed || 'AI'}\n• प्राथमिकता: ${data.task.priority}\n• शाखा: ${data.task.assigned_section}\n• संदर्भ क्र.: ${data.task.letter_ref_no}`);
+            await loadSupervisionTasks();
+            if (document.getElementById('modalTaskDetail')?.classList.contains('open')) {
+                await openTaskDetailModal(taskId);
+            }
+        } else {
+            alert('AI विश्लेषण विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (err) {
+        alert('सर्वर त्रुटि: ' + err.message);
+    }
+}
+
 
 
 
