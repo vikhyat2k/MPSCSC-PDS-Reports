@@ -3797,17 +3797,67 @@ async function openGmailStatusModal(initialTab = null) {
             txtKey.value = geminiData.maskedKey;
         }
 
-        // 2. AI Pipeline Header Pill
+        // Groq AI Status badge & key input
+        const groqBadge = document.getElementById('groqStatusBadge');
+        const txtGroqKey = document.getElementById('txtGroqApiKey');
+        const groqData = geminiData.groq || {};
+        const isGroqActive = Boolean(groqData.active);
+        const groqModel = groqData.model || 'qwen/qwen3.8-27b';
+
+        if (groqBadge) {
+            if (isGroqActive) {
+                groqBadge.className = 'superv-badge badge-success';
+                groqBadge.style.background = 'rgba(249,115,22,0.15)';
+                groqBadge.style.color = '#ea580c';
+                groqBadge.style.border = '1px solid rgba(249,115,22,0.3)';
+                groqBadge.textContent = `सक्रिय (Active: ${groqModel})`;
+            } else if (groqData.rateLimited) {
+                groqBadge.className = 'superv-badge badge-warning';
+                groqBadge.textContent = `दर सीमा (429 Rate Limit)`;
+            } else if (groqData.configured) {
+                groqBadge.className = 'superv-badge badge-warning';
+                groqBadge.textContent = `अपुष्ट (Unverified)`;
+            } else {
+                groqBadge.className = 'superv-badge';
+                groqBadge.textContent = `असंरचित (Setup Required)`;
+            }
+        }
+        if (txtGroqKey && !txtGroqKey.value && groqData.maskedKey) {
+            txtGroqKey.value = groqData.maskedKey;
+        }
+
+        // 2. AI Pipeline Header Pill (Dual AI Awareness)
         const pillGemini = document.getElementById('headerPillGemini');
         if (pillGemini) {
-            if (isGeminiActive) {
+            if (isGeminiActive && isGroqActive) {
                 pillGemini.className = 'superv-badge badge-success';
+                pillGemini.style.background = '';
+                pillGemini.style.color = '';
+                pillGemini.textContent = `🤖 Gemini + Groq AI: सक्रिय`;
+            } else if (isGeminiActive) {
+                pillGemini.className = 'superv-badge badge-success';
+                pillGemini.style.background = '';
+                pillGemini.style.color = '';
                 pillGemini.textContent = `🤖 Gemini AI: सक्रिय (${geminiModel})`;
+            } else if (geminiData.rateLimited && isGroqActive) {
+                pillGemini.className = 'superv-badge';
+                pillGemini.style.background = 'rgba(249,115,22,0.15)';
+                pillGemini.style.color = '#ea580c';
+                pillGemini.textContent = `⚡ Groq LPU AI: सक्रिय (429 Failover)`;
+            } else if (isGroqActive) {
+                pillGemini.className = 'superv-badge';
+                pillGemini.style.background = 'rgba(249,115,22,0.15)';
+                pillGemini.style.color = '#ea580c';
+                pillGemini.textContent = `⚡ Groq AI: सक्रिय (${groqModel})`;
             } else if (geminiData.rateLimited) {
                 pillGemini.className = 'superv-badge badge-warning';
+                pillGemini.style.background = '';
+                pillGemini.style.color = '';
                 pillGemini.textContent = `⚠️ Gemini AI: दर सीमा (Rate Limit)`;
             } else {
                 pillGemini.className = 'superv-badge badge-warning';
+                pillGemini.style.background = '';
+                pillGemini.style.color = '';
                 pillGemini.textContent = `🤖 AI इंजन: असंरचित`;
             }
         }
