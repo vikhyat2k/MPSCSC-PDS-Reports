@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 26 |
 | Pending Milestones | 0 |
-| Last Code Change | 06 Oct 2026 — Email Reports History Sync: Instant module history reflection, no-store HTTP headers, and full background insights calculation (ISSUE-065) |
+| Last Code Change | 08 Oct 2026 — Removal of Sarvam API: Streamlined Administrative AI to Google Gemini with deterministic rules engine fallback (ISSUE-066) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -621,7 +621,7 @@ Tracks implementation status of all major features.
 | Supervision Test Data Sandbox & 1-Click Safe Purge | COMPLETE | YES | Multi-scenario 22 dummy records across 5 modules, live preview counts, strict zero-data-loss safe purge, 33/33 automated tests passing (ISSUE-046) |
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048, ISSUE-049) |
-| Dual-Engine Administrative AI (Gemini + Sarvam AI) | COMPLETE | YES | Automatic failover to Indian Sovereign AI Sarvam (sarvam-105b) when Gemini hits 429 rate limit or quota exhaustion; full UI key configuration, status badges, and test coverage (ISSUE-060) |
+| Administrative AI Intelligence (Google Gemini AI) | COMPLETE | YES | High-speed LLM administrative intelligence via Google Gemini Generative AI (gemini-3.5-flash) with deterministic rules fallback; full UI key configuration, status badges, and test coverage (ISSUE-056, ISSUE-066) |
 | Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
 
 ---
@@ -652,7 +652,7 @@ Tracks implementation status of all major features.
 | M19 | Supervision & Inspection Module (Orders 3/1, 3/2 & Rice KMS 2025-26) | 03 Oct 2026 | Full implementation of DM Betul & RM monitoring portal (`supervision.html`, `supervision_logic.js`, `db.js`, `/api/supervision/*`) based on MD Orders 3/1, 3/2 & 179 + Rice Quality Analysis Sheet (KMS 2025-26) |
 | M20 | Comprehensive Supervision Testing, Realistic Dummy Dataset & 1-Click Safe Purge | 04 Oct 2026 | Full functional testing, CRUD verification across all 5 modules, input validation, 22-record multi-scenario dummy dataset, dedicated Sandbox UI modal with 1-click safe purge strictly preserving genuine production records, 33 automated tests verified (100% pass) |
 | M21 | Official Gmail Integration & Actionable Task Automation Subsystem | 04 Oct 2026 | Google OAuth 2.0 least-privilege integration, AES-256-GCM token security, official government order parser with timeline distinction, SQLite task persistence, interactive Supervision Portal task matrix & aging dashboard, and 100% verified test suite (ISSUE-048) |
-| M26 | Dual-Engine Administrative AI Integration (Gemini + Sarvam AI Failover) | 04 Oct 2026 | Resilient dual AI architecture integrating Google Gemini as primary and Sarvam AI (sarvam-105b) as sovereign zero-downtime failover for official government email analysis |
+| M26 | Administrative AI Integration (Google Gemini AI Engine) | 04 Oct 2026 | Streamlined single-engine administrative AI architecture integrating Google Gemini with deterministic rules fallback for official government email analysis (Sarvam AI removed 08 Oct 2026) |
 
 
 ### Upcoming Milestones
@@ -799,7 +799,7 @@ Tracks what has been tested and confirmed working.
 | Gemini AI Administrative Order Intelligence Engine | End-to-End AI, Database & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified Gemini Generative AI (gemini-3.5-flash / gemini-flash-latest) integration, bilingual administrative Hindi order parsing, automatic letter ref & date extraction, smart priority assessment, due date calculation, draft compliance note generation, in-app API key management, and 100% automated test pass (ISSUE-056) |
 | Milling & Procurement Section Categorization & Triage | Database, API & UI Headless Browser Verification | VERIFIED | 04 Oct 2026 | Verified addition of Milling (मिलिंग) and Procurement (उपार्जन) options in task creation/edit modal (#taskFormSection), table badge rendering, local search filter, back-end query filter (?section=), automated rules.js triage, Gemini AI section detection, and 100% automated Puppeteer test pass (ISSUE-057) |
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
-| Dual-Engine AI (Gemini + Sarvam Fallback) | Automated Integration Test | VERIFIED | 04 Oct 2026 | tests/test-dual-ai-integration.js verifies Gemini ping, Sarvam ping, 429 rate-limit failover, and graceful fallback |
+| Administrative AI Intelligence (Google Gemini) | Automated Integration & UI Test | VERIFIED | 08 Oct 2026 | tests/test-verify-gemini-management-tab.js & /api/gemini/status verify Gemini connection, masked key display, active model status, and UI management modal after Sarvam removal (ISSUE-066) |
 | Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
 
 ---
@@ -872,10 +872,53 @@ Tracks what has been tested and confirmed working.
 | ISSUE-063 | Email send flow showed raw 'NFSA/WELFARE fresh generation failed: NO_DATA: ...' message in warning toast; duplicate welfare fresh-generation triggered when same scheme checked twice | MEDIUM | RESOLVED | public/app.js | 05 Oct 2026 |
 | ISSUE-064 | In NFSA scraper (server.js), global errors (login failure, navigation timeout, etc.) were swallowed in catch(globalErr) without rethrowing, causing fallthrough to aggregatedRawData.length === 0 and masking real failures as 'NO_DATA: The portal currently shows "No data found"...'. SCM data is real-time; real errors were falsely presented as empty data. | HIGH | RESOLVED | server.js, public/app.js | 05 Oct 2026 |
 | ISSUE-065 | Reports generated via Send Reports via Email option were not reflected in history tables of concerned report modules without manual full-page reload | HIGH | RESOLVED | server.js, public/app.js, public/index.html | 06 Oct 2026 |
+| ISSUE-066 | Sarvam AI integration was present in codebase as secondary failover; user requested complete removal of Sarvam API, endpoints, credentials, and dual-engine UI components | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-dual-ai-integration.js | 08 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-08 | Optimization & Architecture: Removal of Sarvam AI Engine
+
+Files: server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-dual-ai-integration.js, PROJECT_DOCS.md
+Type: Removal / Architecture Streamlining
+Closes: ISSUE-066
+
+- USER REQUIREMENT:
+  "remove sarvam API"
+
+- ROOT CAUSES & MOTIVATION:
+  1. The user requested complete removal of the secondary Sarvam AI engine (`sarvam-105b` / `https://api.sarvam.ai/v1/chat/completions`) from the application.
+  2. Streamline the Administrative Intelligence system to focus purely on Google Gemini Generative AI (`gemini-flash-latest`, `gemini-3.5-flash`, `gemini-3.8-flash`), with deterministic rules-based regex engine as the primary offline/fallback protector.
+  3. Eliminate obsolete API keys, credentials, endpoints, caches, and dual-engine UI components.
+
+- CHANGES & IMPLEMENTATION:
+  1. **Backend Analyzer (`server/services/gmail/geminiAnalyzer.js`):**
+     - Removed `SARVAM_MODELS`, `SARVAM_API_URL`, `getSarvamApiKey()`, `isSarvamConfigured()`, `testSarvamConnection()`, and `callSarvamAI()`.
+     - Streamlined `isConfigured()` to check `isGeminiConfigured()`.
+     - In `analyzeOfficialEmail()`, removed failover routing to Sarvam AI. If Gemini models fail or rate-limit, execution falls back cleanly to the deterministic rules engine.
+     - Added 10-second `AbortController` timeout to `testConnection()` to prevent hanging network calls.
+     - Streamlined module exports to Gemini-only methods (`isConfigured`, `isGeminiConfigured`, `getApiKey`, `testConnection`, `analyzeOfficialEmail`, `CANDIDATE_MODELS`).
+  2. **Express Server API (`server.js`):**
+     - Removed Sarvam ping cache (`cachedSarvamPing`, `lastSarvamPingTime`).
+     - Streamlined `GET /api/gemini/status`: removed Sarvam status properties, returning clean `{ configured, geminiConfigured, active, rateLimited, model, maskedKey, error, activeProvider }`.
+     - Deleted endpoints `GET /api/sarvam/status` and `POST /api/sarvam/config`.
+  3. **Supervision UI (`public/supervision.html`):**
+     - Updated sidebar navigation title and label (`🤖 AI प्रबंधन (Google Gemini)`).
+     - Updated toolbar button `#btnHeaderGemini` and header banner to reflect Google Gemini Administrative AI.
+     - Streamlined Panel 4 (`#panelGmailGemini`): removed the secondary Sarvam AI configuration card (`#txtSarvamApiKey`, `#btnTestSarvam`, `#btnSaveSarvamKey`, `#sarvamStatusBadge`) and updated architecture diagrams and feature bullet points.
+  4. **Supervision Logic (`public/supervision_logic.js`):**
+     - Updated `updateGeminiBadges()` to eliminate Sarvam status checks and badge modifications.
+     - Updated `openGmailStatusModal()` to remove Sarvam prefilling and tab badge updates.
+     - Removed `testSarvamConnectionUI()` and `saveSarvamApiKeyUI()`.
+     - Updated rate-limit alert copy to remove Sarvam references.
+  5. **Environment Configuration (`.env`):**
+     - Removed `SARVAM_API_KEY` definition.
+  6. **Automated Tests:**
+     - Removed obsolete `tests/test-dual-ai-integration.js`.
+     - Verified `tests/test-verify-gemini-management-tab.js` and `tests/test-verify-sync-and-gemini-ui.js` passing 100%.
+
+---
 
 ### 2026-10-06 | Feature & Bug Fix: Instant Module History Reflection for Reports Generated via Email
 

@@ -4632,15 +4632,11 @@ const geminiAnalyzer = require('./server/services/gmail/geminiAnalyzer');
 
 let cachedGeminiPing = null;
 let lastGeminiPingTime = 0;
-let cachedSarvamPing = null;
-let lastSarvamPingTime = 0;
 
 app.get('/api/gemini/status', async (req, res) => {
     try {
         const isGeminiConf = geminiAnalyzer.isGeminiConfigured();
-        const isSarvamConf = geminiAnalyzer.isSarvamConfigured();
         let pingResult = { ok: false };
-        let sarvamPing = { ok: false };
         const now = Date.now();
 
         // 1. Check Gemini Ping
@@ -4655,51 +4651,18 @@ app.get('/api/gemini/status', async (req, res) => {
             }
         }
 
-        // 2. Check Sarvam Ping
-        if (isSarvamConf) {
-            const sarvamTTL = (cachedSarvamPing && (cachedSarvamPing.quotaExhausted || cachedSarvamPing.rateLimited)) ? 2 * 60 * 1000 : 5 * 60 * 1000;
-            if (cachedSarvamPing && (now - lastSarvamPingTime < sarvamTTL) && req.query.force !== 'true') {
-                sarvamPing = cachedSarvamPing;
-            } else {
-                sarvamPing = await geminiAnalyzer.testSarvamConnection();
-                cachedSarvamPing = sarvamPing;
-                lastSarvamPingTime = now;
-            }
-        }
-
         const rawGeminiKey = process.env.GEMINI_API_KEY || '';
         const maskedKey = rawGeminiKey.length > 8 ? `${rawGeminiKey.substring(0, 6)}...${rawGeminiKey.substring(rawGeminiKey.length - 4)}` : '';
 
-        const rawSarvamKey = process.env.SARVAM_API_KEY || '';
-        const maskedSarvamKey = rawSarvamKey.length > 8 ? `${rawSarvamKey.substring(0, 6)}...${rawSarvamKey.substring(rawSarvamKey.length - 4)}` : '';
-
-        let activeProvider = 'None';
-        if (pingResult.ok) {
-            activeProvider = isSarvamConf ? 'Google Gemini AI (Sarvam Fallback Standby)' : 'Google Gemini AI';
-        } else if (sarvamPing.ok) {
-            activeProvider = 'Sarvam AI (Indian Sovereign AI Fallback)';
-        } else if (pingResult.rateLimited && sarvamPing.quotaExhausted) {
-            activeProvider = 'Both Rate-Limited / Quota Exhausted';
-        }
-
         res.json({
-            configured: isGeminiConf || isSarvamConf,
+            configured: isGeminiConf,
             geminiConfigured: isGeminiConf,
             active: pingResult.ok,
             rateLimited: pingResult.rateLimited || false,
             model: pingResult.model || 'gemini-3.5-flash',
             maskedKey,
             error: pingResult.error || null,
-            sarvam: {
-                configured: isSarvamConf,
-                active: sarvamPing.ok,
-                quotaExhausted: sarvamPing.quotaExhausted || false,
-                rateLimited: sarvamPing.rateLimited || false,
-                model: sarvamPing.model || 'sarvam-105b',
-                maskedKey: maskedSarvamKey,
-                error: sarvamPing.error || null
-            },
-            activeProvider
+            activeProvider: pingResult.ok ? 'Google Gemini AI' : 'None'
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -4729,57 +4692,6 @@ app.post('/api/gemini/config', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'Failed to save Gemini key: ' + err.message });
-    }
-});
-
-app.get('/api/sarvam/status', async (req, res) => {
-    try {
-        const isSarvamConf = geminiAnalyzer.isSarvamConfigured();
-        let pingResult = { ok: false };
-        if (isSarvamConf) {
-            pingResult = await geminiAnalyzer.testSarvamConnection();
-        }
-        const rawKey = process.env.SARVAM_API_KEY || '';
-        const maskedKey = rawKey.length > 8 ? `${rawKey.substring(0, 6)}...${rawKey.substring(rawKey.length - 4)}` : '';
-        res.json({
-            configured: isSarvamConf,
-            active: pingResult.ok,
-            quotaExhausted: pingResult.quotaExhausted || false,
-            rateLimited: pingResult.rateLimited || false,
-            model: pingResult.model || 'sarvam-105b',
-            maskedKey,
-            error: pingResult.error || null
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/sarvam/config', async (req, res) => {
-    try {
-        const { apiKey } = req.body || {};
-        const cleanKey = String(apiKey || '').trim();
-        if (!cleanKey) {
-            return res.status(400).json({ error: 'Sarvam AI API Key अनिवार्य है।' });
-        }
-        const testRes = await geminiAnalyzer.testSarvamConnection(cleanKey);
-        if (!testRes.ok && !testRes.quotaExhausted) {
-            return res.status(400).json({ error: 'Sarvam AI API Key अमान्य है: ' + (testRes.error || 'Connection failed') });
-        }
-        updateEnvFile({ SARVAM_API_KEY: cleanKey });
-        cachedSarvamPing = null;
-        lastSarvamPingTime = 0;
-        console.log(`🇮🇳 Sarvam AI API Key configured via UI (Model: ${testRes.model}, Quota Exhausted: ${Boolean(testRes.quotaExhausted)})`);
-        res.json({
-            success: true,
-            quotaExhausted: testRes.quotaExhausted || false,
-            message: testRes.quotaExhausted
-                ? 'Sarvam AI Key सफलतापूर्वक सुरक्षित कर ली गई है! (सूचना: Sarvam खाते में 0 क्रेडिट उपलब्ध हैं, कृपया dashboard.sarvam.ai पर क्रेडिट रिचार्ज करें)'
-                : 'Sarvam AI फॉलबैक इंजन सफलतापूर्वक सक्रिय हो गया है!',
-            model: testRes.model || 'sarvam-105b'
-        });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to save Sarvam key: ' + err.message });
     }
 });
 

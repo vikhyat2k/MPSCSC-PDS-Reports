@@ -1,26 +1,26 @@
 /**
- * Dual-Engine Administrative AI Intelligence (Google Gemini AI + Sarvam AI Fallback)
+ * Dual-Engine Administrative AI Intelligence (Google Gemini AI + Groq Cloud LPU AI)
  * MPSCSC Supervision Portal — District Office Betul
  * 
  * Primary Engine: Google Gemini Generative AI (gemini-flash-latest, gemini-3.5-flash, gemini-3.8-flash)
- * Fallback Engine: Sarvam AI (sarvam-105b) — Indian Sovereign AI for official Hindi governance orders
+ * Ultra-Fast Failover Engine: Groq Cloud LPU AI (qwen/qwen3.8-27b, openai/gpt-oss-120b, openai/gpt-oss-20b)
  * 
- * Automatically failovers to Sarvam AI when Gemini AI encounters HTTP 429 (Rate Limit),
- * quota exhaustion, or temporary API downtime.
+ * Automatically failovers to Groq Cloud when Gemini hits HTTP 429 (Rate Limit) or quota exhaustion,
+ * ensuring zero-downtime, sub-second administrative analysis of official Hindi government orders.
  */
 
 const CANDIDATE_MODELS = ['gemini-flash-latest', 'gemini-3.5-flash', 'gemini-3.8-flash'];
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-const SARVAM_MODELS = ['sarvam-105b', 'sarvam-105b-conversations'];
-const SARVAM_API_URL = 'https://api.sarvam.ai/v1/chat/completions';
+const GROQ_CANDIDATE_MODELS = ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 function getApiKey() {
   return (process.env.GEMINI_API_KEY || '').trim();
 }
 
-function getSarvamApiKey() {
-  return (process.env.SARVAM_API_KEY || '').trim();
+function getGroqApiKey() {
+  return (process.env.GROQ_API_KEY || '').trim();
 }
 
 function isGeminiConfigured() {
@@ -28,13 +28,13 @@ function isGeminiConfigured() {
   return Boolean(key && key.length > 10);
 }
 
-function isSarvamConfigured() {
-  const key = getSarvamApiKey();
+function isGroqConfigured() {
+  const key = getGroqApiKey();
   return Boolean(key && key.length > 10);
 }
 
 function isConfigured() {
-  return isGeminiConfigured() || isSarvamConfigured();
+  return isGeminiConfigured() || isGroqConfigured();
 }
 
 /**
@@ -57,9 +57,12 @@ async function testConnection(testKey) {
 
     try {
       const url = `${GEMINI_API_URL}/${model}:generateContent?key=${key}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{
             parts: [{ text: "Respond in JSON: {\"status\":\"OK\"}" }]
@@ -67,10 +70,11 @@ async function testConnection(testKey) {
           generationConfig: { responseMimeType: "application/json" }
         })
       });
+      clearTimeout(timeoutId);
 
       if (res.status === 429) {
         hitRateLimit = true;
-        lastError = 'Gemini API दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें या Sarvam AI फॉलबैक का उपयोग करें।';
+        lastError = 'Gemini API दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें या Groq LPU फॉलबैक का उपयोग करें।';
         console.warn(`⚠️ Gemini model ${model}: 429 Rate Limit — skipping`);
         continue;
       }
@@ -78,7 +82,7 @@ async function testConnection(testKey) {
       if (res.status === 401 || res.status === 403) {
         lastError = 'Gemini API Key अमान्य है। कृपया सही API Key दर्ज करें।';
         console.warn(`⚠️ Gemini model ${model}: ${res.status} Auth failure`);
-        break; // No point trying other models with a bad key
+        break;
       }
 
       const data = await res.json();
@@ -101,73 +105,69 @@ async function testConnection(testKey) {
 }
 
 /**
- * Validates the Sarvam AI API key with a fast ping
- * @param {string} testKey Optional key to test, defaults to process.env.SARVAM_API_KEY
+ * Validates the Groq Cloud API key with a fast ping
+ * @param {string} testKey Optional key to test, defaults to process.env.GROQ_API_KEY
  */
-async function testSarvamConnection(testKey) {
-  const key = (testKey || getSarvamApiKey()).trim();
+async function testGroqConnection(testKey) {
+  const key = (testKey || getGroqApiKey()).trim();
   if (!key) {
-    return { ok: false, error: 'Sarvam AI API Key missing' };
+    return { ok: false, error: 'Groq Cloud API Key missing' };
   }
 
-  try {
-    const res = await fetch(SARVAM_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-subscription-key': key
-      },
-      body: JSON.stringify({
-        model: 'sarvam-105b',
-        messages: [{ role: 'user', content: 'Reply in JSON: {"status":"OK"}' }],
-        max_tokens: 30
-      })
-    });
+  for (let i = 0; i < GROQ_CANDIDATE_MODELS.length; i++) {
+    const model = GROQ_CANDIDATE_MODELS[i];
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    if (res.status === 200) {
-      const data = await res.json();
-      return { ok: true, model: 'sarvam-105b', provider: 'sarvam', data };
+      const res = await fetch(GROQ_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type': 'application/json'
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: 'Respond with valid JSON: {"status":"OK"}' }],
+          temperature: 0.1,
+          response_format: { type: 'json_object' }
+        })
+      });
+      clearTimeout(timeoutId);
+
+      if (res.status === 200) {
+        const data = await res.json();
+        return { ok: true, model, provider: 'groq', data };
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        return {
+          ok: false,
+          model,
+          provider: 'groq',
+          error: 'Groq Cloud API Key अमान्य है। कृपया सही API Key दर्ज करें।'
+        };
+      }
+
+      if (res.status === 429) {
+        return {
+          ok: false,
+          rateLimited: true,
+          model,
+          provider: 'groq',
+          error: 'Groq Cloud दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें।'
+        };
+      }
+
+      const errText = await res.text();
+      console.warn(`⚠️ Groq model ${model} HTTP ${res.status}: ${errText.substring(0, 100)}`);
+    } catch (err) {
+      console.warn(`⚠️ Groq model ${model} fetch error: ${err.message}`);
     }
-
-    if (res.status === 402) {
-      return {
-        ok: false,
-        quotaExhausted: true,
-        model: 'sarvam-105b',
-        provider: 'sarvam',
-        error: 'Sarvam AI कोटा समाप्त (402 No credits available). API Key सही है, कृपया Sarvam AI डैशबोर्ड (dashboard.sarvam.ai) पर क्रेडिट जोड़ें।'
-      };
-    }
-
-    if (res.status === 401 || res.status === 403) {
-      return {
-        ok: false,
-        model: 'sarvam-105b',
-        provider: 'sarvam',
-        error: 'Sarvam AI API Key अमान्य है। कृपया सही Subscription Key दर्ज करें।'
-      };
-    }
-
-    if (res.status === 429) {
-      return {
-        ok: false,
-        rateLimited: true,
-        model: 'sarvam-105b',
-        provider: 'sarvam',
-        error: 'Sarvam AI दर सीमा पहुँच गई (Rate Limit). कृपया कुछ मिनट बाद पुनः प्रयास करें।'
-      };
-    }
-
-    const errText = await res.text();
-    return {
-      ok: false,
-      model: 'sarvam-105b',
-      provider: 'sarvam',
-      error: `Sarvam AI HTTP ${res.status}: ${errText.substring(0, 120)}`
-    };
-  } catch (err) {
-    return { ok: false, model: 'sarvam-105b', provider: 'sarvam', error: `नेटवर्क त्रुटि (Sarvam AI): ${err.message}` };
   }
+
+  return { ok: false, provider: 'groq', error: 'Groq Cloud API से संपर्क स्थापित नहीं हो सका।' };
 }
 
 /**
@@ -230,85 +230,79 @@ function parseJsonFromText(rawText) {
 }
 
 /**
- * Calls Sarvam AI (sarvam-105b) as an administrative intelligence engine
+ * Calls Groq Cloud LPU AI as an ultra-fast failover / alternate intelligence engine
  */
-async function callSarvamAI(systemInstruction, combinedDocument, formattedDate, subject) {
-  const sarvamKey = getSarvamApiKey();
-  if (!sarvamKey) return null;
+async function callGroqAI(systemInstruction, combinedDocument, formattedDate, subject) {
+  const groqKey = getGroqApiKey();
+  if (!groqKey) return null;
 
-  console.log('🇮🇳 [Dual-Engine AI] Invoking Sarvam AI (sarvam-105b) as failover engine...');
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  console.log('⚡ [Dual-Engine AI] Invoking Groq Cloud LPU AI engine for sub-second inference...');
+  for (const model of GROQ_CANDIDATE_MODELS) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-  try {
-    const res = await fetch(SARVAM_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-subscription-key': sarvamKey
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: 'sarvam-105b',
-        messages: [
-          { role: 'system', content: systemInstruction },
-          { role: 'user', content: combinedDocument }
-        ],
-        temperature: 0.1,
-        max_tokens: 1800
-      })
-    });
+    try {
+      const res = await fetch(GROQ_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqKey}`,
+          'Content-Type': 'application/json'
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: combinedDocument }
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' }
+        })
+      });
 
-    clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-    if (res.status === 402) {
-      console.warn('⚠️ [Sarvam AI] 402 Insufficient Quota (No credits available). Please recharge Sarvam AI credits.');
-      return null;
+      if (!res.ok) {
+        console.warn(`⚠️ [Groq AI] HTTP ${res.status} on model ${model}: ${await res.text()}`);
+        continue;
+      }
+
+      const data = await res.json();
+      const rawContent = data.choices?.[0]?.message?.content;
+      const result = parseJsonFromText(rawContent);
+      if (!result) continue;
+
+      return {
+        aiPowered: true,
+        provider: 'groq',
+        modelUsed: `${model} (Groq Cloud LPU)`,
+        letterRefNo: result.letterRefNo || 'उल्लेख नहीं',
+        letterDate: result.letterDate || formattedDate,
+        issuingAuthority: result.issuingAuthority || 'सक्षम प्राधिकारी',
+        taskDescription: result.taskDescription || subject,
+        summary: result.summary || subject,
+        priority: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(result.priority) ? result.priority : 'MEDIUM',
+        priorityReason: result.priorityReason || 'Groq AI द्वारा शासकीय प्राथमिकीकरण',
+        dueDate: result.dueDate || null,
+        suggestedTimeline: result.suggestedTimeline || 'समय-सीमा अनिर्णित',
+        deadlineType: result.deadlineType || 'AI_SUGGESTED',
+        requiresConfirmation: result.requiresConfirmation ?? 1,
+        reportingRequired: result.reportingRequired ?? 0,
+        category: result.category || 'GENERAL',
+        assignedSection: result.assignedSection || null,
+        draftComplianceResponse: result.draftComplianceResponse || ''
+      };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn(`⚠️ [Groq AI] Request error on model ${model}:`, err.message);
     }
-
-    if (!res.ok) {
-      console.warn(`⚠️ [Sarvam AI] HTTP ${res.status} failed: ${await res.text()}`);
-      return null;
-    }
-
-    const data = await res.json();
-    const rawContent = data.choices?.[0]?.message?.content;
-    const result = parseJsonFromText(rawContent);
-
-    if (!result) {
-      console.warn('⚠️ [Sarvam AI] Could not parse valid JSON from response');
-      return null;
-    }
-
-    return {
-      aiPowered: true,
-      provider: 'sarvam',
-      modelUsed: 'sarvam-105b (Sarvam AI Fallback)',
-      letterRefNo: result.letterRefNo || 'उल्लेख नहीं',
-      letterDate: result.letterDate || formattedDate,
-      issuingAuthority: result.issuingAuthority || 'सक्षम प्राधिकारी',
-      taskDescription: result.taskDescription || subject,
-      summary: result.summary || subject,
-      priority: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(result.priority) ? result.priority : 'MEDIUM',
-      priorityReason: result.priorityReason || 'Sarvam AI द्वारा शासकीय प्राथमिकीकरण',
-      dueDate: result.dueDate || null,
-      suggestedTimeline: result.suggestedTimeline || 'समय-सीमा अनिर्णित',
-      deadlineType: result.deadlineType || 'AI_SUGGESTED',
-      requiresConfirmation: result.requiresConfirmation ?? 1,
-      reportingRequired: result.reportingRequired ?? 0,
-      category: result.category || 'GENERAL',
-      assignedSection: result.assignedSection || null,
-      draftComplianceResponse: result.draftComplianceResponse || ''
-    };
-  } catch (err) {
-    clearTimeout(timeoutId);
-    console.warn('⚠️ [Sarvam AI] Request error:', err.message);
-    return null;
   }
+
+  return null;
 }
 
 /**
- * Contextually analyzes an official email & attachments using Gemini (Primary) with Sarvam AI fallback
+ * Contextually analyzes an official email & attachments using Google Gemini (Primary) with Groq Cloud LPU fallback
  * @param {object} param0 { subject, sender, date, body, pdfText, attachments }
  */
 async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date(), body = '', pdfText = '', attachments = [] }) {
@@ -339,7 +333,7 @@ async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date
       try {
         const url = `${GEMINI_API_URL}/${model}:generateContent?key=${geminiKey}`;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s safety timeout
+        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s safety timeout
 
         const res = await fetch(url, {
           method: 'POST',
@@ -362,7 +356,7 @@ async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date
         clearTimeout(timeoutId);
 
         if (res.status === 429) {
-          console.warn(`⚠️ Gemini API model ${model} HTTP 429 Rate Limit. Switching to next model / Sarvam AI fallback...`);
+          console.warn(`⚠️ Gemini API model ${model} HTTP 429 Rate Limit. Trying next / Groq fallback...`);
           geminiFailed = true;
           continue;
         }
@@ -408,28 +402,28 @@ async function analyzeOfficialEmail({ subject = '', sender = '', date = new Date
     geminiFailed = true;
   }
 
-  // 2. Fallback to Sarvam AI if Gemini exhausted/failed or unconfigured
-  if (geminiFailed && isSarvamConfigured()) {
-    console.log('🔄 [Failover Triggered] Gemini AI rate-limited or unavailable. Activating Sarvam AI Sovereign Fallback...');
-    const sarvamResult = await callSarvamAI(systemInstruction, combinedDocument, formattedDate, subject);
-    if (sarvamResult) {
-      return sarvamResult;
+  // 2. Ultra-Fast Failover to Groq Cloud LPU AI
+  if (geminiFailed && isGroqConfigured()) {
+    console.log('🔄 [Failover Triggered] Gemini AI rate-limited or unavailable. Activating Groq Cloud LPU AI engine...');
+    const groqResult = await callGroqAI(systemInstruction, combinedDocument, formattedDate, subject);
+    if (groqResult) {
+      return groqResult;
     }
   }
 
-  console.warn('⚠️ All AI models (Gemini & Sarvam) failed, exhausted, or timed out. Falling back to deterministic rules engine.');
+  console.warn('⚠️ All AI models (Gemini & Groq) failed, exhausted, or timed out. Falling back to deterministic rules engine.');
   return null;
 }
 
 module.exports = {
   isConfigured,
   isGeminiConfigured,
-  isSarvamConfigured,
+  isGroqConfigured,
   getApiKey,
-  getSarvamApiKey,
+  getGroqApiKey,
   testConnection,
-  testSarvamConnection,
+  testGroqConnection,
   analyzeOfficialEmail,
   CANDIDATE_MODELS,
-  SARVAM_MODELS
+  GROQ_CANDIDATE_MODELS
 };

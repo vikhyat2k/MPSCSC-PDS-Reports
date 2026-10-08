@@ -3553,12 +3553,9 @@ async function updateGeminiBadges() {
         const headerBadge = document.getElementById('geminiHeaderBadge');
         const bannerBadge = document.getElementById('geminiBannerBadge');
         const modalBadge = document.getElementById('geminiStatusBadge');
-        const sarvamBadge = document.getElementById('sarvamStatusBadge');
         const bannerDesc = document.getElementById('geminiBannerDesc');
 
         const isGeminiActive = Boolean(aiData.active);
-        const isSarvamActive = Boolean(aiData.sarvam && aiData.sarvam.active);
-        const isSarvamQuota = Boolean(aiData.sarvam && aiData.sarvam.quotaExhausted);
 
         if (isGeminiActive) {
             if (headerBadge) {
@@ -3576,54 +3573,27 @@ async function updateGeminiBadges() {
                 modalBadge.className = 'superv-badge badge-success';
                 modalBadge.textContent = `सक्रिय (Active: ${aiData.model || 'gemini-3.5-flash'})`;
             }
-        } else if (isSarvamActive) {
-            if (headerBadge) {
-                headerBadge.style.background = '#059669';
-                headerBadge.textContent = 'Sarvam AI';
-            }
-            if (bannerBadge) {
-                bannerBadge.className = 'superv-badge badge-success';
-                bannerBadge.style.background = 'rgba(16,185,129,0.15)';
-                bannerBadge.style.color = '#10b981';
-                bannerBadge.style.border = '1px solid rgba(16,185,129,0.3)';
-                bannerBadge.textContent = `🇮🇳 Sarvam AI सक्रिय (फॉलबैक)`;
-            }
-            if (modalBadge) {
-                modalBadge.className = 'superv-badge badge-warning';
-                modalBadge.textContent = 'दर सीमा (Rate Limit) — Sarvam सक्रिय';
+            if (bannerDesc) {
+                bannerDesc.textContent = 'शासकीय ईमेल व आदेशों का गहन हिंदी विश्लेषण, पत्र क्रमांक निष्कर्षण, प्राथमिकीकरण एवं 1-क्लिक पालन प्रतिवेदन तैयार करने हेतु सक्रिय।';
             }
         } else if (aiData.rateLimited) {
-            if (isSarvamQuota) {
-                if (headerBadge) {
-                    headerBadge.style.background = '#ef4444';
-                    headerBadge.textContent = 'कोटा समाप्त';
-                }
-                if (bannerBadge) {
-                    bannerBadge.className = 'superv-badge';
-                    bannerBadge.style.background = 'rgba(239,68,68,0.15)';
-                    bannerBadge.style.color = '#ef4444';
-                    bannerBadge.style.border = '1px solid rgba(239,68,68,0.3)';
-                    bannerBadge.textContent = '🔴 Gemini दर सीमा (429) • Sarvam 0 क्रेडिट';
-                }
-                if (bannerDesc) {
-                    bannerDesc.textContent = 'Google Gemini की दैनिक दर सीमा (HTTP 429) समाप्त हो गई है एवं Sarvam AI में 0 क्रेडिट हैं। सिस्टम वर्तमान में सुरक्षित नियम-आधारित पार्सर (Rules Engine) से कार्य कर रहा है।';
-                }
-            } else {
-                if (headerBadge) {
-                    headerBadge.style.background = '#f59e0b';
-                    headerBadge.textContent = 'दर सीमा (429)';
-                }
-                if (bannerBadge) {
-                    bannerBadge.className = 'superv-badge badge-warning';
-                    bannerBadge.style.background = 'rgba(245,158,11,0.15)';
-                    bannerBadge.style.color = '#fbbf24';
-                    bannerBadge.style.border = '1px solid rgba(245,158,11,0.3)';
-                    bannerBadge.textContent = '🟡 Gemini दर सीमा (429 Rate Limit)';
-                }
+            if (headerBadge) {
+                headerBadge.style.background = '#f59e0b';
+                headerBadge.textContent = 'दर सीमा (429)';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge badge-warning';
+                bannerBadge.style.background = 'rgba(245,158,11,0.15)';
+                bannerBadge.style.color = '#fbbf24';
+                bannerBadge.style.border = '1px solid rgba(245,158,11,0.3)';
+                bannerBadge.textContent = '🟡 Gemini दर सीमा (429 Rate Limit)';
             }
             if (modalBadge) {
                 modalBadge.className = 'superv-badge badge-warning';
                 modalBadge.textContent = 'दर सीमा (429 Rate Limit)';
+            }
+            if (bannerDesc) {
+                bannerDesc.textContent = 'Google Gemini की दैनिक दर सीमा (HTTP 429) पहुँच गई है। सिस्टम वर्तमान में सुरक्षित नियम-आधारित पार्सर (Rules Engine) से कार्य कर रहा है।';
             }
         } else if (aiData.configured) {
             if (headerBadge) {
@@ -3647,22 +3617,9 @@ async function updateGeminiBadges() {
                 bannerBadge.className = 'superv-badge';
                 bannerBadge.textContent = '⚪ असंरचित';
             }
-        }
-
-        // Update Sarvam Badge
-        if (sarvamBadge) {
-            if (isSarvamActive) {
-                sarvamBadge.className = 'superv-badge badge-success';
-                sarvamBadge.textContent = '🟢 सक्रिय (sarvam-105b)';
-            } else if (isSarvamQuota) {
-                sarvamBadge.className = 'superv-badge badge-warning';
-                sarvamBadge.textContent = '🟡 कोटा समाप्त (0 Credits)';
-            } else if (aiData.sarvam && aiData.sarvam.configured) {
-                sarvamBadge.className = 'superv-badge badge-warning';
-                sarvamBadge.textContent = '🟡 स्टैंडबाय (Standby)';
-            } else {
-                sarvamBadge.className = 'superv-badge';
-                sarvamBadge.textContent = 'असंरचित (Setup Required)';
+            if (modalBadge) {
+                modalBadge.className = 'superv-badge';
+                modalBadge.textContent = 'असंरचित (Setup Required)';
             }
         }
 
@@ -3672,12 +3629,9 @@ async function updateGeminiBadges() {
             if (isGeminiActive) {
                 tabBadge.style.background = '#10b981';
                 tabBadge.textContent = 'Active';
-            } else if (isSarvamActive) {
-                tabBadge.style.background = '#059669';
-                tabBadge.textContent = 'Sarvam';
             } else if (aiData.rateLimited) {
                 tabBadge.style.background = '#ef4444';
-                tabBadge.textContent = isSarvamQuota ? '429 / 0 Cr' : '429 Limit';
+                tabBadge.textContent = '429 Limit';
             } else {
                 tabBadge.style.background = 'var(--text-muted)';
                 tabBadge.textContent = 'Setup';
@@ -3745,13 +3699,6 @@ async function openGmailStatusModal(initialTab = null) {
         const geminiModel = (geminiData && geminiData.model) || 'gemini-3.5-flash';
         const maskedKey = (geminiData && geminiData.maskedKey) || (isGeminiConfigured ? '••••••••••••' : 'असंरचित (Setup Required)');
 
-        // Sarvam details
-        const sarvam = geminiData.sarvam || {};
-        const isSarvamActive = Boolean(sarvam.active);
-        const isSarvamQuota = Boolean(sarvam.quotaExhausted);
-        const isSarvamConfigured = Boolean(sarvam.configured);
-        const maskedSarvamKey = sarvam.maskedKey || (isSarvamConfigured ? '••••••••••••' : '');
-
         // 1. Gemini AI Tab badge & key input
         const badge = document.getElementById('geminiStatusBadge');
         const txtKey = document.getElementById('txtGeminiApiKey');
@@ -3774,38 +3721,12 @@ async function openGmailStatusModal(initialTab = null) {
             txtKey.value = geminiData.maskedKey;
         }
 
-        // 1b. Sarvam AI Tab badge & key input
-        const sarvamBadge = document.getElementById('sarvamStatusBadge');
-        const txtSarvamKey = document.getElementById('txtSarvamApiKey');
-        if (sarvamBadge) {
-            if (isSarvamActive) {
-                sarvamBadge.className = 'superv-badge badge-success';
-                sarvamBadge.textContent = `सक्रिय (sarvam-105b)`;
-            } else if (isSarvamQuota) {
-                sarvamBadge.className = 'superv-badge badge-warning';
-                sarvamBadge.textContent = `कोटा समाप्त (0 Credits)`;
-            } else if (isSarvamConfigured) {
-                sarvamBadge.className = 'superv-badge badge-warning';
-                sarvamBadge.textContent = `स्टैंडबाय (Standby)`;
-            } else {
-                sarvamBadge.className = 'superv-badge';
-                sarvamBadge.textContent = `असंरचित (Setup Required)`;
-            }
-        }
-        if (txtSarvamKey && !txtSarvamKey.value && maskedSarvamKey) {
-            txtSarvamKey.value = maskedSarvamKey;
-        }
-
-        // 2. Dual Pipeline Header Pill
+        // 2. AI Pipeline Header Pill
         const pillGemini = document.getElementById('headerPillGemini');
         if (pillGemini) {
             if (isGeminiActive) {
-                const fallbackLabel = isSarvamConfigured ? ' + Sarvam 🛡️' : '';
                 pillGemini.className = 'superv-badge badge-success';
-                pillGemini.textContent = `🤖 Gemini AI: सक्रिय (${geminiModel})${fallbackLabel}`;
-            } else if (isSarvamActive) {
-                pillGemini.className = 'superv-badge badge-success';
-                pillGemini.textContent = `🇮🇳 Sarvam AI: सक्रिय (फॉलबैक)`;
+                pillGemini.textContent = `🤖 Gemini AI: सक्रिय (${geminiModel})`;
             } else if (geminiData.rateLimited) {
                 pillGemini.className = 'superv-badge badge-warning';
                 pillGemini.textContent = `⚠️ Gemini AI: दर सीमा (Rate Limit)`;
@@ -4155,7 +4076,7 @@ async function testGeminiConnectionUI() {
         if (data.active) {
             alert(`✅ Gemini AI कनेक्शन सफल एवं सक्रिय है!\n\n• मॉडल: ${data.model}\n• स्थिति: ऑनलाइन एवं शासकीय विश्लेषण हेतु तैयार`);
         } else if (data.rateLimited) {
-            alert(`⚠️ Gemini API दर सीमा (Rate Limit):\n${data.error}\n\n💡 सूचना: यदि आपने Sarvam AI Key कॉन्फ़िगर की है, तो सिस्टम बिना किसी रुकावट के स्वचालित रूप से Sarvam AI पर स्विच होकर सभी ईमेल का विश्लेषण करेगा!`);
+            alert(`⚠️ Gemini API दर सीमा (Rate Limit):\n${data.error}\n\n💡 सूचना: कृपया कुछ समय बाद पुनः प्रयास करें।`);
         } else {
             alert(`⚠️ Gemini AI कनेक्शन चेतावनी: ${data.error || 'सत्यापन विफल'}`);
         }
@@ -4207,72 +4128,7 @@ async function saveGeminiApiKeyUI() {
     }
 }
 
-// ── Sarvam AI Sovereign Fallback Handlers ──────────────────────
 
-async function testSarvamConnectionUI() {
-    const btn = document.getElementById('btnTestSarvam');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = '⏳ टेस्ट हो रहा है...';
-    }
-
-    try {
-        const res = await fetch('/api/sarvam/status');
-        const data = await res.json();
-        if (data.active) {
-            alert(`✅ Sarvam AI कनेक्शन सफल एवं सक्रिय है!\n\n• मॉडल: ${data.model}\n• स्थिति: ऑनलाइन एवं शासकीय विश्लेषण हेतु तैयार\n• यह इंजन Gemini AI की दर सीमा पर स्वतः फॉलबैक का कार्य करेगा।`);
-        } else if (data.quotaExhausted) {
-            alert(`⚠️ Sarvam AI स्थिति सूचना:\n\n• मॉडल: sarvam-105b\n• परिणाम: API Key वैध है, परंतु खाते में 0 क्रेडिट उपलब्ध हैं (No credits available)।\n\n💡 समाधान: कृपया Sarvam AI डैशबोर्ड (dashboard.sarvam.ai) पर जाकर वॉलेट रिचार्ज करें ताकि Gemini 429 दर सीमा होने पर यह फॉलबैक स्वचालित कार्य कर सके।`);
-        } else {
-            alert(`⚠️ Sarvam AI स्थिति:\n${data.error || 'कनेक्शन सत्यापन विफल'}`);
-        }
-    } catch (e) {
-        alert('सर्वर त्रुटि: ' + e.message);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = '⚡ Sarvam AI टेस्ट करें';
-        }
-    }
-}
-
-async function saveSarvamApiKeyUI() {
-    const input = document.getElementById('txtSarvamApiKey');
-    const apiKey = input ? input.value.trim() : '';
-    if (!apiKey) {
-        alert('कृपया वैध Sarvam AI API Subscription Key प्रविष्ट करें।');
-        if (input) input.focus();
-        return;
-    }
-
-    const btn = document.getElementById('btnSaveSarvamKey');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = '⏳ सुरक्षित हो रहा है...';
-    }
-
-    try {
-        const res = await fetch('/api/sarvam/config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ apiKey })
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert(`🎉 ${data.message}\n\nमॉडल: ${data.model}\nGemini AI की दर सीमा होने पर सिस्टम स्वचालित रूप से Sarvam AI पर स्विच हो जाएगा!`);
-            await openGmailStatusModal();
-        } else {
-            alert('सुरक्षित करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
-        }
-    } catch (e) {
-        alert('सर्वर त्रुटि: ' + e.message);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = '💾 Sarvam Key सुरक्षित करें';
-        }
-    }
-}
 
 
 
