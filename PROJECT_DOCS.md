@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 27 |
 | Pending Milestones | 0 |
-| Last Code Change | 08 Oct 2026 — Groq Cloud LPU AI Integration: Ultra-fast (~700ms) zero-cost secondary failover engine for administrative email order intelligence (ISSUE-067) |
+| Last Code Change | 08 Oct 2026 — AI Analysis of Mails: 1-click on-demand AI analysis buttons in Header, AI Banner, Modal Panel 4, and per-task rows with dual-engine batch & individual task endpoints (ISSUE-068) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -622,6 +622,7 @@ Tracks implementation status of all major features.
 | Rice Quality Uniform Specification (Common Rice KMS 2025-26) | COMPLETE | YES | Strict alignment with GOI/MPSCSC KMS 2025-26 Common Rice limits (Broken 25%/Small 1%, FM 0.5%/Inorg 0.2%, Damaged 3.0%, Discolored 3.0%, Chalky 5.0%, Red 3.0%, Admixture NA, Dehusked 13.0%, Moisture 14%, FRK 0.90-1.20%), interactive red violation highlights, auto-BRL assignment, official A4 print schedule box, and verified automated tests (ISSUE-047) |
 | Official Gmail Integration & Actionable Tasks Management | COMPLETE | YES | Google OAuth 2.0 least-privilege (readonly), AES-256-GCM token encryption, triage & department rules engine, Hindi/English government memo parser, timeline & deadline determination engine (explicit vs AI-suggested), SQLite schema (supervision_tasks, email_sync_logs, task_attachments), interactive task dashboard in supervision.html, and 100% automated test coverage (ISSUE-048, ISSUE-049) |
 | Administrative AI Intelligence (Google Gemini + Groq Cloud LPU) | COMPLETE | YES | Dual-engine AI administrative intelligence combining Google Gemini with Groq Cloud LPU ultra-fast (~700ms) failover and deterministic rules engine fallback; in-app key management, telemetry, and 100% verified test suite (ISSUE-056, ISSUE-066, ISSUE-067) |
+| AI Analysis of Mails 1-Click Execution & Batch Re-analyze | COMPLETE | YES | Dedicated 1-click on-demand execution buttons in Header (#btnHeaderAiAnalysis), AI Status Banner (#btnBannerAiAnalysis), Modal Panel 4 (#btnModalTriggerAi), per-task row actions (🤖 AI विश्लेषण), and task detail modal; backed by POST /api/gmail/analyze-ai (alias /api/tasks/analyze-ai) and POST /api/tasks/:id/reanalyze with dual Gemini+Groq engine and 100% automated test pass (ISSUE-068) |
 | Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
 
 ---
@@ -802,6 +803,7 @@ Tracks what has been tested and confirmed working.
 | Gemini AI Management Tab & Direct Access Elements | UI, API & Headless Browser Verification | VERIFIED | 04 Oct 2026 | Added visible direct access controls for Gemini AI Management across the portal: dedicated sidebar item (#superv-nav-gemini), view header action button (#btnHeaderGemini), AI intelligence status banner with 1-click launch, active state badge caching, and 100% automated Puppeteer test pass (ISSUE-058) |
 | Administrative AI Intelligence (Google Gemini) | Automated Integration & UI Test | VERIFIED | 08 Oct 2026 | tests/test-verify-gemini-management-tab.js & /api/gemini/status verify Gemini connection, masked key display, active model status, and UI management modal after Sarvam removal (ISSUE-066) |
 | Groq Cloud LPU AI Secondary Failover Integration | Automated Unit, API & UI Headless Browser Test | VERIFIED | 08 Oct 2026 | tests/test-verify-groq-integration.js verifies Groq Cloud API connectivity, Hindi Devanagari extraction with qwen/qwen3.8-27b (~700ms), /api/groq/status, /api/groq/config, prefilled masked keys, and dual-engine UI badges (ISSUE-067) |
+| AI Analysis of Mails 1-Click Execution & Batch API | Automated Unit, API & UI Headless Browser Test | VERIFIED | 08 Oct 2026 | tests/test-verify-ai-analysis-button.js verifies #btnHeaderAiAnalysis, #btnBannerAiAnalysis, #btnModalTriggerAi, table quick actions, and POST /api/gmail/analyze-ai batch execution with dual AI engine (ISSUE-068) |
 | Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
 
 ---
@@ -876,10 +878,41 @@ Tracks what has been tested and confirmed working.
 | ISSUE-065 | Reports generated via Send Reports via Email option were not reflected in history tables of concerned report modules without manual full-page reload | HIGH | RESOLVED | server.js, public/app.js, public/index.html | 06 Oct 2026 |
 | ISSUE-066 | Sarvam AI integration was present in codebase as secondary failover; user requested complete removal of Sarvam API, endpoints, credentials, and dual-engine UI components | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-dual-ai-integration.js | 08 Oct 2026 |
 | ISSUE-067 | Gemini API rate limits (429) required an ultra-fast, zero-cost secondary failover AI engine for uninterrupted administrative email intelligence; integrated Groq Cloud LPU AI | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-verify-groq-integration.js | 08 Oct 2026 |
+| ISSUE-068 | Missing prominent 1-click buttons to trigger on-demand AI analysis of official government emails across Orders & Tasks views; users only had sync and settings buttons | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-ai-analysis-button.js | 08 Oct 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-10-08 | Feature & UI: AI Analysis of Mails 1-Click Execution Buttons & Dual-Engine Batch Pipeline
+
+Files: public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-ai-analysis-button.js, PROJECT_DOCS.md
+Type: Feature / UI & API Integration
+Closes: ISSUE-068
+
+- USER REQUIREMENT:
+  "ai analysis of mails button not avilable"
+
+- ROOT CAUSES & MOTIVATION:
+  1. In the Orders & Tasks view (`supervision.html`), users only had "ईमेल सिंक करें" (Sync Emails) and settings buttons. There was no direct, visible 1-click button to trigger AI analysis on demand across synchronized official government emails.
+  2. Users needed the ability to run AI analysis both in batch mode (for all recent/pending emails) and on individual tasks (for re-evaluation), without having to wait for background sync or navigate through hidden modals.
+
+- CHANGES & IMPLEMENTATION:
+  1. **UI Execution Buttons (`public/supervision.html`):**
+     - Added `#btnHeaderAiAnalysis` in the Card Header toolbar with prominent gradient styling (`⚡ ईमेल AI विश्लेषण (AI Analysis of Mails)`).
+     - Added `#btnBannerAiAnalysis` in the AI Status Banner (`⚡ ईमेल AI विश्लेषण करें (AI Analysis of Mails)`).
+     - Added `#btnModalTriggerAi` in Panel 4 of the AI Management modal (`⚡ अभी AI विश्लेषण चलाएं (Analyze Mails Now)`).
+  2. **Frontend Interaction Logic (`public/supervision_logic.js`):**
+     - Implemented `triggerEmailAiAnalysis()`: displays loading spinner, triggers batch AI analysis endpoint, presents summary alert (synced emails, tasks analyzed, active AI engine), and refreshes the task table.
+     - Implemented `reanalyzeSingleTask(taskId)`: triggers individual task re-analysis.
+     - Added `🤖 AI विश्लेषण` quick-action button in every row of `supervisionTasksTable`.
+     - Added `🤖 AI पुनः विश्लेषण (Re-analyze)` button inside `openTaskDetailModal()`.
+  3. **Backend Dual-Engine Endpoints (`server.js`):**
+     - Added `POST /api/gmail/analyze-ai` (with alias `POST /api/tasks/analyze-ai`): synchronizes up to 20 recent emails (within 14 days) and processes pending tasks with `geminiAnalyzer.analyzeOfficialEmail()`, updating priority, reference number, due date, department section, and compliance draft note.
+     - Added `POST /api/tasks/:id/reanalyze` for individual task re-processing.
+  4. **Verification & Testing (`tests/test-verify-ai-analysis-button.js`):**
+     - Puppeteer headless test verified visibility of Header button, AI Banner button, and Modal Panel 4 button.
+     - Verified `POST /api/gmail/analyze-ai` batch analysis returning `{ success: true, syncedEmails: 50, tasksAnalyzed: 7, aiEngine: 'Google Gemini AI (gemini-3.5-flash)' }`.
 
 ### 2026-10-08 | Feature & Architecture: Groq Cloud LPU AI Integration (Dual-Engine AI Failover)
 
