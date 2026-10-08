@@ -4254,6 +4254,76 @@ async function saveGeminiApiKeyUI() {
     }
 }
 
+// ── Groq Cloud LPU AI Administrative Intelligence Handlers ─────
+
+async function testGroqConnectionUI() {
+    const btn = document.getElementById('btnTestGroq');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ टेस्ट हो रहा है...';
+    }
+
+    try {
+        const res = await fetch('/api/groq/status?force=true');
+        const data = await res.json();
+        if (data.active) {
+            alert(`✅ Groq Cloud LPU AI कनेक्शन सफल एवं सक्रिय है!\n\n• मॉडल: ${data.model}\n• स्थिति: ऑनलाइन एवं अति-तीव्र (~700ms) शासकीय विश्लेषण हेतु तैयार`);
+            await updateGeminiBadges();
+        } else if (data.rateLimited) {
+            alert(`⚠️ Groq API दर सीमा (Rate Limit):\n${data.error}\n\n💡 सूचना: कृपया कुछ समय बाद पुनः प्रयास करें।`);
+        } else {
+            alert(`⚠️ Groq Cloud AI कनेक्शन चेतावनी: ${data.error || 'सत्यापन विफल'}`);
+        }
+    } catch (e) {
+        alert('सर्वर त्रुटि: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '⚡ Groq AI टेस्ट करें';
+        }
+    }
+}
+
+async function saveGroqApiKeyUI() {
+    const input = document.getElementById('txtGroqApiKey');
+    const apiKey = input ? input.value.trim() : '';
+    if (!apiKey) {
+        alert('कृपया वैध Groq Cloud API Key प्रविष्ट करें (उदा. gsk_...)।');
+        if (input) input.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnSaveGroqKey');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳ सुरक्षित हो रहा है...';
+    }
+
+    try {
+        const res = await fetch('/api/groq/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`🎉 ${data.message}\n\nसक्रिय मॉडल: ${data.model}\nअब Gemini अनुपलब्ध होने पर Groq LPU (~700ms) द्वारा स्वतः अति-तीव्र विश्लेषण होगा!`);
+            await openGmailStatusModal();
+            await updateGeminiBadges();
+        } else {
+            alert('सुरक्षित करने में विफल: ' + (data.error || 'अज्ञात त्रुटि'));
+        }
+    } catch (e) {
+        alert('सर्वर त्रुटि: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = '💾 Groq Key सुरक्षित करें';
+        }
+    }
+}
+
+
 
 
 
