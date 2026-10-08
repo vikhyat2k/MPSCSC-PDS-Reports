@@ -3553,11 +3553,67 @@ async function updateGeminiBadges() {
         const headerBadge = document.getElementById('geminiHeaderBadge');
         const bannerBadge = document.getElementById('geminiBannerBadge');
         const modalBadge = document.getElementById('geminiStatusBadge');
+        const groqModalBadge = document.getElementById('groqStatusBadge');
         const bannerDesc = document.getElementById('geminiBannerDesc');
 
         const isGeminiActive = Boolean(aiData.active);
+        const groqData = aiData.groq || {};
+        const isGroqActive = Boolean(groqData.active);
 
-        if (isGeminiActive) {
+        // 1. Update Groq Status Badge in Tab 4
+        if (groqModalBadge) {
+            if (isGroqActive) {
+                groqModalBadge.className = 'superv-badge badge-success';
+                groqModalBadge.style.background = 'rgba(249,115,22,0.15)';
+                groqModalBadge.style.color = '#ea580c';
+                groqModalBadge.style.border = '1px solid rgba(249,115,22,0.3)';
+                groqModalBadge.textContent = `सक्रिय (Active: ${groqData.model || 'qwen/qwen3.8-27b'})`;
+            } else if (groqData.rateLimited) {
+                groqModalBadge.className = 'superv-badge badge-warning';
+                groqModalBadge.textContent = 'दर सीमा (429 Rate Limit)';
+            } else if (groqData.configured) {
+                groqModalBadge.className = 'superv-badge badge-warning';
+                groqModalBadge.textContent = 'अपुष्ट (Unverified)';
+            } else {
+                groqModalBadge.className = 'superv-badge';
+                groqModalBadge.textContent = 'असंरचित (Setup Required)';
+            }
+        }
+
+        // 2. Gemini status badge in Tab 4
+        if (modalBadge) {
+            if (isGeminiActive) {
+                modalBadge.className = 'superv-badge badge-success';
+                modalBadge.textContent = `सक्रिय (Active: ${aiData.model || 'gemini-3.5-flash'})`;
+            } else if (aiData.rateLimited) {
+                modalBadge.className = 'superv-badge badge-warning';
+                modalBadge.textContent = 'दर सीमा (429 Rate Limit)';
+            } else if (aiData.configured) {
+                modalBadge.className = 'superv-badge badge-warning';
+                modalBadge.textContent = 'अपुष्ट (Unverified)';
+            } else {
+                modalBadge.className = 'superv-badge';
+                modalBadge.textContent = 'असंरचित (Setup Required)';
+            }
+        }
+
+        // 3. Combined Header and Banner Status (Dual-Engine Awareness)
+        if (isGeminiActive && isGroqActive) {
+            if (headerBadge) {
+                headerBadge.style.background = '#10b981';
+                headerBadge.textContent = 'Gemini + Groq';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge badge-success';
+                bannerBadge.style.background = 'rgba(16,185,129,0.15)';
+                bannerBadge.style.color = '#10b981';
+                bannerBadge.style.border = '1px solid rgba(16,185,129,0.3)';
+                bannerBadge.textContent = `🟢 Gemini + Groq LPU सक्रिय (Dual AI)`;
+            }
+            if (bannerDesc) {
+                bannerDesc.textContent = 'Google Gemini (प्राथमिक) एवं Groq Cloud LPU (~700ms Failover) दोनों सक्रिय हैं। शासकीय ईमेल व आदेशों का निर्बाध त्वरित विश्लेषण जारी रहेगा।';
+            }
+        } else if (isGeminiActive) {
             if (headerBadge) {
                 headerBadge.style.background = '#10b981';
                 headerBadge.textContent = 'Active';
@@ -3569,12 +3625,38 @@ async function updateGeminiBadges() {
                 bannerBadge.style.border = '1px solid rgba(16,185,129,0.3)';
                 bannerBadge.textContent = `🟢 Gemini सक्रिय (${aiData.model || 'gemini-3.5-flash'})`;
             }
-            if (modalBadge) {
-                modalBadge.className = 'superv-badge badge-success';
-                modalBadge.textContent = `सक्रिय (Active: ${aiData.model || 'gemini-3.5-flash'})`;
-            }
             if (bannerDesc) {
                 bannerDesc.textContent = 'शासकीय ईमेल व आदेशों का गहन हिंदी विश्लेषण, पत्र क्रमांक निष्कर्षण, प्राथमिकीकरण एवं 1-क्लिक पालन प्रतिवेदन तैयार करने हेतु सक्रिय।';
+            }
+        } else if (aiData.rateLimited && isGroqActive) {
+            if (headerBadge) {
+                headerBadge.style.background = '#ea580c';
+                headerBadge.textContent = 'Groq Failover';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge';
+                bannerBadge.style.background = 'rgba(249,115,22,0.15)';
+                bannerBadge.style.color = '#ea580c';
+                bannerBadge.style.border = '1px solid rgba(249,115,22,0.4)';
+                bannerBadge.textContent = `⚡ Groq LPU सक्रिय (Gemini 429 Failover)`;
+            }
+            if (bannerDesc) {
+                bannerDesc.textContent = 'Google Gemini दर सीमा (429) पर है। Groq Cloud LPU (qwen3.8-27b) द्वारा अति-तीव्र (~700ms) शासकीय विश्लेषण निर्बाध रूप से चालू है।';
+            }
+        } else if (isGroqActive) {
+            if (headerBadge) {
+                headerBadge.style.background = '#ea580c';
+                headerBadge.textContent = 'Groq Active';
+            }
+            if (bannerBadge) {
+                bannerBadge.className = 'superv-badge';
+                bannerBadge.style.background = 'rgba(249,115,22,0.15)';
+                bannerBadge.style.color = '#ea580c';
+                bannerBadge.style.border = '1px solid rgba(249,115,22,0.4)';
+                bannerBadge.textContent = `⚡ Groq Cloud LPU सक्रिय (${groqData.model || 'qwen3.8-27b'})`;
+            }
+            if (bannerDesc) {
+                bannerDesc.textContent = 'Groq Cloud LPU (qwen3.8-27b) द्वारा अति-तीव्र (~700ms) शासकीय विश्लेषण व पत्र क्रमांक निष्कर्षण सक्रिय है।';
             }
         } else if (aiData.rateLimited) {
             if (headerBadge) {
@@ -3588,14 +3670,10 @@ async function updateGeminiBadges() {
                 bannerBadge.style.border = '1px solid rgba(245,158,11,0.3)';
                 bannerBadge.textContent = '🟡 Gemini दर सीमा (429 Rate Limit)';
             }
-            if (modalBadge) {
-                modalBadge.className = 'superv-badge badge-warning';
-                modalBadge.textContent = 'दर सीमा (429 Rate Limit)';
-            }
             if (bannerDesc) {
                 bannerDesc.textContent = 'Google Gemini की दैनिक दर सीमा (HTTP 429) पहुँच गई है। सिस्टम वर्तमान में सुरक्षित नियम-आधारित पार्सर (Rules Engine) से कार्य कर रहा है।';
             }
-        } else if (aiData.configured) {
+        } else if (aiData.configured || groqData.configured) {
             if (headerBadge) {
                 headerBadge.style.background = '#f59e0b';
                 headerBadge.textContent = 'जांच जारी';
@@ -3603,10 +3681,6 @@ async function updateGeminiBadges() {
             if (bannerBadge) {
                 bannerBadge.className = 'superv-badge badge-warning';
                 bannerBadge.textContent = '🟡 अपुष्ट / परीक्षण जारी';
-            }
-            if (modalBadge) {
-                modalBadge.className = 'superv-badge badge-warning';
-                modalBadge.textContent = 'अपुष्ट (Unverified)';
             }
         } else {
             if (headerBadge) {
@@ -3617,18 +3691,20 @@ async function updateGeminiBadges() {
                 bannerBadge.className = 'superv-badge';
                 bannerBadge.textContent = '⚪ असंरचित';
             }
-            if (modalBadge) {
-                modalBadge.className = 'superv-badge';
-                modalBadge.textContent = 'असंरचित (Setup Required)';
-            }
         }
 
-        // Update modal Tab 4 Mini Badge
+        // 4. Update modal Tab 4 Mini Badge
         const tabBadge = document.getElementById('tabGeminiBadge');
         if (tabBadge) {
-            if (isGeminiActive) {
+            if (isGeminiActive && isGroqActive) {
                 tabBadge.style.background = '#10b981';
-                tabBadge.textContent = 'Active';
+                tabBadge.textContent = 'Gemini+Groq';
+            } else if (isGeminiActive) {
+                tabBadge.style.background = '#10b981';
+                tabBadge.textContent = 'Gemini';
+            } else if (isGroqActive) {
+                tabBadge.style.background = '#ea580c';
+                tabBadge.textContent = 'Groq';
             } else if (aiData.rateLimited) {
                 tabBadge.style.background = '#ef4444';
                 tabBadge.textContent = '429 Limit';
