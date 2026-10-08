@@ -4632,11 +4632,15 @@ const geminiAnalyzer = require('./server/services/gmail/geminiAnalyzer');
 
 let cachedGeminiPing = null;
 let lastGeminiPingTime = 0;
+let cachedGroqPing = null;
+let lastGroqPingTime = 0;
 
 app.get('/api/gemini/status', async (req, res) => {
     try {
         const isGeminiConf = geminiAnalyzer.isGeminiConfigured();
+        const isGroqConf = geminiAnalyzer.isGroqConfigured();
         let pingResult = { ok: false };
+        let groqPing = { ok: false };
         const now = Date.now();
 
         // 1. Check Gemini Ping
@@ -4651,18 +4655,50 @@ app.get('/api/gemini/status', async (req, res) => {
             }
         }
 
+        // 2. Check Groq Ping
+        if (isGroqConf) {
+            const cacheTTL = (cachedGroqPing && cachedGroqPing.rateLimited) ? 2 * 60 * 1000 : 5 * 60 * 1000;
+            if (cachedGroqPing && (now - lastGroqPingTime < cacheTTL) && req.query.force !== 'true') {
+                groqPing = cachedGroqPing;
+            } else {
+                groqPing = await geminiAnalyzer.testGroqConnection();
+                cachedGroqPing = groqPing;
+                lastGroqPingTime = now;
+            }
+        }
+
         const rawGeminiKey = process.env.GEMINI_API_KEY || '';
         const maskedKey = rawGeminiKey.length > 8 ? `${rawGeminiKey.substring(0, 6)}...${rawGeminiKey.substring(rawGeminiKey.length - 4)}` : '';
 
+        const rawGroqKey = process.env.GROQ_API_KEY || '';
+        const maskedGroqKey = rawGroqKey.length > 8 ? `${rawGroqKey.substring(0, 7)}...${rawGroqKey.substring(rawGroqKey.length - 4)}` : '';
+
+        let activeProvider = 'None';
+        if (pingResult.ok) {
+            activeProvider = isGroqConf ? 'Google Gemini AI (Groq LPU Standby)' : 'Google Gemini AI';
+        } else if (groqPing.ok) {
+            activeProvider = 'Groq Cloud LPU AI (Ultra-Fast Engine)';
+        } else if (pingResult.rateLimited && groqPing.rateLimited) {
+            activeProvider = 'Both Rate-Limited';
+        }
+
         res.json({
-            configured: isGeminiConf,
+            configured: isGeminiConf || isGroqConf,
             geminiConfigured: isGeminiConf,
             active: pingResult.ok,
             rateLimited: pingResult.rateLimited || false,
             model: pingResult.model || 'gemini-3.5-flash',
             maskedKey,
             error: pingResult.error || null,
-            activeProvider: pingResult.ok ? 'Google Gemini AI' : 'None'
+            groq: {
+                configured: isGroqConf,
+                active: groqPing.ok,
+                rateLimited: groqPing.rateLimited || false,
+                model: groqPing.model || 'qwen/qwen3.8-27b',
+                maskedKey: maskedGroqKey,
+                error: groqPing.error || null
+            },
+            activeProvider
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -4692,6 +4728,53 @@ app.post('/api/gemini/config', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'Failed to save Gemini key: ' + err.message });
+    }
+});
+
+app.get('/api/groq/status', async (req, res) => {
+    try {
+        const isGroqConf = geminiAnalyzer.isGroqConfigured();
+        let pingResult = { ok: false };
+        if (isGroqConf) {
+            pingResult = await geminiAnalyzer.testGroqConnection();
+        }
+        const rawKey = process.env.GROQ_API_KEY || '';
+        const maskedKey = rawKey.length > 8 ? `${rawKey.substring(0, 7)}...${rawKey.substring(rawKey.length - 4)}` : '';
+        res.json({
+            configured: isGroqConf,
+            active: pingResult.ok,
+            rateLimited: pingResult.rateLimited || false,
+            model: pingResult.model || 'qwen/qwen3.8-27b',
+            maskedKey,
+            error: pingResult.error || null
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/groq/config', async (req, res) => {
+    try {
+        const { apiKey } = req.body || {};
+        const cleanKey = String(apiKey || '').trim();
+        if (!cleanKey) {
+            return res.status(400).json({ error: 'Groq Cloud API Key अनिवार्य है।' });
+        }
+        const testRes = await geminiAnalyzer.testGroqConnection(cleanKey);
+        if (!testRes.ok) {
+            return res.status(400).json({ error: 'Groq Cloud API Key अमान्य है: ' + (testRes.error || 'Connection failed') });
+        }
+        updateEnvFile({ GROQ_API_KEY: cleanKey });
+        cachedGroqPing = null;
+        lastGroqPingTime = 0;
+        console.log(`⚡ Groq Cloud API Key configured via UI (Model: ${testRes.model})`);
+        res.json({
+            success: true,
+            message: 'Groq Cloud LPU AI इंजन सफलतापूर्वक सक्रिय हो गया है!',
+            model: testRes.model || 'qwen/qwen3.8-27b'
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to save Groq key: ' + err.message });
     }
 });
 
