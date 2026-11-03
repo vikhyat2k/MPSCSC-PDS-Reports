@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 27 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Nov 2026 — Fixed false "No data found" error by detecting portal "Invalid User Credentials" explicitly, preventing verifyLogin() false positives from public nav links, disambiguating NFSA vs MDM navigation, and halting CAPTCHA retry on bad credentials (ISSUE-069) |
+| Last Code Change | 03 Nov 2026 — Prevented false manual CAPTCHA entry fallback on credential rejection, eliminating "Could not capture CAPTCHA image" error and correctly surfacing portal credential errors (ISSUE-070) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -625,6 +625,7 @@ Tracks implementation status of all major features.
 | AI Analysis of Mails 1-Click Execution & Batch Re-analyze | COMPLETE | YES | Dedicated 1-click on-demand execution buttons in Header (#btnHeaderAiAnalysis), AI Status Banner (#btnBannerAiAnalysis), Modal Panel 4 (#btnModalTriggerAi), per-task row actions (🤖 AI विश्लेषण), and task detail modal; backed by POST /api/gmail/analyze-ai (alias /api/tasks/analyze-ai) and POST /api/tasks/:id/reanalyze with dual Gemini+Groq engine and 100% automated test pass (ISSUE-068) |
 | Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
 | SCM Portal Auth Detection & NO_DATA Masking Prevention | COMPLETE | YES | Fixed SCMScraper.verifyLogin() false positive on unauthenticated navbar links; explicitly detect "Invalid User Credentials"; prevent navigation drift to MDM allotment; fix missing distreport falsy NO_DATA in MDM/ICDS/Welfare scrapers; distinct auth error rendering in frontend (ISSUE-069) |
+| Manual CAPTCHA Fallback Guard on Credential Rejection | COMPLETE | YES | Prevented scraper falling back to requestManualCaptcha() when portal explicitly rejects login credentials; added waitForSelector and refreshCaptchaImage() fallbacks to captureCaptchaBase64(); cleanly surfaces SCM_AUTH_FAILED to UI (ISSUE-070) |
 
 ---
 
@@ -807,6 +808,7 @@ Tracks what has been tested and confirmed working.
 | AI Analysis of Mails 1-Click Execution & Batch API | Automated Unit, API & UI Headless Browser Test | VERIFIED | 08 Oct 2026 | tests/test-verify-ai-analysis-button.js verifies #btnHeaderAiAnalysis, #btnBannerAiAnalysis, #btnModalTriggerAi, table quick actions, and POST /api/gmail/analyze-ai batch execution with dual AI engine (ISSUE-068) |
 | Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
 | SCM Auth Error & NO_DATA Error Masking Fix | Scraper Unit & Browser Verification | VERIFIED | 03 Nov 2026 | Verified SCMScraper halting on "Invalid User Credentials", verifyLogin() returning false without false-positive nav elements, disambiguated NFSA dispatch abstract navigation, and distinct UI error modal rendering (ISSUE-069) |
+| Manual CAPTCHA Fallback Guard on Credential Rejection | Automated Unit & Browser Test | VERIFIED | 03 Nov 2026 | Verified SCMScraper throwing SCM_AUTH_FAILED directly instead of triggering requestManualCaptcha() and crashing with "Could not capture CAPTCHA image" on bad credentials (ISSUE-070) |
 
 ---
 
@@ -882,10 +884,32 @@ Tracks what has been tested and confirmed working.
 | ISSUE-067 | Gemini API rate limits (429) required an ultra-fast, zero-cost secondary failover AI engine for uninterrupted administrative email intelligence; integrated Groq Cloud LPU AI | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-verify-groq-integration.js | 08 Oct 2026 |
 | ISSUE-068 | Missing prominent 1-click buttons to trigger on-demand AI analysis of official government emails across Orders & Tasks views; users only had sync and settings buttons | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-ai-analysis-button.js | 08 Oct 2026 |
 | ISSUE-069 | SCMScraper verifyLogin() false positive on unauthenticated navbar links caused portal login failures (e.g. Invalid User Credentials) to navigate to MDM allotment, miss form selects, and masquerade as false "No data found" | HIGH | RESOLVED | server/automation/scraper_v2.js, server.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, public/app.js | 03 Nov 2026 |
+| ISSUE-070 | SCMScraper fell back to manual CAPTCHA modal when credentials failed ('Invalid User Credentials'), crashing with 'Could not capture CAPTCHA image for manual entry' on post-submit error page | HIGH | RESOLVED | server/automation/scraper_v2.js, PROJECT_DOCS.md | 03 Nov 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-11-03 | Bug Fix: Prevent False Manual CAPTCHA Fallback on Portal Credential Failure
+
+Files: server/automation/scraper_v2.js, PROJECT_DOCS.md
+Type: Bug Fix / Automation & Authentication Reliability
+Closes: ISSUE-070
+
+- USER SYMPTOM & REPORT:
+  "❌ Error: Could not capture CAPTCHA image for manual entry."
+
+- ROOT CAUSE:
+  When the SCM portal rejected login credentials (`Invalid User Credentials`), `attemptAutoCaptcha()` halted as expected. However, `login()` subsequently checked `if (!captchaSolved && typeof onCaptchaRequired === 'function')` without checking `this.lastLoginError`. It erroneously treated credential failure as "Auto-CAPTCHA exhausted" and called `requestManualCaptcha()`.
+  On the post-submit error page, `captureCaptchaBase64()` attempted a zero-wait `this.page.$()` query for the CAPTCHA element, returned `null`, and threw `Error: Could not capture CAPTCHA image for manual entry.`, masking the credential error and confusing the user.
+
+- FIXES & IMPLEMENTATION:
+  1. In `server/automation/scraper_v2.js`:
+     - Added credential failure check before manual CAPTCHA fallback in `login()`: immediately throws `SCM_AUTH_FAILED: ${this.lastLoginError}` so the credential rejection is never masked.
+     - Updated `captureCaptchaBase64()` to use `waitForSelector(..., { timeout: 4000 })` to guard against race conditions.
+     - Added page reload fallback (`refreshCaptchaImage()`) to `requestManualCaptcha()` if the CAPTCHA image is not immediately found.
+     - Bumped `SCMScraper` version to `1.0.7`.
+  2. Verified with automated integration test `scratch/test_credential_fix.js` that bad credentials cleanly throw `SCM_AUTH_FAILED: Invalid User Credentials` and propagate directly to the user-friendly `🔒 Portal Authentication Failed` UI modal.
 
 ### 2026-11-03 | Bug Fix: Resolving False "No Records Found" Masking & SCM Portal Login Verification Failure
 
