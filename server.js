@@ -642,6 +642,9 @@ app.post('/api/generate-report', async (req, res) => {
 
 
 
+                if (processedCategories.length === 0) {
+                    throw new Error('EXTRACTION_FAILED: No RO categories could be processed from the portal.');
+                }
                 if (aggregatedRawData.length === 0) {
                     throw new Error('NO_DATA: The portal currently shows "No data found" for this month/year.');
                 }
@@ -750,10 +753,16 @@ app.post('/api/generate-report', async (req, res) => {
                 console.error('❌ Parallel report generation failed:', err);
                 const isNoData = err.message.includes('NO_DATA');
                 const isIntegrityFail = err.message.includes('STRICT_INTEGRITY_FAILURE');
+                const isAuthFail = err.message.includes('SCM_AUTH_FAILED') || err.message.includes('Invalid User Credentials') || err.message.includes('Authentication Failed');
                 
                 let errorMsg = err.message;
-                if (isNoData) errorMsg = 'NO_DATA: The portal currently shows "No data found" for this month/year.';
-                if (isIntegrityFail) errorMsg = 'Data Integrity Failure: Some sectors failed to load for Regular RO. Please try again in 5 minutes after the portal session has reset.';
+                if (isAuthFail) {
+                    errorMsg = 'Authentication Failed: The portal rejected login credentials ("Invalid User Credentials"). Please verify and update SCM_USERNAME and SCM_PASSWORD in your .env file.';
+                } else if (isNoData) {
+                    errorMsg = 'NO_DATA: The portal currently shows "No data found" for this month/year.';
+                } else if (isIntegrityFail) {
+                    errorMsg = 'Data Integrity Failure: Some sectors failed to load for Regular RO. Please try again in 5 minutes after the portal session has reset.';
+                }
 
                 activeRequests.set(requestId, {
                     status: 'error',

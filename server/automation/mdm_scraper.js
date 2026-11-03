@@ -288,7 +288,7 @@ class MDMScraper {
 
         let noData = await this.page.evaluate((m) => {
             const dr = document.getElementById('distreport');
-            if (!dr) return true;
+            if (!dr) return false;
             const text = dr.innerText;
             const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             const targetMonthName = monthNames[parseInt(m)];
