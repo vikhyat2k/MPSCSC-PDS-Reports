@@ -965,6 +965,12 @@ class SCMScraper {
         } else {
           // Localhost: fast automatic Tesseract OCR
           captchaSolved = await this.attemptAutoCaptcha(this.isHeadless ? 12 : 20, onProgress);
+
+          // If the portal explicitly rejected user credentials, do NOT prompt for manual CAPTCHA
+          if (!captchaSolved && this.lastLoginError && this.lastLoginError.toLowerCase().includes('credential')) {
+            throw new Error(`SCM_AUTH_FAILED: ${this.lastLoginError}`);
+          }
+
           if (!captchaSolved && typeof onCaptchaRequired === 'function') {
             console.log('🔄 Auto-CAPTCHA exhausted: Falling back to Web UI Manual CAPTCHA prompt...');
             if (typeof onProgress === 'function') {
