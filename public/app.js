@@ -746,6 +746,7 @@ function showError(msg) {
     const text = document.getElementById(prefix ? `${prefix}ErrorText` : 'errorText');
     
     const isNoDataError = msg && (msg.includes('NO_DATA') || msg.toLowerCase().includes('no data found on portal'));
+    const isAuthError = msg && (msg.includes('Authentication Failed') || msg.includes('Invalid User Credentials') || msg.includes('SCM_AUTH_FAILED'));
 
     if (box && text) {
         if (isNoDataError) {
@@ -757,6 +758,14 @@ function showError(msg) {
             if(icon) icon.innerText = '⚠️';
             const title = box.querySelector('strong');
             if(title) title.innerText = 'No Records Found';
+        } else if (isAuthError) {
+            text.innerText = msg;
+            box.classList.remove('alert-warning');
+            box.classList.add('alert-error');
+            const icon = box.querySelector('.alert-icon');
+            if(icon) icon.innerText = '🔒';
+            const title = box.querySelector('strong');
+            if(title) title.innerText = 'Portal Authentication Failed';
         } else {
             text.innerText = msg || 'An unknown error occurred during report generation.';
             box.classList.remove('alert-warning');
