@@ -37,7 +37,7 @@ function getTesseract() {
  */
 class SCMScraper {
   constructor() {
-    this.VERSION = '1.0.6'; // Bump version
+    this.VERSION = '1.0.7'; // Bump version: fix manual captcha fallback on credential failure
     this.browser = null;
     this.page = null;
     this.ocrWorker = null;
