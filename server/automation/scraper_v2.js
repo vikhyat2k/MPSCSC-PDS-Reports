@@ -37,10 +37,12 @@ function getTesseract() {
  */
 class SCMScraper {
   constructor() {
-    this.VERSION = '1.0.5'; // Bump version
+    this.VERSION = '1.0.6'; // Bump version
     this.browser = null;
     this.page = null;
     this.ocrWorker = null;
+    this.lastLoginError = null;
+    this.lastFormError = null;
     const rawURL = process.env.SCM_URL || 'https://scm.mp.gov.in/Login.jsp';
     // Standardize to origin if provided as just domain, or keep as is if it includes path
     this.baseURL = rawURL.endsWith('.jsp') ? rawURL : `${rawURL}/Login.jsp`.replace('//Login.jsp', '/Login.jsp');
@@ -550,6 +552,11 @@ class SCMScraper {
         if (isLoggedIn) {
           console.log('✅ Auto-CAPTCHA Login Successful!');
           return true;
+        }
+
+        if (this.lastLoginError && this.lastLoginError.toLowerCase().includes('credential')) {
+          console.log(`❌ Halting CAPTCHA retry: Portal explicitly rejected credentials ("${this.lastLoginError}")`);
+          return false;
         }
 
         // Generate candidate variants for common OCR confusables before submitting
