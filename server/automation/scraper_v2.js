@@ -1411,6 +1411,7 @@ class SCMScraper {
         fs.writeFileSync(path.join(this.logsDir, 'form_error_page.html'), bodyContent);
         console.log('📝 Saved form error page HTML for debugging');
         await this.screenshot('form_error_selects.png');
+        this.lastFormError = `Expected 3 form dropdowns (month, year, RO type), but found ${selectInfo.length}. The page was not the NFSA report form.`;
         return false;
       }
 
@@ -2105,11 +2106,11 @@ class SCMScraper {
       }
 
       if (!formSuccess) {
-        if (!summary || summary.rows.length === 0) {
+        if (summary && summary.rows && summary.rows.length === 0) {
           console.log(`[${roType}] No data found for this selection after 3 attempts.`);
           return { rawData: [], summaryTotals: null, status: 'empty' };
         }
-        throw new Error(`Failed to select form for ${roType} after 3 attempts`);
+        throw new Error(`Failed to load or select form for ${roType} after 3 attempts: ${this.lastFormError || 'Form could not be loaded on portal'}`);
       }
 
       summaryTotals = summary.grandTotals;
