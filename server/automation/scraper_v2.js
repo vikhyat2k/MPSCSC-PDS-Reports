@@ -113,9 +113,10 @@ class SCMScraper {
    */
   async captureCaptchaBase64() {
     try {
-      const captchaElement = await this.page.$(
-        '#captcha_img, img[src*="captcha"], img[src*="Captcha"], img[alt*="captcha"]'
-      );
+      const captchaElement = await this.page.waitForSelector(
+        '#captcha_img, img[src*="captcha"], img[src*="Captcha"], img[alt*="captcha"]',
+        { timeout: 4000 }
+      ).catch(() => null);
       if (!captchaElement) return null;
       const rawBuffer = await captchaElement.screenshot({ type: 'png' });
       return 'data:image/png;base64,' + rawBuffer.toString('base64');
