@@ -555,7 +555,8 @@ app.post('/api/generate-report', async (req, res) => {
                     );
 
                     if (!loginSuccess) {
-                        throw new Error('Login failed. Check credentials or CAPTCHA.');
+                        const detail = scraper.lastLoginError ? `: ${scraper.lastLoginError}` : '';
+                        throw new Error(`SCM_AUTH_FAILED: Login failed${detail}. Please check SCM_USERNAME and SCM_PASSWORD in .env.`);
                     }
 
                     for (const roType of roTypes) {
