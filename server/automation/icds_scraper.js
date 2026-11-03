@@ -268,8 +268,8 @@ class ICDSScraper {
 
         let noData = await this.page.evaluate(() => {
             const dr = document.getElementById('distreport');
-            const txt = dr ? dr.innerText : document.body.innerText;
-            return txt.includes('No data found');
+            if (!dr) return false;
+            return dr.innerText.includes('No data found');
         });
 
         // INTERMITTENT FIX: If portal says No data found, retry once
@@ -285,8 +285,8 @@ class ICDSScraper {
             
             noData = await this.page.evaluate(() => {
                 const dr = document.getElementById('distreport');
-                const txt = dr ? dr.innerText : document.body.innerText;
-                return txt.includes('No data found');
+                if (!dr) return false;
+                return dr.innerText.includes('No data found');
             });
         }
 

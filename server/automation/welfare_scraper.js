@@ -343,8 +343,9 @@ class WelfareScraper {
         }, { timeout: 30000 }).catch(() => console.log('⚠️ Timed out waiting for Results table'));
 
         let noData = await this.page.evaluate(() => {
-            const txt = document.body.innerText;
-            return txt.includes('No data found');
+            const dr = document.getElementById('distreport') || document.getElementById('detailsED');
+            if (!dr) return false;
+            return dr.innerText.includes('No data found');
         });
 
         // INTERMITTENT FIX: If portal says No data found, retry once
@@ -359,8 +360,9 @@ class WelfareScraper {
             await new Promise(r => setTimeout(r, 1000));
             
             noData = await this.page.evaluate(() => {
-                const txt = document.body.innerText;
-                return txt.includes('No data found');
+                const dr = document.getElementById('distreport') || document.getElementById('detailsED');
+                if (!dr) return false;
+                return dr.innerText.includes('No data found');
             });
         }
 
