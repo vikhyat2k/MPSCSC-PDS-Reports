@@ -982,6 +982,9 @@ class SCMScraper {
         }
 
         if (!captchaSolved) {
+          if (this.lastLoginError) {
+            throw new Error(`SCM_AUTH_FAILED: ${this.lastLoginError}`);
+          }
           throw new Error('CAPTCHA verification failed or timed out. Please try generating again.');
         }
       } else {
@@ -1050,12 +1053,15 @@ class SCMScraper {
         return true;
       } else {
         await this.screenshot('09_login_failed.png');
+        if (this.lastLoginError && this.lastLoginError.toLowerCase().includes('credential')) {
+          throw new Error(`SCM_AUTH_FAILED: ${this.lastLoginError}`);
+        }
         if (maxRetries > 0) {
           console.log(`❌ Login failed, retrying... (${maxRetries} attempts remaining)`);
           await new Promise(r => setTimeout(r, 2000));
           return await this.login(username, password, maxRetries - 1);
         } else {
-          throw new Error('Login failed after maximum retries');
+          throw new Error(this.lastLoginError ? `SCM_AUTH_FAILED: ${this.lastLoginError}` : 'Login failed after maximum retries');
         }
       }
 
@@ -1073,77 +1079,84 @@ class SCMScraper {
       console.log('🧐 Verifying login status on SCM portal...');
       await new Promise(r => setTimeout(r, 1200)); // Wait for page to settle
 
+      // 1. Check for explicit error text first!
+      const pageText = await this.page.evaluate(() => document.body ? document.body.innerText : '').catch(() => '');
+
+      const knownLoginErrors = [
+        'Invalid User Credentials',
+        'Invalid Credentials',
+        'Invalid Captcha',
+        'Please Enter Captcha',
+        'Please Enter User Name',
+        'Please Enter Password',
+        'Another person trying to login',
+        'User does not exist',
+        'Account Locked',
+        'Session Expired'
+      ];
+
+      for (const errText of knownLoginErrors) {
+        if (pageText.toLowerCase().includes(errText.toLowerCase())) {
+          console.log(`❌ Portal explicitly returned login error: "${errText}"`);
+          this.lastLoginError = errText;
+          return false;
+        }
+      }
+
+      // Check for red error font / alert in DOM
+      const domError = await this.page.evaluate(() => {
+        const errorEl = document.querySelector('.error, .alert, font[color="red"], font[color="#FF0000"], font[color="#ff3333"], span[style*="red"]');
+        const txt = errorEl ? errorEl.innerText.trim() : '';
+        if (txt && (txt.toLowerCase().includes('invalid') || txt.toLowerCase().includes('error') || txt.toLowerCase().includes('failed') || txt.toLowerCase().includes('captcha'))) {
+          return txt;
+        }
+        return null;
+      }).catch(() => null);
+
+      if (domError) {
+        console.log(`❌ Portal returned DOM error banner: "${domError}"`);
+        this.lastLoginError = domError;
+        return false;
+      }
+
       // Check current URL
       const currentUrl = this.page.url().toLowerCase();
       console.log(`🌐 Current Page URL after login attempt: ${currentUrl}`);
 
-      // If redirected to Main/Home/Dashboard/Dispatch page
-      if (
-        currentUrl.includes('home') ||
-        currentUrl.includes('main') ||
-        currentUrl.includes('dashboard') ||
-        currentUrl.includes('dispatch') ||
-        currentUrl.includes('allotment') ||
-        currentUrl.includes('welcome')
-      ) {
-        console.log('✅ URL indicates successful navigation into authenticated portal!');
-        return true;
-      }
-
-      // Check page text for logged-in indicators
-      const pageText = await this.page.evaluate(() => document.body ? document.body.innerText : '').catch(() => '');
-
-      const successIndicators = [
-        'Logout',
-        'Reports',
-        'Welcome',
-        'Login Successful',
-        'Administrator',
-        'User Name',
-        'Main Menu',
-        'Issue Point',
-        'Dispatch Abstract'
-      ];
-
-      for (const indicator of successIndicators) {
-        if (pageText.includes(indicator)) {
-          console.log(`✅ Found login success indicator in page text: "${indicator}"`);
-          return true;
-        }
-      }
-
-      // Check for logout link / reports menu elements in DOM
-      const hasAuthElement = await this.page.evaluate(() => {
-        const anchors = Array.from(document.querySelectorAll('a, button, input[type="button"]'));
-        return anchors.some(a => {
-          const t = (a.innerText || a.value || '').toLowerCase();
-          return t.includes('logout') || t.includes('report') || t.includes('dispatch') || t.includes('menu');
+      // Check for definitive authenticated indicators (MUST be unique to logged-in sessions)
+      const hasLogoutLink = await this.page.evaluate(() => {
+        const links = Array.from(document.querySelectorAll('a'));
+        return links.some(a => {
+          const href = (a.getAttribute('href') || '').toLowerCase();
+          const txt = (a.innerText || '').toLowerCase();
+          return href.includes('logout') || txt === 'logout';
         });
       }).catch(() => false);
 
-      if (hasAuthElement) {
-        console.log('✅ Found authenticated navigation elements in DOM');
+      const hasAdminOrWelcome = await this.page.evaluate(() => {
+        const txt = document.body ? document.body.innerText : '';
+        return (txt.includes('Welcome') && (txt.includes('dm_447') || txt.includes('Betul') || txt.includes('DM Betul'))) ||
+               txt.includes('Administrator') ||
+               txt.includes('ChangePassword.jsp');
+      }).catch(() => false);
+
+      if (hasLogoutLink || hasAdminOrWelcome || currentUrl.includes('loginsuccess') || currentUrl.includes('home.jsp')) {
+        console.log('✅ Authenticated session confirmed (Logout / Welcome / Administrator found)');
+        this.lastLoginError = null;
         return true;
       }
 
-      // Check if still on Login.jsp
+      // If still on Login page URL without authenticated elements, it is definitely not logged in
       if (currentUrl.includes('login')) {
-        // Check for error text
-        const errorAlert = await this.page.evaluate(() => {
-          const alertEl = document.querySelector('.error, .alert, font[color="red"], font[color="#FF0000"], span[style*="red"]');
-          return alertEl ? alertEl.innerText.trim() : null;
-        }).catch(() => null);
-
-        if (errorAlert) {
-          console.log(`❌ Portal returned login error message: "${errorAlert}"`);
-        } else {
-          console.log('❌ Still on Login.jsp with no authentication indicators found.');
+        console.log('❌ Still on Login page without authenticated indicators');
+        if (!this.lastLoginError) {
+          this.lastLoginError = 'Login page did not transition to authenticated session';
         }
         return false;
       }
 
-      // If URL changed away from login, assume success
-      console.log('✅ Page navigated away from Login page without errors');
+      // If URL changed away from login, verify page has not rendered a generic error
+      console.log('✅ Page navigated away from Login page to:', currentUrl);
       return true;
     } catch (error) {
       if (error.message && error.message.includes('Execution context was destroyed')) {
@@ -1252,14 +1265,31 @@ class SCMScraper {
       console.log('✅ Clicked Reports menu');
       await new Promise(r => setTimeout(r, 1000));
 
-      // 3. Find and click "Dispatch Abstract"
+      // 3. Find and click "Dispatch Abstract" (strictly targeting NFSA, never MDM or ICDS)
       const dispatchClicked = await this.page.evaluate(() => {
         const links = Array.from(document.querySelectorAll('a'));
-        const dispatchLink = links.find(a =>
-          a.innerText.includes('Dispatch Abstract') ||
-          a.innerText.includes('डिस्पैच') ||
-          a.href.includes('DispatchAbstract')
-        );
+        // 1. Look for explicit authenticated or depot dispatch abstract URL
+        const exactDispatchLink = links.find(a => {
+          const href = (a.getAttribute('href') || '').toLowerCase();
+          const title = (a.getAttribute('title') || '').toLowerCase();
+          if (href.includes('mdm') || href.includes('icds') || href.includes('welfare')) return false;
+          return href.includes('dispatch_abstract_dist_int.jsp') || 
+                 href.includes('depot_dispatch_abstract.jsp') ||
+                 title === 'isuue point dispatch abstract' ||
+                 (title === 'dispatch abstract' && !href.includes('mdm') && !href.includes('icds'));
+        });
+        if (exactDispatchLink) {
+          exactDispatchLink.click();
+          return true;
+        }
+
+        // 2. Fallback: text search strictly excluding other schemes
+        const dispatchLink = links.find(a => {
+          const href = (a.getAttribute('href') || '').toLowerCase();
+          const txt = (a.innerText || '').trim();
+          if (href.includes('mdm') || href.includes('icds') || href.includes('welfare')) return false;
+          return txt === 'Dispatch Abstract' || txt.includes('डिस्पैच') || href.includes('depot_dispatch_abstract');
+        });
         if (dispatchLink) {
           dispatchLink.click();
           return true;
@@ -1268,12 +1298,7 @@ class SCMScraper {
       });
 
       if (!dispatchClicked) {
-        const [dispatchLink] = await this.page.$$("::-p-xpath(//a[contains(normalize-space(), 'Dispatch Abstract') or contains(normalize-space(), 'डिस्पैच')])");
-        if (dispatchLink) {
-          await dispatchLink.click();
-        } else {
-          throw new Error('Dispatch Abstract link not found in Reports menu');
-        }
+        throw new Error('Dispatch Abstract link for NFSA not found in Reports / Stock Movement menu');
       }
 
       console.log('✅ Clicked Dispatch Abstract');
