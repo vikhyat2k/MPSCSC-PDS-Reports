@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 27 |
 | Pending Milestones | 0 |
-| Last Code Change | 08 Oct 2026 — AI Analysis of Mails: 1-click on-demand AI analysis buttons in Header, AI Banner, Modal Panel 4, and per-task rows with dual-engine batch & individual task endpoints (ISSUE-068) |
+| Last Code Change | 03 Nov 2026 — Fixed false "No data found" error by detecting portal "Invalid User Credentials" explicitly, preventing verifyLogin() false positives from public nav links, disambiguating NFSA vs MDM navigation, and halting CAPTCHA retry on bad credentials (ISSUE-069) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -624,6 +624,7 @@ Tracks implementation status of all major features.
 | Administrative AI Intelligence (Google Gemini + Groq Cloud LPU) | COMPLETE | YES | Dual-engine AI administrative intelligence combining Google Gemini with Groq Cloud LPU ultra-fast (~700ms) failover and deterministic rules engine fallback; in-app key management, telemetry, and 100% verified test suite (ISSUE-056, ISSUE-066, ISSUE-067) |
 | AI Analysis of Mails 1-Click Execution & Batch Re-analyze | COMPLETE | YES | Dedicated 1-click on-demand execution buttons in Header (#btnHeaderAiAnalysis), AI Status Banner (#btnBannerAiAnalysis), Modal Panel 4 (#btnModalTriggerAi), per-task row actions (🤖 AI विश्लेषण), and task detail modal; backed by POST /api/gmail/analyze-ai (alias /api/tasks/analyze-ai) and POST /api/tasks/:id/reanalyze with dual Gemini+Groq engine and 100% automated test pass (ISSUE-068) |
 | Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
+| SCM Portal Auth Detection & NO_DATA Masking Prevention | COMPLETE | YES | Fixed SCMScraper.verifyLogin() false positive on unauthenticated navbar links; explicitly detect "Invalid User Credentials"; prevent navigation drift to MDM allotment; fix missing distreport falsy NO_DATA in MDM/ICDS/Welfare scrapers; distinct auth error rendering in frontend (ISSUE-069) |
 
 ---
 
@@ -805,6 +806,7 @@ Tracks what has been tested and confirmed working.
 | Groq Cloud LPU AI Secondary Failover Integration | Automated Unit, API & UI Headless Browser Test | VERIFIED | 08 Oct 2026 | tests/test-verify-groq-integration.js verifies Groq Cloud API connectivity, Hindi Devanagari extraction with qwen/qwen3.8-27b (~700ms), /api/groq/status, /api/groq/config, prefilled masked keys, and dual-engine UI badges (ISSUE-067) |
 | AI Analysis of Mails 1-Click Execution & Batch API | Automated Unit, API & UI Headless Browser Test | VERIFIED | 08 Oct 2026 | tests/test-verify-ai-analysis-button.js verifies #btnHeaderAiAnalysis, #btnBannerAiAnalysis, #btnModalTriggerAi, table quick actions, and POST /api/gmail/analyze-ai batch execution with dual AI engine (ISSUE-068) |
 | Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
+| SCM Auth Error & NO_DATA Error Masking Fix | Scraper Unit & Browser Verification | VERIFIED | 03 Nov 2026 | Verified SCMScraper halting on "Invalid User Credentials", verifyLogin() returning false without false-positive nav elements, disambiguated NFSA dispatch abstract navigation, and distinct UI error modal rendering (ISSUE-069) |
 
 ---
 
@@ -879,10 +881,44 @@ Tracks what has been tested and confirmed working.
 | ISSUE-066 | Sarvam AI integration was present in codebase as secondary failover; user requested complete removal of Sarvam API, endpoints, credentials, and dual-engine UI components | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-dual-ai-integration.js | 08 Oct 2026 |
 | ISSUE-067 | Gemini API rate limits (429) required an ultra-fast, zero-cost secondary failover AI engine for uninterrupted administrative email intelligence; integrated Groq Cloud LPU AI | MEDIUM | RESOLVED | server/services/gmail/geminiAnalyzer.js, server.js, public/supervision.html, public/supervision_logic.js, .env, tests/test-verify-groq-integration.js | 08 Oct 2026 |
 | ISSUE-068 | Missing prominent 1-click buttons to trigger on-demand AI analysis of official government emails across Orders & Tasks views; users only had sync and settings buttons | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-ai-analysis-button.js | 08 Oct 2026 |
+| ISSUE-069 | SCMScraper verifyLogin() false positive on unauthenticated navbar links caused portal login failures (e.g. Invalid User Credentials) to navigate to MDM allotment, miss form selects, and masquerade as false "No data found" | HIGH | RESOLVED | server/automation/scraper_v2.js, server.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, public/app.js | 03 Nov 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-11-03 | Bug Fix: Resolving False "No Records Found" Masking & SCM Portal Login Verification Failure
+
+Files: server/automation/scraper_v2.js, server.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / Automation & Authentication Reliability
+Closes: ISSUE-069
+
+- USER SYMPTOM & REPORT:
+  "No Records Found: The portal currently shows 'No data found' for this month/year. although report available on portal"
+
+- ROOT CAUSES UNCOVERED:
+  1. **verifyLogin() False Positives on Public Navbar:** In `server/automation/scraper_v2.js`, `verifyLogin()` checked generic strings like `'Dispatch Abstract'` and `'Issue Point'` as proof of successful authentication. Because the MP SCM portal displays these strings in its public top navigation bar (under MDM and Stock Movement) even when login fails, `verifyLogin()` falsely returned `true` when the portal explicitly responded with red text: `"Invalid User Credentials"`.
+  2. **Navigation Drift to MDM Allotment:** Because the scraper erroneously proceeded as "logged in", `navigateToDispatchAbstract()` performed a generic search for `a.innerText.includes('Dispatch Abstract')`. The unauthenticated navbar only had `"Dispatch Abstract"` under MDM (`MDM_allotment.jsp`), which it clicked.
+  3. **Form Selection Failure Misdiagnosed as Empty Data:** On `MDM_allotment.jsp`, there are only 2 dropdowns (month & year) instead of 3 (month, year, ro_type). `selectFormAndGetDetails()` returned `false`. After 3 retries, `extractRoTypeData()` returned `status: 'empty'`.
+  4. **Silent Error Masking in server.js & app.js:** In `server.js`, when `aggregatedRawData.length === 0`, it unconditionally threw `NO_DATA: The portal currently shows "No data found" for this month/year.`, completely hiding the real authentication error ("Invalid User Credentials") and form mismatch from the user.
+  5. **Scraper Falsy Fallbacks in MDM/ICDS/Welfare:** In `mdm_scraper.js`, `if (!dr) return true;` treated a missing or slow-loading `#distreport` element as "No data found" rather than a timeout or DOM wait failure.
+
+- FIXES & IMPLEMENTATION:
+  1. **Strict Error-First Login Verification (`server/automation/scraper_v2.js`):**
+     - `verifyLogin()` now inspects the DOM and page text for explicit errors (`"Invalid User Credentials"`, `"Invalid Captcha"`, `"Please Enter Captcha"`, `"Another person trying to login"`) *before* checking success indicators.
+     - Removed public navbar keywords (`'Dispatch Abstract'`, `'Issue Point'`, `'User Name'`, `'Main Menu'`) from `successIndicators`.
+     - Authentication is now confirmed strictly via authenticated DOM elements: `a[href*="Logout"]`, `LoginSuccess.jsp`, `Home.jsp`, `"Welcome DM Betul"`, or `"Administrator"`.
+     - Immediately halts CAPTCHA auto-retry loops upon detecting invalid credentials.
+  2. **Scheme-Isolated Navigation Guard (`server/automation/scraper_v2.js`):**
+     - `navigateToDispatchAbstract()` explicitly filters out links containing `mdm`, `icds`, or `welfare`, strictly matching `dispatch_abstract_dist_int.jsp` or `depot_dispatch_abstract.jsp`.
+  3. **Accurate Error Propagation (`server/automation/scraper_v2.js` & `server.js`):**
+     - `selectFormAndGetDetails()` sets `this.lastFormError` when form dropdown count is invalid.
+     - `extractRoTypeData()` throws a descriptive navigation error instead of returning `status: 'empty'` when form selection fails.
+     - `server.js` explicitly maps `SCM_AUTH_FAILED` / `Invalid User Credentials` to a high-priority, actionable error message asking the user to verify `SCM_USERNAME` and `SCM_PASSWORD` in `.env`.
+  4. **Scraper Null Guard Correction (`mdm_scraper.js`, `icds_scraper.js`, `welfare_scraper.js`):**
+     - Changed `if (!dr) return true;` to `if (!dr) return false;`, preventing slow network requests or unrendered tables from falsely triggering NO_DATA errors.
+  5. **UI Authentication Error Modal (`public/app.js`):**
+     - Added distinct `Portal Authentication Failed` banner (`🔒`) in `showError()`, guiding the user directly to update their credentials in `.env`.
 
 ### 2026-10-08 | Feature & UI: AI Analysis of Mails 1-Click Execution Buttons & Dual-Engine Batch Pipeline
 
