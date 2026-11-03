@@ -293,9 +293,16 @@ class SCMScraper {
   async requestManualCaptcha(onCaptchaRequired, maxAttempts = 3, maxWaitMs = 120000) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       console.log(`🖐️ [Manual CAPTCHA] Prompting user in Web UI (attempt ${attempt}/${maxAttempts})...`);
-      const captchaBase64 = await this.captureCaptchaBase64();
+      let captchaBase64 = await this.captureCaptchaBase64();
       if (!captchaBase64) {
-        throw new Error('Could not capture CAPTCHA image for manual entry.');
+        console.log('⚠️ CAPTCHA image not immediately found, reloading login page for fresh CAPTCHA...');
+        captchaBase64 = await this.refreshCaptchaImage();
+      }
+      if (!captchaBase64) {
+        if (this.lastLoginError) {
+          throw new Error(`SCM_AUTH_FAILED: ${this.lastLoginError}`);
+        }
+        throw new Error('Could not capture CAPTCHA image for manual entry. SCM portal login page did not render CAPTCHA.');
       }
 
       if (typeof onCaptchaRequired === 'function') {
