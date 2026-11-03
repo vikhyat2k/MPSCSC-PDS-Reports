@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 27 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Nov 2026 — Prevented false manual CAPTCHA entry fallback on credential rejection, eliminating "Could not capture CAPTCHA image" error and correctly surfacing portal credential errors (ISSUE-070) |
+| Last Code Change | 03 Nov 2026 — SCM portal credentials updated in .env and verified live authenticated session ("Welcome DM Betul (dm_447)") |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -889,6 +889,19 @@ Tracks what has been tested and confirmed working.
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-11-03 | Config & Verification: SCM Portal Credential Update & Live Session Confirmation
+
+Files: .env, PROJECT_DOCS.md
+Type: Configuration & Live Integration Verification
+Status: VERIFIED
+
+- ACTION & VERIFICATION:
+  - Updated `SCM_PASSWORD=Mpnan@2026` in `.env`.
+  - Executed automated browser login test against `https://scm.mp.gov.in`.
+  - Auto-CAPTCHA solved on attempt 2 (`zbcrcs`), and portal authenticated successfully.
+  - Confirmed active session: `"Welcome  DM Betul  (dm_447)"` on `https://scm.mp.gov.in/login`.
+  - Restarted application server daemon on `http://localhost:3000` with active credentials.
 
 ### 2026-11-03 | Bug Fix: Prevent False Manual CAPTCHA Fallback on Portal Credential Failure
 
