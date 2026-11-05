@@ -27,7 +27,7 @@
 | Open Low Issues | 0 |
 | Completed Milestones | 27 |
 | Pending Milestones | 0 |
-| Last Code Change | 03 Nov 2026 — SCM portal credentials updated in .env and verified live authenticated session ("Welcome DM Betul (dm_447)") |
+| Last Code Change | 05 Nov 2026 — Handled MP SCM server offline/maintenance connection refusal, preventing misleading net::ERR_BLOCKED_BY_CLIENT error and surfacing clear portal offline alert (ISSUE-071) |
 | Server Status | Production-ready (run START_PORTAL.bat or CREATE_DESKTOP_SHORTCUTS.bat) |
 | CAPTCHA Solver | Active (Jimp + Tesseract, ~60% accuracy) |
 | Supervision Module | Active (`/supervision`, `supervision.html` · Orders 3/1, 3/2, Common Rice KMS 2025-26 & Official Gmail Tasks) |
@@ -626,6 +626,7 @@ Tracks implementation status of all major features.
 | Email Reports Module History Reflection & Cache Sync | COMPLETE | YES | When reports are generated via Send Reports via Email, concerned module history tables (NFSA, MDM, ICDS, Welfare), stats, email presets grid, and dashboard instantly reload; added no-store HTTP headers, cache-busting timestamps, and background insights computation (ISSUE-065) |
 | SCM Portal Auth Detection & NO_DATA Masking Prevention | COMPLETE | YES | Fixed SCMScraper.verifyLogin() false positive on unauthenticated navbar links; explicitly detect "Invalid User Credentials"; prevent navigation drift to MDM allotment; fix missing distreport falsy NO_DATA in MDM/ICDS/Welfare scrapers; distinct auth error rendering in frontend (ISSUE-069) |
 | Manual CAPTCHA Fallback Guard on Credential Rejection | COMPLETE | YES | Prevented scraper falling back to requestManualCaptcha() when portal explicitly rejects login credentials; added waitForSelector and refreshCaptchaImage() fallbacks to captureCaptchaBase64(); cleanly surfaces SCM_AUTH_FAILED to UI (ISSUE-070) |
+| SCM Portal Offline & Connection Refused Handling | COMPLETE | YES | Detected portal server connection refusal (ERR_CONNECTION_REFUSED / ECONNREFUSED) without failing over to insecure HTTP blocked by Chromium (ERR_BLOCKED_BY_CLIENT); cleanly surfaces portal maintenance banner in UI (ISSUE-071) |
 
 ---
 
@@ -809,6 +810,7 @@ Tracks what has been tested and confirmed working.
 | Email Reports History Reflection & Cache Sync | Automated Unit, API & UI Sync Test | VERIFIED | 06 Oct 2026 | tests/test-email-reports-history-sync.js confirms Cache-Control: no-store on /api/reports, /api/reports/stats, /api/auth/available-periods, /api/reports/:id, /api/reports/:id/analytics, refreshModuleHistory hook in generateFreshSchemeForEmail and submitGlobalEmail, modal close sync, background insights calculation in runEmailBundleJob, and District Intelligence Dashboard & Messenger dropdown reflection (ISSUE-065) |
 | SCM Auth Error & NO_DATA Error Masking Fix | Scraper Unit & Browser Verification | VERIFIED | 03 Nov 2026 | Verified SCMScraper halting on "Invalid User Credentials", verifyLogin() returning false without false-positive nav elements, disambiguated NFSA dispatch abstract navigation, and distinct UI error modal rendering (ISSUE-069) |
 | Manual CAPTCHA Fallback Guard on Credential Rejection | Automated Unit & Browser Test | VERIFIED | 03 Nov 2026 | Verified SCMScraper throwing SCM_AUTH_FAILED directly instead of triggering requestManualCaptcha() and crashing with "Could not capture CAPTCHA image" on bad credentials (ISSUE-070) |
+| SCM Portal Offline & Connection Refused Handling | Automated Integration Test | VERIFIED | 05 Nov 2026 | scratch/test_offline_handling.js verified that portal connection refusal throws PORTAL_OFFLINE immediately and UI renders clear portal unavailable alert without ERR_BLOCKED_BY_CLIENT (ISSUE-071) |
 
 ---
 
@@ -885,10 +887,37 @@ Tracks what has been tested and confirmed working.
 | ISSUE-068 | Missing prominent 1-click buttons to trigger on-demand AI analysis of official government emails across Orders & Tasks views; users only had sync and settings buttons | MEDIUM | RESOLVED | public/supervision.html, public/supervision_logic.js, server.js, tests/test-verify-ai-analysis-button.js | 08 Oct 2026 |
 | ISSUE-069 | SCMScraper verifyLogin() false positive on unauthenticated navbar links caused portal login failures (e.g. Invalid User Credentials) to navigate to MDM allotment, miss form selects, and masquerade as false "No data found" | HIGH | RESOLVED | server/automation/scraper_v2.js, server.js, server/automation/mdm_scraper.js, server/automation/icds_scraper.js, server/automation/welfare_scraper.js, public/app.js | 03 Nov 2026 |
 | ISSUE-070 | SCMScraper fell back to manual CAPTCHA modal when credentials failed ('Invalid User Credentials'), crashing with 'Could not capture CAPTCHA image for manual entry' on post-submit error page | HIGH | RESOLVED | server/automation/scraper_v2.js, PROJECT_DOCS.md | 03 Nov 2026 |
+| ISSUE-071 | When MP SCM portal server refused connections (down for maintenance), scraper attempted HTTP fallback which Chromium blocked, producing cryptic net::ERR_BLOCKED_BY_CLIENT error | HIGH | RESOLVED | server/automation/scraper_v2.js, server.js, public/app.js, PROJECT_DOCS.md | 05 Nov 2026 |
 
 ---
 
 ## 20. CHANGE LOG (DATEWISE)
+
+### 2026-11-05 | Bug Fix: Resolving Cryptic net::ERR_BLOCKED_BY_CLIENT & Handling Government Portal Connection Refusal Gracefully
+
+Files: server/automation/scraper_v2.js, server.js, public/app.js, PROJECT_DOCS.md
+Type: Bug Fix / Resilience & Portal Availability Handling
+Closes: ISSUE-071
+
+- USER SYMPTOM & REPORT:
+  "❌ Error: net::ERR_BLOCKED_BY_CLIENT at http://scm.mp.gov.in/Login.jsp"
+
+- ROOT CAUSE:
+  1. The MP State SCM portal web server (`103.195.218.42`) was down / refusing TCP connections on both port 443 (HTTPS) and port 80 (HTTP) due to server maintenance (`ERR_CONNECTION_REFUSED`).
+  2. When `this.page.goto('https://scm.mp.gov.in/Login.jsp')` failed with `ERR_CONNECTION_REFUSED`, the scraper's automatic fallback caught the error and attempted `this.page.goto('http://scm.mp.gov.in/Login.jsp')`.
+  3. Chromium has security safeguards that automatically block downgrading `.gov.in` connections to plain unencrypted HTTP, resulting in `net::ERR_BLOCKED_BY_CLIENT`.
+  4. This masked the genuine root cause (that the government portal was down for maintenance) and displayed a confusing error message to the user.
+
+- FIXES & IMPLEMENTATION:
+  1. In `server/automation/scraper_v2.js`:
+     - Added offline/connection refusal detection (`ERR_CONNECTION_REFUSED`, `ECONNREFUSED`, `ERR_NAME_NOT_RESOLVED`, `ERR_ADDRESS_UNREACHABLE`).
+     - Bypasses insecure HTTP fallback when the server is actively refusing connections, throwing `PORTAL_OFFLINE` with clear diagnostic context.
+     - Bumped `SCMScraper` version to `1.0.8`.
+  2. In `server.js`:
+     - Added `isPortalOffline` check in report generation catch block, mapping connection refusal errors to user-friendly message: `"Government Portal Offline: The MP SCM portal (https://scm.mp.gov.in) is currently refusing connections or undergoing maintenance. The state server is unreachable. Please try again in a few moments once the government portal resumes service."`
+  3. In `public/app.js`:
+     - Added `isOfflineError` handler to render a `🌐 Government Portal Unavailable` alert banner with warning styling.
+  4. Verified with automated script `scratch/test_offline_handling.js` that connection refusal is now caught and reported cleanly.
 
 ### 2026-11-03 | Config & Verification: SCM Portal Credential Update & Live Session Confirmation
 
