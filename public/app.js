@@ -747,9 +747,26 @@ function showError(msg) {
     
     const isNoDataError = msg && (msg.includes('NO_DATA') || msg.toLowerCase().includes('no data found on portal'));
     const isAuthError = msg && (msg.includes('Authentication Failed') || msg.includes('Invalid User Credentials') || msg.includes('SCM_AUTH_FAILED'));
+    const isOfflineError = msg && (
+        msg.includes('Government Portal Offline') ||
+        msg.includes('Portal Unavailable') ||
+        msg.includes('PORTAL_OFFLINE') ||
+        msg.includes('PORTAL_UNREACHABLE') ||
+        msg.includes('ERR_CONNECTION_REFUSED') ||
+        msg.includes('ERR_BLOCKED_BY_CLIENT') ||
+        msg.includes('ECONNREFUSED')
+    );
 
     if (box && text) {
-        if (isNoDataError) {
+        if (isOfflineError) {
+            text.innerText = msg;
+            box.classList.remove('alert-error');
+            box.classList.add('alert-warning');
+            const icon = box.querySelector('.alert-icon');
+            if(icon) icon.innerText = '🌐';
+            const title = box.querySelector('strong');
+            if(title) title.innerText = 'Government Portal Unavailable';
+        } else if (isNoDataError) {
             const cleanMsg = msg.replace(/^NO_DATA:\s*/i, '').trim();
             text.innerText = cleanMsg;
             box.classList.remove('alert-error');
