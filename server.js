@@ -754,9 +754,17 @@ app.post('/api/generate-report', async (req, res) => {
                 const isNoData = err.message.includes('NO_DATA');
                 const isIntegrityFail = err.message.includes('STRICT_INTEGRITY_FAILURE');
                 const isAuthFail = err.message.includes('SCM_AUTH_FAILED') || err.message.includes('Invalid User Credentials') || err.message.includes('Authentication Failed');
+                const isPortalOffline = err.message.includes('PORTAL_OFFLINE') ||
+                                        err.message.includes('ERR_CONNECTION_REFUSED') ||
+                                        err.message.includes('ERR_BLOCKED_BY_CLIENT') ||
+                                        err.message.includes('ECONNREFUSED') ||
+                                        err.message.includes('ERR_CONNECTION_TIMED_OUT') ||
+                                        err.message.includes('PORTAL_UNREACHABLE');
                 
                 let errorMsg = err.message;
-                if (isAuthFail) {
+                if (isPortalOffline) {
+                    errorMsg = 'Government Portal Offline: The MP SCM portal (https://scm.mp.gov.in) is currently refusing connections or undergoing maintenance. The state server is unreachable. Please try again in a few moments once the government portal resumes service.';
+                } else if (isAuthFail) {
                     errorMsg = 'Authentication Failed: The portal rejected login credentials ("Invalid User Credentials"). Please verify and update SCM_USERNAME and SCM_PASSWORD in your .env file.';
                 } else if (isNoData) {
                     errorMsg = 'NO_DATA: The portal currently shows "No data found" for this month/year.';
