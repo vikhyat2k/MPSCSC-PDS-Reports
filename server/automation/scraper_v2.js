@@ -876,21 +876,33 @@ class SCMScraper {
     if (typeof onProgress === 'function') onProgress('Navigating to SCM portal...');
 
     try {
-      // Navigate to login page with automatic HTTP/HTTPS fallback for portal timeouts
+      // Navigate to login page with connection error handling
       try {
         await this.page.goto(this.baseURL, {
           waitUntil: 'domcontentloaded',
           timeout: 30000
         });
       } catch (err) {
+        const isOffline = err.message.includes('ERR_CONNECTION_REFUSED') ||
+                          err.message.includes('ERR_NAME_NOT_RESOLVED') ||
+                          err.message.includes('ERR_ADDRESS_UNREACHABLE') ||
+                          err.message.includes('ECONNREFUSED');
+        if (isOffline) {
+          throw new Error(`PORTAL_OFFLINE: The MP SCM portal server (scm.mp.gov.in) is currently refusing connections (${err.message}). The portal server is likely down for maintenance.`);
+        }
+
         const altURL = this.baseURL.startsWith('https://')
           ? this.baseURL.replace('https://', 'http://')
           : this.baseURL.replace('http://', 'https://');
         console.warn(`⚠️ Primary navigation warning for ${this.baseURL}: ${err.message}. Retrying with ${altURL}...`);
-        await this.page.goto(altURL, {
-          waitUntil: 'domcontentloaded',
-          timeout: 45000
-        });
+        try {
+          await this.page.goto(altURL, {
+            waitUntil: 'domcontentloaded',
+            timeout: 45000
+          });
+        } catch (altErr) {
+          throw new Error(`PORTAL_OFFLINE: Failed to connect to ${this.baseURL} (${err.message}) and ${altURL} (${altErr.message}). The MP SCM government portal appears to be down or unreachable.`);
+        }
       }
 
       console.log('✅ Page loaded successfully');
